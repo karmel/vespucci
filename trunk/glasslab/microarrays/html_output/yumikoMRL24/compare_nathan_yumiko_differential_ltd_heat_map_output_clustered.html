@@ -1,0 +1,2366 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+
+<head>
+
+    <!-- encoding -->
+    <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=utf-8" />
+    <!-- style -->
+    <link type="text/css" rel="stylesheet" href="../../templates/base.css"/>
+    
+    
+    
+
+    <!-- title -->
+    <title>
+         Microarrays:: Heat Map 
+    </title>
+    
+</head>
+
+<body class="">
+<div id="content-wrapper">
+    <div id="container">
+
+            <!-- content -->
+            <div id="content">
+                
+
+<table class="legend">
+    <tr>
+        <th colspan="7">Mean Log Transformation Coloring</th>
+    </tr>
+    <tr>
+        <td>-3</td>
+        <td>-2</td>
+        <td>-1</td>
+        <td>0</td>
+        <td>1</td>
+        <td>2</td>
+        <td>3</td>
+    </tr>
+    <tr class="color-coded-cell">
+        <td><div class="down-regulated" style="opacity:1">&nbsp;</div></td>
+        <td><div class="down-regulated" style="opacity:.66">&nbsp;</div></td>
+        <td><div class="down-regulated" style="opacity:.33">&nbsp;</div></td>
+        <td><div class="zero-regulated" style="opacity:0">&nbsp;</div></td>
+        <td><div class="up-regulated" style="opacity:.33">&nbsp;</div></td>
+        <td><div class="up-regulated" style="opacity:.66">&nbsp;</div></td>
+        <td><div class="up-regulated" style="opacity:1">&nbsp;</div></td>
+    </tr>
+</table>
+<br />
+<table class="heat-map">
+    <tr>
+        <th>Gene name</th>
+        
+            <th>
+            	Test: Kdo2 (6:00:00)<br />
+            	vs. Control: DMSO (6:00:00)
+            </th>
+        
+            <th>
+            	Test: Rosi+Kdo2 (6:00:00)<br />
+            	vs. Control: DMSO (6:00:00)
+            </th>
+        
+            <th>
+            	Test: Rosi (1 day, 0:00:00)<br />
+            	vs. Control: DMSO (1 day, 0:00:00)
+            </th>
+        
+            <th>
+            	Test: Kdo2 (6:00:00)<br />
+            	vs. Control: DMSO (6:00:00)
+            </th>
+        
+            <th>
+            	Test: MRL24+Kdo2 (8:00:00)<br />
+            	vs. Control: DMSO (6:00:00)
+            </th>
+        
+            <th>
+            	Test: MRL24 (1 day, 0:00:00)<br />
+            	vs. Control: DMSO (1 day, 0:00:00)
+            </th>
+         
+        
+            <th>
+            	Differential: Rosi (1 day, 0:00:00)<br />
+            	- MRL24 (1 day, 0:00:00)
+            </th>
+        
+            <th>
+            	Differential: Kdo2 (6:00:00)<br />
+            	- Rosi+Kdo2 (6:00:00)
+            </th>
+        
+            <th>
+            	Differential: Kdo2 (6:00:00)<br />
+            	- Kdo2 (6:00:00)
+            </th>
+        
+            <th>
+            	Differential: Kdo2 (6:00:00)<br />
+            	- MRL24+Kdo2 (8:00:00)
+            </th>
+        
+            <th>
+            	Differential: Rosi+Kdo2 (6:00:00)<br />
+            	- Kdo2 (6:00:00)
+            </th>
+        
+            <th>
+            	Differential: Rosi+Kdo2 (6:00:00)<br />
+            	- MRL24+Kdo2 (8:00:00)
+            </th>
+        
+            <th>
+            	Differential: Kdo2 (6:00:00)<br />
+            	- MRL24+Kdo2 (8:00:00)
+            </th>
+         
+        
+    </tr>
+    
+        <tr class="even">
+            <td class="gene-name-cell">
+            	<div class="gene-name">
+            		Egln3
+            	</div>
+            	<div class="gene-links">
+            	<a href="http://www.ncbi.nlm.nih.gov/gene?term=Egln3" target="_blank"
+            		>Entrez</a>
+            	<a href="http://amigo.geneontology.org/cgi-bin/amigo/search.cgi?search_query=Egln3&amp;search_constraint=gp&amp;action=new-search" target="_blank"
+            		>GO</a>
+            	<a href="http://www.ncbi.nlm.nih.gov/nuccore?term=NM_028133.1" target="_blank"
+            		>Nuccore</a>
+            	</div>
+            </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div up-regulated"
+                        style="opacity: 0.02">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div up-regulated"
+                        style="opacity: 0.03">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div up-regulated"
+                        style="opacity: 0.33">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div up-regulated"
+                        style="opacity: 0.28">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div up-regulated"
+                        style="opacity: 0.22">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div down-regulated"
+                        style="opacity: 0.08">&nbsp;</div>
+                </td>
+            
+            
+                <td class="heat-map-cell-text">
+                    1.2287 (234.36%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    -0.0360 (97.53%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    -0.7811 (58.19%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    -0.6032 (65.83%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    -0.7450 (59.66%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    -0.5671 (67.50%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    0.1779 (113.12%)
+                </td>
+            
+            
+        </tr>
+    
+        <tr class="even">
+            <td class="gene-name-cell">
+            	<div class="gene-name">
+            		LOC100044702
+            	</div>
+            	<div class="gene-links">
+            	<a href="http://www.ncbi.nlm.nih.gov/gene?term=LOC100044702" target="_blank"
+            		>Entrez</a>
+            	<a href="http://amigo.geneontology.org/cgi-bin/amigo/search.cgi?search_query=LOC100044702&amp;search_constraint=gp&amp;action=new-search" target="_blank"
+            		>GO</a>
+            	<a href="http://www.ncbi.nlm.nih.gov/nuccore?term=XM_001472699.1" target="_blank"
+            		>Nuccore</a>
+            	</div>
+            </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div up-regulated"
+                        style="opacity: 0.29">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div up-regulated"
+                        style="opacity: 0.35">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div up-regulated"
+                        style="opacity: 0.11">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div up-regulated"
+                        style="opacity: 0.27">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div up-regulated"
+                        style="opacity: 0.31">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div down-regulated"
+                        style="opacity: 0.26">&nbsp;</div>
+                </td>
+            
+            
+                <td class="heat-map-cell-text">
+                    1.0881 (212.60%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    -0.1744 (88.61%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    0.0688 (104.88%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    -0.0522 (96.45%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    0.2432 (118.36%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    0.1222 (108.84%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    -0.1210 (91.96%)
+                </td>
+            
+            
+        </tr>
+    
+        <tr class="even">
+            <td class="gene-name-cell">
+            	<div class="gene-name">
+            		Golga2
+            	</div>
+            	<div class="gene-links">
+            	<a href="http://www.ncbi.nlm.nih.gov/gene?term=Golga2" target="_blank"
+            		>Entrez</a>
+            	<a href="http://amigo.geneontology.org/cgi-bin/amigo/search.cgi?search_query=Golga2&amp;search_constraint=gp&amp;action=new-search" target="_blank"
+            		>GO</a>
+            	<a href="http://www.ncbi.nlm.nih.gov/nuccore?term=NM_133852.2" target="_blank"
+            		>Nuccore</a>
+            	</div>
+            </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div down-regulated"
+                        style="opacity: 0.12">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div up-regulated"
+                        style="opacity: 0.14">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div down-regulated"
+                        style="opacity: 0.02">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div down-regulated"
+                        style="opacity: 0.04">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div down-regulated"
+                        style="opacity: 0.05">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div down-regulated"
+                        style="opacity: 0.01">&nbsp;</div>
+                </td>
+            
+            
+                <td class="heat-map-cell-text">
+                    -0.0276 (98.10%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    -0.8088 (57.09%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    -0.2487 (84.17%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    -0.2390 (84.73%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    0.5602 (147.44%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    0.5698 (148.43%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    0.0097 (100.67%)
+                </td>
+            
+            
+        </tr>
+    
+        <tr class="even">
+            <td class="gene-name-cell">
+            	<div class="gene-name">
+            		Scd1
+            	</div>
+            	<div class="gene-links">
+            	<a href="http://www.ncbi.nlm.nih.gov/gene?term=Scd1" target="_blank"
+            		>Entrez</a>
+            	<a href="http://amigo.geneontology.org/cgi-bin/amigo/search.cgi?search_query=Scd1&amp;search_constraint=gp&amp;action=new-search" target="_blank"
+            		>GO</a>
+            	<a href="http://www.ncbi.nlm.nih.gov/nuccore?term=NM_009127.3" target="_blank"
+            		>Nuccore</a>
+            	</div>
+            </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div down-regulated"
+                        style="opacity: 0.15">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div down-regulated"
+                        style="opacity: 0.11">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div up-regulated"
+                        style="opacity: 0.25">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div down-regulated"
+                        style="opacity: 0.19">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div down-regulated"
+                        style="opacity: 0.17">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div down-regulated"
+                        style="opacity: 0.25">&nbsp;</div>
+                </td>
+            
+            
+                <td class="heat-map-cell-text">
+                    1.4965 (282.16%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    -0.1210 (91.95%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    0.1193 (108.62%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    0.0631 (104.47%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    0.2404 (118.13%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    0.1842 (113.62%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    -0.0562 (96.18%)
+                </td>
+            
+            
+        </tr>
+    
+        <tr class="odd">
+            <td class="gene-name-cell">
+            	<div class="gene-name">
+            		Siat9
+            	</div>
+            	<div class="gene-links">
+            	<a href="http://www.ncbi.nlm.nih.gov/gene?term=Siat9" target="_blank"
+            		>Entrez</a>
+            	<a href="http://amigo.geneontology.org/cgi-bin/amigo/search.cgi?search_query=Siat9&amp;search_constraint=gp&amp;action=new-search" target="_blank"
+            		>GO</a>
+            	<a href="http://www.ncbi.nlm.nih.gov/nuccore?term=NM_011375.1" target="_blank"
+            		>Nuccore</a>
+            	</div>
+            </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div up-regulated"
+                        style="opacity: 0.66">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div up-regulated"
+                        style="opacity: 0.38">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div down-regulated"
+                        style="opacity: 0.09">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div up-regulated"
+                        style="opacity: 0.49">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div up-regulated"
+                        style="opacity: 0.43">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div down-regulated"
+                        style="opacity: 0.02">&nbsp;</div>
+                </td>
+            
+            
+                <td class="heat-map-cell-text">
+                    -0.1991 (87.11%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    0.8431 (179.39%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    0.5137 (142.77%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    0.6971 (162.13%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    -0.3294 (79.59%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    -0.1460 (90.38%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    0.1834 (113.56%)
+                </td>
+            
+            
+        </tr>
+    
+        <tr class="odd">
+            <td class="gene-name-cell">
+            	<div class="gene-name">
+            		Flt1
+            	</div>
+            	<div class="gene-links">
+            	<a href="http://www.ncbi.nlm.nih.gov/gene?term=Flt1" target="_blank"
+            		>Entrez</a>
+            	<a href="http://amigo.geneontology.org/cgi-bin/amigo/search.cgi?search_query=Flt1&amp;search_constraint=gp&amp;action=new-search" target="_blank"
+            		>GO</a>
+            	<a href="http://www.ncbi.nlm.nih.gov/nuccore?term=NM_010228.3" target="_blank"
+            		>Nuccore</a>
+            	</div>
+            </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div up-regulated"
+                        style="opacity: 0.60">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div up-regulated"
+                        style="opacity: 0.30">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div down-regulated"
+                        style="opacity: 0.20">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div up-regulated"
+                        style="opacity: 0.76">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div up-regulated"
+                        style="opacity: 0.65">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div down-regulated"
+                        style="opacity: 0.12">&nbsp;</div>
+                </td>
+            
+            
+                <td class="heat-map-cell-text">
+                    -0.2542 (83.84%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    0.9009 (186.73%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    -0.4635 (72.52%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    -0.1534 (89.91%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    -1.3644 (38.84%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    -1.0543 (48.15%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    0.3101 (123.98%)
+                </td>
+            
+            
+        </tr>
+    
+        <tr class="odd">
+            <td class="gene-name-cell">
+            	<div class="gene-name">
+            		St3gal5
+            	</div>
+            	<div class="gene-links">
+            	<a href="http://www.ncbi.nlm.nih.gov/gene?term=St3gal5" target="_blank"
+            		>Entrez</a>
+            	<a href="http://amigo.geneontology.org/cgi-bin/amigo/search.cgi?search_query=St3gal5&amp;search_constraint=gp&amp;action=new-search" target="_blank"
+            		>GO</a>
+            	<a href="http://www.ncbi.nlm.nih.gov/nuccore?term=NM_011375.2" target="_blank"
+            		>Nuccore</a>
+            	</div>
+            </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div up-regulated"
+                        style="opacity: 0.74">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div up-regulated"
+                        style="opacity: 0.47">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div down-regulated"
+                        style="opacity: 0.19">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div up-regulated"
+                        style="opacity: 0.65">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div up-regulated"
+                        style="opacity: 0.57">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div down-regulated"
+                        style="opacity: 0.12">&nbsp;</div>
+                </td>
+            
+            
+                <td class="heat-map-cell-text">
+                    -0.1995 (87.08%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    0.8327 (178.10%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    0.2791 (121.34%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    0.5188 (143.28%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    -0.5536 (68.13%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    -0.3139 (80.45%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    0.2398 (118.08%)
+                </td>
+            
+            
+        </tr>
+    
+        <tr class="odd">
+            <td class="gene-name-cell">
+            	<div class="gene-name">
+            		Tapbp
+            	</div>
+            	<div class="gene-links">
+            	<a href="http://www.ncbi.nlm.nih.gov/gene?term=Tapbp" target="_blank"
+            		>Entrez</a>
+            	<a href="http://amigo.geneontology.org/cgi-bin/amigo/search.cgi?search_query=Tapbp&amp;search_constraint=gp&amp;action=new-search" target="_blank"
+            		>GO</a>
+            	<a href="http://www.ncbi.nlm.nih.gov/nuccore?term=NM_001025313.1" target="_blank"
+            		>Nuccore</a>
+            	</div>
+            </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div up-regulated"
+                        style="opacity: 0.52">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div up-regulated"
+                        style="opacity: 0.41">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div down-regulated"
+                        style="opacity: 0.24">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div up-regulated"
+                        style="opacity: 0.60">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div up-regulated"
+                        style="opacity: 0.59">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div up-regulated"
+                        style="opacity: 0.04">&nbsp;</div>
+                </td>
+            
+            
+                <td class="heat-map-cell-text">
+                    -0.8490 (55.52%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    0.3170 (124.58%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    -0.2675 (83.08%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    -0.2370 (84.85%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    -0.5845 (66.69%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    -0.5540 (68.11%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    0.0304 (102.13%)
+                </td>
+            
+            
+        </tr>
+    
+        <tr class="odd">
+            <td class="gene-name-cell">
+            	<div class="gene-name">
+            		LOC100048858
+            	</div>
+            	<div class="gene-links">
+            	<a href="http://www.ncbi.nlm.nih.gov/gene?term=LOC100048858" target="_blank"
+            		>Entrez</a>
+            	<a href="http://amigo.geneontology.org/cgi-bin/amigo/search.cgi?search_query=LOC100048858&amp;search_constraint=gp&amp;action=new-search" target="_blank"
+            		>GO</a>
+            	<a href="http://www.ncbi.nlm.nih.gov/nuccore?term=XM_001472990.1" target="_blank"
+            		>Nuccore</a>
+            	</div>
+            </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div up-regulated"
+                        style="opacity: 0.24">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div up-regulated"
+                        style="opacity: 0.17">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div down-regulated"
+                        style="opacity: 0.40">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div up-regulated"
+                        style="opacity: 0.14">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div up-regulated"
+                        style="opacity: 0.08">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div down-regulated"
+                        style="opacity: 0.05">&nbsp;</div>
+                </td>
+            
+            
+                <td class="heat-map-cell-text">
+                    -1.0276 (49.05%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    0.2147 (116.05%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    0.3068 (123.70%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    0.4877 (140.22%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    0.0921 (106.59%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    0.2730 (120.83%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    0.1809 (113.36%)
+                </td>
+            
+            
+        </tr>
+    
+        <tr class="even">
+            <td class="gene-name-cell">
+            	<div class="gene-name">
+            		Ifrd2
+            	</div>
+            	<div class="gene-links">
+            	<a href="http://www.ncbi.nlm.nih.gov/gene?term=Ifrd2" target="_blank"
+            		>Entrez</a>
+            	<a href="http://amigo.geneontology.org/cgi-bin/amigo/search.cgi?search_query=Ifrd2&amp;search_constraint=gp&amp;action=new-search" target="_blank"
+            		>GO</a>
+            	<a href="http://www.ncbi.nlm.nih.gov/nuccore?term=NM_025903.1" target="_blank"
+            		>Nuccore</a>
+            	</div>
+            </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div down-regulated"
+                        style="opacity: 0.04">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div up-regulated"
+                        style="opacity: 0.03">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div down-regulated"
+                        style="opacity: 0.03">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div down-regulated"
+                        style="opacity: 0.01">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div up-regulated"
+                        style="opacity: 0.08">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div up-regulated"
+                        style="opacity: 0.24">&nbsp;</div>
+                </td>
+            
+            
+                <td class="heat-map-cell-text">
+                    -0.8084 (57.10%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    -0.1958 (87.31%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    -0.0943 (93.68%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    -0.3566 (78.10%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    0.1015 (107.29%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    -0.1608 (89.45%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    -0.2624 (83.37%)
+                </td>
+            
+            
+        </tr>
+    
+        <tr class="odd">
+            <td class="gene-name-cell">
+            	<div class="gene-name">
+            		Ear2
+            	</div>
+            	<div class="gene-links">
+            	<a href="http://www.ncbi.nlm.nih.gov/gene?term=Ear2" target="_blank"
+            		>Entrez</a>
+            	<a href="http://amigo.geneontology.org/cgi-bin/amigo/search.cgi?search_query=Ear2&amp;search_constraint=gp&amp;action=new-search" target="_blank"
+            		>GO</a>
+            	<a href="http://www.ncbi.nlm.nih.gov/nuccore?term=NM_007895.2" target="_blank"
+            		>Nuccore</a>
+            	</div>
+            </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div down-regulated"
+                        style="opacity: 0.19">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div up-regulated"
+                        style="opacity: 0.10">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div up-regulated"
+                        style="opacity: 1.00">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div down-regulated"
+                        style="opacity: 0.09">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div up-regulated"
+                        style="opacity: 0.03">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div up-regulated"
+                        style="opacity: 0.39">&nbsp;</div>
+                </td>
+            
+            
+                <td class="heat-map-cell-text">
+                    2.2521 (476.37%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    -0.8625 (55.00%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    -0.3041 (80.99%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    -0.6402 (64.16%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    0.5584 (147.26%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    0.2223 (116.66%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    -0.3361 (79.22%)
+                </td>
+            
+            
+        </tr>
+    
+        <tr class="odd">
+            <td class="gene-name-cell">
+            	<div class="gene-name">
+            		Ear12
+            	</div>
+            	<div class="gene-links">
+            	<a href="http://www.ncbi.nlm.nih.gov/gene?term=Ear12" target="_blank"
+            		>Entrez</a>
+            	<a href="http://amigo.geneontology.org/cgi-bin/amigo/search.cgi?search_query=Ear12&amp;search_constraint=gp&amp;action=new-search" target="_blank"
+            		>GO</a>
+            	<a href="http://www.ncbi.nlm.nih.gov/nuccore?term=NM_001012766.1" target="_blank"
+            		>Nuccore</a>
+            	</div>
+            </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div down-regulated"
+                        style="opacity: 0.09">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div up-regulated"
+                        style="opacity: 0.06">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div up-regulated"
+                        style="opacity: 0.91">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div down-regulated"
+                        style="opacity: 0.01">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div down-regulated"
+                        style="opacity: 0.02">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div up-regulated"
+                        style="opacity: 0.29">&nbsp;</div>
+                </td>
+            
+            
+                <td class="heat-map-cell-text">
+                    1.8680 (365.02%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    -0.4516 (73.12%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    -0.2511 (84.03%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    -0.2265 (85.47%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    0.2006 (114.91%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    0.2251 (116.89%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    0.0246 (101.72%)
+                </td>
+            
+            
+        </tr>
+    
+        <tr class="odd">
+            <td class="gene-name-cell">
+            	<div class="gene-name">
+            		Ear10
+            	</div>
+            	<div class="gene-links">
+            	<a href="http://www.ncbi.nlm.nih.gov/gene?term=Ear10" target="_blank"
+            		>Entrez</a>
+            	<a href="http://amigo.geneontology.org/cgi-bin/amigo/search.cgi?search_query=Ear10&amp;search_constraint=gp&amp;action=new-search" target="_blank"
+            		>GO</a>
+            	<a href="http://www.ncbi.nlm.nih.gov/nuccore?term=NM_053112.1" target="_blank"
+            		>Nuccore</a>
+            	</div>
+            </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div down-regulated"
+                        style="opacity: 0.16">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div up-regulated"
+                        style="opacity: 0.04">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div up-regulated"
+                        style="opacity: 0.88">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div down-regulated"
+                        style="opacity: 0.09">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div down-regulated"
+                        style="opacity: 0.04">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div up-regulated"
+                        style="opacity: 0.26">&nbsp;</div>
+                </td>
+            
+            
+                <td class="heat-map-cell-text">
+                    1.8501 (360.51%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    -0.5754 (67.11%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    -0.2072 (86.62%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    -0.3627 (77.77%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    0.3682 (129.07%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    0.2127 (115.89%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    -0.1555 (89.78%)
+                </td>
+            
+            
+        </tr>
+    
+        <tr class="odd">
+            <td class="gene-name-cell">
+            	<div class="gene-name">
+            		Ear4
+            	</div>
+            	<div class="gene-links">
+            	<a href="http://www.ncbi.nlm.nih.gov/gene?term=Ear4" target="_blank"
+            		>Entrez</a>
+            	<a href="http://amigo.geneontology.org/cgi-bin/amigo/search.cgi?search_query=Ear4&amp;search_constraint=gp&amp;action=new-search" target="_blank"
+            		>GO</a>
+            	<a href="http://www.ncbi.nlm.nih.gov/nuccore?term=NM_001017422.1" target="_blank"
+            		>Nuccore</a>
+            	</div>
+            </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div down-regulated"
+                        style="opacity: 0.21">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div up-regulated"
+                        style="opacity: 0.10">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div up-regulated"
+                        style="opacity: 1.00">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div down-regulated"
+                        style="opacity: 0.05">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div down-regulated"
+                        style="opacity: 0.01">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div up-regulated"
+                        style="opacity: 0.22">&nbsp;</div>
+                </td>
+            
+            
+                <td class="heat-map-cell-text">
+                    2.5052 (567.71%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    -0.9222 (52.77%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    -0.4817 (71.62%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    -0.6037 (65.81%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    0.4406 (135.71%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    0.3185 (124.71%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    -0.1220 (91.89%)
+                </td>
+            
+            
+        </tr>
+    
+        <tr class="even">
+            <td class="gene-name-cell">
+            	<div class="gene-name">
+            		Tgm2
+            	</div>
+            	<div class="gene-links">
+            	<a href="http://www.ncbi.nlm.nih.gov/gene?term=Tgm2" target="_blank"
+            		>Entrez</a>
+            	<a href="http://amigo.geneontology.org/cgi-bin/amigo/search.cgi?search_query=Tgm2&amp;search_constraint=gp&amp;action=new-search" target="_blank"
+            		>GO</a>
+            	<a href="http://www.ncbi.nlm.nih.gov/nuccore?term=NM_009373.3" target="_blank"
+            		>Nuccore</a>
+            	</div>
+            </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div up-regulated"
+                        style="opacity: 0.45">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div up-regulated"
+                        style="opacity: 0.48">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div up-regulated"
+                        style="opacity: 0.41">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div up-regulated"
+                        style="opacity: 0.62">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div up-regulated"
+                        style="opacity: 0.61">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div up-regulated"
+                        style="opacity: 0.12">&nbsp;</div>
+                </td>
+            
+            
+                <td class="heat-map-cell-text">
+                    0.8786 (183.86%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    -0.0766 (94.83%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    -0.5045 (70.49%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    -0.4880 (71.30%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    -0.4279 (74.33%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    -0.4114 (75.19%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    0.0165 (101.15%)
+                </td>
+            
+            
+        </tr>
+    
+        <tr class="even">
+            <td class="gene-name-cell">
+            	<div class="gene-name">
+            		Dusp6
+            	</div>
+            	<div class="gene-links">
+            	<a href="http://www.ncbi.nlm.nih.gov/gene?term=Dusp6" target="_blank"
+            		>Entrez</a>
+            	<a href="http://amigo.geneontology.org/cgi-bin/amigo/search.cgi?search_query=Dusp6&amp;search_constraint=gp&amp;action=new-search" target="_blank"
+            		>GO</a>
+            	<a href="http://www.ncbi.nlm.nih.gov/nuccore?term=NM_026268.1" target="_blank"
+            		>Nuccore</a>
+            	</div>
+            </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div up-regulated"
+                        style="opacity: 0.39">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div up-regulated"
+                        style="opacity: 0.46">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div up-regulated"
+                        style="opacity: 0.26">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div up-regulated"
+                        style="opacity: 0.22">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div up-regulated"
+                        style="opacity: 0.18">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div down-regulated"
+                        style="opacity: 0.02">&nbsp;</div>
+                </td>
+            
+            
+                <td class="heat-map-cell-text">
+                    0.8535 (180.69%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    -0.2218 (85.75%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    0.5035 (141.76%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    0.6431 (156.16%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    0.7253 (165.33%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    0.8649 (182.12%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    0.1396 (110.16%)
+                </td>
+            
+            
+        </tr>
+    
+        <tr class="even">
+            <td class="gene-name-cell">
+            	<div class="gene-name">
+            		S100a8
+            	</div>
+            	<div class="gene-links">
+            	<a href="http://www.ncbi.nlm.nih.gov/gene?term=S100a8" target="_blank"
+            		>Entrez</a>
+            	<a href="http://amigo.geneontology.org/cgi-bin/amigo/search.cgi?search_query=S100a8&amp;search_constraint=gp&amp;action=new-search" target="_blank"
+            		>GO</a>
+            	<a href="http://www.ncbi.nlm.nih.gov/nuccore?term=NM_013650.2" target="_blank"
+            		>Nuccore</a>
+            	</div>
+            </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div up-regulated"
+                        style="opacity: 0.28">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div up-regulated"
+                        style="opacity: 0.59">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div up-regulated"
+                        style="opacity: 0.19">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div up-regulated"
+                        style="opacity: 0.26">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div up-regulated"
+                        style="opacity: 0.34">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div up-regulated"
+                        style="opacity: 0.04">&nbsp;</div>
+                </td>
+            
+            
+                <td class="heat-map-cell-text">
+                    0.4702 (138.53%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    -0.9278 (52.57%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    0.0408 (102.87%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    -0.1896 (87.69%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    0.9687 (195.70%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    0.7382 (166.81%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    -0.2304 (85.24%)
+                </td>
+            
+            
+        </tr>
+    
+        <tr class="odd">
+            <td class="gene-name-cell">
+            	<div class="gene-name">
+            		Gngt2
+            	</div>
+            	<div class="gene-links">
+            	<a href="http://www.ncbi.nlm.nih.gov/gene?term=Gngt2" target="_blank"
+            		>Entrez</a>
+            	<a href="http://amigo.geneontology.org/cgi-bin/amigo/search.cgi?search_query=Gngt2&amp;search_constraint=gp&amp;action=new-search" target="_blank"
+            		>GO</a>
+            	<a href="http://www.ncbi.nlm.nih.gov/nuccore?term=NM_001038664.2" target="_blank"
+            		>Nuccore</a>
+            	</div>
+            </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div down-regulated"
+                        style="opacity: 0.16">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div up-regulated"
+                        style="opacity: 0.11">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div up-regulated"
+                        style="opacity: 0.23">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div down-regulated"
+                        style="opacity: 0.32">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div down-regulated"
+                        style="opacity: 0.21">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div up-regulated"
+                        style="opacity: 0.12">&nbsp;</div>
+                </td>
+            
+            
+                <td class="heat-map-cell-text">
+                    0.3293 (125.64%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    -0.8231 (56.52%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    0.4905 (140.50%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    0.1471 (110.74%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    1.3136 (248.56%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    0.9702 (195.91%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    -0.3434 (78.82%)
+                </td>
+            
+            
+        </tr>
+    
+        <tr class="odd">
+            <td class="gene-name-cell">
+            	<div class="gene-name">
+            		Acsl3
+            	</div>
+            	<div class="gene-links">
+            	<a href="http://www.ncbi.nlm.nih.gov/gene?term=Acsl3" target="_blank"
+            		>Entrez</a>
+            	<a href="http://amigo.geneontology.org/cgi-bin/amigo/search.cgi?search_query=Acsl3&amp;search_constraint=gp&amp;action=new-search" target="_blank"
+            		>GO</a>
+            	<a href="http://www.ncbi.nlm.nih.gov/nuccore?term=NM_028817.2" target="_blank"
+            		>Nuccore</a>
+            	</div>
+            </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div down-regulated"
+                        style="opacity: 0.23">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div down-regulated"
+                        style="opacity: 0.16">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div up-regulated"
+                        style="opacity: 0.15">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div down-regulated"
+                        style="opacity: 0.24">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div down-regulated"
+                        style="opacity: 0.21">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div down-regulated"
+                        style="opacity: 0.13">&nbsp;</div>
+                </td>
+            
+            
+                <td class="heat-map-cell-text">
+                    0.8334 (178.19%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    -0.1876 (87.80%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    0.0299 (102.09%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    -0.0544 (96.30%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    0.2175 (116.27%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    0.1332 (109.67%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    -0.0843 (94.32%)
+                </td>
+            
+            
+        </tr>
+    
+        <tr class="odd">
+            <td class="gene-name-cell">
+            	<div class="gene-name">
+            		Fos
+            	</div>
+            	<div class="gene-links">
+            	<a href="http://www.ncbi.nlm.nih.gov/gene?term=Fos" target="_blank"
+            		>Entrez</a>
+            	<a href="http://amigo.geneontology.org/cgi-bin/amigo/search.cgi?search_query=Fos&amp;search_constraint=gp&amp;action=new-search" target="_blank"
+            		>GO</a>
+            	<a href="http://www.ncbi.nlm.nih.gov/nuccore?term=NM_010234.2" target="_blank"
+            		>Nuccore</a>
+            	</div>
+            </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div down-regulated"
+                        style="opacity: 0.35">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div down-regulated"
+                        style="opacity: 0.23">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div up-regulated"
+                        style="opacity: 0.45">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div down-regulated"
+                        style="opacity: 0.33">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div down-regulated"
+                        style="opacity: 0.31">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div up-regulated"
+                        style="opacity: 0.14">&nbsp;</div>
+                </td>
+            
+            
+                <td class="heat-map-cell-text">
+                    0.9458 (192.62%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    -0.3658 (77.60%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    -0.0578 (96.07%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    -0.1379 (90.88%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    0.3080 (123.80%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    0.2279 (117.12%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    -0.0801 (94.60%)
+                </td>
+            
+            
+        </tr>
+    
+        <tr class="odd">
+            <td class="gene-name-cell">
+            	<div class="gene-name">
+            		Arg1
+            	</div>
+            	<div class="gene-links">
+            	<a href="http://www.ncbi.nlm.nih.gov/gene?term=Arg1" target="_blank"
+            		>Entrez</a>
+            	<a href="http://amigo.geneontology.org/cgi-bin/amigo/search.cgi?search_query=Arg1&amp;search_constraint=gp&amp;action=new-search" target="_blank"
+            		>GO</a>
+            	<a href="http://www.ncbi.nlm.nih.gov/nuccore?term=NM_007482.2" target="_blank"
+            		>Nuccore</a>
+            	</div>
+            </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div down-regulated"
+                        style="opacity: 0.52">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div down-regulated"
+                        style="opacity: 0.25">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div up-regulated"
+                        style="opacity: 0.60">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div down-regulated"
+                        style="opacity: 0.49">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div down-regulated"
+                        style="opacity: 0.53">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div down-regulated"
+                        style="opacity: 0.16">&nbsp;</div>
+                </td>
+            
+            
+                <td class="heat-map-cell-text">
+                    2.2809 (485.98%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    -0.8115 (56.98%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    -0.1070 (92.85%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    0.0274 (101.92%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    0.7045 (162.96%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    0.8389 (178.87%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    0.1344 (109.76%)
+                </td>
+            
+            
+        </tr>
+    
+        <tr class="even">
+            <td class="gene-name-cell">
+            	<div class="gene-name">
+            		Il4i1
+            	</div>
+            	<div class="gene-links">
+            	<a href="http://www.ncbi.nlm.nih.gov/gene?term=Il4i1" target="_blank"
+            		>Entrez</a>
+            	<a href="http://amigo.geneontology.org/cgi-bin/amigo/search.cgi?search_query=Il4i1&amp;search_constraint=gp&amp;action=new-search" target="_blank"
+            		>GO</a>
+            	<a href="http://www.ncbi.nlm.nih.gov/nuccore?term=NM_010215.2" target="_blank"
+            		>Nuccore</a>
+            	</div>
+            </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div up-regulated"
+                        style="opacity: 0.95">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div up-regulated"
+                        style="opacity: 0.62">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div up-regulated"
+                        style="opacity: 0.10">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div up-regulated"
+                        style="opacity: 1.00">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div up-regulated"
+                        style="opacity: 1.00">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div down-regulated"
+                        style="opacity: 0.03">&nbsp;</div>
+                </td>
+            
+            
+                <td class="heat-map-cell-text">
+                    0.3877 (130.83%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    0.9760 (196.70%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    -1.8499 (27.74%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    -1.6458 (31.96%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    -2.8259 (14.10%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    -2.6218 (16.25%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    0.2041 (115.20%)
+                </td>
+            
+            
+        </tr>
+    
+        <tr class="even">
+            <td class="gene-name-cell">
+            	<div class="gene-name">
+            		Hamp
+            	</div>
+            	<div class="gene-links">
+            	<a href="http://www.ncbi.nlm.nih.gov/gene?term=Hamp" target="_blank"
+            		>Entrez</a>
+            	<a href="http://amigo.geneontology.org/cgi-bin/amigo/search.cgi?search_query=Hamp&amp;search_constraint=gp&amp;action=new-search" target="_blank"
+            		>GO</a>
+            	<a href="http://www.ncbi.nlm.nih.gov/nuccore?term=NM_032541.1" target="_blank"
+            		>Nuccore</a>
+            	</div>
+            </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div up-regulated"
+                        style="opacity: 0.55">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div up-regulated"
+                        style="opacity: 0.91">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div down-regulated"
+                        style="opacity: 0.01">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div up-regulated"
+                        style="opacity: 1.00">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div up-regulated"
+                        style="opacity: 1.00">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div up-regulated"
+                        style="opacity: 0.01">&nbsp;</div>
+                </td>
+            
+            
+                <td class="heat-map-cell-text">
+                    -0.0650 (95.59%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    -1.0851 (47.14%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    -2.8698 (13.68%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    -3.1653 (11.15%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    -1.7847 (29.02%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    -2.0802 (23.65%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    -0.2955 (81.48%)
+                </td>
+            
+            
+        </tr>
+    
+        <tr class="even">
+            <td class="gene-name-cell">
+            	<div class="gene-name">
+            		LOC100048556
+            	</div>
+            	<div class="gene-links">
+            	<a href="http://www.ncbi.nlm.nih.gov/gene?term=LOC100048556" target="_blank"
+            		>Entrez</a>
+            	<a href="http://amigo.geneontology.org/cgi-bin/amigo/search.cgi?search_query=LOC100048556&amp;search_constraint=gp&amp;action=new-search" target="_blank"
+            		>GO</a>
+            	<a href="http://www.ncbi.nlm.nih.gov/nuccore?term=XM_001480891.1" target="_blank"
+            		>Nuccore</a>
+            	</div>
+            </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div up-regulated"
+                        style="opacity: 1.00">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div up-regulated"
+                        style="opacity: 0.88">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div down-regulated"
+                        style="opacity: 0.05">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div up-regulated"
+                        style="opacity: 1.00">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div up-regulated"
+                        style="opacity: 1.00">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div down-regulated"
+                        style="opacity: 0.06">&nbsp;</div>
+                </td>
+            
+            
+                <td class="heat-map-cell-text">
+                    0.0153 (101.06%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    0.8749 (183.39%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    -1.8519 (27.70%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    -1.5016 (35.32%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    -2.7268 (15.11%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    -2.3765 (19.26%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    0.3503 (127.48%)
+                </td>
+            
+            
+        </tr>
+    
+        <tr class="odd">
+            <td class="gene-name-cell">
+            	<div class="gene-name">
+            		9-Sep
+            	</div>
+            	<div class="gene-links">
+            	<a href="http://www.ncbi.nlm.nih.gov/gene?term=9-Sep" target="_blank"
+            		>Entrez</a>
+            	<a href="http://amigo.geneontology.org/cgi-bin/amigo/search.cgi?search_query=9-Sep&amp;search_constraint=gp&amp;action=new-search" target="_blank"
+            		>GO</a>
+            	<a href="http://www.ncbi.nlm.nih.gov/nuccore?term=NM_017380.1" target="_blank"
+            		>Nuccore</a>
+            	</div>
+            </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div down-regulated"
+                        style="opacity: 0.62">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div down-regulated"
+                        style="opacity: 0.28">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div up-regulated"
+                        style="opacity: 0.40">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div down-regulated"
+                        style="opacity: 0.50">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div down-regulated"
+                        style="opacity: 0.42">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div up-regulated"
+                        style="opacity: 0.33">&nbsp;</div>
+                </td>
+            
+            
+                <td class="heat-map-cell-text">
+                    0.2297 (117.26%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    -1.0062 (49.79%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    -0.3589 (77.98%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    -0.5812 (66.84%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    0.6473 (156.63%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    0.4250 (134.26%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    -0.2224 (85.72%)
+                </td>
+            
+            
+        </tr>
+    
+        <tr class="odd">
+            <td class="gene-name-cell">
+            	<div class="gene-name">
+            		4931406C07Rik
+            	</div>
+            	<div class="gene-links">
+            	<a href="http://www.ncbi.nlm.nih.gov/gene?term=4931406C07Rik" target="_blank"
+            		>Entrez</a>
+            	<a href="http://amigo.geneontology.org/cgi-bin/amigo/search.cgi?search_query=4931406C07Rik&amp;search_constraint=gp&amp;action=new-search" target="_blank"
+            		>GO</a>
+            	<a href="http://www.ncbi.nlm.nih.gov/nuccore?term=NM_133732.2" target="_blank"
+            		>Nuccore</a>
+            	</div>
+            </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div down-regulated"
+                        style="opacity: 0.61">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div down-regulated"
+                        style="opacity: 0.40">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div up-regulated"
+                        style="opacity: 0.62">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div down-regulated"
+                        style="opacity: 0.39">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div down-regulated"
+                        style="opacity: 0.31">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div up-regulated"
+                        style="opacity: 0.25">&nbsp;</div>
+                </td>
+            
+            
+                <td class="heat-map-cell-text">
+                    1.1119 (216.13%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    -0.6078 (65.62%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    -0.6602 (63.28%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    -0.8759 (54.49%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    -0.0524 (96.43%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    -0.2681 (83.04%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    -0.2157 (86.11%)
+                </td>
+            
+            
+        </tr>
+    
+        <tr class="even">
+            <td class="gene-name-cell">
+            	<div class="gene-name">
+            		Galnt9
+            	</div>
+            	<div class="gene-links">
+            	<a href="http://www.ncbi.nlm.nih.gov/gene?term=Galnt9" target="_blank"
+            		>Entrez</a>
+            	<a href="http://amigo.geneontology.org/cgi-bin/amigo/search.cgi?search_query=Galnt9&amp;search_constraint=gp&amp;action=new-search" target="_blank"
+            		>GO</a>
+            	<a href="http://www.ncbi.nlm.nih.gov/nuccore?term=NM_198306.1" target="_blank"
+            		>Nuccore</a>
+            	</div>
+            </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div down-regulated"
+                        style="opacity: 0.59">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div down-regulated"
+                        style="opacity: 0.56">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div down-regulated"
+                        style="opacity: 0.28">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div down-regulated"
+                        style="opacity: 0.73">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div down-regulated"
+                        style="opacity: 0.77">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div up-regulated"
+                        style="opacity: 0.05">&nbsp;</div>
+                </td>
+            
+            
+                <td class="heat-map-cell-text">
+                    -0.9882 (50.41%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    -0.0813 (94.52%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    0.4197 (133.76%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    0.5444 (145.84%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    0.5010 (141.51%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    0.6257 (154.29%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    0.1247 (109.03%)
+                </td>
+            
+            
+        </tr>
+    
+        <tr class="even">
+            <td class="gene-name-cell">
+            	<div class="gene-name">
+            		Il6ra
+            	</div>
+            	<div class="gene-links">
+            	<a href="http://www.ncbi.nlm.nih.gov/gene?term=Il6ra" target="_blank"
+            		>Entrez</a>
+            	<a href="http://amigo.geneontology.org/cgi-bin/amigo/search.cgi?search_query=Il6ra&amp;search_constraint=gp&amp;action=new-search" target="_blank"
+            		>GO</a>
+            	<a href="http://www.ncbi.nlm.nih.gov/nuccore?term=NM_010559.2" target="_blank"
+            		>Nuccore</a>
+            	</div>
+            </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div down-regulated"
+                        style="opacity: 0.53">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div down-regulated"
+                        style="opacity: 0.57">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div down-regulated"
+                        style="opacity: 0.19">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div down-regulated"
+                        style="opacity: 0.49">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div down-regulated"
+                        style="opacity: 0.44">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div up-regulated"
+                        style="opacity: 0.10">&nbsp;</div>
+                </td>
+            
+            
+                <td class="heat-map-cell-text">
+                    -0.8669 (54.83%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    0.1257 (109.11%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    -0.1317 (91.28%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    -0.2710 (82.88%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    -0.2574 (83.66%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    -0.3967 (75.96%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    -0.1393 (90.80%)
+                </td>
+            
+            
+        </tr>
+    
+        <tr class="odd">
+            <td class="gene-name-cell">
+            	<div class="gene-name">
+            		Slco2b1
+            	</div>
+            	<div class="gene-links">
+            	<a href="http://www.ncbi.nlm.nih.gov/gene?term=Slco2b1" target="_blank"
+            		>Entrez</a>
+            	<a href="http://amigo.geneontology.org/cgi-bin/amigo/search.cgi?search_query=Slco2b1&amp;search_constraint=gp&amp;action=new-search" target="_blank"
+            		>GO</a>
+            	<a href="http://www.ncbi.nlm.nih.gov/nuccore?term=NM_175316.3" target="_blank"
+            		>Nuccore</a>
+            	</div>
+            </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div down-regulated"
+                        style="opacity: 1.00">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div down-regulated"
+                        style="opacity: 1.00">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div up-regulated"
+                        style="opacity: 0.51">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div down-regulated"
+                        style="opacity: 1.00">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div down-regulated"
+                        style="opacity: 1.00">&nbsp;</div>
+                </td>
+            
+                <td class="heat-map-cell">
+                    <div class="heat-map-div up-regulated"
+                        style="opacity: 0.21">&nbsp;</div>
+                </td>
+            
+            
+                <td class="heat-map-cell-text">
+                    0.9010 (186.74%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    -0.3361 (79.22%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    0.5243 (143.82%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    0.5501 (146.42%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    0.8604 (181.55%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    0.8862 (184.83%)
+                </td>
+            
+                <td class="heat-map-cell-text">
+                    0.0258 (101.81%)
+                </td>
+            
+            
+        </tr>
+    
+</table>
+
+            </div>  
+    </div>
+
+</div>
+</body>
+</html> 

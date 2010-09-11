@@ -1,0 +1,62 @@
+/* For heat maps */
+.heat-map, .legend {
+	border-spacing: 0px 0px;
+	border-collapse: collapse;
+	font-size: 10px;
+}
+
+table.legend { margin-left: 325px; }
+
+.legend td {
+    text-align: center;
+    width: 25px;	
+}
+.legend .color-coded-cell td { background: #000000; }
+
+.gene-name-cell { 
+	min-width: 175px;
+	white-space: nowrap; 
+}
+
+.annotation-cell { 
+	min-width: 175px;
+	white-space: nowrap;
+	overflow: hidden; 
+}
+
+tr.odd .gene-name-cell,
+tr.odd .heat-map-cell-text,
+tr.odd .annotation-cell { background: #EFEFEF; }
+
+.heat-map-cell { 
+	background: #000000; 
+    min-height: 10px;
+    min-width: 100px;	
+}
+
+.heat-map-cell-text { 
+    min-height: 10px;
+    min-width: 96px;	
+    padding: 0px 2px;	
+}
+
+.white { 
+	background: #FFFFFF; 
+}
+
+.heat-map-div {
+	height: 100%;
+	width: 100%;
+}
+
+.up-regulated { background: #FF0000; }
+.down-regulated { background: #0FFF00; }
+
+.gene-name {
+	float: left;
+}
+
+.gene-links {
+	float: right;
+	margin-right: 5px;
+}
