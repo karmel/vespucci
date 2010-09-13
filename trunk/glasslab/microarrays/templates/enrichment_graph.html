@@ -1,0 +1,42 @@
+{% extends 'base_template.html' %}
+
+{% block title %} Microarrays:: Enrichment Graph {% endblock %}
+
+{% block content %}
+
+<div class="graph-title">
+	<h1>Enriched Ontologies</h1>
+</div>
+
+<div class="enrichment-graph-container">
+	<div class="y-axis-labels">
+		<span class="min-distance">{{ min_distance|floatformat:0 }}</span>
+		<span class="y-axis-label">Distance from Root</span>
+		<span class="max-distance">{{ max_distance|floatformat:0 }}</span>
+	</div>
+	
+	<div class="enrichment-graph">
+		{% for go_id, term, distance, count, p_val,
+			dist_percent, count_percent, p_percent in enriched %}
+		<div class="enriched-term" 
+			style="top: {{ dist_percent|floatformat:"2" }}%; 
+					left: {{ p_percent|floatformat:"2" }}%;
+					opacity: {{ count_percent|floatformat:"2" }};"
+			title="Distance from root: {{ distance"floatformat:0 }}; p-value: {{ p_val }}"
+			>		
+				<a href="http://amigo.geneontology.org/cgi-bin/amigo/term-details.cgi?term={{ go_id }}" 
+					target="_blank">{{ term }}</a>
+		</div>
+		{% endfor %}  
+	</div>
+	
+	<div class="x-axis-labels">
+		<span class="min-distance">{{ min_p }}</span>
+		<span class="x-axis-label">P value</span>
+		<span class="max-distance">{{ max_p }}</span>
+	</div>
+
+</div>
+
+
+{% endblock %}
