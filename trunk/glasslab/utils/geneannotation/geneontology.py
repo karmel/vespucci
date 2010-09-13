@@ -63,31 +63,12 @@ class GOAccessor(object):
         self.close_connection()
         return result
     
-    def get_ancestors_for_genes_indexed(self, results=None, genes=None, batch_size=1000, min_count=10):
-        ''' 
-        Returns a dictionary of GO ID: (term name, distance from root, count)
-        for passed list of genes. So:: 
-
-            [('GO:123','nuclear activity',5,23)]
-        
-        becomes::
-        
-            {'GO:123': ('nuclear activity',5,23)}
-        
-        Uses either passed genes or an already-retrieved result.
-        '''
-        if results is None:
-            results = self.get_ancestors_for_genes(genes, 
-                                                   batch_size=batch_size, 
-                                                   min_count=min_count)
-        in_columns = zip(*results)
-        indexed = dict(zip(in_columns[0], zip(*in_columns[1:])))
-        return indexed
-    
     def get_ancestors_for_genes(self, genes, batch_size=1000, min_count=10):
         '''
-        Returns a list of tuples of distance from root, ancestor label, ancester GO ID
-        for the passed list of gene symbols.
+        Returns a dictionary of tuples of distance from root, ancestor label, count
+        for the passed list of gene symbols, indexed by GO ID::
+        
+            {'GO:123': ('nuclear activity',5,23)}
         
         Limits to Homo sapiens or Mus musculus trees from the UniProt KB db.
         
@@ -103,10 +84,15 @@ class GOAccessor(object):
         genes = list(set(genes))
         
         # Batch out the requests
-        results = []
+        results = {}
         for x in xrange(0, len(genes), batch_size):
             subset = genes[x:(x+batch_size)]
-            if subset: results += list(self._get_ancestors_in_batches(subset, min_count=min_count))
+            if subset: sub_results = self._get_ancestors_in_batches(subset, min_count=min_count)
+            for sub_result in sub_results:
+                try: 
+                    # If GO ID already exists, just add in the count; other data is the same.
+                    results[sub_result[0]][-1:][0] += sub_result[-1:][0]
+                except KeyError: results[0] = sub_result[1:]
         return results 
             
     def _get_ancestors_in_batches(self, genes, min_count=10):

@@ -36,10 +36,9 @@ class MicroarrayCategorizer(object):
         if not self.go_accessor: self.go_accessor = GOAccessor()
         
         gene_names = [g.gene_name for g in self.subset_analyzers[0].genes]
-        results = self.go_accessor.get_ancestors_for_genes(gene_names)
-        results_array = numpy.array(results)
+        self.background_ontologies = self.go_accessor.get_ancestors_for_genes(gene_names)
+        results_array = numpy.array(self.background_ontologies.values())
         self.background_term_count = sum(numpy.float_(results_array[:,-1]))
-        self.background_ontologies = self.go_accessor.get_ancestors_for_genes_indexed(results)
 
     def set_foreground_ontology(self, genes):
         '''
@@ -49,10 +48,9 @@ class MicroarrayCategorizer(object):
         if not self.go_accessor: self.go_accessor = GOAccessor()
         
         gene_names = [g.gene_name for g in genes]
-        results = self.go_accessor.get_ancestors_for_genes(gene_names)
-        results_array = numpy.array(results)
+        self.foreground_ontologies = self.go_accessor.get_ancestors_for_genes(gene_names)
+        results_array = numpy.array(self.foreground_ontologies.values())
         self.foreground_term_count = sum(numpy.float_(results_array[:,-1]))
-        self.foreground_ontologies = self.go_accessor.get_ancestors_for_genes_indexed(results)
         
     def get_enriched_genes(self):
         '''
