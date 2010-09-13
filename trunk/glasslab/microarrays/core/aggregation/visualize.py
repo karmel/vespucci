@@ -7,6 +7,8 @@ from __future__ import division
 import os
 from glasslab.utils.geneannotation.genbank import GeneAnotator
 import numpy
+import math
+from random import randint
 
 class MicroarrayVisualizer(object):
     '''
@@ -117,32 +119,43 @@ class MicroarrayVisualizer(object):
         enriched_array = numpy.array(enriched.values())
         # Pull out numeric values for sorting.
         val_array = numpy.float_(enriched_array[:,-3:])
+        val_array = val_array.view(','.join(['float64']*val_array.shape[1]))
         
-        # Sort by distance ascending, p val ascending
-        ordered_indices = numpy.argsort(val_array.view(','.join(['float64']*val_array.shape[1])), 
-                                        order=['f0','f1'], axis=0)
-        enriched_array = enriched_array[ordered_indices]
+        # Sort by distance ascending, p val ascending,
+        # then reverse order to go descending
+        ordered_indices = numpy.argsort(val_array,order=['f0','f2'], axis=0)
+        enriched_array = enriched_array[ordered_indices.flatten()][::-1]
         
-        min_distance = enriched_array[0][2]
-        max_distance = enriched_array[-1:][0][2]
-        min_count = enriched_array[0][3]
-        max_count = enriched_array[-1:][0][3]
-        min_p = enriched_array[0][4]
-        max_p = enriched_array[-1:][0][4]
+        ordered_by_dist = numpy.sort(val_array, order=['f0'], axis=0)
+        min_distance = ordered_by_dist[0][0][0]
+        max_distance = ordered_by_dist[-1:][0][0][0] # Extra 0 index because the val array view returns wrapped arrays
+        ordered_by_count = numpy.sort(val_array, order=['f1'], axis=0)
+        min_count = ordered_by_count[0][0][1] 
+        max_count = ordered_by_count[-1:][0][0][1]
+        ordered_by_p = numpy.sort(val_array, order=['f2'], axis=0)
+        # Use logarithmic scale for p vals
+        min_p = ordered_by_p[0][0][2]
+        max_p = ordered_by_p[-1:][0][0][2]
+        p_zero = abs(math.log(min_p,10)) # This becomes '0' for p_val
+        max_p_adj = math.log(max_p,10) + p_zero
         
         for_display = []
         for data_row in enriched_array:
             # Modify to get display percentages for each val
-            dist_percent = data_row[2]/(max_distance - min_distance)
-            count_percent = data_row[3]/(max_count - min_count)
-            p_percent = data_row[4]/(max_p - min_p)
-            for_display.append(data_row.tolist() + [dist_percent, count_percent, p_percent])
+            # We stagger the distance percent up to 10% with a random val
+            # so that the blocks are easier to distinguish
+            count_percent = (float(data_row[3]) - min_count)/(max_count - min_count)
+            p_percent = (math.log(float(data_row[4]),10) + p_zero)/max_p_adj
+            for_display.append(data_row.tolist() + [count_percent, # Opacity is expressed as a decimal-percent 
+                                                    p_percent*100])
             
         context = { 'enriched': for_display, 
                    'min_distance': min_distance,
                    'max_distance': max_distance,
                    'min_p': min_p,
                    'max_p': max_p,
+                   'min_count':min_count,
+                   'max_count':max_count,
                    }
         filename = '%senrichment_graph_output.html' % (prefix and prefix + '_' or '')
         
@@ -152,9 +165,10 @@ class MicroarrayVisualizer(object):
         from django.template.loader import render_to_string
         from django.conf import settings
         from glasslab import microarrays
+        from glasslab.microarrays import core as ma_core
         
         # Set up templates
-        main_pkg_dir = os.path.relpath(os.path.dirname(microarrays.__file__),__file__)
+        main_pkg_dir = os.path.relpath(os.path.dirname(microarrays.__file__),ma_core.__file__)
         templates_dir = os.path.join(main_pkg_dir,'templates')
         # Enable using Django templates without the DJANGO_SETTINGS_MODULE setup
         try: settings.configure(TEMPLATE_DIRS = (templates_dir,))
@@ -174,3 +188,6 @@ class MicroarrayVisualizer(object):
         f = open(output_loc + '/' + filename,'w')
         f.write(html)
         f.close()
+
+    
+    

@@ -1,3 +1,6 @@
+/* Generic */
+.clear-both { clear: both; }
+
 /* For heat maps */
 .heat-map, .legend {
 	border-spacing: 0px 0px;
@@ -59,4 +62,83 @@ tr.odd .annotation-cell { background: #EFEFEF; }
 .gene-links {
 	float: right;
 	margin-right: 5px;
+}
+
+
+/* For enrichment graphs */
+.enrichment-graph {
+	width: 760px;
+	position: relative;
+	margin: 50px;
+}
+
+.y-axis-label {
+	-webkit-transform: rotate(-90deg); 
+	-moz-transform: rotate(-90deg);
+	filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=3);
+	display: block;
+	text-align: center;
+	width: 100%;
+	position: relative;
+	top: 100%;
+	left: -49%;
+}
+
+.min-distance {
+	position: relative;
+	top: -10%;
+}
+
+.max-distance {
+	position: relative;
+	top: 10%;
+}
+
+.max-p {
+	float: right;
+}
+
+.min-p {
+	float: left;
+}
+
+.x-axis-labels {
+	width: 100%;
+	text-align: center;
+}
+
+.count-legend-div {
+	float: left;
+}
+
+.count-legend-label {
+	float: left;
+	z-index: 10;
+	text-align: center;
+	margin: 0 5px;
+}
+
+.count-legend-bg {
+	background: #0044cc;
+	height: 20px;
+	min-width: 40px;
+}
+
+.enriched-term, .enriched-term-background {
+	height: 20px;
+	border: 1px solid #000000;
+}
+
+.enriched-term-background {
+	background: #0044cc;
+	width: 200px;
+}
+
+.enriched-term {
+	min-width: 200px;
+	white-space: nowrap;
+	text-align: center;
+	line-height: 10pt;
+	position: absolute;
+	font-size: 9pt;
 }
