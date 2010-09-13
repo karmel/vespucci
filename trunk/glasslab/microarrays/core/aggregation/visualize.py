@@ -3,8 +3,10 @@ Created on Sep 10, 2010
 
 @author: karmel
 '''
+from __future__ import division
 import os
 from glasslab.utils.geneannotation.genbank import GeneAnotator
+import numpy
 
 class MicroarrayVisualizer(object):
     '''
@@ -35,7 +37,7 @@ class MicroarrayVisualizer(object):
         samples, table_cells = self._generate_table_cells(clustered, 
                                                           include_differentials,
                                                           include_annotation)
-        self._output_file(output_dir, prefix, clustered, include_annotation,
+        self._output_heat_map(output_dir, prefix, clustered, include_annotation,
                           samples, table_cells)
     
     def _generate_table_cells(self, clustered, include_differentials, include_annotation):
@@ -93,7 +95,60 @@ class MicroarrayVisualizer(object):
         if not include_differentials: return []
         return ['%.4f (%.2f%%)' % (diff, (2**diff)*100) for diff in self.differentials[i]]
     
-    def _output_file(self, output_dir, prefix, clustered, include_annotation, samples, table_cells):
+    def _output_heat_map(self, output_dir, prefix, clustered, include_annotation, samples, table_cells):
+        context = {'samples': samples, 
+                 'table_cells': table_cells,
+                 'compared_samples': self.compared_samples,
+                 'include_annotation': include_annotation,}
+        filename = '%sheat_map_output%s.html' % (prefix and prefix + '_' or '',
+                                                  clustered and '_clustered' or '')
+        
+        self._output_file(output_dir, prefix, 'heat_map.html', context, filename)
+        
+    def draw_enriched_ontologies(self, output_dir='', prefix=''):
+        '''
+        Taking advantage of the gene ontology categorization
+        interface assumed on this class, draw a graph of enriched genes,
+        with distance from root on the y-axis, p-value on the x-axis,
+        and appearance count represented by color.
+        '''
+        # Enriched is a dict of go id: [go id, term, distance, count, p val]
+        enriched = self.get_enriched_genes()
+        enriched_array = numpy.array(enriched.values())
+        # Pull out numeric values for sorting.
+        val_array = numpy.float_(enriched_array[:,-3:])
+        
+        # Sort by distance ascending, p val ascending
+        ordered_indices = numpy.argsort(val_array.view(','.join(['float64']*val_array.shape[1])), 
+                                        order=['f0','f1'], axis=0)
+        enriched_array = enriched_array[ordered_indices]
+        
+        min_distance = enriched_array[0][2]
+        max_distance = enriched_array[-1:][0][2]
+        min_count = enriched_array[0][3]
+        max_count = enriched_array[-1:][0][3]
+        min_p = enriched_array[0][4]
+        max_p = enriched_array[-1:][0][4]
+        
+        for_display = []
+        for data_row in enriched_array:
+            # Modify to get display percentages for each val
+            dist_percent = data_row[2]/(max_distance - min_distance)
+            count_percent = data_row[3]/(max_count - min_count)
+            p_percent = data_row[4]/(max_p - min_p)
+            for_display.append(data_row.tolist() + [dist_percent, count_percent, p_percent])
+            
+        context = { 'enriched': for_display, 
+                   'min_distance': min_distance,
+                   'max_distance': max_distance,
+                   'min_p': min_p,
+                   'max_p': max_p,
+                   }
+        filename = '%senrichment_graph_output.html' % (prefix and prefix + '_' or '')
+        
+        self._output_file(output_dir, prefix, 'enrichment_graph.html', context, filename)
+        
+    def _output_file(self, output_dir, prefix, template_name, context, filename):
         from django.template.loader import render_to_string
         from django.conf import settings
         from glasslab import microarrays
@@ -107,19 +162,15 @@ class MicroarrayVisualizer(object):
             # 'Settings already configured'
             settings.TEMPLATE_DIRS = (templates_dir,)
         # Render html string
-        html = render_to_string('heat_map.html',{'samples': samples, 
-                                                 'table_cells': table_cells,
-                                                 'compared_samples': self.compared_samples,
-                                                 'include_annotation': include_annotation,
-                                                 'base_url': templates_dir + '/'})
-        filename = '/%sheat_map_output%s.html' % (prefix and prefix + '_' or '',
-                                                  clustered and '_clustered' or '')
+        context['base_url'] = templates_dir + '/'
+        html = render_to_string(template_name,context)
+        
         # Set up output directory
         output_loc = os.path.join(main_pkg_dir,'html_output')
         if prefix:
             output_loc = output_loc + '/' + (output_dir or prefix)
             if not os.path.exists(output_loc): os.mkdir(output_loc)
         # Save generated HTML to file
-        f = open(output_loc + filename,'w')
+        f = open(output_loc + '/' + filename,'w')
         f.write(html)
         f.close()

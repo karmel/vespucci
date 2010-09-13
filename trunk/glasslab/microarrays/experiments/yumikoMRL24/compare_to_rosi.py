@@ -140,7 +140,7 @@ if __name__ == '__main__':
             #if analyzer.test_samples is None: analyzer.split_samples()
             # Now, with samples split,
     
-    enriched = comparitor.get_enriched_genes()
+    comparitor.draw_enriched_ontologies(output_dir='yumikoMRL24', prefix='differential')
     '''    
     comparitor.draw_heat_map(output_dir='yumikoMRL24', prefix='compare_nathan_yumiko_differential_processes', 
                                 clustered=True, include_differentials=False,
