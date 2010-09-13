@@ -74,6 +74,6 @@ class MicroarrayCategorizer(object):
             bg_appearance = bg_info[-1:][0]/self.background_term_count
             p_val = binom_test(fg_info[-1:][0], n=self.foreground_term_count, p=bg_appearance)
             if p_val <= self.max_p_val:
-                enriched[go_id] = (fg_info[0],p_val)
+                enriched[go_id] = fg_info + [p_val]
         return enriched
             

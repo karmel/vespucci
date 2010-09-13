@@ -92,7 +92,7 @@ class GOAccessor(object):
                 try: 
                     # If GO ID already exists, just add in the count; other data is the same.
                     results[sub_result[0]][-1:][0] += sub_result[-1:][0]
-                except KeyError: results[0] = sub_result[1:]
+                except KeyError: results[sub_result[0]] = list(sub_result)
         return results 
             
     def _get_ancestors_in_batches(self, genes, min_count=10):
