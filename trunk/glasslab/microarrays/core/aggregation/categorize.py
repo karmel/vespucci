@@ -70,7 +70,11 @@ class MicroarrayCategorizer(object):
         if genes: self.set_foreground_ontology(genes)
         enriched = {}
         for go_id, fg_info in self.foreground_ontologies.items():
-            bg_info = self.background_ontologies[go_id]
+            try: bg_info = self.background_ontologies[go_id]
+            except KeyError:
+                # Term didn't make the cut for the background. 
+                # Assume the appearance in the foreground is the only occurence in the background 
+                bg_info = fg_info
             bg_appearance = bg_info[-1:][0]/self.background_term_count
             p_val = binom_test(fg_info[-1:][0], n=self.foreground_term_count, p=bg_appearance)
             if p_val <= self.max_p_val:

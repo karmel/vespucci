@@ -63,7 +63,7 @@ class GOAccessor(object):
         self.close_connection()
         return result
     
-    def get_ancestors_for_genes(self, genes, batch_size=1000, min_count=10):
+    def get_ancestors_for_genes(self, genes, batch_size=1000, min_count=5):
         '''
         Returns a dictionary of tuples of distance from root, ancestor label, count
         for the passed list of gene symbols, indexed by GO ID::

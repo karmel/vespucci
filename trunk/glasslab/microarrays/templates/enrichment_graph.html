@@ -39,7 +39,14 @@ Term appearance counts in data set:
 
 </div>
 <br class="clear-both" />
+<br class="clear-both" />
+<br class="clear-both" />
 <div class="enrichment-graph-container">
+	<div class="x-axis-labels">
+		<span class="min-p">{{ min_p }}</span>
+		<span class="x-axis-label">P-value (logarithmic scale)</span>
+		<span class="max-p">{{ max_p }}</span>
+	</div>
 	<span class="max-distance">{{ max_distance|floatformat }}</span>
 	<span class="y-axis-label">Distance from Root</span>
 	<div class="enrichment-graph">
@@ -51,10 +58,11 @@ Term appearance counts in data set:
 		</div>
 		<div class="enriched-term-background" 
 			style="margin-left: {{ p_percent|floatformat:"2" }}%;
-					opacity: {{ count_percent|floatformat:"2" }};"
+					opacity: {{ count_percent|floatformat:"2" }};">
+			<a href="http://amigo.geneontology.org/cgi-bin/amigo/term-details.cgi?term={{ go_id }}"
+			target="_blank"
 			title="{{ term }}:: Distance from root: {{ distance|floatformat }}; p-value: {{ p_val }}"
-			onclick="window.open('http://amigo.geneontology.org/cgi-bin/amigo/term-details.cgi?term={{ go_id }}','go-term-{{ forloop.counter }}')"	
-			>
+			>&nbsp;</a>
 		</div>
 		{% endfor %}  
 	</div>

@@ -69,7 +69,9 @@ tr.odd .annotation-cell { background: #EFEFEF; }
 .enrichment-graph {
 	width: 760px;
 	position: relative;
-	margin: 50px;
+	margin: 0px 50px;
+	border: 1px solid #CCC;
+	border-right: none;
 }
 
 .y-axis-label {
@@ -132,6 +134,12 @@ tr.odd .annotation-cell { background: #EFEFEF; }
 .enriched-term-background {
 	background: #0044cc;
 	width: 200px;
+}
+
+.enriched-term-background a {
+	height: 100%;
+	width: 100%;
+	text-decoration: none;
 }
 
 .enriched-term {
