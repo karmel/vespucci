@@ -269,4 +269,47 @@ class MicroarrayAggregator(MicroarrayVisualizer, MicroarrayCategorizer):
             clusters.append(cluster)
         return clusters
      
-
+    def output_to_file(self, original=True, normalized=False, 
+                       mean_log_transformations=True, differentials=True,
+                       filtered=False):
+        '''
+        Create and save a CSV file with raw data values.
+        
+        Can be filtered and clustered as the visual outputs if desired.
+        '''
+        
+        output = []
+        header_row = []
+        if original: 
+            for analyzer in self.subset_analyzers:
+                header_row = header_row + [str(sample) for sample in analyzer.samples]
+        if normalized: 
+            for analyzer in self.subset_analyzers:
+                header_row = header_row + [str(sample) + ' (norm)' for sample in analyzer.samples]
+        
+            
+        for i, gene in enumerate(self.subset_analyzers[0].genes):
+            # Gene details
+            data_row = [gene.probe_id, gene.gene_name]
+            # Original data
+            if original: 
+                for analyzer in self.subset_analyzers:
+                    data_row + analyzer.original_matrix[i].tolist()
+            if normalized:
+                for analyzer in self.subset_analyzers:
+                    data_row + analyzer.matrix[i].tolist()
+            # Calcs over data
+            if mean_log_transformations:
+                for analyzer in self.subset_analyzers:
+                    if mean_log_transformations and analyzer.mean_log_transformations is None:
+                        analyzer.set_mean_log_transformations()
+                    data_row.append(analyzer.mean_log_transformations[i])
+            if differentials:
+                for analyzer in self.subset_analyzers:
+                    if ((isinstance(analyzer.differentials,list) and not analyzer.differentials) \
+                        or not analyzer.any()): self.set_log_differentials()
+                    data_row.append(analyzer.differentials[i])
+                    
+            output.append(data_row)
+            
+        

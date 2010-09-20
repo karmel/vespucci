@@ -47,7 +47,7 @@
             <th>Other Information</th>
         {% endif %}
     </tr>
-    {% for row_class, gene, row, differentials, annotation in table_cells %}
+    {% for row_class, gene, row, differentials in table_cells %}
         <tr class="{{ row_class }}">
             <td class="gene-name-cell">
             	<div class="gene-name" title="Probe ID: {{ gene.probe_id }}">

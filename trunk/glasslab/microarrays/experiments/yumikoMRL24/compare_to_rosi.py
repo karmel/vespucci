@@ -16,6 +16,7 @@ import re
 from glasslab.microarrays.experiments.yumikoMRL24 import mrl24
 from glasslab.microarrays.experiments.nathanRosi import rosi
 from glasslab.utils.geneannotation.geneontology import GOAccessor
+from glasslab.microarrays.core.aggregation.visualize import MicroarrayRawDataVisualizer
 
 class ExperimentSample(Sample):
     ''' 
@@ -41,12 +42,13 @@ class ExperimentSample(Sample):
     def __repr__(self):
         return '%s (%s)' % (self.type[0], str(self.type[1]))
 
-class ExperimentMicroarrayAggregator(MicroarrayAggregator):
+class ExperimentMicroarrayAggregator(MicroarrayAggregator,MicroarrayRawDataVisualizer):
     gene_names = [
         'AGTR1', 'ALOX15', 'INSR', 'PRKAB1', 'IL1R2', 'ESR2', 'KCNK1', 'FBLN5', 'PPARA', 'VEGFA', 'PON1', 'TDRD6', 'PLA2G7'
         ]
     
     def filter_rows(self):
+        return self._filter_rows_by_log_differential(differential=0, cols=[1])
         genes, data_rows, selected_ids = self.get_x_fold_genes(1.2, analyzer_ids=[2], type='down')
         genes, data_rows, selected_ids2 = self._filter_rows_by_log_differential(differential=.32, cols=[1], type='positive')
         return self._filter_by_go_id('GO:0051173',limiting_ids=selected_ids+selected_ids2)
@@ -153,7 +155,7 @@ if __name__ == '__main__':
     
     #comparitor.draw_enriched_ontologies(output_dir='yumikoMRL24', prefix='go_category_angiogenesis')
       
-    comparitor.draw_heat_map(output_dir='yumikoMRL24', prefix='go_category_nitric_oxide', 
+    comparitor.compile_csv(output_dir='yumikoMRL24', prefix='all_genes', 
                                 clustered=True, include_differentials=True,
                                 include_annotation=False)
     

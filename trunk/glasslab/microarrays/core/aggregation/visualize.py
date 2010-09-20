@@ -8,7 +8,6 @@ import os
 from glasslab.utils.geneannotation.genbank import GeneAnotator
 import numpy
 import math
-from random import randint
 
 class MicroarrayVisualizer(object):
     '''
@@ -27,7 +26,7 @@ class MicroarrayVisualizer(object):
     ##########################################################
     def draw_heat_map(self, output_dir='', prefix='',
                       clustered=True, include_differentials=False,
-                      include_annotation=False):
+                      include_annotation=False, include_originals=False):
         '''
         Draws a color-coded HTML heat-map based on the fold variation of 
         the samples by gene. Generate a Django-template-based HTML table
@@ -38,11 +37,12 @@ class MicroarrayVisualizer(object):
         '''
         samples, table_cells = self._generate_table_cells(clustered, 
                                                           include_differentials,
-                                                          include_annotation)
+                                                          include_annotation,
+                                                          include_originals=include_originals)
         self._output_heat_map(output_dir, prefix, clustered, include_annotation,
                           samples, table_cells)
     
-    def _generate_table_cells(self, clustered, include_differentials, include_annotation):
+    def _generate_table_cells(self, clustered, include_differentials, include_annotation, include_originals=False):
         # Get relevant samples for display
         samples = []
         for analyzer in self.subset_analyzers:
@@ -78,8 +78,18 @@ class MicroarrayVisualizer(object):
                     cell_values.append(self._format_for_value(log_val))
                 # Get differentials, if desired
                 diffs = self._format_differentials(include_differentials, selected_ids[i])
-                # Assemble all into a cell 
-                table_cells.append((row_class, genes[i], cell_values, diffs))
+                
+                # Include original, raw data vals if desired
+                originals = []
+                if include_originals:
+                    for analyzer in self.subset_analyzers:
+                        originals = originals + analyzer.original_matrix[selected_ids[i]].tolist()
+                        
+                # Assemble all into a cell
+                row = [row_class, genes[i], cell_values, diffs] 
+                if include_originals: row.append(originals)
+                table_cells.append(row)
+                
         return samples, table_cells
     
     def _format_for_value(self, val):
@@ -189,5 +199,38 @@ class MicroarrayVisualizer(object):
         f.write(html)
         f.close()
 
+class MicroarrayRawDataVisualizer(MicroarrayVisualizer):
+    '''
+    Borrows the visualization methods defined above, but overwriting 
+    formatting methods to allow for raw CSV or Excel output.
+    '''
+    def compile_csv(self, output_dir='', prefix='',
+                      clustered=True, include_differentials=False,
+                      include_annotation=False, include_originals=True):
+        samples, table_cells = self._generate_table_cells(clustered, 
+                                                          include_differentials,
+                                                          include_annotation,
+                                                          include_originals=include_originals)
+        self._output_csv(output_dir, prefix, clustered, include_annotation,
+                          samples, table_cells, include_originals)
+        
+    def _output_csv(self, output_dir, prefix, clustered, include_annotation, samples, table_cells, include_originals=True):
+        original_samples = []
+        if include_originals:
+            for analyzer in self.subset_analyzers: original_samples += analyzer.samples
+                
+        context = {'samples': samples, 
+                 'original_samples': original_samples,
+                 'table_cells': table_cells,
+                 'compared_samples': self.compared_samples,
+                 'include_originals': include_originals,
+                 'include_annotation': include_annotation,}
+        filename = '%sraw_data%s.csv' % (prefix and prefix + '_' or '',
+                                                  clustered and '_clustered' or '')
+        
+        self._output_file(output_dir, prefix, 'raw_data.csv', context, filename)
+        
+    def _format_for_value(self, val):
+        return val
     
     
