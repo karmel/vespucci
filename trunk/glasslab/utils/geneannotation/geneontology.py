@@ -19,6 +19,31 @@ PORT = 4085
 class GOAccessor(object):
     connection = None
     
+    def get_gene_names_for_category(self, id):
+        '''
+        For a given GO category ID, get all associated Homo Sapiens
+        gene names in a tuple.
+        '''
+        query = '''
+        SELECT DISTINCT
+         gene_product.symbol
+        FROM term
+         INNER JOIN graph_path ON (term.id=graph_path.term1_id)
+         INNER JOIN association ON (graph_path.term2_id=association.term_id)
+         INNER JOIN gene_product ON (association.gene_product_id=gene_product.id)
+         INNER JOIN species ON (gene_product.species_id=species.id)
+         INNER JOIN dbxref ON (gene_product.dbxref_id=dbxref.id)
+        WHERE
+         term.acc = %s
+         AND (species.species = 'sapiens'
+         OR species.species = 'musculus'); '''
+    
+        cursor = self.connect_to_go_db()
+        cursor.execute(query, [id])
+        result = cursor.fetchall()
+        self.close_connection()
+        return zip(*result)[0]
+    
     def get_generic_ancestors(self, id):
         return self.get_ancestors(id, distance_from_root=4)
     

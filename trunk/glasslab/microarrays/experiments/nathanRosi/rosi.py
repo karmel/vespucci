@@ -16,20 +16,20 @@ The setup: Illumina hybridization
 
 The samples:
 
-#. DMSO (control), 6h
-#. DMSO (control), 6h
+#. DMSO (control), 8h
+#. DMSO (control), 8h
 #. Kdo2, 6h
 #. Kdo2, 6h
-#. Rosi + Kdo2, 6h
-#. GW1929 + Kdo2, 6h
-#. GW0072 + Kdo2, 6h
+#. Rosi + Kdo2, 8h
+#. GW1929 + Kdo2, 8h
+#. GW0072 + Kdo2, 8h
+#. GW0072 + Kdo2, 8h
 #. DMSO (control), 24h
 #. DMSO (control), 24h
 #. Rosi, 24h
 #. Rosi, 24h
 #. GW1929, 24h
 #. GW1929, 24h
-#. GW0072, 24h
 #. GW0072, 24h
 
 '''

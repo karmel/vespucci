@@ -73,7 +73,7 @@ class MicroarrayCategorizer(object):
             try: bg_info = self.background_ontologies[go_id]
             except KeyError:
                 # Term didn't make the cut for the background. 
-                # Assume the appearance in the foreground is the only occurence in the background 
+                # Assume the appearance in the foreground is the only occurrence in the background 
                 bg_info = fg_info
             bg_appearance = bg_info[-1:][0]/self.background_term_count
             p_val = binom_test(fg_info[-1:][0], n=self.foreground_term_count, p=bg_appearance)

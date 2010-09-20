@@ -43,22 +43,33 @@ class ExperimentSample(Sample):
 
 class ExperimentMicroarrayAggregator(MicroarrayAggregator):
     gene_names = [
-        # Immunological
-        'Prkcb','Il6ra','4732429D16Rik','Havcr2','Il7r','Cd22','Cd109','Cd97',
-        'Serpinf1','Ogn','Hsf2','Ear2','Ear12','Ear10','Ear4','Egln3','Tgm2',
-        'Prf1','Lat','Hipk2','Ifngr2','Csf2rb','Il16',
-        
-        # Lipids
-        'Sdpr','Acsl3','Scd1','Acsl4','Ctps','Cyb5r3','Cav1','Ch25h','Angptl4',
-        'Pex11a','Lpcat3','Pld3','Pld2','Sort1','Acot1','Acaa2','Slco2b1','Adfp','Cd36',
-        
-        # Cardio/vascular/angio
-        'Plxdc1','Nfam1','Flt1','F2r','Pdgfra','Mdk','Tnfsf15',
+        'AGTR1', 'ALOX15', 'INSR', 'PRKAB1', 'IL1R2', 'ESR2', 'KCNK1', 'FBLN5', 'PPARA', 'VEGFA', 'PON1', 'TDRD6', 'PLA2G7'
         ]
     
-    def filter_rows(self): 
-        genes, data_rows, selected_ids = self._filter_rows_by_log_differential(differential=.6, cols=[0,1,6])
-        # return self._filter_for_specific_genes(gene_names=self.gene_names, limiting_ids=selected_ids)
+    def filter_rows(self):
+        genes, data_rows, selected_ids = self.get_x_fold_genes(1.2, analyzer_ids=[2], type='down')
+        genes, data_rows, selected_ids2 = self._filter_rows_by_log_differential(differential=.32, cols=[1], type='positive')
+        return self._filter_by_go_id('GO:0051173',limiting_ids=selected_ids+selected_ids2)
+        
+        genes, data_rows, selected_ids = self.get_x_fold_genes(1, analyzer_ids=[0], type='down') 
+        genes, data_rows, selected_ids = self._filter_rows_by_log_differential(differential=.32, cols=[1], type='positive')
+        
+        return self._filter_for_specific_genes(gene_names=self.gene_names, limiting_ids=selected_ids)
+        
+        return genes, data_rows, selected_ids
+    
+    def _deprecated_filter_rows(self):
+        genes1, data_rows1, selected_ids1 = self.get_x_fold_genes(1, analyzer_ids=[0], type='down') 
+        genes, data_rows, selected_ids = self._filter_rows_by_log_differential(differential=.32, cols=[1], type='positive')
+        keep_keys = []
+        for key, selected_id in enumerate(selected_ids):
+            if selected_id not in selected_ids1: 
+                keep_keys.append(key)
+        selected_ids = numpy.array(selected_ids)[keep_keys].tolist()
+        genes = numpy.array(genes)[keep_keys].tolist()
+        data_rows = data_rows[keep_keys]
+        return self._filter_for_specific_genes(gene_names=self.gene_names, limiting_ids=selected_ids)
+        
         return genes, data_rows, selected_ids
     
     def sort_rows(self, genes, data_rows, selected_ids):
@@ -140,9 +151,9 @@ if __name__ == '__main__':
             #if analyzer.test_samples is None: analyzer.split_samples()
             # Now, with samples split,
     
-    comparitor.draw_enriched_ontologies(output_dir='yumikoMRL24', prefix='differential')
-    '''    
-    comparitor.draw_heat_map(output_dir='yumikoMRL24', prefix='compare_nathan_yumiko_differential_processes', 
-                                clustered=True, include_differentials=False,
-                                include_annotation=True)
-    '''
+    #comparitor.draw_enriched_ontologies(output_dir='yumikoMRL24', prefix='go_category_angiogenesis')
+      
+    comparitor.draw_heat_map(output_dir='yumikoMRL24', prefix='go_category_nitric_oxide', 
+                                clustered=True, include_differentials=True,
+                                include_annotation=False)
+    
