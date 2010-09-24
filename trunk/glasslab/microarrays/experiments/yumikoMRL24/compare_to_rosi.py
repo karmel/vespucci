@@ -42,16 +42,16 @@ class ExperimentSample(Sample):
     def __repr__(self):
         return '%s (%s)' % (self.type[0], str(self.type[1]))
 
-class ExperimentMicroarrayAggregator(MicroarrayAggregator,MicroarrayRawDataVisualizer):
+class ExperimentMicroarrayAggregator(MicroarrayAggregator):
     gene_names = [
         'AGTR1', 'ALOX15', 'INSR', 'PRKAB1', 'IL1R2', 'ESR2', 'KCNK1', 'FBLN5', 'PPARA', 'VEGFA', 'PON1', 'TDRD6', 'PLA2G7'
         ]
     
     def filter_rows(self):
-        return self._filter_rows_by_log_differential(differential=0, cols=[1])
-        genes, data_rows, selected_ids = self.get_x_fold_genes(1.2, analyzer_ids=[2], type='down')
-        genes, data_rows, selected_ids2 = self._filter_rows_by_log_differential(differential=.32, cols=[1], type='positive')
-        return self._filter_by_go_id('GO:0051173',limiting_ids=selected_ids+selected_ids2)
+        #return self._filter_rows_by_log_differential(differential=0, cols=[1])
+        genes, data_rows, selected_ids = self.get_x_fold_genes(1.3, analyzer_ids=[2], type='down')
+        #genes, data_rows, selected_ids = self._filter_rows_by_log_differential(differential=.32, cols=[6],type='positive')
+        return self._filter_by_go_id(['GO:0005245','GO:0055074','GO:0006816'],limiting_ids=selected_ids)
         
         genes, data_rows, selected_ids = self.get_x_fold_genes(1, analyzer_ids=[0], type='down') 
         genes, data_rows, selected_ids = self._filter_rows_by_log_differential(differential=.32, cols=[1], type='positive')
@@ -155,7 +155,7 @@ if __name__ == '__main__':
     
     #comparitor.draw_enriched_ontologies(output_dir='yumikoMRL24', prefix='go_category_angiogenesis')
       
-    comparitor.compile_csv(output_dir='yumikoMRL24', prefix='all_genes', 
+    comparitor.draw_heat_map(output_dir='yumikoMRL24', prefix='calcium_homeostasis', 
                                 clustered=True, include_differentials=True,
                                 include_annotation=False)
     

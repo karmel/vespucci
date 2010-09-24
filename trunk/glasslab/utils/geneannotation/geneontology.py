@@ -34,12 +34,13 @@ class GOAccessor(object):
          INNER JOIN species ON (gene_product.species_id=species.id)
          INNER JOIN dbxref ON (gene_product.dbxref_id=dbxref.id)
         WHERE
-         term.acc = %s
+         term.acc %s
          AND (species.species = 'sapiens'
-         OR species.species = 'musculus'); '''
-    
+         OR species.species = 'musculus'); ''' \
+            % (isinstance(id,list) and ('IN (' + ','.join(['%s']*len(id)) + ')') or '= %s')
+        
         cursor = self.connect_to_go_db()
-        cursor.execute(query, [id])
+        cursor.execute(query, (isinstance(id,list) and id or [id]))
         result = cursor.fetchall()
         self.close_connection()
         return zip(*result)[0]
