@@ -14,9 +14,9 @@ variation there is in the measurements.
 
 '''
 from datetime import timedelta
-from glasslab.utils.data_types import Sample
+from glasslab.utils.datatypes.basic_array import Sample
 from glasslab.microarrays.core.parse import MicroarrayImporter
-from glasslab.microarrays.core.aggregate import MicroarrayAggregator
+from glasslab.microarrays.core.aggregation.aggregate import MicroarrayAggregator
 import numpy
 
 class LPSSample(Sample):

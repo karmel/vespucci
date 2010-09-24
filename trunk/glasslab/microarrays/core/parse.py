@@ -13,7 +13,7 @@ Microarray data assumed to be a CSV file in the following format::
 '''
 import csv
 import numpy
-from glasslab.utils.data_types import Sample, Gene
+from glasslab.utils.datatypes.basic_array import Sample, Gene
 
 class MicroarrayImporter(object):
     reader = None

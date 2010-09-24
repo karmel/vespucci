@@ -2,6 +2,11 @@
 Created on Sep 23, 2010
 
 @author: karmel
+
+.. note::
+
+    Experimental only. Not used by anything, and not operational.
+
 '''
 from __future__ import division
 import numpy
@@ -64,7 +69,16 @@ class PeakFinder(object):
         '''
         points = numpy.array([self.tags[chromosome][:,2], # x-coord: position
                              self.tags[chromosome][:,4]], dtype=numpy.int64) # y-coord: count
-        # Sort by x-coord, ascending
+        
+        # Combine points that have fallen onto the same place:
+        unique = {}
+        for i,point in enumerate(points[0]):
+            try: unique[point] += points[1][i]
+            except KeyError: unique[point] = points[1][i]
+        x_coords, y_coords = [],[]
+        for key, val in unique.items(): 
+            x_coords.append(key), y_coords.append(val)
+        points = numpy.array([x_coords, y_coords], dtype=numpy.int64)
         self.points[chromosome] = points[:,points[0].argsort()]
         
     def moving_average(self, chromosome, peak_width=100):
@@ -89,8 +103,8 @@ class PeakFinder(object):
     def interpolate_points(self, chromosome, peak_width=100):
         x_start = self.points[chromosome][0][0]
         x_stop = self.points[chromosome][0][-1:][0]
-        range = xrange((x_start + peak_width/2),(x_stop + peak_width/2),peak_width)
-        self.functions[chromosome] = interpolate.splrep(self.points[chromosome][0].tolist(),self.points[chromosome][0].tolist())
+        range = xrange(int(x_start + peak_width//2),int(x_stop + peak_width//2),peak_width)
+        self.functions[chromosome] = interpolate.splrep(self.points[chromosome][0].tolist(),self.points[chromosome][1].tolist(),s=0)
         self.smoothed_points[chromosome] = (range,interpolate.splev(range, self.functions[chromosome]))
         
     def graph_points(self, chromosome, peak_width=100):
@@ -102,7 +116,7 @@ class PeakFinder(object):
                     self.smoothed_points[chromosome][0],self.smoothed_points[chromosome][1],'-')
         #pyplot.hist(self.points[chromosome], peak_width, label='Tag counts at positions for %s' % chromosome)
         #pyplot.plot(*self.averages[chromosome], label='Tag counts at positions for %s' % chromosome)
-        pyplot.legend()
+        
         pyplot.xlabel('Centered position on %s' % chromosome)
         pyplot.ylabel('Count of tags at position')
         pyplot.savefig('test.png')
@@ -114,6 +128,14 @@ if __name__ == '__main__':
     finder.import_tag_file(chr, '/Users/karmel/Downloads/homer_output/chr10.tags.tsv')
     finder.adjust_to_center(chr, seq_length=36)
     finder.convert_to_points(chr)
+    dict = {}
+    '''
+    for x in finder.points[chr][0]:
+        try: 
+            dict[x] +=1
+            print x
+        except KeyError: dict[x] = 1
+    '''
     finder.interpolate_points(chr)
     finder.graph_points(chr)
     

@@ -24,7 +24,7 @@ The samples:
 
 '''
 from datetime import timedelta
-from glasslab.utils.data_types import Sample
+from glasslab.utils.datatypes.basic_array import Sample
 from glasslab.microarrays.core.parse import MicroarrayImporter
 from glasslab.microarrays.core.aggregation.aggregate import MicroarrayAggregator
 import numpy

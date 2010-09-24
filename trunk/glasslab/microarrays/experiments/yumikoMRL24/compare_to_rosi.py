@@ -8,7 +8,7 @@ There are a number of comparable samples in the nathanRosi and the yumikoMRL24 d
 Here we tease out some of the differences and similarities between the two.
 '''
 from datetime import timedelta
-from glasslab.utils.data_types import Sample
+from glasslab.utils.datatypes.basic_array import Sample
 from glasslab.microarrays.core.parse import MicroarrayImporter
 from glasslab.microarrays.core.aggregation.aggregate import MicroarrayAggregator
 import numpy
