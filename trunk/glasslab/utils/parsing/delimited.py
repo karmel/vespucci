@@ -19,7 +19,10 @@ class DelimitedFileParser(object):
     def get_array(self, delimiter='\t', strip=False):
         '''
         For initialized file, parse into numpy array and return.
+        
+        Omits empty lines and lines beginning with #
         '''
         if strip: clean = lambda x: x.strip('"').strip() 
         else: clean = lambda x: x
-        return numpy.array([[clean(field) for field in line.strip('\n').split(delimiter)] for line in self.file])
+        return numpy.array([[clean(field) for field in line.strip('\n').split(delimiter)] 
+                                for line in self.file if line.strip('\n') and line[:1] != '#' ])

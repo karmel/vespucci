@@ -9,5 +9,5 @@ class GlassOptionParser(OptionParser):
     options = None
     ''' List of optparse make_option objects. '''
     
-    def __init__(self, option_list=None):
-        super(OptionParser, self).__init__(option_list=option_list or self.options)
+    def __init__(self, option_list=None, **kwargs):
+        OptionParser.__init__(self, option_list=option_list or self.options, **kwargs)
