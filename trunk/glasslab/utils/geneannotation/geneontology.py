@@ -19,6 +19,24 @@ PORT = 4085
 class GOAccessor(object):
     connection = None
     
+    def get_terms_for_ids(self, id):
+        '''
+        For given GO category ID(s), term labels.
+        '''
+        query = '''
+        SELECT
+         term.name
+        FROM term
+        WHERE
+         term.acc %s ; ''' \
+            % (isinstance(id,list) and ('IN (' + ','.join(['%s']*len(id)) + ')') or '= %s')
+        
+        cursor = self.connect_to_go_db()
+        cursor.execute(query, (isinstance(id,list) and id or [id]))
+        result = cursor.fetchall()
+        self.close_connection()
+        return zip(*result)[0]
+    
     def get_gene_names_for_category(self, id):
         '''
         For a given GO category ID, get all associated Homo Sapiens

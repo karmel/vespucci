@@ -30,6 +30,6 @@ def import_file(file_path='',genome_name=''):
             pass
         
 if __name__ == '__main__':
-    genome_name = sys.argv and sys.argv[1] or 'mm9'
+    genome_name = len(sys.argv) > 1 and sys.argv[1] or 'mm9'
     print genome_name
     import_file('/Volumes/Unknowme/homer/data/genomes/%s/%s.tss' % (genome_name,genome_name),genome_name)

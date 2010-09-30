@@ -7,36 +7,61 @@ Script for importing original tab-delimited files for a genome
 into models and DB tables.
 '''
 from glasslab.utils.parsing.delimited import DelimitedFileParser
-from glasslab.utils.datatypes.genome_reference import Genome, ChromosomeLocationAnnotation
+from glasslab.utils.datatypes.genome_reference import ChromosomeLocationAnnotationFactory
 from django.db import connection
 import traceback
 import sys
+import os
 
-def import_file(file_path='',genome_name='', type=''):
+def import_file(file_path='',genome_name='', type='', start=0):
     data = DelimitedFileParser(file_path).get_array()
-    genome = Genome.objects.get(genome=genome_name)
-    start = False
-    for i,row in enumerate(data):
+    model = ChromosomeLocationAnnotationFactory.get_model(genome=genome_name)
+    for i,row in enumerate(data[start:]):
         try:
-            if row[0] == 'exon (NM_013720, exon 8 of 24)': start = True
-            if not start: continue
-            record, created = ChromosomeLocationAnnotation.objects.get_or_create(
-                                                            genome=genome,
-                                                            chromosome=str(row[1]),
-                                                            start=int(row[2]),
-                                                            end=int(row[3]),
-                                                            direction=int(row[4]),
-                                                            type=type,
-                                                            description=str(row[0]))
+            record, created = model.objects.get_or_create(
+                                        chromosome=str(row[1]),
+                                        start=int(row[2]),
+                                        end=int(row[3]),
+                                        direction=int(row[4]),
+                                        type=type,
+                                        description=str(row[0]))
             cursor = connection.cursor()
             cursor.close()
         except: 
-            print i,row
+            print start,i,row
+            print traceback.format_exc()
             raise
         
 if __name__ == '__main__':
-    genome_name = sys.argv and sys.argv[1] or 'mm9'
-    for file_name, type in (('introns','Intron'),('exons','Exon'),
-                            ('promoters','Promoter'),('cpgIsland','CpG Island'),
-                            ('utr3',"3' UTR"),('utr5',"5' UTR")):
-        import_file('/Volumes/Unknowme/homer/data/genomes/%s/annotations/basic/%s.ann.txt' % (genome_name,file_name),genome_name)
+    genome_name = len(sys.argv) > 1 and sys.argv[1] or 'mm9'
+    start_type = len(sys.argv) > 2 and sys.argv[2] or None
+    start_file = len(sys.argv) > 4 and sys.argv[4] or None
+    start_type_hit = False
+    
+    if start_type == 'Intergenic':
+        dir_name = '/Volumes/Unknowme/homer/data/genomes/%s/annotations/repeats' % genome_name
+        for file_name in os.listdir(dir_name):
+            start_index = 0
+            if start_file:
+                if file_name==start_file: 
+                    start_type_hit = True
+                    start_index = len(sys.argv) > 3 and int(sys.argv[3]) or 0
+                if not start_type_hit: continue
+             
+            import_file(os.path.join(dir_name,file_name),genome_name, start_type, start_index)
+        
+    else:
+    
+        for file_name, type in (('introns','Intron'),('exons','Exon'),
+                                ('promoters','Promoter'),('cpgIsland','CpG Island'),
+                                ('utr3',"3' UTR"),('utr5',"5' UTR")):
+            start_index = 0
+            if start_type:
+                if type==start_type: 
+                    start_type_hit = True
+                    start_index = len(sys.argv) > 3 and int(sys.argv[3]) or 0
+                if not start_type_hit: continue
+                
+        
+            import_file('/Volumes/Unknowme/homer/data/genomes/%s/annotations/basic/%s.ann.txt' % (genome_name,file_name),
+                        genome_name, type, start_index)

@@ -37,6 +37,6 @@ def import_file(file_path='',genome_name=''):
             raise
         
 if __name__ == '__main__':
-    genome_name = sys.argv and sys.argv[1] or 'Mus musculus'
-    file_name = sys.argv and sys.argv[2] or 'mouse'
+    genome_name = len(sys.argv) > 1 and sys.argv[1] or 'Mus musculus'
+    file_name = len(sys.argv) > 2 and sys.argv[2] or 'mouse'
     import_file('/Volumes/Unknowme/homer/data/accession/%s2gene.tsv' % file_name,genome_name)

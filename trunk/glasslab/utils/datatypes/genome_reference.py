@@ -70,6 +70,7 @@ class GeneDetail(models.Model):
     gene_name           = models.CharField(max_length=255, blank=True)
     gene_alias          = models.CharField(max_length=255, blank=True)
     gene_description    = models.CharField(max_length=255, blank=True)
+    refseq_gene_id      = models.IntegerField(max_length=12, blank=True)
     
     class Meta: db_table = 'genome_reference"."gene_detail'
  
@@ -92,8 +93,10 @@ class TranscriptionStartSite(models.Model):
 class ChromosomeLocationAnnotation(models.Model):
     '''
     Mappings of locations to introns, exons, etc.
+    
+    Abstract model; there are a sufficient number of rows that it is useful
+    to separate these by genome.
     '''
-    genome          = models.ForeignKey(Genome)
     chromosome      = models.CharField(max_length=20)
     start           = models.IntegerField(max_length=12)
     end             = models.IntegerField(max_length=12)
@@ -103,4 +106,24 @@ class ChromosomeLocationAnnotation(models.Model):
                                                                                 "3' UTR", "5' UTR"))])
     description     = models.CharField(max_length=255, blank=True)
     
-    class Meta: db_table = 'genome_reference"."chromosome_location_annotation'
+    class Meta: abstract = True
+
+class ChromosomeLocationAnnotationMm8(ChromosomeLocationAnnotation):
+    class Meta: db_table = 'genome_reference"."chromosome_location_annotation_mm8'
+class ChromosomeLocationAnnotationMm8r(ChromosomeLocationAnnotation):
+    class Meta: db_table = 'genome_reference"."chromosome_location_annotation_mm8r'
+class ChromosomeLocationAnnotationMm9(ChromosomeLocationAnnotation):
+    class Meta: db_table = 'genome_reference"."chromosome_location_annotation_mm9'
+class ChromosomeLocationAnnotationHg18(ChromosomeLocationAnnotation):
+    class Meta: db_table = 'genome_reference"."chromosome_location_annotation_hg18'
+class ChromosomeLocationAnnotationHg18r(ChromosomeLocationAnnotation):
+    class Meta: db_table = 'genome_reference"."chromosome_location_annotation_hg18r'
+
+class ChromosomeLocationAnnotationFactory(object):
+    '''
+    Factory for getting appropriate model by genome.
+    '''
+    @classmethod
+    def get_model(cls, genome):
+        return globals()['ChromosomeLocationAnnotation%s' % genome.capitalize()]
+    

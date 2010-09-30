@@ -20,6 +20,11 @@ from datetime import datetime
 from random import randint
 from glasslab.sequencing.datatypes.peak import CurrentPeak
 from glasslab.utils.parsing.delimited import DelimitedFileParser
+from glasslab.config.django_settings import DATABASES
+from glasslab.utils.datatypes.genome_reference import SequenceIdentifier,\
+    TranscriptionStartSite, GeneDetail, Genome
+from glasslab.sequencing.datatypes.geneontology import GoSeqEnrichedTerm
+from glasslab.utils.geneannotation.geneontology import GOAccessor
 
 class FastqOptionParser(GlassOptionParser):
     options = [
@@ -96,7 +101,66 @@ def import_peaks(options, file_name, macs_file_path):
         peak = CurrentPeak.init_from_macs_row(row)
         peak.save()
     
+def annotate_peaks(options):
+    '''
+    Now that we have our peaks saved, find the nearest TSS and chromosome loc annotations.
+    '''
+    CurrentPeak.find_transcriptions_start_sites(genome=options.genome)
+    CurrentPeak.find_chromosome_location_annotation(genome=options.genome)
     
+def get_goseq_annotation(options, file_name):
+    '''
+    Our peaks have all been saved and annotated; get enriched GO terms from GOSeq.
+    
+    To run::
+    
+        r /Path/to/R/script.r db_host db_port db_name db_user db_pass 
+                gene_detail_table seq_table tss_table genome_table current_peaks_table 
+                genome output_dir file_name
+    
+    Creates and saves plot of Probability Weighting Function, and
+    creates a table that has GO term IDs and enrichment p-values.
+    '''
+    import glasslab.sequencing.goseq as goseq
+    r_script_path = os.path.join(os.path.abspath(goseq.__file__),'ontology_for_peaks.r')
+    goseq_command = 'R CMD BATCH %s %s %s %s %s %s %s %s %s %s' % (r_script_path,
+                                                         DATABASES['default']['HOST'],
+                                                         DATABASES['default']['PORT'],
+                                                         DATABASES['default']['NAME'],
+                                                         DATABASES['default']['USER'],
+                                                         DATABASES['default']['PASSWORD'],
+                                                         GeneDetail._meta.db_table,
+                                                         SequenceIdentifier._meta.db_table,
+                                                         TranscriptionStartSite._meta.db_table,
+                                                         Genome._meta.db_table,
+                                                         CurrentPeak._meta.db_table,
+                                                         options.genome, 
+                                                         options.output_dir, file_name
+                                                         )
+    try: subprocess.check_call(goseq_command, shell=True)
+    except Exception:
+        raise Exception('Exception encountered while trying to get GOSeq analysis. Traceback:\n%s'
+                                % traceback.format_exc())
+def output_goseq_enriched_ontology(options, file_name):
+    '''
+    For saved GoSeq term ids, output file of term id, term, and p val 
+    for all terms with p val <= .05
+    '''
+    GoSeqEnrichedTerm.set_table_name(CurrentPeak._meta.db_table)
+    # Get list of (term id, p val) tuples
+    enriched = GoSeqEnrichedTerm.objects.filter(p_value_overexpressed__lte=.05
+                                    ).values_list('go_term_id','p_value_overexpressed')
+    term_ids, p_vals = zip(*enriched)
+    # Get corresponding terms for human readability
+    term_names = GOAccessor().get_terms_for_ids(list(term_ids))
+    term_rows = zip(term_ids, term_names, p_vals)
+    # Output tsv
+    header = 'GO Term ID\tGO Term\tP-value of overexpression\n'
+    output_tsv = header + '\n'.join(['\t'.join(row) for row in term_rows])
+    file_path = os.path.join(options.output_dir,'%s_GOSeq_enriched_terms.tsv' % file_name)
+    file = open(file_path, 'w')
+    file.write(output_tsv)
+
 if __name__ == '__main__':
     run_from_command_line = True # Useful for debugging in Eclipse
     
@@ -124,4 +188,13 @@ if __name__ == '__main__':
         print 'Skipping macs.'
         macs_file_path = bowtie_file_path
     
+    print 'Saving peaks to table.'
     import_peaks(options, file_name, macs_file_path)
+
+    print 'Annotating peaks.'
+    annotate_peaks(options)
+
+    print 'Analyzing with GOSeq.'
+    get_goseq_annotation(options, file_name)
+    output_goseq_enriched_ontology(options, file_name)
+    
