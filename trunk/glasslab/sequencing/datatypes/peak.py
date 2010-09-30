@@ -42,6 +42,13 @@ class CurrentPeak(models.Model):
             self._chromosome_location_annotation = model.objects.get(id=self.chromosome_location_annotation_id)
         return self._chromosome_location_annotation
     
+    @classmethod
+    def set_table_name(cls, table_name):
+        '''
+        Set table name for class, incorporating into schema specification.
+        '''
+        cls._meta.db_table = 'current_projects"."%s' % table_name
+                
     @classmethod        
     def create_table(cls, name):
         '''
@@ -49,9 +56,8 @@ class CurrentPeak(models.Model):
         dynamically named.
         '''
         if cls.table_created: print 'Warning: CurrentPeak table has already been created.'
-        
+        cls.set_table_name('enriched_peaks_' + name)
         cls.name = name
-        cls._meta.db_table = 'current_projects"."enriched_peaks_%s' % name
         table_sql = """
         CREATE TABLE "%s" (
             id serial4,

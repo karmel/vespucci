@@ -8,6 +8,7 @@ and returns results, parsed.
 
 '''
 import MySQLdb
+from MySQLdb.cursors import DictCursor
 
 # DB connection params
 HOST = 'mysql.ebi.ac.uk'
@@ -25,7 +26,7 @@ class GOAccessor(object):
         '''
         query = '''
         SELECT
-         term.name
+         term.acc,term.name
         FROM term
         WHERE
          term.acc %s ; ''' \

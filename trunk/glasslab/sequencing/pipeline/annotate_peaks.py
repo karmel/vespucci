@@ -43,6 +43,8 @@ class FastqOptionParser(GlassOptionParser):
                            help='Skip bowtie; presume MACS uses input file directly.'),
                make_option('--skip_macs',action='store_true', dest='skip_macs', default=False, 
                            help='Skip MACS; presume peak annotation uses input file directly.'),
+               make_option('--peak_table',action='store', dest='peak_table',
+                           help='Skip saving and annotating peaks; peak table will be used directly.'),
                ]
     
 def check_input(options):
@@ -122,18 +124,18 @@ def get_goseq_annotation(options, file_name):
     creates a table that has GO term IDs and enrichment p-values.
     '''
     import glasslab.sequencing.goseq as goseq
-    r_script_path = os.path.join(os.path.abspath(goseq.__file__),'ontology_for_peaks.r')
-    goseq_command = 'R CMD BATCH %s %s %s %s %s %s %s %s %s %s' % (r_script_path,
+    r_script_path = os.path.join(os.path.dirname(goseq.__file__),'ontology_for_peaks.r')
+    goseq_command = '%s "%s" "%s" "%s" "%s" "%s" "%s" "%s" "%s" "%s" "%s" "%s" "%s" "%s"' % (r_script_path,
                                                          DATABASES['default']['HOST'],
                                                          DATABASES['default']['PORT'],
                                                          DATABASES['default']['NAME'],
                                                          DATABASES['default']['USER'],
                                                          DATABASES['default']['PASSWORD'],
-                                                         GeneDetail._meta.db_table,
-                                                         SequenceIdentifier._meta.db_table,
-                                                         TranscriptionStartSite._meta.db_table,
-                                                         Genome._meta.db_table,
-                                                         CurrentPeak._meta.db_table,
+                                                         GeneDetail._meta.db_table.replace('"','\\"'),
+                                                         SequenceIdentifier._meta.db_table.replace('"','\\"'),
+                                                         TranscriptionStartSite._meta.db_table.replace('"','\\"'),
+                                                         Genome._meta.db_table.replace('"','\\"'),
+                                                         CurrentPeak._meta.db_table.replace('"','\\"'),
                                                          options.genome, 
                                                          options.output_dir, file_name
                                                          )
@@ -152,11 +154,11 @@ def output_goseq_enriched_ontology(options, file_name):
                                     ).values_list('go_term_id','p_value_overexpressed')
     term_ids, p_vals = zip(*enriched)
     # Get corresponding terms for human readability
-    term_names = GOAccessor().get_terms_for_ids(list(term_ids))
-    term_rows = zip(term_ids, term_names, p_vals)
+    term_names_by_id = dict(GOAccessor().get_terms_for_ids(list(term_ids)))
+    term_rows = zip(term_ids, [term_names_by_id[id] for id in term_ids], p_vals)
     # Output tsv
     header = 'GO Term ID\tGO Term\tP-value of overexpression\n'
-    output_tsv = header + '\n'.join(['\t'.join(row) for row in term_rows])
+    output_tsv = header + '\n'.join(['\t'.join([str(field) for field in row]) for row in term_rows])
     file_path = os.path.join(options.output_dir,'%s_GOSeq_enriched_terms.tsv' % file_name)
     file = open(file_path, 'w')
     file.write(output_tsv)
@@ -169,10 +171,12 @@ if __name__ == '__main__':
     
     # Allow for easy running from Eclipse
     if not run_from_command_line:
-        options.file_path = ''
-        options.output_dir = ''
+        options.file_path = '/Users/karmel/GlassLab/SourceData/ThioMac_Lazar/test'
+        options.output_dir = 'first_test'
+        options.peak_table = 'enriched_peaks_enriched_peaks_first_test_2010-09-30_16-04-52_454502'
     
     file_name = check_input(options)
+    
     
     if not options.skip_bowtie:
         print 'Processing FASTQ file using bowtie.'
@@ -188,12 +192,16 @@ if __name__ == '__main__':
         print 'Skipping macs.'
         macs_file_path = bowtie_file_path
     
-    print 'Saving peaks to table.'
-    import_peaks(options, file_name, macs_file_path)
+    if not options.peak_table:
+        print 'Saving peaks to table.'
+        import_peaks(options, file_name, macs_file_path)
 
-    print 'Annotating peaks.'
-    annotate_peaks(options)
-
+        print 'Annotating peaks.'
+        annotate_peaks(options)
+    else:
+        CurrentPeak.set_table_name(options.peak_table)
+        print 'Using existing peaks table "%s"' % CurrentPeak._meta.db_table 
+        
     print 'Analyzing with GOSeq.'
     get_goseq_annotation(options, file_name)
     output_goseq_enriched_ontology(options, file_name)
