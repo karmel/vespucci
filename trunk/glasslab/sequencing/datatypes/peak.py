@@ -5,7 +5,7 @@ Created on Sep 27, 2010
 '''
 from django.db import models
 from glasslab.utils.datatypes.genome_reference import TranscriptionStartSite,\
-    ChromosomeLocationAnnotation, Genome, ChromosomeLocationAnnotationFactory
+    Genome, ChromosomeLocationAnnotationFactory
 from django.db import connection, transaction
         
 class CurrentPeak(models.Model):
@@ -38,7 +38,7 @@ class CurrentPeak(models.Model):
     @property
     def chromosome_location_annotation(self):
         if not self._chromosome_location_annotation: 
-            model = ChromosomeLocationAnnotationFactory.get_model(self.transcription_start_site.genome)
+            model = ChromosomeLocationAnnotationFactory.get_model(self.transcription_start_site.genome.genome)
             self._chromosome_location_annotation = model.objects.get(id=self.chromosome_location_annotation_id)
         return self._chromosome_location_annotation
     

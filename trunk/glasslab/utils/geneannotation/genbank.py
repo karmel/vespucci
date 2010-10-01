@@ -6,7 +6,7 @@ Created on Sep 1, 2010
 from Bio import Entrez
 import traceback
 from glasslab.utils.datatypes.basic_array import Gene
-from glasslab.utils.geneannotation.geneontology import GOAccessor
+from glasslab.utils.geneannotation.gene_ontology import GOAccessor
 
 Entrez.email = 'karmelallison@ucsd.edu'
 

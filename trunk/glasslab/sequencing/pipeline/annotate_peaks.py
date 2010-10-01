@@ -20,11 +20,8 @@ from datetime import datetime
 from random import randint
 from glasslab.sequencing.datatypes.peak import CurrentPeak
 from glasslab.utils.parsing.delimited import DelimitedFileParser
-from glasslab.config.django_settings import DATABASES
-from glasslab.utils.datatypes.genome_reference import SequenceIdentifier,\
-    TranscriptionStartSite, GeneDetail, Genome
-from glasslab.sequencing.datatypes.geneontology import GoSeqEnrichedTerm
-from glasslab.utils.geneannotation.geneontology import GOAccessor
+from glasslab.sequencing.goseq.analyze import get_goseq_annotation,\
+    output_goseq_enriched_ontology
 
 class FastqOptionParser(GlassOptionParser):
     options = [
@@ -45,6 +42,8 @@ class FastqOptionParser(GlassOptionParser):
                            help='Skip MACS; presume peak annotation uses input file directly.'),
                make_option('--peak_table',action='store', dest='peak_table',
                            help='Skip saving and annotating peaks; peak table will be used directly.'),
+               make_option('--goseq',action='store_true', dest='goseq', default=False,
+                           help='Run and output ontological analysis using the GOSeq R library.'),
                ]
     
 def check_input(options):
@@ -109,61 +108,47 @@ def annotate_peaks(options):
     '''
     CurrentPeak.find_transcriptions_start_sites(genome=options.genome)
     CurrentPeak.find_chromosome_location_annotation(genome=options.genome)
-    
-def get_goseq_annotation(options, file_name):
-    '''
-    Our peaks have all been saved and annotated; get enriched GO terms from GOSeq.
-    
-    To run::
-    
-        r /Path/to/R/script.r db_host db_port db_name db_user db_pass 
-                gene_detail_table seq_table tss_table genome_table current_peaks_table 
-                genome output_dir file_name
-    
-    Creates and saves plot of Probability Weighting Function, and
-    creates a table that has GO term IDs and enrichment p-values.
-    '''
-    import glasslab.sequencing.goseq as goseq
-    r_script_path = os.path.join(os.path.dirname(goseq.__file__),'ontology_for_peaks.r')
-    goseq_command = '%s "%s" "%s" "%s" "%s" "%s" "%s" "%s" "%s" "%s" "%s" "%s" "%s" "%s"' % (r_script_path,
-                                                         DATABASES['default']['HOST'],
-                                                         DATABASES['default']['PORT'],
-                                                         DATABASES['default']['NAME'],
-                                                         DATABASES['default']['USER'],
-                                                         DATABASES['default']['PASSWORD'],
-                                                         GeneDetail._meta.db_table.replace('"','\\"'),
-                                                         SequenceIdentifier._meta.db_table.replace('"','\\"'),
-                                                         TranscriptionStartSite._meta.db_table.replace('"','\\"'),
-                                                         Genome._meta.db_table.replace('"','\\"'),
-                                                         CurrentPeak._meta.db_table.replace('"','\\"'),
-                                                         options.genome, 
-                                                         options.output_dir, file_name
-                                                         )
-    try: subprocess.check_call(goseq_command, shell=True)
-    except Exception:
-        raise Exception('Exception encountered while trying to get GOSeq analysis. Traceback:\n%s'
-                                % traceback.format_exc())
-def output_goseq_enriched_ontology(options, file_name):
-    '''
-    For saved GoSeq term ids, output file of term id, term, and p val 
-    for all terms with p val <= .05
-    '''
-    GoSeqEnrichedTerm.set_table_name(CurrentPeak._meta.db_table)
-    # Get list of (term id, p val) tuples
-    enriched = GoSeqEnrichedTerm.objects.filter(p_value_overexpressed__lte=.05
-                                    ).values_list('go_term_id','p_value_overexpressed')
-    term_ids, p_vals = zip(*enriched)
-    # Get corresponding terms for human readability
-    term_names_by_id = dict(GOAccessor().get_terms_for_ids(list(term_ids)))
-    term_rows = zip(term_ids, [term_names_by_id[id] for id in term_ids], p_vals)
-    # Output tsv
-    header = 'GO Term ID\tGO Term\tP-value of overexpression\n'
-    output_tsv = header + '\n'.join(['\t'.join([str(field) for field in row]) for row in term_rows])
-    file_path = os.path.join(options.output_dir,'%s_GOSeq_enriched_terms.tsv' % file_name)
+
+def output_peak_annotation(options, file_name):   
+    # Output full annotation set to file
+    peaks = CurrentPeak.objects.order_by('chromosome','start','end')
+    peak_output = []
+    for peak in peaks:
+        # Prep promoter fields, if available
+        try: 
+            promoter = peak.transcription_start_site.sequence_identifier
+            gene_details = [promoter.sequence_identifier]
+        except Exception: 
+            promoter = None
+            gene_details = ['']
+        try:
+            detail = promoter.gene_detail
+            gene_details += [detail.refseq_gene_id, detail.unigene_identifier,
+                             detail.ensembl_identifier, detail.gene_name,
+                             detail.gene_alias, detail.gene_description]
+        except Exception: gene_details += ['']*6
+        
+        # Prep chromosome location annotation fields, if available
+        try:
+            chr = peak.chromosome_location_annotation
+            chr_details = [chr.type, chr.description]
+        except Exception: chr_details = ['']*2
+        
+        fields = [peak.id, peak.chromosome, peak.start, peak.end,
+                  peak.length, peak.summit, peak.tag_count,
+                  peak.log_ten_p_value, peak.fold_enrichment,
+                  peak.distance] + chr_details + gene_details
+        
+        peak_output.append(map(lambda x: str(x).strip(), fields))
+    header = 'Peak ID\tChromosome\tStart\tEnd\tLength\tSummit\tTag Count\tlog10(p-value)\tFold Enrichment\tDistance to TSS'
+    header += '\tLocation Annotation\tLocation Annotation Description'
+    header += '\tNearest Promoter\tRefSeq ID\tUnigene\tEnsembl\tGene Name\tGene Alias\tGene Description'
+    output_tsv = header + '\n' + '\n'.join(['\t'.join(row) for row in peak_output])
+    file_path = os.path.join(options.output_dir,'%s_gene_annotation.tsv' % file_name)
     file = open(file_path, 'w')
     file.write(output_tsv)
-
-if __name__ == '__main__':
+    
+if __name__ == '__main__':    
     run_from_command_line = True # Useful for debugging in Eclipse
     
     parser = FastqOptionParser()
@@ -201,8 +186,12 @@ if __name__ == '__main__':
     else:
         CurrentPeak.set_table_name(options.peak_table)
         print 'Using existing peaks table "%s"' % CurrentPeak._meta.db_table 
+    
+    print 'Outputting peak annotation.'
+    output_peak_annotation(options, file_name)
         
-    print 'Analyzing with GOSeq.'
-    get_goseq_annotation(options, file_name)
-    output_goseq_enriched_ontology(options, file_name)
+    if options.goseq: 
+        print 'Analyzing with GOSeq.'
+        get_goseq_annotation(options.genome, options.output_dir, file_name)
+        output_goseq_enriched_ontology(options.output_dir, file_name)
     

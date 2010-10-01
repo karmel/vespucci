@@ -16,7 +16,7 @@ import numpy
 from copy import copy
 from glasslab.microarrays.core.aggregation.visualize import MicroarrayVisualizer
 from glasslab.microarrays.core.aggregation.categorize import MicroarrayCategorizer
-from glasslab.utils.geneannotation.geneontology import GOAccessor
+from glasslab.utils.geneannotation.gene_ontology import GOAccessor
 
 
 

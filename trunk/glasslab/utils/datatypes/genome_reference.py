@@ -49,6 +49,13 @@ class SequenceIdentifier(models.Model):
             del kwargs['sequence_identifier']
             return SequenceAlias.objects.get(*args, **kwargs).sequence_identifier
 
+    _gene_detail = None
+    @property 
+    def gene_detail(self):
+        if not self._gene_detail:
+            self._gene_detail = GeneDetail.objects.get(sequence_identifier=self)
+        return self._gene_detail
+    
 class SequenceAlias(models.Model):
     '''
     Unique identifiers for sequence fragments, keyed to single parent sequence identifier.
@@ -89,7 +96,7 @@ class TranscriptionStartSite(models.Model):
     direction           = models.IntegerField(max_length=1, help_text='0 for forward, 1 for backwards')
     
     class Meta: db_table = 'genome_reference"."transcription_start_site'
-
+    
 class ChromosomeLocationAnnotation(models.Model):
     '''
     Mappings of locations to introns, exons, etc.
@@ -125,5 +132,5 @@ class ChromosomeLocationAnnotationFactory(object):
     '''
     @classmethod
     def get_model(cls, genome):
-        return globals()['ChromosomeLocationAnnotation%s' % genome.capitalize()]
+        return globals()['ChromosomeLocationAnnotation%s' % genome.capitalize().strip()]
     

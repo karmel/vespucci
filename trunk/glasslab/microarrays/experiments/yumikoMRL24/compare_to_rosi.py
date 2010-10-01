@@ -15,7 +15,7 @@ import numpy
 import re 
 from glasslab.microarrays.experiments.yumikoMRL24 import mrl24
 from glasslab.microarrays.experiments.nathanRosi import rosi
-from glasslab.utils.geneannotation.geneontology import GOAccessor
+from glasslab.utils.geneannotation.gene_ontology import GOAccessor
 from glasslab.microarrays.core.aggregation.visualize import MicroarrayRawDataVisualizer
 
 class ExperimentSample(Sample):

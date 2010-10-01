@@ -4,7 +4,7 @@ Created on Sep 10, 2010
 @author: karmel
 '''
 from __future__ import division
-from glasslab.utils.geneannotation.geneontology import GOAccessor
+from glasslab.utils.geneannotation.gene_ontology import GOAccessor
 import numpy
 from scipy.stats import binom_test
  
