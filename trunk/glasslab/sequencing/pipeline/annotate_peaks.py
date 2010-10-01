@@ -20,8 +20,9 @@ from datetime import datetime
 from random import randint
 from glasslab.sequencing.datatypes.peak import CurrentPeak
 from glasslab.utils.parsing.delimited import DelimitedFileParser
-from glasslab.sequencing.goseq.analyze import get_goseq_annotation,\
+from glasslab.sequencing.geneontology.goseq.analyze import get_goseq_annotation,\
     output_goseq_enriched_ontology
+from glasslab.sequencing.geneontology.analyze import EnrichedOntologiesAnalyzer
 
 class FastqOptionParser(GlassOptionParser):
     options = [
@@ -42,6 +43,8 @@ class FastqOptionParser(GlassOptionParser):
                            help='Skip MACS; presume peak annotation uses input file directly.'),
                make_option('--peak_table',action='store', dest='peak_table',
                            help='Skip saving and annotating peaks; peak table will be used directly.'),
+               make_option('--go',action='store_true', dest='goseq', default=True,
+                           help='Run and output gene ontological analysis.'),
                make_option('--goseq',action='store_true', dest='goseq', default=False,
                            help='Run and output ontological analysis using the GOSeq R library.'),
                ]
@@ -189,6 +192,12 @@ if __name__ == '__main__':
     
     print 'Outputting peak annotation.'
     output_peak_annotation(options, file_name)
+        
+    if options.go: 
+        print 'Analyzing GeneOntology.'
+        analyzer = EnrichedOntologiesAnalyzer()
+        analyzer.output_go_enriched_ontology(options.output_dir, file_name, options.genome)
+        analyzer.graph_terms(options.output_dir, file_name, options.genome)
         
     if options.goseq: 
         print 'Analyzing with GOSeq.'

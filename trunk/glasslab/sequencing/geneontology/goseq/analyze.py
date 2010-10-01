@@ -29,7 +29,7 @@ def get_goseq_annotation(genome, output_dir, file_name):
     Creates and saves plot of Probability Weighting Function, and
     creates a table that has GO term IDs and enrichment p-values.
     '''
-    import glasslab.sequencing.goseq as goseq
+    import glasslab.sequencing.geneontology.goseq as goseq
     r_script_path = os.path.join(os.path.dirname(goseq.__file__),'ontology_for_peaks.r')
     goseq_command = '%s "%s" "%s" "%s" "%s" "%s" "%s" "%s" "%s" "%s" "%s" "%s" "%s" "%s"' % (r_script_path,
                                                          DATABASES['default']['HOST'],
