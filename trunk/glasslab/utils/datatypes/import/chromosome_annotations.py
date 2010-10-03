@@ -7,7 +7,8 @@ Script for importing original tab-delimited files for a genome
 into models and DB tables.
 '''
 from glasslab.utils.parsing.delimited import DelimitedFileParser
-from glasslab.utils.datatypes.genome_reference import ChromosomeLocationAnnotationFactory
+from glasslab.utils.datatypes.genome_reference import ChromosomeLocationAnnotationFactory,\
+    IntergenicDescription
 from django.db import connection
 import traceback
 import sys
@@ -25,6 +26,25 @@ def import_file(file_path='',genome_name='', type='', start=0):
                                         direction=int(row[4]),
                                         type=type,
                                         description=str(row[0]))
+            cursor = connection.cursor()
+            cursor.close()
+        except: 
+            print start,i,row
+            print traceback.format_exc()
+            raise
+
+def import_file_intergenic(file_path='',genome_name='', type='', start=0):
+    data = DelimitedFileParser(file_path).get_array()
+    model = ChromosomeLocationAnnotationFactory.get_intergenic(genome=genome_name)
+    for i,row in enumerate(data[start:]):
+        try:
+            desc, created = IntergenicDescription.objects.get_or_create(description=re.replace('-HOMER\d+','',str(row[0])))
+            record, created = model.objects.get_or_create(
+                                        chromosome=str(row[1]),
+                                        start=int(row[2]),
+                                        end=int(row[3]),
+                                        direction=int(row[4]),
+                                        description=desc)
             cursor = connection.cursor()
             cursor.close()
         except: 

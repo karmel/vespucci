@@ -126,6 +126,37 @@ class ChromosomeLocationAnnotationHg18(ChromosomeLocationAnnotation):
 class ChromosomeLocationAnnotationHg18r(ChromosomeLocationAnnotation):
     class Meta: db_table = 'genome_reference"."chromosome_location_annotation_hg18r'
 
+class IntergenicDescription(models.Model):
+    description     = models.CharField(max_length=100)
+    
+    class Meta: db_table = 'genome_reference"."intergenic_chromosome_location_description'
+     
+class ChromosomeLocationAnnotationIntergenic(models.Model):
+    '''
+    Mappings of locations to intergenic regions (i.e., repeats).
+    
+    Abstract model; there are a sufficient number of rows that it is useful
+    to separate these by genome.
+    '''
+    chromosome      = models.CharField(max_length=20)
+    start           = models.IntegerField(max_length=12)
+    end             = models.IntegerField(max_length=12)
+    direction       = models.IntegerField(max_length=1, help_text='0 for forward, 1 for backwards')
+    description     = models.ForeignKey(IntergenicDescription)
+    
+    class Meta: abstract = True
+
+class ChromosomeLocationAnnotationMm8Intergenic(ChromosomeLocationAnnotationIntergenic):
+    class Meta: db_table = 'genome_reference"."chromosome_location_annotation_mm8_intergenic'
+class ChromosomeLocationAnnotationMm8rIntergenic(ChromosomeLocationAnnotationIntergenic):
+    class Meta: db_table = 'genome_reference"."chromosome_location_annotation_mm8r_intergenic'
+class ChromosomeLocationAnnotationMm9Intergenic(ChromosomeLocationAnnotationIntergenic):
+    class Meta: db_table = 'genome_reference"."chromosome_location_annotation_mm9_intergenic'
+class ChromosomeLocationAnnotationHg18Intergenic(ChromosomeLocationAnnotationIntergenic):
+    class Meta: db_table = 'genome_reference"."chromosome_location_annotation_hg18_intergenic'
+class ChromosomeLocationAnnotationHg18rIntergenic(ChromosomeLocationAnnotationIntergenic):
+    class Meta: db_table = 'genome_reference"."chromosome_location_annotation_hg18r_intergenic'
+
 class ChromosomeLocationAnnotationFactory(object):
     '''
     Factory for getting appropriate model by genome.
@@ -133,4 +164,8 @@ class ChromosomeLocationAnnotationFactory(object):
     @classmethod
     def get_model(cls, genome):
         return globals()['ChromosomeLocationAnnotation%s' % genome.capitalize().strip()]
+    
+    @classmethod
+    def get_intergenic(cls, genome):
+        return globals()['ChromosomeLocationAnnotation%sIntergenic' % genome.capitalize().strip()]
     
