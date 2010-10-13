@@ -82,7 +82,7 @@ def call_macs(options, file_name, bowtie_file_path):
     macs_command = 'cd %s && macs -t %s -n %s -g %s -f BOWTIE' % (options.output_dir,
                                                                   bowtie_file_path, file_name, 
                                                                   'hs' and options.genome[:2] == 'hg' or 'mm')
-    if options.control: macs_command += ' -c %s' & options.control
+    if options.control: macs_command += ' -c %s' % options.control
     
     try: subprocess.check_call(macs_command, shell=True)
     except Exception:
