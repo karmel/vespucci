@@ -43,7 +43,7 @@ class FastqOptionParser(GlassOptionParser):
                            help='Skip MACS; presume peak annotation uses input file directly.'),
                make_option('--peak_table',action='store', dest='peak_table',
                            help='Skip saving and annotating peaks; peak table will be used directly.'),
-               make_option('--go',action='store_true', dest='goseq', default=True,
+               make_option('--go',action='store_true', dest='go', default=True,
                            help='Run and output gene ontological analysis.'),
                make_option('--goseq',action='store_true', dest='goseq', default=False,
                            help='Run and output ontological analysis using the GOSeq R library.'),
@@ -94,9 +94,8 @@ def import_peaks(options, file_name, macs_file_path):
     '''
     Given a MACS peak file, save a temp table and store peak data.
     '''
-    table_name = '%s_%s_%s' % (file_name.replace(' ','_'), 
-                            datetime.now().strftime('%Y-%m-%d_%H-%M-%S'),
-                            str(randint(0,999999)))
+    table_name = '%s_%s' % (file_name.replace(' ','_'), 
+                            datetime.now().strftime('%Y-%m-%d_%H-%M-%S'))
     
     CurrentPeak.create_table(table_name)
     data = DelimitedFileParser(macs_file_path).get_array()
@@ -135,7 +134,7 @@ def output_peak_annotation(options, file_name):
         try:
             chr = peak.chromosome_location_annotation
             chr_details = [chr.type, chr.description]
-        except Exception: chr_details = ['']*2
+        except Exception: chr_details = ['Intergenic','Nonspecific']
         
         fields = [peak.id, peak.chromosome, peak.start, peak.end,
                   peak.length, peak.summit, peak.tag_count,
@@ -186,12 +185,13 @@ if __name__ == '__main__':
 
         print 'Annotating peaks.'
         annotate_peaks(options)
+        
+        print 'Outputting peak annotation.'
+        output_peak_annotation(options, file_name)
     else:
         CurrentPeak.set_table_name(options.peak_table)
         print 'Using existing peaks table "%s"' % CurrentPeak._meta.db_table 
     
-    print 'Outputting peak annotation.'
-    output_peak_annotation(options, file_name)
         
     if options.go: 
         print 'Analyzing GeneOntology.'

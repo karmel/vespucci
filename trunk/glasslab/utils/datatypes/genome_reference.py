@@ -130,7 +130,9 @@ class IntergenicDescription(models.Model):
     description     = models.CharField(max_length=100)
     
     class Meta: db_table = 'genome_reference"."intergenic_chromosome_location_description'
-     
+    
+    def __unicode__(self): return self.description
+    
 class ChromosomeLocationAnnotationIntergenic(models.Model):
     '''
     Mappings of locations to intergenic regions (i.e., repeats).
@@ -144,6 +146,7 @@ class ChromosomeLocationAnnotationIntergenic(models.Model):
     direction       = models.IntegerField(max_length=1, help_text='0 for forward, 1 for backwards')
     description     = models.ForeignKey(IntergenicDescription)
     
+    type = 'Intergenic'
     class Meta: abstract = True
 
 class ChromosomeLocationAnnotationMm8Intergenic(ChromosomeLocationAnnotationIntergenic):

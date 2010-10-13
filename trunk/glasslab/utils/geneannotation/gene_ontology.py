@@ -8,9 +8,7 @@ and returns results, parsed.
 
 '''
 import MySQLdb
-from MySQLdb.cursors import DictCursor
-from glasslab.utils.datatypes.genome_reference import SequenceIdentifier,\
-    GenomeType, GeneDetail
+from glasslab.utils.datatypes.genome_reference import GenomeType, GeneDetail
 from glasslab.utils.datatypes.gene_ontology_reference import BackgroundGOCount
 
 # DB connection params
@@ -111,7 +109,7 @@ class GOAccessor(object):
         self.close_connection()
         return result
     
-    def get_ancestors_for_genes(self, genes, batch_size=1000, min_count=5, genome_type=None):
+    def get_ancestors_for_genes(self, genes, batch_size=1000, min_count=5):
         '''
         Returns a dictionary of tuples of distance from root, ancestor label, count
         for the passed list of gene symbols, indexed by GO ID::
@@ -135,7 +133,7 @@ class GOAccessor(object):
         results = {}
         for x in xrange(0, len(genes), batch_size):
             subset = genes[x:(x+batch_size)]
-            if subset: sub_results = self._get_ancestors_in_batches(subset, min_count=min_count, genome_type=genome_type)
+            if subset: sub_results = self._get_ancestors_in_batches(subset, min_count=min_count)
             for sub_result in sub_results:
                 try: 
                     # If GO ID already exists, just add in the count; other data is the same.
@@ -143,10 +141,8 @@ class GOAccessor(object):
                 except KeyError: results[sub_result[0]] = list(sub_result)
         return results 
             
-    def _get_ancestors_in_batches(self, genes, min_count=5, genome_type=None):
-        if not genome_type:
-            species_sql = "(species.species = 'sapiens' OR species.species = 'musculus')"
-        else: species_sql = "(species.species = '%s')" % genome_type.split(' ')[1]
+    def _get_ancestors_in_batches(self, genes, min_count=5):
+        
         query = '''
         SELECT 
             derived.*,
@@ -178,15 +174,14 @@ class GOAccessor(object):
               AND association.is_not = '0'
               AND root_term.is_root = '1'
               AND db.xref_dbname = 'UniProtKB'
-              AND %s
+              AND (species.species = 'sapiens' OR species.species = 'musculus')
               AND path_to_root.distance > '1'
             GROUP BY ancestor.acc, gene.symbol
         ) AS derived
         GROUP BY derived.acc
         HAVING count >= %s
         ;
-        ''' % (','.join(['%s'] * len(genes)), 
-               species_sql,
+        ''' % (','.join(['%s'] * len(genes)),
                min_count)
         
         cursor = self.connect_to_go_db()
@@ -221,7 +216,7 @@ class GOAccessor(object):
         and save the expected appearance count, to save time in distribution 
         comparisons later.
         '''
-        genome_types = GenomeType.objects.all()
+        genome_types = GenomeType.objects.all().filter(genome_type='Mus musculus')
         for genome_type in genome_types:
             self._set_background_ontologies_for_genome(genome_type, 
                                                        batch_size=batch_size, 
@@ -234,8 +229,7 @@ class GOAccessor(object):
                                             ).values_list('gene_name', flat=True).distinct()
         
         # Retrieve GO dictionaries
-        go_terms = self.get_ancestors_for_genes(map(lambda x: x.strip(), list(gene_names)),  
-                                                genome_type=genome_type.genome_type)
+        go_terms = self.get_ancestors_for_genes(map(lambda x: x.strip(), list(gene_names)))
         
         # Save to model with term, count, distance from root.
         for go_id, counts in go_terms.items():
