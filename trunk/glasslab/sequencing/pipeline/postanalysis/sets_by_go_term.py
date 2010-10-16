@@ -16,16 +16,21 @@ class IntersectionAnalyzer(object):
     tables = {
                 #'ncor_ko_kla_1h': '"current_projects"."peaks_nathan_ncor_ko_kla_1h_2010-10-13_11-53-21"', 
                 #'ncor_ko_kla_12h': '"current_projects"."peaks_nathan_ncor_ko_kla_12h_2010-10-13_11-34-53"', 
-                #'ncor_ko_notx_1h': '"current_projects"."peaks_nathan_ncor_ko_notx_1h_2010-10-13_11-43-22"',
-                #'ncor_ko_notx_12h': '"current_projects"."peaks_nathan_ncor_ko_notx_12h_2010-10-13_11-24-48"',
+                'ncor_ko_notx_1h': '"current_projects"."peaks_nathan_ncor_ko_notx_1h_2010-10-13_11-43-22"',
+                'ncor_ko_notx_12h': '"current_projects"."peaks_nathan_ncor_ko_notx_12h_2010-10-13_11-24-48"',
                 #'wt_kla_1h': '"current_projects"."peaks_nathan_wt_kla_1h_2010-10-13_12-35-14"',
                 #'wt_kla_12h': '"current_projects"."peaks_nathan_wt_kla_12h_2010-10-13_11-23-44"',
-                #'wt_notx_1h': '"current_projects"."peaks_nathan_wt_notx_1h_2010-10-13_12-10-26"',
-                #'wt_notx_12h': '"current_projects"."peaks_nathan_wt_notx_12h_2010-10-13_11-25-03"',
+                'wt_notx_1h': '"current_projects"."peaks_nathan_wt_notx_1h_2010-10-13_12-10-26"',
+                'wt_notx_12h': '"current_projects"."peaks_nathan_wt_notx_12h_2010-10-13_11-25-03"',
+                
                 #'ncor_ko_kla_1h_with_control': '"current_projects"."peaks_ncor_ko_kla_1h_with_control_2010-10-13_16-42-06"',
                 #'ncor_ko_kla_12h_with_control': '"current_projects"."peaks_ncor_ko_kla_12h_with_control_2010-10-13_17-39-44"',
-                'wt_kla_1h_with_control': '"current_projects"."peaks_wt_kla_1h_with_control_2010-10-13_17-40-39"',
-                'wt_kla_12h_with_control': '"current_projects"."peaks_wt_kla_12h_with_control_2010-10-13_17-32-33"',
+                #'wt_kla_1h_with_control': '"current_projects"."peaks_wt_kla_1h_with_control_2010-10-13_17-40-39"',
+                #'wt_kla_12h_with_control': '"current_projects"."peaks_wt_kla_12h_with_control_2010-10-13_17-32-33"',
+                #'ncor_ko_notx_1h_with_control': '"current_projects"."peaks_ncor_ko_notx_1h_with_control_2010-10-14_11-34-37"',
+                #'ncor_ko_notx_12h_with_control': '"current_projects"."peaks_ncor_ko_notx_12h_with_control_2010-10-14_11-26-42"',
+                #'wt_notx_1h_with_control': '"current_projects"."peaks_wt_notx_1h_with_control_2010-10-14_11-19-20"',
+                #'wt_notx_12h_with_control': '"current_projects"."peaks_wt_notx_12h_with_control_2010-10-14_11-13-10"',
               }
     
     
@@ -171,23 +176,27 @@ class IntersectionAnalyzer(object):
         
         
 if __name__ == '__main__':
-    
+    """
     analyzer = IntersectionAnalyzer(go_term_ids=['GO:0046903'],
                                     output_dir='/Users/karmel/Desktop/Projects/GlassLab/Data/Sequencing/GroSeq/Nathan_NCoR_KO_2010_10_08/secretion')
-    """
+    
     analyzer = IntersectionAnalyzer(go_term_ids=['GO:0046394'],
                                     output_dir='/Users/karmel/Desktop/Projects/GlassLab/Data/Sequencing/GroSeq/Nathan_NCoR_KO_2010_10_08/lipid_synthesis')
-    
-    analyzer = IntersectionAnalyzer(go_term_ids=None,
-                                    output_dir='/Users/karmel/Desktop/Projects/GlassLab/Data/Sequencing/GroSeq/Nathan_NCoR_KO_2010_10_08/all')
     """
+    analyzer = IntersectionAnalyzer(go_term_ids=None,
+                                    output_dir='/Users/karmel/Desktop/Projects/GlassLab/Data/Sequencing/GroSeq/Nathan_NCoR_KO_2010_10_08/all_notx')
+    
     subsets={#'ncor_ko_kla_1h': ['ncor_ko_kla_1h','ncor_ko_kla_12h',],
              #'wt_kla_vs_ncor_ko_kla': ['wt_kla_1h','wt_kla_12h'],
              #'all_kla': ['ncor_ko_kla_1h','ncor_ko_kla_12h','wt_kla_1h','wt_kla_12h'],
+             'ncor_ko_notx_vs_wt_notx': ['ncor_ko_notx_1h','ncor_ko_notx_12h'],
+             'wt_notx_vs_ncor_ko_notx': ['wt_notx_1h','wt_notx_12h'],
+             'all_notx': ['ncor_ko_notx_1h','ncor_ko_notx_12h','wt_notx_1h','wt_notx_12h'],
             #'wt': ['wt_kla_1h','wt_kla_12h','wt_notx_1h','wt_notx_12h'],
             #'ncor_ko_wt_notx': ['ncor_ko_kla_1h','ncor_ko_kla_12h','ncor_ko_notx_1h','ncor_ko_notx_12h','wt_notx_1h','wt_notx_12h'],
             #'ncor_ko_kla_with_control': ['ncor_ko_kla_1h_with_control','ncor_ko_kla_12h_with_control',],
-            'wt_kla_with_control': ['wt_kla_1h_with_control','wt_kla_12h_with_control',],
+            #'wt_notx_with_control': ['wt_notx_1h_with_control','wt_notx_12h_with_control',],
+            #'ncor_ko_notx_with_control': ['ncor_ko_notx_1h_with_control','ncor_ko_notx_12h_with_control',],
              }
     analyzer.query_for_tables()
     analyzer.query_differential_intersections(subsets)
