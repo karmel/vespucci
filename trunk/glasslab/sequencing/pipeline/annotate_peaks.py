@@ -17,7 +17,6 @@ from optparse import make_option
 import subprocess
 import traceback
 from datetime import datetime
-from random import randint
 from glasslab.sequencing.datatypes.peak import CurrentPeak
 from glasslab.utils.parsing.delimited import DelimitedFileParser
 from glasslab.sequencing.geneontology.goseq.analyze import get_goseq_annotation,\

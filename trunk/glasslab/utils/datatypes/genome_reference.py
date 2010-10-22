@@ -2,11 +2,17 @@
 Created on Sep 24, 2010
 
 @author: karmel
+
+.. attention::
+    
+    All sequence indices assume a start position of 0, as per the UCSC Genome Browser standard.
+
 '''
 from django.db import models
+from glasslab.config import current_settings
     
 #######################################################
-# Gene identifiers
+# Genome identifiers
 #######################################################
 
 class GenomeType(models.Model):
@@ -26,7 +32,27 @@ class Genome(models.Model):
     description = models.CharField(max_length=50)
     
     class Meta: db_table = 'genome_reference"."genome'
+
+class KeggPathway(models.Model):
+    '''
+    Kegg Pathway descriptions
+    '''
+    pathway_key = models.CharField(max_length=10, help_text='Identifier string for the pathway (i.e., "mmu00051"')
+    description = models.CharField(max_length=255)
     
+    class Meta: db_table = 'genome_reference"."kegg_pathway'
+    
+#######################################################
+# Per-genome Gene identifiers
+#######################################################
+class Chromosome(models.Model):
+    '''
+    Unique record of chromosome, i.e. 'chr1', 'chrUn_random', etc
+    '''
+    name = models.CharField(max_length=25, blank=False)
+    
+    class Meta: db_table = 'genome_reference_%s"."chromosome' % current_settings.GENOME
+
 class SequenceIdentifier(models.Model):
     '''
     Gene and sequence (i.e., noncoding RNA) identifiers from RefSeq, unique per genome.
@@ -34,40 +60,16 @@ class SequenceIdentifier(models.Model):
     genome_type         = models.ForeignKey(GenomeType)
     sequence_identifier = models.CharField(max_length=50, blank=False)
     
-    class Meta: db_table = 'genome_reference"."sequence_identifier'
+    class Meta: db_table = 'genome_reference_%s"."sequence_identifier' % current_settings.GENOME
     
-    @classmethod
-    def get_with_fallback(cls, *args, **kwargs):
-        ''' 
-        Try to get sequence id directly first; if that fails, check aliases.
-        
-        Requires that sequence_identifier be passed in.
-        '''
-        try: return cls.objects.get(*args,**kwargs)
-        except cls.DoesNotExist:
-            kwargs['alias'] = kwargs.get('sequence_identifier')
-            del kwargs['sequence_identifier']
-            return SequenceAlias.objects.get(*args, **kwargs).sequence_identifier
-
     _gene_detail = None
     @property 
-    def gene_detail(self):
+    def sequence_detail(self):
         if not self._gene_detail:
-            self._gene_detail = GeneDetail.objects.get(sequence_identifier=self)
+            self._gene_detail = SequenceDetail.objects.get(sequence_identifier=self)
         return self._gene_detail
-    
-class SequenceAlias(models.Model):
-    '''
-    Unique identifiers for sequence fragments, keyed to single parent sequence identifier.
-    If self is same as parent, keyed to self.
-    '''
-    genome_type         = models.ForeignKey(GenomeType)
-    alias               = models.CharField(max_length=50, blank=False)
-    sequence_identifier = models.ForeignKey(SequenceIdentifier, help_text='Main identifier.')
-    
-    class Meta: db_table = 'genome_reference"."sequence_alias'
 
-class GeneDetail(models.Model):
+class SequenceDetail(models.Model):
     '''
     Gene details, keyed to unique sequences.
     '''
@@ -79,96 +81,99 @@ class GeneDetail(models.Model):
     gene_description    = models.CharField(max_length=255, blank=True)
     refseq_gene_id      = models.IntegerField(max_length=12, blank=True)
     
-    class Meta: db_table = 'genome_reference"."gene_detail'
+    class Meta: db_table = 'genome_reference_%s"."gene_detail' % current_settings.GENOME
  
 #######################################################
-# Chromosome location details 
+# Chromosome region details 
 #######################################################
-class TranscriptionStartSite(models.Model):
+class SequenceTranscriptionRegion(models.Model):
     '''
-    Mappings of transcription start sites.
+    Mappings of transcription regions and coding sites.
     '''
-    genome              = models.ForeignKey(Genome)
     sequence_identifier = models.ForeignKey(SequenceIdentifier)
-    chromosome          = models.CharField(max_length=20)
-    start               = models.IntegerField(max_length=12)
-    end                 = models.IntegerField(max_length=12)
-    direction           = models.IntegerField(max_length=1, help_text='0 for forward, 1 for backwards')
+    full_bin            = models.IntegerField(max_length=7, help_text='5 digit, left-padded, bin, plus id of chromosome.')
+    chromosome          = models.ForeignKey(Chromosome)
+    bin                 = models.IntegerField(max_length=5, help_text='Base-2 determined bin.')
+    strand              = models.IntegerField(max_length=1, help_text='0 for +, 1 for -')
+    transcription_start = models.IntegerField(max_length=12)
+    transcription_end   = models.IntegerField(max_length=12)    
+    coding_start        = models.IntegerField(max_length=12)
+    coding_end          = models.IntegerField(max_length=12)
     
-    class Meta: db_table = 'genome_reference"."transcription_start_site'
-    
-class ChromosomeLocationAnnotation(models.Model):
-    '''
-    Mappings of locations to introns, exons, etc.
-    
-    Abstract model; there are a sufficient number of rows that it is useful
-    to separate these by genome.
-    '''
-    chromosome      = models.CharField(max_length=20)
-    start           = models.IntegerField(max_length=12)
-    end             = models.IntegerField(max_length=12)
-    direction       = models.IntegerField(max_length=1, help_text='0 for forward, 1 for backwards')
-    type            = models.CharField(max_length=20, choices=[((x,x) for x in ('Intron','Exon','CpG Island',
-                                                                                'Intergenic','Promoter',
-                                                                                "3' UTR", "5' UTR"))])
-    description     = models.CharField(max_length=255, blank=True)
-    
-    class Meta: abstract = True
+    class Meta: db_table = 'genome_reference_%s"."sequence_transcription_region' % current_settings.GENOME
 
-class ChromosomeLocationAnnotationMm8(ChromosomeLocationAnnotation):
-    class Meta: db_table = 'genome_reference"."chromosome_location_annotation_mm8'
-class ChromosomeLocationAnnotationMm8r(ChromosomeLocationAnnotation):
-    class Meta: db_table = 'genome_reference"."chromosome_location_annotation_mm8r'
-class ChromosomeLocationAnnotationMm9(ChromosomeLocationAnnotation):
-    class Meta: db_table = 'genome_reference"."chromosome_location_annotation_mm9'
-class ChromosomeLocationAnnotationHg18(ChromosomeLocationAnnotation):
-    class Meta: db_table = 'genome_reference"."chromosome_location_annotation_hg18'
-class ChromosomeLocationAnnotationHg18r(ChromosomeLocationAnnotation):
-    class Meta: db_table = 'genome_reference"."chromosome_location_annotation_hg18r'
+class SequenceExon(models.Model):
+    '''
+    Mappings of transcription regions and coding sites.
+    '''
+    sequence_transcription_region = models.ForeignKey(SequenceTranscriptionRegion)
+    exon_start = models.IntegerField(max_length=12)
+    exon_end   = models.IntegerField(max_length=12)    
+    frame      = models.IntegerField(max_length=5, help_text='Number o nucleotides needed from prior exon to make a complete amino acid at the start of this exon.')
+    
+    class Meta: db_table = 'genome_reference_%s"."sequence_exon' % current_settings.GENOME
+    
+class SequenceKeggPathway(models.Model):
+    '''
+    Mappings of transcription regions and coding sites.
+    '''
+    sequence_identifier = models.ForeignKey(SequenceIdentifier)
+    kegg_pathway        = models.ForeignKey(KeggPathway)
+    map_location        = models.CharField(max_length=50, help_text='Mappable identifier for this sequence and pathway; can be used in Kegg URLs.')
+    
+    class Meta: db_table = 'genome_reference_%s"."sequence_kegg_pathway' % current_settings.GENOME
 
-class IntergenicDescription(models.Model):
-    description     = models.CharField(max_length=100)
-    
-    class Meta: db_table = 'genome_reference"."intergenic_chromosome_location_description'
-    
-    def __unicode__(self): return self.description
-    
-class ChromosomeLocationAnnotationIntergenic(models.Model):
+class NonCodingTranscriptionRegion(models.Model):
     '''
-    Mappings of locations to intergenic regions (i.e., repeats).
+    Mappings of transcription regions that are not tied to RefSeq genes.
     
-    Abstract model; there are a sufficient number of rows that it is useful
-    to separate these by genome.
+    Scores are 0 - 1000, higher indicating that the sequence is more likely to be true ncRNA.
+    
     '''
-    chromosome      = models.CharField(max_length=20)
-    start           = models.IntegerField(max_length=12)
-    end             = models.IntegerField(max_length=12)
-    direction       = models.IntegerField(max_length=1, help_text='0 for forward, 1 for backwards')
-    description     = models.ForeignKey(IntergenicDescription)
+    type                = models.CharField(max_length=20)
+    name                = models.CharField(max_length=100)
+    full_bin            = models.IntegerField(max_length=7, help_text='5 digit, left-padded, bin, plus id of chromosome.')
+    chromosome          = models.ForeignKey(Chromosome)
+    bin                 = models.IntegerField(max_length=5, help_text='Base-2 determined bin.')
+    strand              = models.IntegerField(max_length=1, help_text='0 for +, 1 for -')
+    transcription_start = models.IntegerField(max_length=12)
+    transcription_end   = models.IntegerField(max_length=12)    
+    score               = models.IntegerField(max_length=5)
     
-    type = 'Intergenic'
-    class Meta: abstract = True
+    class Meta: db_table = 'genome_reference_%s"."non_coding_transcription_region' % current_settings.GENOME
 
-class ChromosomeLocationAnnotationMm8Intergenic(ChromosomeLocationAnnotationIntergenic):
-    class Meta: db_table = 'genome_reference"."chromosome_location_annotation_mm8_intergenic'
-class ChromosomeLocationAnnotationMm8rIntergenic(ChromosomeLocationAnnotationIntergenic):
-    class Meta: db_table = 'genome_reference"."chromosome_location_annotation_mm8r_intergenic'
-class ChromosomeLocationAnnotationMm9Intergenic(ChromosomeLocationAnnotationIntergenic):
-    class Meta: db_table = 'genome_reference"."chromosome_location_annotation_mm9_intergenic'
-class ChromosomeLocationAnnotationHg18Intergenic(ChromosomeLocationAnnotationIntergenic):
-    class Meta: db_table = 'genome_reference"."chromosome_location_annotation_hg18_intergenic'
-class ChromosomeLocationAnnotationHg18rIntergenic(ChromosomeLocationAnnotationIntergenic):
-    class Meta: db_table = 'genome_reference"."chromosome_location_annotation_hg18r_intergenic'
+class PatternedTranscriptionRegion(models.Model):
+    '''
+    Mappings of patterns-- i.e., repeats-- onto transcription regions.
+    '''
+    type                = models.CharField(max_length=20)
+    name                = models.CharField(max_length=100)
+    full_bin            = models.IntegerField(max_length=7, help_text='5 digit, left-padded, bin, plus id of chromosome.')
+    chromosome          = models.ForeignKey(Chromosome)
+    bin                 = models.IntegerField(max_length=5, help_text='Base-2 determined bin.')
+    strand              = models.IntegerField(max_length=1, help_text='0 for +, 1 for -. Default NULL')
+    transcription_start = models.IntegerField(max_length=12)
+    transcription_end   = models.IntegerField(max_length=12)
+    
+    class Meta: db_table = 'genome_reference_%s"."patterned_transcription_region' % current_settings.GENOME
 
-class ChromosomeLocationAnnotationFactory(object):
+class ConservedTranscriptionRegion(models.Model):
     '''
-    Factory for getting appropriate model by genome.
+    Coservation records for transcription regions determined by the phastCons HMM algorithm.
+    
+    Scores are 0 - 1000, higher indicating more likely to be a conserved region.
+    
+    More on the scores: http://genome.ucsc.edu/goldenPath/help/phastCons.html
+    
+    Siepel A and Haussler D (2005). Phylogenetic hidden Markov models. In R. Nielsen, ed., 
+    Statistical Methods in Molecular Evolution, pp. 325-351, Springer, New York.
+    
     '''
-    @classmethod
-    def get_model(cls, genome):
-        return globals()['ChromosomeLocationAnnotation%s' % genome.capitalize().strip()]
+    full_bin            = models.IntegerField(max_length=7, help_text='5 digit, left-padded, bin, plus id of chromosome.')
+    chromosome          = models.ForeignKey(Chromosome)
+    bin                 = models.IntegerField(max_length=5, help_text='Base-2 determined bin.')
+    transcription_start = models.IntegerField(max_length=12)
+    transcription_end   = models.IntegerField(max_length=12)
+    score               = models.IntegerField(max_length=5)
     
-    @classmethod
-    def get_intergenic(cls, genome):
-        return globals()['ChromosomeLocationAnnotation%sIntergenic' % genome.capitalize().strip()]
-    
+    class Meta: db_table = 'genome_reference_%s"."conserved_transcription_region' % current_settings.GENOME
