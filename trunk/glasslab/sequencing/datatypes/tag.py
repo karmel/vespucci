@@ -16,6 +16,7 @@ def multiprocess_glass_tags(func, cls):
     ''' 
     Convenience method for splitting up queries based on glass tag id.
     '''
+    print GlassTag.chromosomes()
     total_count = len(GlassTag.chromosomes())
     p = Pool(8)
     step = int(math.ceil(total_count/8))
@@ -111,7 +112,7 @@ class GlassTag(DynamicTable):
     @classmethod 
     def chromosomes(cls): 
         if not cls._chromosomes:
-            cls._chromosomes = cls.objects.values_list('chromosome_id',flat=True)
+            cls._chromosomes = cls.objects.values('chromosome').distinct().values_list('chromosome_id',flat=True)
         return cls._chromosomes
            
     @classmethod
