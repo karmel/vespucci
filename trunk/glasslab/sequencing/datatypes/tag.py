@@ -8,6 +8,8 @@ from django.db import connection, transaction
 from glasslab.utils.datatypes.genome_reference import SequenceTranscriptionRegion,\
     NonCodingTranscriptionRegion, PatternedTranscriptionRegion, SequenceExon,\
     ConservedTranscriptionRegion, Chromosome
+from multiprocessing import Pool
+import math
 
 class DynamicTable(models.Model):
     name = None
@@ -179,21 +181,123 @@ class GlassTag(DynamicTable):
     @classmethod
     def add_chromosome_index(cls):
         update_sql = """
-        CREATE INDEX %s_chr_idx ON "%s" USING btree (chromosome_id, start_end);
-        """ % (cls.name, cls._meta.db_table)
+        CREATE INDEX %s_chr_idx ON "%s" USING btree (chromosome_id);
+        CREATE INDEX %s_start_end_idx ON "%s" USING gist (chromosome_id);
+        """ % (cls.name, cls._meta.db_table,
+               cls.name, cls._meta.db_table)
         connection.close()
         cursor = connection.cursor()
         cursor.execute(update_sql)
         transaction.commit_unless_managed()
                           
-class GlassTagSequence(DynamicTable):
+
+class GlassTagTranscriptionRegionTable(DynamicTable):
+    glass_tag       = models.ForeignKey(GlassTag)
+    
+    table_type      = None
+    
+    class Meta: abstract = True
+    
+    @classmethod        
+    def create_table(cls, name):
+        '''
+        Create table that will be used for these tags,
+        dynamically named.
+        '''
+        if cls.table_created: print 'Warning: Glass Tag to %s Transcription table has already been created.' % cls.table_type
+        name = 'tag_%s_%s' % (cls.table_type,name)
+        cls.set_table_name(name)
+        table_sql = """
+        CREATE TABLE "%s" (
+            id integer NOT NULL,
+            glass_tag_id integer,
+            %s_transcription_region_id integer
+        );
+        CREATE SEQUENCE "%s_id_seq"
+            START WITH 1
+            INCREMENT BY 1
+            NO MINVALUE
+            NO MAXVALUE
+            CACHE 1;
+        ALTER SEQUENCE "%s_id_seq" OWNED BY "%s".id;
+        ALTER TABLE "%s" ALTER COLUMN id SET DEFAULT nextval('"%s_id_seq"'::regclass);
+        ALTER TABLE ONLY "%s" ADD CONSTRAINT %s_pkey PRIMARY KEY (id);
+        """ % (cls._meta.db_table, cls.table_type,
+               cls._meta.db_table,
+               cls._meta.db_table, cls._meta.db_table,
+               cls._meta.db_table, cls._meta.db_table,
+               cls._meta.db_table, name)
+        cursor = connection.cursor()
+        cursor.execute(table_sql)
+        transaction.commit_unless_managed()
+        
+        cls.table_created = True
+    
+    @classmethod
+    def insert_matching_tags(cls):
+        '''
+        Multi-process and split by id to conserve time.
+        '''
+        total_count = cls.objects.count()
+        p = Pool(8)
+        step = int(math.ceil(total_count,total_count/8))
+        for start in xrange(0,total_count,step):
+            p.apply_async(wrap_insert_matching_tags, args=(cls, start, start + step))
+        p.close()
+        p.join()
+    @classmethod
+    def _insert_matching_tags(cls, start, stop):
+        '''
+        Insert records where either the start or the end of the tag 
+        are within the boundaries of the sequence region.
+        '''
+        insert_sql = """
+        INSERT INTO
+            "%s" (glass_tag_id, sequence_transcription_region_id)
+        SELECT * FROM
+            (SELECT tag.id, reg.id
+            FROM "%s" tag
+            JOIN "%s" reg
+            ON
+                tag.chromosome_id = reg.chromosome_id
+                AND tag.start_end OPERATOR(public.&&) reg.start_end
+            WHERE tag.id > %d AND tag.id <= %d) derived;
+        """ % (cls._meta.db_table, 
+               GlassTag._meta.db_table,
+               cls.related_class._meta.db_table,
+               start, stop)
+        connection.close()
+        cursor = connection.cursor()
+        cursor.execute(insert_sql)
+        transaction.commit_unless_managed()
+        
+    @classmethod  
+    def add_indices(cls):
+        update_sql = """
+        CREATE INDEX %s_%s_idx ON "%s" USING btree (%s_transcription_region_id);
+        """ % (cls.name,cls.table_type, 
+               cls._meta.db_table, cls.table_type)
+        connection.close()
+        cursor = connection.cursor()
+        cursor.execute(update_sql)
+        transaction.commit_unless_managed() 
+
+def wrap_insert_matching_tags(cls, start, stop):
+    '''
+    For use with multiprocessing
+    '''
+    cls._insert_matching_tags(start, stop)
+    
+class GlassTagSequence(GlassTagTranscriptionRegionTable):
     '''
     Relationship between GlassTag and the sequence record it maps to.
     '''
-    glass_tag                       = models.ForeignKey(GlassTag)
     sequence_transcription_region   = models.ForeignKey(SequenceTranscriptionRegion)
     exon                            = models.BooleanField(default=False)
     start_site                      = models.BooleanField(default=False)
+    
+    table_type = 'sequence'
+    related_class = SequenceTranscriptionRegion
     
     @classmethod        
     def create_table(cls, name):
@@ -234,35 +338,6 @@ class GlassTagSequence(DynamicTable):
         cls.table_created = True
     
     promotion_cutoff = 1000
-    @classmethod
-    def insert_matching_tags(cls):
-        '''
-        Insert records where either the start or the end of the tag 
-        are within the boundaries of the sequence region.
-        
-        Mark records as start_site=1 if the region is on the + strand
-        and the start of the tag is within 1kb of the start of the region,
-        or if the region is on the - strand and the end of the tag is 
-        within 1kb of the end of the region.
-        '''
-        insert_sql = """
-        INSERT INTO
-            "%s" (glass_tag_id, sequence_transcription_region_id)
-        SELECT * FROM
-            (SELECT tag.id, reg.id
-            FROM "%s" tag
-            JOIN "%s" reg
-            ON
-                tag.chromosome_id = reg.chromosome_id
-                AND tag.start_end OPERATOR(public.&&) reg.start_end
-            ) derived;
-        """ % (cls._meta.db_table, 
-               GlassTag._meta.db_table,
-               SequenceTranscriptionRegion._meta.db_table)
-        connection.close()
-        cursor = connection.cursor()
-        cursor.execute(insert_sql)
-        transaction.commit_unless_managed()
     
     @classmethod  
     def update_start_site_tags(cls):
@@ -317,91 +392,6 @@ class GlassTagSequence(DynamicTable):
         cursor = connection.cursor()
         cursor.execute(update_sql)
         transaction.commit_unless_managed()
-    
-    @classmethod  
-    def add_indices(cls):
-        update_sql = """
-        CREATE INDEX %s_sequence_idx ON "%s" USING btree (sequence_transcription_region_id);
-        """ % (cls.name, cls._meta.db_table)
-        connection.close()
-        cursor = connection.cursor()
-        cursor.execute(update_sql)
-        transaction.commit_unless_managed()
-
-class GlassTagTranscriptionRegionTable(DynamicTable):
-    glass_tag       = models.ForeignKey(GlassTag)
-    
-    table_type      = None
-    
-    class Meta: abstract = True
-    
-    @classmethod        
-    def create_table(cls, name):
-        '''
-        Create table that will be used for these tags,
-        dynamically named.
-        '''
-        if cls.table_created: print 'Warning: Glass Tag to %s Transcription table has already been created.' % cls.table_type
-        name = 'tag_%s_%s' % (cls.table_type,name)
-        cls.set_table_name(name)
-        table_sql = """
-        CREATE TABLE "%s" (
-            id integer NOT NULL,
-            glass_tag_id integer,
-            %s_transcription_region_id integer
-        );
-        CREATE SEQUENCE "%s_id_seq"
-            START WITH 1
-            INCREMENT BY 1
-            NO MINVALUE
-            NO MAXVALUE
-            CACHE 1;
-        ALTER SEQUENCE "%s_id_seq" OWNED BY "%s".id;
-        ALTER TABLE "%s" ALTER COLUMN id SET DEFAULT nextval('"%s_id_seq"'::regclass);
-        ALTER TABLE ONLY "%s" ADD CONSTRAINT %s_pkey PRIMARY KEY (id);
-        """ % (cls._meta.db_table, cls.table_type,
-               cls._meta.db_table,
-               cls._meta.db_table, cls._meta.db_table,
-               cls._meta.db_table, cls._meta.db_table,
-               cls._meta.db_table, name)
-        cursor = connection.cursor()
-        cursor.execute(table_sql)
-        transaction.commit_unless_managed()
-        
-        cls.table_created = True
-    
-    @classmethod
-    def insert_matching_tags(cls):
-        '''
-        Insert records where either the start or the end of the tag 
-        are within the boundaries of the transcription region.
-        '''
-        insert_sql = """
-        INSERT INTO
-            "%s" (glass_tag_id, %s_transcription_region_id)
-        SELECT tag.id, reg.id
-        FROM "%s" tag, "%s" reg
-        WHERE
-            tag.chromosome_id = reg.chromosome_id
-            AND tag.start_end OPERATOR(public.&&) reg.start_end;
-        """ % (cls._meta.db_table, cls.table_type,
-               GlassTag._meta.db_table,
-               cls.related_class._meta.db_table)
-        connection.close()
-        cursor = connection.cursor()
-        cursor.execute(insert_sql)
-        transaction.commit_unless_managed()
-    
-    @classmethod  
-    def add_indices(cls):
-        update_sql = """
-        CREATE INDEX %s_%s_idx ON "%s" USING btree (%s_transcription_region_id);
-        """ % (cls.name,cls.table_type, 
-               cls._meta.db_table, cls.table_type)
-        connection.close()
-        cursor = connection.cursor()
-        cursor.execute(update_sql)
-        transaction.commit_unless_managed() 
         
 class GlassTagNonCoding(GlassTagTranscriptionRegionTable):
     '''
