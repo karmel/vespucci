@@ -270,6 +270,7 @@ class GlassTagTranscriptionRegionTable(DynamicTable):
                GlassTag._meta.db_table,
                cls.related_class._meta.db_table,
                start, stop)
+        print insert_sql
         connection.close()
         cursor = connection.cursor()
         cursor.execute(insert_sql)
