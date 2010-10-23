@@ -12,6 +12,28 @@ from glasslab.utils.datatypes.genome_reference import SequenceTranscriptionRegio
 from multiprocessing import Pool
 import math
 
+def multiprocess_glass_tags(func, cls):
+    ''' 
+    Convenience method for splitting up queries based on glass tag id.
+    '''
+    total_count = GlassTag.count()
+    p = Pool(8)
+    step = int(math.ceil(total_count/8))
+    for start in xrange(0,total_count,step):
+        p.apply_async(func, args=(cls, start, start + step))
+    p.close()
+    p.join()
+
+# The following methods wrap bound methods. This is necessary
+# for use with multiprocessing. Note that getattr with dynamic function names
+# doesn't seem to work either.
+def wrap_translate_from_bowtie(cls, start, stop): cls._translate_from_bowtie(start, stop)
+def wrap_associate_chromosome(cls, start, stop): cls._associate_chromosome(start, stop)
+def wrap_set_start_end_cube(cls, start, stop): cls._set_start_end_cube(start, stop)
+def wrap_insert_matching_tags(cls, start, stop): cls._insert_matching_tags(start, stop)
+def wrap_update_start_site_tags(cls, start, stop): cls._update_start_site_tags(start, stop)
+def wrap_update_exon_tags(cls, start, stop): cls._update_exon_tags(start, stop)
+        
 class DynamicTable(models.Model):
     name = None
     table_created = None
@@ -86,15 +108,28 @@ class GlassTag(DynamicTable):
         
         cls.table_created = True
     
+    _count = None
+    @classmethod 
+    def count(cls): 
+        if not cls._count:
+            cls._count = cls.objects.count()
+        return cls._count
+    
     @classmethod
     def translate_from_bowtie(cls):
+        multiprocess_glass_tags(wrap_translate_from_bowtie, cls)
+        
+    @classmethod
+    def _translate_from_bowtie(cls, start, stop):
         '''
         Take bowtied uploaded values and streamline into ints and sequence ends.
         '''
         update_query = """
-        UPDATE "%s" SET strand = (CASE WHEN strand_char = '-' THEN 1 ELSE 0 END);
-        UPDATE "%s" SET "end" = ("start" + char_length(sequence_matched));
-        """ % (cls._meta.db_table,cls._meta.db_table)
+        UPDATE "%s" SET strand = (CASE WHEN strand_char = '-' THEN 1 ELSE 0 END) WHERE id > %d and id <= %d;
+        UPDATE "%s" SET "end" = ("start" + char_length(sequence_matched)) WHERE id > %d and id <= %d;
+        """ % (cls._meta.db_table,cls._meta.db_table,
+               start, stop,
+               start, stop)
         connection.close()
         cursor = connection.cursor()
         cursor.execute(update_query)
@@ -102,13 +137,19 @@ class GlassTag(DynamicTable):
             
     @classmethod
     def associate_chromosome(cls):
+        multiprocess_glass_tags(wrap_associate_chromosome, cls)
+        
+    @classmethod
+    def _associate_chromosome(cls):
         '''
         Take bowtied uploaded values and streamline into ints and sequence ends.
         '''
         update_query = """
         UPDATE "%s" tag SET chromosome_id = chr.id
-        FROM "%s" chr WHERE tag.chromosome = chr.name;
-        """ % (cls._meta.db_table, Chromosome._meta.db_table)
+        FROM "%s" chr WHERE tag.chromosome = chr.name
+        WHERE tag.id > %d and tag.id <= %d;
+        """ % (cls._meta.db_table, Chromosome._meta.db_table,
+               start, stop)
         connection.close()
         cursor = connection.cursor()
         cursor.execute(update_query)
@@ -116,12 +157,16 @@ class GlassTag(DynamicTable):
             
     @classmethod
     def set_start_end_cube(cls):
+        multiprocess_glass_tags(wrap_set_start_end_cube, cls)
+        
+    @classmethod
+    def _set_start_end_cube(cls, start, stop):
         '''
         Create type cube field for faster interval searching with the PostgreSQL cube package.
         '''
         update_query = """
-        UPDATE "%s" set start_end = public.cube("start"::float,"end"::float);
-        """ % cls._meta.db_table
+        UPDATE "%s" set start_end = public.cube("start"::float,"end"::float) WHERE id > %d and id <= %d;
+        """ % (cls._meta.db_table, start, stop)
         connection.close()
         cursor = connection.cursor()
         cursor.execute(update_query)
@@ -144,40 +189,6 @@ class GlassTag(DynamicTable):
         transaction.commit_unless_managed()
         
         cls.table_created = False
-
-    @classmethod 
-    def set_bins(cls):
-        '''
-        Set bins according to bitwise operation algorithm used by UCSC, SAM, etc:
-        
-            In the following, each bin may span 2^29, 2^26, 2^23, 2^20, 2^17 or 2^14 bp. 
-            Bin 0 spans a 512Mbp region, bins 1-8 span 64Mbp, 
-            9-72 8Mbp, 73-584 1Mbp, 585-4680 128Kbp and bins 4681-37449 span 16Kbp regions. 
-            
-        (From http://samtools.sourceforge.net/SAM1.pdf)
-        '''
-        sets = ((14,15),(17,12),(20,9),(23,6),(26,3))
-        for span, shift in sets:
-            # Not that these all block each other; no gain in multiprocessing.
-            cls._set_bin(span, shift)
-        
-    @classmethod
-    def _set_bin(cls, span, shift):
-            update_sql = """
-            UPDATE "%s"
-            SET 
-                full_bin = (chromosome_id * 100000 + (((1<<%d)-1)/7 + ("start">>%d))), 
-                bin = (((1<<%d)-1)/7 + ("start">>%d))
-            WHERE 
-                    ("start">>%d = "end">>%d);
-            """ % (cls._meta.db_table,
-                   shift, span, 
-                   shift, span, 
-                   span, span)
-            connection.close()
-            cursor = connection.cursor()
-            cursor.execute(update_sql)
-            transaction.commit_unless_managed()
 
     @classmethod
     def add_chromosome_index(cls):
@@ -236,16 +247,7 @@ class GlassTagTranscriptionRegionTable(DynamicTable):
     
     @classmethod
     def insert_matching_tags(cls):
-        '''
-        Multi-process and split by id to conserve time.
-        '''
-        total_count = GlassTag.objects.count()
-        p = Pool(8)
-        step = int(math.ceil(total_count/8))
-        for start in xrange(0,total_count,step):
-            p.apply_async(wrap_insert_matching_tags, args=(cls, start, start + step))
-        p.close()
-        p.join()
+        multiprocess_glass_tags(wrap_insert_matching_tags, cls)
         
     @classmethod
     def _insert_matching_tags(cls, start, stop):
@@ -283,12 +285,6 @@ class GlassTagTranscriptionRegionTable(DynamicTable):
         cursor = connection.cursor()
         cursor.execute(update_sql)
         transaction.commit_unless_managed() 
-
-def wrap_insert_matching_tags(cls, start, stop):
-    '''
-    For use with multiprocessing
-    '''
-    cls._insert_matching_tags(start, stop)
     
 class GlassTagSequence(GlassTagTranscriptionRegionTable):
     '''
@@ -343,6 +339,10 @@ class GlassTagSequence(GlassTagTranscriptionRegionTable):
     
     @classmethod  
     def update_start_site_tags(cls):
+        multiprocess_glass_tags(wrap_update_start_site_tags, cls)
+        
+    @classmethod  
+    def _update_start_site_tags(cls, start, stop):
         '''
         If the start of a tag is within 1kb of the 
         start (if + strand) or the start of a tag is within
@@ -355,6 +355,7 @@ class GlassTagSequence(GlassTagTranscriptionRegionTable):
         FROM "%s" tag, "%s" reg
         WHERE 
         tag_seq.sequence_transcription_region_id = reg.id
+        AND tag.id > %d AND tag.id <= %d
         AND tag_seq.glass_tag_id = tag.id
         AND ((reg.strand = 0
             AND tag.start <= (reg.transcription_start + %d))
@@ -363,6 +364,7 @@ class GlassTagSequence(GlassTagTranscriptionRegionTable):
         """ % (cls._meta.db_table, 
                GlassTag._meta.db_table,
                SequenceTranscriptionRegion._meta.db_table,
+               start, stop,
                cls.promotion_cutoff, cls.promotion_cutoff)
         connection.close()
         cursor = connection.cursor()
@@ -371,6 +373,10 @@ class GlassTagSequence(GlassTagTranscriptionRegionTable):
         
     @classmethod  
     def update_exon_tags(cls):
+        multiprocess_glass_tags(wrap_update_exon_tags, cls)
+
+    @classmethod  
+    def _update_exon_tags(cls, start, stop):
         '''
         If a tag is within the exon of the sequence associated,
         set exon = 1
@@ -382,6 +388,7 @@ class GlassTagSequence(GlassTagTranscriptionRegionTable):
         FROM "%s" tag, "%s" ex
         WHERE
             tag_seq.sequence_transcription_region_id = ex.sequence_transcription_region_id
+            AND tag.id > %d AND tag.id <= %d
             AND tag_seq.glass_tag_id = tag.id
             AND ((tag."start" >= ex.exon_start
                     AND tag."start" <= ex.exon_end)
@@ -389,7 +396,8 @@ class GlassTagSequence(GlassTagTranscriptionRegionTable):
                     AND tag."end" <= ex.exon_end));
         """ % (cls._meta.db_table, 
                GlassTag._meta.db_table,
-               SequenceExon._meta.db_table)
+               SequenceExon._meta.db_table,
+               start, stop)
         connection.close()
         cursor = connection.cursor()
         cursor.execute(update_sql)
