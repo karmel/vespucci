@@ -16,7 +16,7 @@ def multiprocess_glass_tags(func, cls):
     ''' 
     Convenience method for splitting up queries based on glass tag id.
     '''
-    total_count = len(GlassTag.chromosomes)
+    total_count = len(GlassTag.chromosomes())
     p = Pool(8)
     step = int(math.ceil(total_count/8))
     for start in xrange(0,total_count,step):
