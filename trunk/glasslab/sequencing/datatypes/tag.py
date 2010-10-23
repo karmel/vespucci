@@ -16,23 +16,22 @@ def multiprocess_glass_tags(func, cls):
     ''' 
     Convenience method for splitting up queries based on glass tag id.
     '''
-    total_count = GlassTag.count()
+    total_count = len(GlassTag.chromosomes)
     p = Pool(8)
     step = int(math.ceil(total_count/8))
     for start in xrange(0,total_count,step):
-        p.apply_async(func, args=(cls, start, start + step))
+        p.apply_async(func, args=(cls, GlassTag.chromosomes[start:(start+step)]))
     p.close()
     p.join()
 
 # The following methods wrap bound methods. This is necessary
 # for use with multiprocessing. Note that getattr with dynamic function names
 # doesn't seem to work either.
-def wrap_translate_from_bowtie(cls, start, stop): cls._translate_from_bowtie(start, stop)
-def wrap_associate_chromosome(cls, start, stop): cls._associate_chromosome(start, stop)
-def wrap_set_start_end_cube(cls, start, stop): cls._set_start_end_cube(start, stop)
-def wrap_insert_matching_tags(cls, start, stop): cls._insert_matching_tags(start, stop)
-def wrap_update_start_site_tags(cls, start, stop): cls._update_start_site_tags(start, stop)
-def wrap_update_exon_tags(cls, start, stop): cls._update_exon_tags(start, stop)
+def wrap_translate_from_bowtie(cls, chr_list): cls._translate_from_bowtie(chr_list)
+def wrap_set_start_end_cube(cls, chr_list): cls._set_start_end_cube(chr_list)
+def wrap_insert_matching_tags(cls, chr_list): cls._insert_matching_tags(chr_list)
+def wrap_update_start_site_tags(cls, chr_list): cls._update_start_site_tags(chr_list)
+def wrap_update_exon_tags(cls, chr_list): cls._update_exon_tags(chr_list)
         
 class DynamicTable(models.Model):
     name = None
@@ -108,69 +107,65 @@ class GlassTag(DynamicTable):
         
         cls.table_created = True
     
-    _count = None
+    _chromosomes = None
     @classmethod 
-    def count(cls): 
-        if not cls._count:
-            cls._count = cls.objects.count()
-        return cls._count
+    def chromosomes(cls): 
+        if not cls._chromosomes:
+            cls._chromosomes = cls.objects.values_list('chromosome_id',flat=True)
+        return cls._chromosomes
+           
+    @classmethod
+    def associate_chromosome(cls):
+        '''
+        Take bowtied uploaded values and streamline into ints and sequence ends.
+        '''
+        update_query = """
+        UPDATE "%s" tag SET chromosome_id = chr.id
+        FROM "%s" chr WHERE tag.chromosome = chr.name;
+        """ % (cls._meta.db_table, Chromosome._meta.db_table,)
+        connection.close()
+        cursor = connection.cursor()
+        cursor.execute(update_query)
+        transaction.commit_unless_managed()
     
     @classmethod
     def translate_from_bowtie(cls):
         multiprocess_glass_tags(wrap_translate_from_bowtie, cls)
         
     @classmethod
-    def _translate_from_bowtie(cls, start, stop):
+    def _translate_from_bowtie(cls, chr_list):
         '''
         Take bowtied uploaded values and streamline into ints and sequence ends.
         '''
-        update_query = """
-        UPDATE "%s" SET strand = (CASE WHEN strand_char = '-' THEN 1 ELSE 0 END) WHERE id > %d and id <= %d;
-        UPDATE "%s" SET "end" = ("start" + char_length(sequence_matched)) WHERE id > %d and id <= %d;
-        """ % (cls._meta.db_table,cls._meta.db_table,
-               start, stop,
-               start, stop)
-        connection.close()
-        cursor = connection.cursor()
-        cursor.execute(update_query)
-        transaction.commit_unless_managed()
-            
-    @classmethod
-    def associate_chromosome(cls):
-        multiprocess_glass_tags(wrap_associate_chromosome, cls)
-        
-    @classmethod
-    def _associate_chromosome(cls):
-        '''
-        Take bowtied uploaded values and streamline into ints and sequence ends.
-        '''
-        update_query = """
-        UPDATE "%s" tag SET chromosome_id = chr.id
-        FROM "%s" chr WHERE tag.chromosome = chr.name
-        WHERE tag.id > %d and tag.id <= %d;
-        """ % (cls._meta.db_table, Chromosome._meta.db_table,
-               start, stop)
-        connection.close()
-        cursor = connection.cursor()
-        cursor.execute(update_query)
-        transaction.commit_unless_managed()
-            
+        for chr_id in chr_list:
+            update_query = """
+            UPDATE "%s" SET strand = (CASE WHEN strand_char = '-' THEN 1 ELSE 0 END) WHERE chromosome_id = %d;
+            UPDATE "%s" SET "end" = ("start" + char_length(sequence_matched)) WHERE chromosome_id = %d;
+            """ % (cls._meta.db_table,cls._meta.db_table,
+                   chr_id,
+                   chr_id)
+            connection.close()
+            cursor = connection.cursor()
+            cursor.execute(update_query)
+            transaction.commit_unless_managed()
+             
     @classmethod
     def set_start_end_cube(cls):
         multiprocess_glass_tags(wrap_set_start_end_cube, cls)
         
     @classmethod
-    def _set_start_end_cube(cls, start, stop):
+    def _set_start_end_cube(cls, chr_list):
         '''
         Create type cube field for faster interval searching with the PostgreSQL cube package.
         '''
-        update_query = """
-        UPDATE "%s" set start_end = public.cube("start"::float,"end"::float) WHERE id > %d and id <= %d;
-        """ % (cls._meta.db_table, start, stop)
-        connection.close()
-        cursor = connection.cursor()
-        cursor.execute(update_query)
-        transaction.commit_unless_managed()
+        for chr_id in chr_list:
+            update_query = """
+            UPDATE "%s" set start_end = public.cube("start"::float,"end"::float) WHERE chromosome_id = %d;
+            """ % (cls._meta.db_table, chr_id)
+            connection.close()
+            cursor = connection.cursor()
+            cursor.execute(update_query)
+            transaction.commit_unless_managed()
             
     @classmethod
     def delete_bowtie_columns(cls):
@@ -250,31 +245,30 @@ class GlassTagTranscriptionRegionTable(DynamicTable):
         multiprocess_glass_tags(wrap_insert_matching_tags, cls)
         
     @classmethod
-    def _insert_matching_tags(cls, start, stop):
+    def _insert_matching_tags(cls, chr_list):
         '''
         Insert records where either the start or the end of the tag 
         are within the boundaries of the sequence region.
         '''
-        insert_sql = """
-        INSERT INTO
-            "%s" (glass_tag_id, sequence_transcription_region_id)
-        SELECT * FROM
-            (SELECT tag.id, reg.id
-            FROM "%s" tag
-            JOIN "%s" reg
-            ON
-                tag.chromosome_id = reg.chromosome_id
-                AND tag.start_end OPERATOR(public.&&) reg.start_end
-            WHERE tag.id > %d AND tag.id <= %d) derived;
-        """ % (cls._meta.db_table, 
-               GlassTag._meta.db_table,
-               cls.related_class._meta.db_table,
-               start, stop)
-        print insert_sql
-        connection.close()
-        cursor = connection.cursor()
-        cursor.execute(insert_sql)
-        transaction.commit_unless_managed()
+        for chr_id in chr_list:
+            insert_sql = """
+            INSERT INTO
+                "%s" (glass_tag_id, sequence_transcription_region_id)
+            SELECT * FROM
+                (SELECT tag.id, reg.id
+                FROM "%s" tag
+                JOIN "%s" reg
+                ON tag.start_end OPERATOR(public.&&) reg.start_end
+                WHERE tag.chromosome_id = %d AND reg.chromosome_id = %d) derived;
+            """ % (cls._meta.db_table, 
+                   GlassTag._meta.db_table,
+                   cls.related_class._meta.db_table,
+                   chr_id, chr_id)
+            print insert_sql
+            connection.close()
+            cursor = connection.cursor()
+            cursor.execute(insert_sql)
+            transaction.commit_unless_managed()
         
     @classmethod  
     def add_indices(cls):
@@ -343,66 +337,68 @@ class GlassTagSequence(GlassTagTranscriptionRegionTable):
         multiprocess_glass_tags(wrap_update_start_site_tags, cls)
         
     @classmethod  
-    def _update_start_site_tags(cls, start, stop):
+    def _update_start_site_tags(cls, chr_list):
         '''
         If the start of a tag is within 1kb of the 
         start (if + strand) or the start of a tag is within
         1kb of the end (if - strand) of the region,
         mark as a start_site.
         '''
-        update_sql = """
-        UPDATE "%s" tag_seq
-        SET start_site = 1
-        FROM "%s" tag, "%s" reg
-        WHERE 
-        tag_seq.sequence_transcription_region_id = reg.id
-        AND tag.id > %d AND tag.id <= %d
-        AND tag_seq.glass_tag_id = tag.id
-        AND ((reg.strand = 0
-            AND tag.start <= (reg.transcription_start + %d))
-            OR (reg.strand = 1
-            AND tag.end >= (reg.transcription_end - %d)));
-        """ % (cls._meta.db_table, 
-               GlassTag._meta.db_table,
-               SequenceTranscriptionRegion._meta.db_table,
-               start, stop,
-               cls.promotion_cutoff, cls.promotion_cutoff)
-        connection.close()
-        cursor = connection.cursor()
-        cursor.execute(update_sql)
-        transaction.commit_unless_managed()
+        for chr_id in chr_list:
+            update_sql = """
+            UPDATE "%s" tag_seq
+            SET start_site = 1
+            FROM "%s" tag, "%s" reg
+            WHERE 
+            tag_seq.sequence_transcription_region_id = reg.id
+            AND tag.chromosome_id = %d
+            AND tag_seq.glass_tag_id = tag.id
+            AND ((reg.strand = 0
+                AND tag.start <= (reg.transcription_start + %d))
+                OR (reg.strand = 1
+                AND tag.end >= (reg.transcription_end - %d)));
+            """ % (cls._meta.db_table, 
+                   GlassTag._meta.db_table,
+                   SequenceTranscriptionRegion._meta.db_table,
+                   chr_id,
+                   cls.promotion_cutoff, cls.promotion_cutoff)
+            connection.close()
+            cursor = connection.cursor()
+            cursor.execute(update_sql)
+            transaction.commit_unless_managed()
         
     @classmethod  
     def update_exon_tags(cls):
         multiprocess_glass_tags(wrap_update_exon_tags, cls)
 
     @classmethod  
-    def _update_exon_tags(cls, start, stop):
+    def _update_exon_tags(cls, chr_list):
         '''
         If a tag is within the exon of the sequence associated,
         set exon = 1
         '''
-        update_sql = """
-        UPDATE
-            "%s" tag_seq
-        SET exon = 1
-        FROM "%s" tag, "%s" ex
-        WHERE
-            tag_seq.sequence_transcription_region_id = ex.sequence_transcription_region_id
-            AND tag.id > %d AND tag.id <= %d
-            AND tag_seq.glass_tag_id = tag.id
-            AND ((tag."start" >= ex.exon_start
-                    AND tag."start" <= ex.exon_end)
-                OR (tag."end" >= ex.exon_start
-                    AND tag."end" <= ex.exon_end));
-        """ % (cls._meta.db_table, 
-               GlassTag._meta.db_table,
-               SequenceExon._meta.db_table,
-               start, stop)
-        connection.close()
-        cursor = connection.cursor()
-        cursor.execute(update_sql)
-        transaction.commit_unless_managed()
+        for chr_id in chr_list:
+            update_sql = """
+            UPDATE
+                "%s" tag_seq
+            SET exon = 1
+            FROM "%s" tag, "%s" ex
+            WHERE
+                tag_seq.sequence_transcription_region_id = ex.sequence_transcription_region_id
+                AND tag.chromosome_id = %d
+                AND tag_seq.glass_tag_id = tag.id
+                AND ((tag."start" >= ex.exon_start
+                        AND tag."start" <= ex.exon_end)
+                    OR (tag."end" >= ex.exon_start
+                        AND tag."end" <= ex.exon_end));
+            """ % (cls._meta.db_table, 
+                   GlassTag._meta.db_table,
+                   SequenceExon._meta.db_table,
+                   chr_id)
+            connection.close()
+            cursor = connection.cursor()
+            cursor.execute(update_sql)
+            transaction.commit_unless_managed()
         
 class GlassTagNonCoding(GlassTagTranscriptionRegionTable):
     '''

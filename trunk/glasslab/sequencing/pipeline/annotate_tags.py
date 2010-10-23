@@ -144,8 +144,8 @@ def translate_bowtie_columns():
     '''
     Transfer bowtie tags to indexed, streamlined Glass tags for annotation.
     '''
-    #GlassTag.translate_from_bowtie()
     #GlassTag.associate_chromosome()
+    #GlassTag.translate_from_bowtie()
     GlassTag.set_start_end_cube()
 
 def delete_bowtie_columns():
