@@ -20,7 +20,7 @@ def multiprocess_glass_tags(func, cls):
     p = Pool(8)
     step = int(math.ceil(total_count/8))
     for start in xrange(0,total_count,step):
-        p.apply_async(func, args=(cls, GlassTag.chromosomes[start:(start+step)]))
+        p.apply_async(func, args=(cls, GlassTag.chromosomes()[start:(start+step)]))
     p.close()
     p.join()
 
