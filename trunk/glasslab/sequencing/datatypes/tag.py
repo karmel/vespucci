@@ -240,11 +240,12 @@ class GlassTagTranscriptionRegionTable(DynamicTable):
         '''
         total_count = cls.objects.count()
         p = Pool(8)
-        step = int(math.ceil(total_count,total_count/8))
+        step = int(math.ceil(total_count/8))
         for start in xrange(0,total_count,step):
             p.apply_async(wrap_insert_matching_tags, args=(cls, start, start + step))
         p.close()
         p.join()
+        
     @classmethod
     def _insert_matching_tags(cls, start, stop):
         '''
