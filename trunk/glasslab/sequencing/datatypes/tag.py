@@ -3,6 +3,7 @@ Created on Sep 27, 2010
 
 @author: karmel
 '''
+from __future__ import division
 from django.db import models
 from django.db import connection, transaction
 from glasslab.utils.datatypes.genome_reference import SequenceTranscriptionRegion,\
@@ -238,7 +239,7 @@ class GlassTagTranscriptionRegionTable(DynamicTable):
         '''
         Multi-process and split by id to conserve time.
         '''
-        total_count = cls.objects.count()
+        total_count = GlassTag.objects.count()
         p = Pool(8)
         step = int(math.ceil(total_count/8))
         for start in xrange(0,total_count,step):
