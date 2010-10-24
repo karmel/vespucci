@@ -160,9 +160,8 @@ def add_indices():
     GlassTag.add_chromosome_index()
     
 def associate_sequences(options, file_name):
-    GlassTagSequence.set_table_name('tag_sequence_' + file_name)
-    #GlassTagSequence.create_table(file_name)
-    #GlassTagSequence.insert_matching_tags()
+    GlassTagSequence.create_table(file_name)
+    GlassTagSequence.insert_matching_tags()
     GlassTagSequence.update_start_site_tags()
     GlassTagSequence.update_exon_tags()
     GlassTagSequence.add_indices()
