@@ -160,6 +160,7 @@ def add_indices():
     GlassTag.add_chromosome_index()
     
 def associate_sequences(options, file_name):
+    GlassTagSequence.set_table_name(file_name)
     #GlassTagSequence.create_table(file_name)
     #GlassTagSequence.insert_matching_tags()
     GlassTagSequence.update_start_site_tags()
