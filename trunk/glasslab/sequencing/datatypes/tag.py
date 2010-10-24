@@ -335,38 +335,27 @@ class GlassTagSequence(GlassTagTranscriptionRegionTable):
     
     @classmethod  
     def update_start_site_tags(cls):
-        multiprocess_glass_tags(wrap_update_start_site_tags, cls)
-        
-    @classmethod  
-    def _update_start_site_tags(cls, chr_list):
         '''
         If the start of a tag is within 1kb of the 
         start (if + strand) or the start of a tag is within
         1kb of the end (if - strand) of the region,
         mark as a start_site.
         '''
-        for chr_id in chr_list:
-            update_sql = """
-            UPDATE "%s" tag_seq
-            SET start_site = 1
-            FROM "%s" tag, "%s" reg
-            WHERE 
-            tag_seq.sequence_transcription_region_id = reg.id
-            AND tag.chromosome_id = %d
-            AND tag_seq.glass_tag_id = tag.id
-            AND ((reg.strand = 0
-                AND tag.start <= (reg.transcription_start + %d))
-                OR (reg.strand = 1
-                AND tag.end >= (reg.transcription_end - %d)));
-            """ % (cls._meta.db_table, 
-                   GlassTag._meta.db_table,
-                   SequenceTranscriptionRegion._meta.db_table,
-                   chr_id,
-                   cls.promotion_cutoff, cls.promotion_cutoff)
-            connection.close()
-            cursor = connection.cursor()
-            cursor.execute(update_sql)
-            transaction.commit_unless_managed()
+        update_sql = """
+        UPDATE "%s" tag_seq
+        SET start_site = 1
+        FROM "%s" tag, "%s" reg
+        WHERE 
+        tag_seq.sequence_transcription_region_id = reg.id
+        AND tag_seq.glass_tag_id = tag.id
+        AND tag.start_end OPERATOR(public.&&) reg.start_site;
+        """ % (cls._meta.db_table, 
+               GlassTag._meta.db_table,
+               SequenceTranscriptionRegion._meta.db_table)
+        connection.close()
+        cursor = connection.cursor()
+        cursor.execute(update_sql)
+        transaction.commit_unless_managed()
         
     @classmethod  
     def update_exon_tags(cls):
