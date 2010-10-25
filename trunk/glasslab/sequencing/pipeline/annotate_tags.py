@@ -164,12 +164,12 @@ def associate_sequences(options, file_name):
     GlassTagSequence.insert_matching_tags()
     GlassTagSequence.update_start_site_tags()
     GlassTagSequence.update_exon_tags()
-    GlassTagSequence.add_indices()
+    #GlassTagSequence.add_indices()
     
 def associate_region_table(options, file_name, table_class):
     table_class.create_table(file_name)
     table_class.insert_matching_tags()
-    table_class.add_indices()
+    #table_class.add_indices()
     
 if __name__ == '__main__':    
     run_from_command_line = True # Useful for debugging in Eclipse

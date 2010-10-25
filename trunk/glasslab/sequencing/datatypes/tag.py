@@ -218,8 +218,8 @@ class GlassTagTranscriptionRegionTable(DynamicTable):
         table_sql = """
         CREATE TABLE "%s" (
             id integer NOT NULL,
-            glass_tag_id integer,
-            %s_transcription_region_id integer
+            glass_tag_id integer REFERENCES "%s",
+            %s_transcription_region_id integer REFERENCES "%s"
         );
         CREATE SEQUENCE "%s_id_seq"
             START WITH 1
@@ -230,7 +230,10 @@ class GlassTagTranscriptionRegionTable(DynamicTable):
         ALTER SEQUENCE "%s_id_seq" OWNED BY "%s".id;
         ALTER TABLE "%s" ALTER COLUMN id SET DEFAULT nextval('"%s_id_seq"'::regclass);
         ALTER TABLE ONLY "%s" ADD CONSTRAINT %s_pkey PRIMARY KEY (id);
-        """ % (cls._meta.db_table, cls.table_type,
+        """ % (cls._meta.db_table,
+               GlassTag._meta.db_table,
+               cls.related_class._meta.db_table, 
+               cls.table_type,
                cls._meta.db_table,
                cls._meta.db_table, cls._meta.db_table,
                cls._meta.db_table, cls._meta.db_table,
@@ -306,8 +309,8 @@ class GlassTagSequence(GlassTagTranscriptionRegionTable):
         table_sql = """
         CREATE TABLE "%s" (
             id integer NOT NULL,
-            glass_tag_id integer,
-            sequence_transcription_region_id integer,
+            glass_tag_id integer REFERENCES "%s",
+            sequence_transcription_region_id integer REFERENCES "%s",
             exon smallint default 0,
             start_site smallint default 0
         );
@@ -320,7 +323,9 @@ class GlassTagSequence(GlassTagTranscriptionRegionTable):
         ALTER SEQUENCE "%s_id_seq" OWNED BY "%s".id;
         ALTER TABLE "%s" ALTER COLUMN id SET DEFAULT nextval('"%s_id_seq"'::regclass);
         ALTER TABLE ONLY "%s" ADD CONSTRAINT %s_pkey PRIMARY KEY (id);
-        """ % (cls._meta.db_table, 
+        """ % (cls._meta.db_table,
+               GlassTag._meta.db_table,
+               cls.related_class._meta.db_table, 
                cls._meta.db_table,
                cls._meta.db_table, cls._meta.db_table,
                cls._meta.db_table, cls._meta.db_table,
