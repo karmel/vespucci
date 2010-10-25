@@ -16,7 +16,6 @@ def multiprocess_glass_tags(func, cls):
     ''' 
     Convenience method for splitting up queries based on glass tag id.
     '''
-    print GlassTag.chromosomes()
     total_count = len(GlassTag.chromosomes())
     p = Pool(8)
     step = int(math.ceil(total_count/8))
@@ -102,6 +101,7 @@ class GlassTag(DynamicTable):
                cls._meta.db_table, cls._meta.db_table,
                cls._meta.db_table, cls._meta.db_table,
                cls._meta.db_table, name)
+        connection.close()
         cursor = connection.cursor()
         cursor.execute(table_sql)
         transaction.commit_unless_managed()
@@ -190,7 +190,7 @@ class GlassTag(DynamicTable):
     def add_chromosome_index(cls):
         update_sql = """
         CREATE INDEX %s_chr_idx ON "%s" USING btree (chromosome_id);
-        CREATE INDEX %s_start_end_idx ON "%s" USING gist (chromosome_id);
+        CREATE INDEX %s_start_end_idx ON "%s" USING gist (start_end);
         """ % (cls.name, cls._meta.db_table,
                cls.name, cls._meta.db_table)
         connection.close()
@@ -238,6 +238,7 @@ class GlassTagTranscriptionRegionTable(DynamicTable):
                cls._meta.db_table, cls._meta.db_table,
                cls._meta.db_table, cls._meta.db_table,
                cls._meta.db_table, name)
+        connection.close()
         cursor = connection.cursor()
         cursor.execute(table_sql)
         transaction.commit_unless_managed()
@@ -268,22 +269,10 @@ class GlassTagTranscriptionRegionTable(DynamicTable):
                    GlassTag._meta.db_table,
                    cls.related_class._meta.db_table,
                    chr_id, chr_id)
-            print insert_sql
             connection.close()
             cursor = connection.cursor()
             cursor.execute(insert_sql)
             transaction.commit_unless_managed()
-        
-    @classmethod  
-    def add_indices(cls):
-        update_sql = """
-        CREATE INDEX %s_%s_idx ON "%s" USING btree (%s_transcription_region_id);
-        """ % (cls.name,cls.table_type, 
-               cls._meta.db_table, cls.table_type)
-        connection.close()
-        cursor = connection.cursor()
-        cursor.execute(update_sql)
-        transaction.commit_unless_managed() 
     
 class GlassTagSequence(GlassTagTranscriptionRegionTable):
     '''
@@ -330,14 +319,13 @@ class GlassTagSequence(GlassTagTranscriptionRegionTable):
                cls._meta.db_table, cls._meta.db_table,
                cls._meta.db_table, cls._meta.db_table,
                cls._meta.db_table, name)
+        connection.close()
         cursor = connection.cursor()
         cursor.execute(table_sql)
         transaction.commit_unless_managed()
         
         cls.table_created = True
-    
-    promotion_cutoff = 1000
-    
+        
     @classmethod  
     def update_start_site_tags(cls):
         '''

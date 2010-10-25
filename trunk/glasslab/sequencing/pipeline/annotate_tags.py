@@ -60,12 +60,12 @@ def check_input(options):
     '''
     Check that required arguments and directories are in place.
     '''
-    if not options.file_path:
-        raise Exception('Please make sure you have supplied an input FASTQ file and an output directory.')
-    if not os.path.exists(options.file_path):
+    if not options.file_path and not options.tag_table:
+        raise Exception('Please make sure you have supplied an input file.')
+    if options.file_path and not os.path.exists(options.file_path):
         raise Exception('Sorry, but the specified input file cannot be found: %s' % os.path.realpath(options.file_path))
     
-    if not os.path.exists(options.output_dir):
+    if options.output_dir and not os.path.exists(options.output_dir):
         os.mkdir(options.output_dir)
         print 'Creating output directory %s' % options.output_dir
     
@@ -144,8 +144,8 @@ def translate_bowtie_columns():
     '''
     Transfer bowtie tags to indexed, streamlined Glass tags for annotation.
     '''
-    #GlassTag.associate_chromosome()
-    #GlassTag.translate_from_bowtie()
+    GlassTag.associate_chromosome()
+    GlassTag.translate_from_bowtie()
     GlassTag.set_start_end_cube()
 
 def delete_bowtie_columns():
@@ -164,12 +164,10 @@ def associate_sequences(options, file_name):
     GlassTagSequence.insert_matching_tags()
     GlassTagSequence.update_start_site_tags()
     GlassTagSequence.update_exon_tags()
-    #GlassTagSequence.add_indices()
     
 def associate_region_table(options, file_name, table_class):
     table_class.create_table(file_name)
     table_class.insert_matching_tags()
-    #table_class.add_indices()
     
 if __name__ == '__main__':    
     run_from_command_line = True # Useful for debugging in Eclipse
@@ -206,7 +204,7 @@ if __name__ == '__main__':
         print 'Translating bowtie columns to integers.'
         translate_bowtie_columns()
         print 'Deleting unnecessary bowtie columns, adding indices.'
-        #delete_bowtie_columns()
+        delete_bowtie_columns()
         add_indices()
     else:
         print 'Skipping translation of bowtie columns to integers'
