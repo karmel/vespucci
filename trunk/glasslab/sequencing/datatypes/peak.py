@@ -7,6 +7,7 @@ from django.db import models
 from glasslab.utils.datatypes.genome_reference import TranscriptionStartSite,\
     Genome, ChromosomeLocationAnnotationFactory
 from django.db import connection, transaction
+from glasslab.config import current_settings
         
 class CurrentPeak(models.Model):
     '''
@@ -54,7 +55,7 @@ class CurrentPeak(models.Model):
         '''
         Set table name for class, incorporating into schema specification.
         '''
-        cls._meta.db_table = 'current_projects"."%s' % table_name
+        cls._meta.db_table = '%s"."%s' % (current_settings.CURRENT_SCHEMA, table_name)
                 
     @classmethod        
     def create_table(cls, name):

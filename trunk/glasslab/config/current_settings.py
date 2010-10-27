@@ -9,3 +9,4 @@ should be set on a run-wide basis.
 GENOME_CHOICES = ['mm9']
 
 GENOME = 'mm9'
+CURRENT_SCHEMA = 'current_projects'
