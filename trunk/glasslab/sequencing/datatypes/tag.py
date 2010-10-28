@@ -304,6 +304,7 @@ class GlassTagTranscriptionRegionTable(DynamicTable):
     glass_tag       = models.ForeignKey(GlassTag)
     
     table_type      = None
+    partitioned     = False
     
     class Meta: abstract = True
     
@@ -347,12 +348,39 @@ class GlassTagTranscriptionRegionTable(DynamicTable):
     @classmethod
     def insert_matching_tags(cls):
         multiprocess_glass_tags(wrap_insert_matching_tags, cls)
+    
+    @classmethod 
+    def _insert_matching_tags(cls, chr_list):
+        if cls.partitioned: return cls._insert_matching_tags_by_chromosome(chr_list)
+        else: return cls._insert_matching_tags_all(chr_list)
         
     @classmethod
-    def _insert_matching_tags(cls, chr_list):
+    def _insert_matching_tags_all(cls, chr_list):
         '''
         Insert records where either the start or the end of the tag 
         are within the boundaries of the sequence region.
+        '''
+        for chr_id in chr_list:
+            insert_sql = """
+            INSERT INTO
+                "%s" (glass_tag_id, %s_transcription_region_id)
+            SELECT tag.id, reg.id
+            FROM "%s_%d" tag, "%s" reg
+            WHERE reg.chromosome_id = %d
+                AND tag.start_end OPERATOR(public.&&) reg.start_end;
+            """ % (cls._meta.db_table, cls.table_type,
+                   GlassTag._meta.db_table, chr_id,
+                   cls.related_class._meta.db_table,
+                   chr_id)
+            connection.close()
+            cursor = connection.cursor()
+            cursor.execute(insert_sql)
+            transaction.commit_unless_managed()
+              
+    @classmethod
+    def _insert_matching_tags_by_chromosome(cls, chr_list):
+        '''
+        Used for partitioned region tables.
         '''
         for chr_id in chr_list:
             try:
@@ -397,6 +425,7 @@ class GlassTagSequence(GlassTagTranscriptionRegionTable):
     
     table_type = 'sequence'
     related_class = SequenceTranscriptionRegion
+    partitioned     = False
     
     @classmethod        
     def create_table(cls, name):
@@ -516,28 +545,7 @@ class GlassTagNonCoding(GlassTagTranscriptionRegionTable):
     
     table_type = 'non_coding'
     related_class = NonCodingTranscriptionRegion
-    
-    @classmethod
-    def _insert_matching_tags(cls, chr_list):
-        '''
-        Overwritten because NonCoding table is not partitioned by chr.
-        '''
-        for chr_id in chr_list:
-            insert_sql = """
-            INSERT INTO
-                "%s" (glass_tag_id, %s_transcription_region_id)
-            SELECT tag.id, reg.id
-            FROM "%s_%d" tag, "%s" reg
-            WHERE reg.chromosome_id = %d
-                AND tag.start_end OPERATOR(public.&&) reg.start_end;
-            """ % (cls._meta.db_table, cls.table_type,
-                   GlassTag._meta.db_table, chr_id,
-                   cls.related_class._meta.db_table,
-                   chr_id)
-            connection.close()
-            cursor = connection.cursor()
-            cursor.execute(insert_sql)
-            transaction.commit_unless_managed()
+    partitioned     = False
     
 class GlassTagPatterned(GlassTagTranscriptionRegionTable):
     '''
@@ -545,8 +553,9 @@ class GlassTagPatterned(GlassTagTranscriptionRegionTable):
     '''
     patterned_transcription_region  = models.ForeignKey(PatternedTranscriptionRegion)
     
-    table_type = 'patterned'
-    related_class = PatternedTranscriptionRegion
+    table_type      = 'patterned'
+    related_class   = PatternedTranscriptionRegion
+    partitioned     = True
     
 class GlassTagConserved(GlassTagTranscriptionRegionTable):
     '''
@@ -554,6 +563,7 @@ class GlassTagConserved(GlassTagTranscriptionRegionTable):
     '''
     conserved_transcription_region  = models.ForeignKey(ConservedTranscriptionRegion)
     
-    table_type = 'conserved'
-    related_class = ConservedTranscriptionRegion
+    table_type      = 'conserved'
+    related_class   = ConservedTranscriptionRegion
+    partitioned     = True
     
