@@ -19,7 +19,7 @@ def multiprocess_glass_tags(func, cls):
     Convenience method for splitting up queries based on glass tag id.
     '''
     total_count = len(GlassTag.chromosomes())
-    processes = 8
+    processes = 6
     p = Pool(processes)
     # Chromosomes are sorted by count descending, so we want to interleave them
     # in order to create even-ish groups.
@@ -547,6 +547,29 @@ class GlassTagNonCoding(GlassTagTranscriptionRegionTable):
     related_class = NonCodingTranscriptionRegion
     partitioned     = False
     
+    @classmethod
+    def _insert_matching_tags(cls, chr_list):
+        '''
+        Overwritten to be strand specific
+        '''
+        for chr_id in chr_list:
+            insert_sql = """
+            INSERT INTO
+                "%s" (glass_tag_id, %s_transcription_region_id)
+            SELECT tag.id, reg.id
+            FROM "%s_%d" tag, "%s" reg
+            WHERE reg.chromosome_id = %d
+                AND reg.strand = tag.strand
+                AND tag.start_end OPERATOR(public.&&) reg.start_end;
+            """ % (cls._meta.db_table, cls.table_type,
+                   GlassTag._meta.db_table, chr_id,
+                   cls.related_class._meta.db_table,
+                   chr_id)
+            connection.close()
+            cursor = connection.cursor()
+            cursor.execute(insert_sql)
+            transaction.commit_unless_managed()
+
 class GlassTagPatterned(GlassTagTranscriptionRegionTable):
     '''
     Relationship between GlassTag and the patterned region it maps to.
