@@ -8,7 +8,7 @@ and returns results, parsed.
 
 '''
 import MySQLdb
-from glasslab.utils.datatypes.genome_reference import GenomeType, GeneDetail
+from glasslab.utils.datatypes.genome_reference import GenomeType, SequenceDetail
 from glasslab.utils.datatypes.gene_ontology_reference import BackgroundGOCount
 
 # DB connection params
@@ -224,7 +224,7 @@ class GOAccessor(object):
             
     def _set_background_ontologies_for_genome(self, genome_type, batch_size=1000, min_count=5):
         # Get all refseq ids
-        gene_names = GeneDetail.objects.filter(sequence_identifier__genome_type=genome_type
+        gene_names = SequenceDetail.objects.filter(sequence_identifier__genome_type=genome_type
                                             ).exclude(gene_name='', gene_name__isnull=True
                                             ).values_list('gene_name', flat=True).distinct()
         

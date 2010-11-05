@@ -176,12 +176,6 @@ def translate_bowtie_columns(file_name):
     GlassTag.create_parent_table(file_name)
     GlassTag.create_partition_tables()
     GlassTag.translate_from_bowtie()
-
-def delete_bowtie_table():
-    '''
-    Delete bowtie tag table in order to conserve space.
-    '''
-    #GlassTag.delete_bowtie_columns()
     
 def add_indices():
     # Execute after all the ends have been calculated,
@@ -189,14 +183,14 @@ def add_indices():
     GlassTag.add_indices()
     
 def associate_sequences(options, file_name):
-    #GlassTagSequence.set_table_name('tag_sequence_' + file_name)
-    GlassTagSequence.create_table(file_name)
-    GlassTagSequence.insert_matching_tags()
-    GlassTagSequence.add_indices()
+    GlassTagSequence.set_table_name('tag_sequence_' + file_name)
+    #GlassTagSequence.create_table(file_name)
+    #GlassTagSequence.insert_matching_tags()
+    #GlassTagSequence.add_indices()
     _print('Updating start sites.')
     GlassTagSequence.update_start_site_tags()
-    _print('Updating exons.')
-    GlassTagSequence.update_exon_tags()
+    #_print('Updating exons.')
+    #GlassTagSequence.update_exon_tags()
     
 def associate_region_table(options, file_name, table_class):
     table_class.create_table(file_name)
@@ -239,8 +233,7 @@ if __name__ == '__main__':
     if not options.tag_table:
         _print('Translating bowtie columns to integers.')
         translate_bowtie_columns(file_name)
-        _print('Deleting unnecessary bowtie columns, adding indices.')
-        delete_bowtie_table()
+        _print('Adding indices.')
         add_indices()
     else:
         _print('Skipping translation of bowtie columns to integers')

@@ -443,7 +443,8 @@ class GlassTagSequence(GlassTagTranscriptionRegionTable):
             glass_tag_id integer,
             sequence_transcription_region_id integer,
             exon smallint default 0,
-            start_site smallint default 0
+            start_site_200 smallint default 0,
+            start_site_1000 smallint default 0
         );
         CREATE SEQUENCE "%s_id_seq"
             START WITH 1
@@ -493,21 +494,24 @@ class GlassTagSequence(GlassTagTranscriptionRegionTable):
         mark as a start_site.
         '''
         for chr_id in chr_list:
-            update_sql = """
-            UPDATE "%s" tag_seq
-            SET start_site = 1
-            FROM "%s_%d" tag, "%s" reg
-            WHERE 
-            tag_seq.glass_tag_id = tag.id
-            AND tag_seq.sequence_transcription_region_id = reg.id 
-            AND tag.start_end OPERATOR(public.&&) reg.start_site;
-            """ % (cls._meta.db_table, 
-                   GlassTag._meta.db_table, chr_id,
-                   SequenceTranscriptionRegion._meta.db_table)
-            connection.close()
-            cursor = connection.cursor()
-            cursor.execute(update_sql)
-            transaction.commit_unless_managed()
+            for distance in (200,):#1000):
+                update_sql = """
+                UPDATE "%s" tag_seq
+                SET start_site_%d = 1
+                FROM "%s_%d" tag, "%s" reg
+                WHERE 
+                tag_seq.glass_tag_id = tag.id
+                AND tag_seq.sequence_transcription_region_id = reg.id 
+                AND tag.start_end OPERATOR(public.&&) reg.start_site_%d;
+                """ % (cls._meta.db_table, 
+                       distance,
+                       GlassTag._meta.db_table, chr_id,
+                       SequenceTranscriptionRegion._meta.db_table,
+                       distance)
+                connection.close()
+                cursor = connection.cursor()
+                cursor.execute(update_sql)
+                transaction.commit_unless_managed()
         
     @classmethod  
     def update_exon_tags(cls):
