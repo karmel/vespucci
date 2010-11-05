@@ -5,7 +5,8 @@ Created on Oct 1, 2010
 '''
 from __future__ import division
 import numpy
-from glasslab.utils.datatypes.genome_reference import Genome
+from glasslab.utils.datatypes.genome_reference import Genome, SequenceDetail,\
+    SequenceTranscriptionRegion
 from glasslab.utils.datatypes.gene_ontology_reference import BackgroundGOCount
 from django.db.models.aggregates import Sum
 from scipy.stats import binom_test
@@ -13,8 +14,9 @@ import os
 from matplotlib import pyplot
 from operator import itemgetter
 from random import randint
-from glasslab.utils.parsing.delimited import DelimitedFileParser
+#from glasslab.utils.parsing.delimited import DelimitedFileParser
 from glasslab.utils.geneannotation.gene_ontology import GOAccessor
+from glasslab.sequencing.datatypes.tag import GlassTagSequence
 
 class EnrichedOntologiesAnalyzer(object):
     max_p_val = .05
@@ -104,7 +106,7 @@ class EnrichedOntologiesAnalyzer(object):
         
         # Add some noise to the distance from root column so that
         # the points on the graph are sufficiently spaced out.
-        for i,row in enumerate(enriched_array):
+        for row in enriched_array:
             row[2] = float(row[2]) + randint(-99,99)/100.0 
             # And annotate with terms
             ax1.text(float(row[4]), float(row[2]), row[1], fontsize=8, withdash=True)
@@ -113,21 +115,19 @@ class EnrichedOntologiesAnalyzer(object):
         ax1.plot(numpy.float_(enriched_array[:,4]), numpy.float_(enriched_array[:,2]), 'o')
         
         pyplot.savefig(os.path.join(output_dir,'%s_GO_enriched_terms_graph' % file_name))
-    
-    """   
-    def get_gene_names_from_current_peaks(self):
+       
+    def get_gene_names_from_matched_tags(self):
         '''
-        Pull gene names/symbols from set of Current Peaks.
+        Pull gene names/symbols from set of GlassTagSequences.
         '''
-        where = ['"%s".sequence_identifier_id = "%s".id' \
-                            % (GeneDetail._meta.db_table, TranscriptionStartSite._meta.db_table),
-                 '"%s".transcription_start_site_id = "%s".id' \
-                            % (CurrentPeak._meta.db_table, TranscriptionStartSite._meta.db_table),]
-        tables = [CurrentPeak._meta.db_table, TranscriptionStartSite._meta.db_table]
-        gene_names = GeneDetail.objects.extra(where=where, tables=tables
+        where = ['"%s".sequence_identifier_id = "%s".sequence_identifier_id' \
+                            % (SequenceDetail._meta.db_table, SequenceTranscriptionRegion._meta.db_table),
+                 '"%s".sequence_transcription_region_id = "%s".id' \
+                            % (GlassTagSequence._meta.db_table, SequenceTranscriptionRegion._meta.db_table),]
+        tables = [SequenceTranscriptionRegion._meta.db_table, GlassTagSequence._meta.db_table]
+        gene_names = SequenceDetail.objects.extra(where=where, tables=tables
                                     ).values_list('gene_name', flat=True).distinct()
         return map(lambda x: x.strip(), list(gene_names))
-    """
      
 if __name__ == '__main__':
     gene_names = ['Daxx','Slc20a1','Gtf2f1','Haus8','Trappc1','Nfil3','Purb','Lat','Pdcd7','Rbm3','Psmb4','Rpl19','Ino80e','2700099C18Rik','Atf5','Ccdc58','Rplp1','Ptger1','Cycs','4632415K11Rik','Dnajc17','Terf2ip','1110049F12Rik','Brip1','Bap1','Parvg','Wdr76','Recql5','Cnnm4','Fam195b','Pomgnt1','Kctd18','C1galt1c1','Wibg','Tmx1','Pomt1','Atg9a','Uqcrfs1','Dtwd2','Cecr5','D9Ertd402e','Zfyve19','4930481A15Rik','Cops5','Nsmce1','Casc1','Mfap1b','Nudt16','Gin1','Rpl34','Eral1']

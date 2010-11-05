@@ -8,13 +8,13 @@ are passed in, and the CurrentPeak table is already set up.
 '''
 from glasslab.sequencing.datatypes.gene_ontology import GoSeqEnrichedTerm
 from glasslab.utils.geneannotation.gene_ontology import GOAccessor
-from glasslab.sequencing.datatypes.peak import CurrentPeak
 from glasslab.config.django_settings import DATABASES
-from glasslab.utils.datatypes.genome_reference import GeneDetail,\
-    SequenceIdentifier, TranscriptionStartSite, Genome
+from glasslab.utils.datatypes.genome_reference import SequenceDetail,\
+    SequenceIdentifier, SequenceTranscriptionRegion
 import traceback
 import subprocess
 import os 
+from glasslab.sequencing.datatypes.tag import GlassTagSequence, GlassTag
 
 def get_goseq_annotation(genome, output_dir, file_name):
     '''
@@ -37,11 +37,10 @@ def get_goseq_annotation(genome, output_dir, file_name):
                                                          DATABASES['default']['NAME'],
                                                          DATABASES['default']['USER'],
                                                          DATABASES['default']['PASSWORD'],
-                                                         GeneDetail._meta.db_table.replace('"','\\"'),
+                                                         SequenceDetail._meta.db_table.replace('"','\\"'),
                                                          SequenceIdentifier._meta.db_table.replace('"','\\"'),
-                                                         TranscriptionStartSite._meta.db_table.replace('"','\\"'),
-                                                         Genome._meta.db_table.replace('"','\\"'),
-                                                         CurrentPeak._meta.db_table.replace('"','\\"'),
+                                                         SequenceTranscriptionRegion._meta.db_table.replace('"','\\"'),
+                                                         GlassTagSequence._meta.db_table.replace('"','\\"'),
                                                          genome, output_dir, file_name
                                                          )
     try: subprocess.check_call(goseq_command, shell=True)
@@ -54,7 +53,7 @@ def output_goseq_enriched_ontology(output_dir, file_name):
     For saved GoSeq term ids, output file of term id, term, and p val 
     for all terms with p val <= .05
     '''
-    GoSeqEnrichedTerm.set_table_name(CurrentPeak._meta.db_table)
+    GoSeqEnrichedTerm.set_table_name(GlassTag._meta.db_table)
     # Get list of (term id, p val) tuples
     enriched = GoSeqEnrichedTerm.objects.filter(p_value_overexpressed__lte=.05
                                     ).values_list('go_term_id','p_value_overexpressed')

@@ -10,7 +10,6 @@ from glasslab.utils.datatypes.genome_reference import SequenceTranscriptionRegio
     NonCodingTranscriptionRegion, PatternedTranscriptionRegion, SequenceExon,\
     ConservedTranscriptionRegion, Chromosome
 from multiprocessing import Pool
-import math
 import traceback
 from glasslab.config import current_settings
 
@@ -83,6 +82,8 @@ class GlassTag(DynamicTable):
     start                   = models.IntegerField(max_length=12)
     end                     = models.IntegerField(max_length=12)
     
+    start_end               = models.CharField(max_length=255, help_text='This is a placeholder for the PostgreSQL cube type.')
+     
     @classmethod        
     def create_bowtie_table(cls, name):
         '''

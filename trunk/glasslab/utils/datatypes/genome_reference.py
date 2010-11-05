@@ -57,7 +57,6 @@ class SequenceIdentifier(models.Model):
     '''
     Gene and sequence (i.e., noncoding RNA) identifiers from RefSeq, unique per genome.
     '''
-    genome_type         = models.ForeignKey(GenomeType)
     sequence_identifier = models.CharField(max_length=50, blank=False)
     
     class Meta: db_table = 'genome_reference_%s"."sequence_identifier' % current_settings.GENOME

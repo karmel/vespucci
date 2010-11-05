@@ -10,6 +10,9 @@ finding peaks with MACs, and annotating peaks.
 Run from the command line like so:
 python annotate_peaks.py <source.fastq> <output_dir>
 
+
+.. warning:: CURRENTLY DEPRECATED! Please update all required files before attempting to use.
+
 '''
 import os
 from glasslab.utils.scripting import GlassOptionParser
@@ -107,8 +110,8 @@ def annotate_peaks(options):
     '''
     Now that we have our peaks saved, find the nearest TSS and chromosome loc annotations.
     '''
-    CurrentPeak.find_transcriptions_start_sites(genome=options.genome)
-    CurrentPeak.find_chromosome_location_annotation(genome=options.genome)
+    #CurrentPeak.find_transcriptions_start_sites(genome=options.genome)
+    #CurrentPeak.find_chromosome_location_annotation(genome=options.genome)
 
 def output_peak_annotation(options, file_name):   
     # Output full annotation set to file
@@ -149,7 +152,9 @@ def output_peak_annotation(options, file_name):
     file = open(file_path, 'w')
     file.write(output_tsv)
     
-if __name__ == '__main__':    
+if __name__ == '__main__': 
+    print "CURRENTLY DEPRECATED! Please update all required files before attempting to use."
+       
     run_from_command_line = True # Useful for debugging in Eclipse
     
     parser = FastqOptionParser()

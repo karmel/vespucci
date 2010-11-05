@@ -252,4 +252,3 @@ if __name__ == '__main__':
     if not options.skip_conserved:
         _print('Associating tags with conserved regions.')
         associate_region_table(options, file_name, GlassTagConserved)
-      

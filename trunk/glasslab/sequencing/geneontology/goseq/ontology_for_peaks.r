@@ -20,16 +20,14 @@ conn <- Rdbi::dbConnect(PgSQL(),host=args[1],port=args[2],dbname=args[3],user=ar
 # Set up query and retrieve-- one RefSeq ID for each gene, 
 # plus binary indicator of whether it appears in our peaks
 query = paste('SELECT DISTINCT gene.refseq_gene_id, ',
-		'MAX(CASE WHEN peak.transcription_start_site_id IS NOT NULL THEN \'1\' ',
+		'MAX(CASE WHEN tag_seq.sequence_transcription_region_id IS NOT NULL THEN \'1\' ',
 		'ELSE \'0\' END) AS expressed FROM "',
 		args[6], '" gene JOIN "', args[7], 
 		'" seq ON gene.sequence_identifier_id = seq.id JOIN "', args[8], 
-		'" tss ON tss.sequence_identifier_id = seq.id JOIN "', args[9],
-		'" genome ON tss.genome_id = genome.id LEFT OUTER JOIN "',
-		args[10], '" peak on peak.transcription_start_site_id = tss.id ',
-		'WHERE (genome.genome = \'', args[11],
-		'\' AND seq.genome_type_id = genome.genome_type_id)
-		GROUP BY gene.refseq_gene_id;', sep='');
+		'" reg ON reg.sequence_identifier_id = seq.id LEFT OUTER JOIN (',
+		'SELECT DISTINCT sequence_transcription_region_id FROM "', args[9],
+		'") tag_seq on reg.id = tag_seq.sequence_transcription_region_id ',
+		'GROUP BY gene.refseq_gene_id;', sep='');
 enriched_genes <- Rdbi::dbGetQuery(conn,query);
 
 # Take each column as a vector, using the gene identifiers as names for the binary vector
@@ -39,14 +37,14 @@ names(vals) <- labels
 
 # Removed 'r' representing masked status of genome if it exists,
 # as GOSeq only supports the standard, unmasked set.
-genome <- gsub("r", "", args[11])
+genome <- gsub("r", "", args[10])
 
 # Set up the probability weighting function that relates length of gene
 # to likelihood of enrichment.
 pwf <- nullp(vals, genome, "refGene", bias.data=NULL,plot.fit=FALSE)
 
 # Save plot of PWF
-png(paste(args[12],'/',args[13],'_plotted_PWF.png', sep=''))
+png(paste(args[11],'/',args[12],'_plotted_PWF.png', sep=''))
 plotPWF(pwf, binsize=200)
 dev.off()
 
@@ -56,7 +54,7 @@ enriched_go <- goseq(pwf, genome, 'refGene')
 
 # Create table to hold our enriched GO IDs
 # Note that we create unique index and table names to avoid index name conflicts in the DB
-table_name = paste('"',args[10],'_goseq','"', sep='')
+table_name = paste('"',args[9],'_goseq','"', sep='')
 random_suffix = as.integer(runif(1,0,999999))
 id_name = paste('goseq_analysis_seq_id_',random_suffix, sep='')
 primary_key_name = paste('goseq_analysis_primary_key_',random_suffix, sep='')

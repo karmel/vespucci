@@ -13,7 +13,6 @@ from glasslab.microarrays.core.analyze import MicroarrayAnalyzer
 from scipy.cluster.vq import vq, kmeans, whiten
 import math
 import numpy
-from copy import copy
 from glasslab.microarrays.core.aggregation.visualize import MicroarrayVisualizer
 from glasslab.microarrays.core.aggregation.categorize import MicroarrayCategorizer
 from glasslab.utils.geneannotation.gene_ontology import GOAccessor
