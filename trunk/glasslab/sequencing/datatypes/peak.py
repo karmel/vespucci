@@ -7,7 +7,7 @@ from django.db import models
 from glasslab.utils.datatypes.genome_reference import SequenceTranscriptionRegion,\
     Chromosome
 from django.db import connection, transaction
-from glasslab.sequencing.datatypes.tag import DynamicTable
+from glasslab.utils.datatypes.basic_model import DynamicTable
         
 class CurrentPeak(DynamicTable):
     '''

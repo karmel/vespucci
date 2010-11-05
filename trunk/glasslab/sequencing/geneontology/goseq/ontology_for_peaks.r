@@ -8,31 +8,25 @@ library('RdbiPgSQL')
 
 # Establish connection to DB-- passed in as host, port, dbname, user, pass
 args = commandArgs(trailingOnly=TRUE)
-#args = c('placeholder','localhost',63333,'glasslab','glass','monocyte',
-#		'genome_reference"."gene_detail','genome_reference"."sequence_identifier',
-#		'genome_reference"."transcription_start_site','genome_reference"."genome',
-#		'current_projects"."enriched_peaks_first_test_2010-09-28_19-16-55_691375',
-#		'mm9','/Users/karmel/Desktop/Projects/GlassLab/SourceData/ThioMac_Lazar/test',
-#		'testing_go_seq')
-
 conn <- Rdbi::dbConnect(PgSQL(),host=args[1],port=args[2],dbname=args[3],user=args[4],password=args[5])
 
 # Set up query and retrieve-- one RefSeq ID for each gene, 
 # plus binary indicator of whether it appears in our peaks
-query = paste('SELECT DISTINCT gene.refseq_gene_id, ',
-		'MAX(CASE WHEN tag_seq.sequence_transcription_region_id IS NOT NULL THEN \'1\' ',
+query = paste('SELECT DISTINCT trim(gene.gene_name) as gene_identifier, ',
+		'MAX(CASE WHEN tag_seq.sequence_transcription_region_id > 50 THEN \'1\' ',
 		'ELSE \'0\' END) AS expressed FROM "',
 		args[6], '" gene JOIN "', args[7], 
 		'" seq ON gene.sequence_identifier_id = seq.id JOIN "', args[8], 
 		'" reg ON reg.sequence_identifier_id = seq.id LEFT OUTER JOIN (',
-		'SELECT DISTINCT sequence_transcription_region_id FROM "', args[9],
-		'") tag_seq on reg.id = tag_seq.sequence_transcription_region_id ',
-		'GROUP BY gene.refseq_gene_id;', sep='');
+		'SELECT count(sequence_transcription_region_id), sequence_transcription_region_id ',
+		' FROM "', args[9], '" GROUP BY sequence_transcription_region_id) ',
+		' tag_seq on reg.id = tag_seq.sequence_transcription_region_id ',
+		'GROUP BY gene.gene_name;', sep='');
 enriched_genes <- Rdbi::dbGetQuery(conn,query);
 
 # Take each column as a vector, using the gene identifiers as names for the binary vector
 vals <- as.integer(enriched_genes$expressed)
-labels <- enriched_genes$refseq_gene_id
+labels <- enriched_genes$gene_identifier
 names(vals) <- labels
 
 # Removed 'r' representing masked status of genome if it exists,
@@ -41,7 +35,7 @@ genome <- gsub("r", "", args[10])
 
 # Set up the probability weighting function that relates length of gene
 # to likelihood of enrichment.
-pwf <- nullp(vals, genome, "refGene", bias.data=NULL,plot.fit=FALSE)
+pwf <- nullp(vals, genome, 'geneSymbol', bias.data=NULL,plot.fit=FALSE)
 
 # Save plot of PWF
 png(paste(args[11],'/',args[12],'_plotted_PWF.png', sep=''))
@@ -50,15 +44,15 @@ dev.off()
 
 # Get enriched go terms.
 # This method returns a three-column matrix-- GO ID | p-val of enrichment | p-val of under-enrichment
-enriched_go <- goseq(pwf, genome, 'refGene')
+enriched_go <- goseq(pwf, genome, 'geneSymbol')
 
 # Create table to hold our enriched GO IDs
 # Note that we create unique index and table names to avoid index name conflicts in the DB
 table_name = paste('"',args[9],'_goseq','"', sep='')
 random_suffix = as.integer(runif(1,0,999999))
-id_name = paste('goseq_analysis_seq_id_',random_suffix, sep='')
+id_name = paste('"',args[9],'_goseq_id_',random_suffix,'"', sep='')
 primary_key_name = paste('goseq_analysis_primary_key_',random_suffix, sep='')
-create_sql = paste('SET search_path TO "current_projects";',
+create_sql = paste(
 		'DROP TABLE IF EXISTS ', table_name, '; ',
 		'CREATE TABLE ',table_name, ' ( ',
 		'id integer NOT NULL, ',

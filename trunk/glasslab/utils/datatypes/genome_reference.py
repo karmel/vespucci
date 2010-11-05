@@ -61,12 +61,12 @@ class SequenceIdentifier(models.Model):
     
     class Meta: db_table = 'genome_reference_%s"."sequence_identifier' % current_settings.GENOME
     
-    _gene_detail = None
+    _sequence_detail = None
     @property 
     def sequence_detail(self):
-        if not self._gene_detail:
-            self._gene_detail = SequenceDetail.objects.get(sequence_identifier=self)
-        return self._gene_detail
+        if not self._sequence_detail:
+            self._sequence_detail = SequenceDetail.objects.get(sequence_identifier=self)
+        return self._sequence_detail
 
 class SequenceDetail(models.Model):
     '''
@@ -80,7 +80,7 @@ class SequenceDetail(models.Model):
     gene_description    = models.CharField(max_length=255, blank=True)
     refseq_gene_id      = models.IntegerField(max_length=12, blank=True)
     
-    class Meta: db_table = 'genome_reference_%s"."gene_detail' % current_settings.GENOME
+    class Meta: db_table = 'genome_reference_%s"."sequence_detail' % current_settings.GENOME
  
 #######################################################
 # Chromosome region details 

@@ -12,6 +12,7 @@ from glasslab.utils.datatypes.genome_reference import SequenceTranscriptionRegio
 from multiprocessing import Pool
 import traceback
 from glasslab.config import current_settings
+from glasslab.utils.datatypes.basic_model import DynamicTable
 
 def multiprocess_glass_tags(func, cls):
     ''' 
@@ -46,20 +47,16 @@ def wrap_insert_matching_tags(cls, chr_list): wrap_errors(cls._insert_matching_t
 def wrap_update_start_site_tags(cls, chr_list): wrap_errors(cls._update_start_site_tags, chr_list)
 def wrap_update_exon_tags(cls, chr_list): wrap_errors(cls._update_exon_tags, chr_list)
 def wrap_add_indices(cls, chr_list): wrap_errors(cls._add_indices, chr_list)
-  
-class DynamicTable(models.Model):
-    name = None
-    table_created = None
     
-    class Meta: abstract = True
-    
-    @classmethod
-    def set_table_name(cls, table_name):
-        '''
-        Set table name for class, incorporating into schema specification.
-        '''
-        cls._meta.db_table = '%s"."%s' % (current_settings.CURRENT_SCHEMA, table_name)
-        cls.name = table_name      
+def set_all_tag_table_names(base_table_name):
+    '''
+    Convenience method for setting all Dynamic tag table names.
+    '''
+    GlassTag.set_table_name('tag_%s' % base_table_name)
+    GlassTagSequence.set_table_name('tag_sequence_%s' % base_table_name)
+    GlassTagNonCoding.set_table_name('tag_non_coding_%s' % base_table_name)
+    GlassTagConserved.set_table_name('tag_conserved_%s' % base_table_name)
+    GlassTagPatterned.set_table_name('tag_patterned_%s' % base_table_name)
     
 class GlassTag(DynamicTable):
     '''
