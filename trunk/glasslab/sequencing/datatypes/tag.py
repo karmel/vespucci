@@ -13,8 +13,9 @@ from multiprocessing import Pool
 import traceback
 from glasslab.config import current_settings
 from glasslab.utils.datatypes.basic_model import DynamicTable
+from glasslab.glassatlas.datatypes.metadata import SequencingRun
 
-def multiprocess_glass_tags(func, cls):
+def multiprocess_glass_tags(func, cls, *args):
     ''' 
     Convenience method for splitting up queries based on glass tag id.
     '''
@@ -27,7 +28,7 @@ def multiprocess_glass_tags(func, cls):
                                 for i in xrange(0,processes)]
     
     for chr_list in chr_lists:
-        p.apply_async(func, args=(cls, chr_list))
+        p.apply_async(func, args=[cls, chr_list,] + list(args))
     p.close()
     p.join()
 
@@ -57,7 +58,7 @@ def set_all_tag_table_names(base_table_name):
     GlassTagNonCoding.set_table_name('tag_non_coding_%s' % base_table_name)
     GlassTagConserved.set_table_name('tag_conserved_%s' % base_table_name)
     GlassTagPatterned.set_table_name('tag_patterned_%s' % base_table_name)
-    
+
 class GlassTag(DynamicTable):
     '''
     From bowtie::
@@ -296,12 +297,25 @@ class GlassTag(DynamicTable):
             cursor = connection.cursor()
             cursor.execute(update_sql)
             transaction.commit_unless_managed()
-                          
+    
+    @classmethod 
+    def add_record_of_tags(cls, description=''):
+        '''
+        Add SequencingRun record with the details of this run.
+        
+        Should be called only after all tags have been added.
+        '''
+        SequencingRun.objects.get_or_create(source_table=cls._meta.db_table,
+                                    defaults={'name': cls.name, 
+                                              'total_tags': cls.objects.count(),
+                                              'description': description, }
+                                           )
 
 class GlassTagTranscriptionRegionTable(DynamicTable):
     glass_tag       = models.ForeignKey(GlassTag)
     
     table_type      = None
+    related_class   = None
     partitioned     = False
     
     class Meta: abstract = True
@@ -492,7 +506,7 @@ class GlassTagSequence(GlassTagTranscriptionRegionTable):
         mark as a start_site.
         '''
         for chr_id in chr_list:
-            for distance in (200,):#1000):
+            for distance in (200,1000):
                 update_sql = """
                 UPDATE "%s" tag_seq
                 SET start_site_%d = 1

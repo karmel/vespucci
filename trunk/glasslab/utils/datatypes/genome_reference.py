@@ -10,6 +10,7 @@ Created on Sep 24, 2010
 '''
 from django.db import models
 from glasslab.config import current_settings
+from glasslab.utils.datatypes.basic_model import CubeField
     
 #######################################################
 # Genome identifiers
@@ -21,7 +22,9 @@ class GenomeType(models.Model):
     '''
     genome_type = models.CharField(max_length=20)
     
-    class Meta: db_table = 'genome_reference"."genome_type'
+    class Meta: 
+        db_table    = 'genome_reference"."genome_type'
+        app_label   = 'Genome_Reference'
 
 class Genome(models.Model):
     '''
@@ -31,7 +34,9 @@ class Genome(models.Model):
     genome      = models.CharField(max_length=10)
     description = models.CharField(max_length=50)
     
-    class Meta: db_table = 'genome_reference"."genome'
+    class Meta: 
+        db_table    = 'genome_reference"."genome'
+        app_label   = 'Genome_Reference'
 
 class KeggPathway(models.Model):
     '''
@@ -40,7 +45,11 @@ class KeggPathway(models.Model):
     pathway_key = models.CharField(max_length=10, help_text='Identifier string for the pathway (i.e., "mmu00051"')
     description = models.CharField(max_length=255)
     
-    class Meta: db_table = 'genome_reference"."kegg_pathway'
+    class Meta: 
+        db_table    = 'genome_reference"."kegg_pathway'
+        app_label   = 'Genome_Reference'
+    
+    def __unicode__(self): return self.description
     
 #######################################################
 # Per-genome Gene identifiers
@@ -51,7 +60,11 @@ class Chromosome(models.Model):
     '''
     name = models.CharField(max_length=25, blank=False)
     
-    class Meta: db_table = 'genome_reference_%s"."chromosome' % current_settings.GENOME
+    class Meta: 
+        db_table    = 'genome_reference_%s"."chromosome' % current_settings.GENOME
+        app_label   = 'Genome_Reference'
+    
+    def __unicode__(self): return self.name
 
 class SequenceIdentifier(models.Model):
     '''
@@ -59,28 +72,44 @@ class SequenceIdentifier(models.Model):
     '''
     sequence_identifier = models.CharField(max_length=50, blank=False)
     
-    class Meta: db_table = 'genome_reference_%s"."sequence_identifier' % current_settings.GENOME
+    class Meta: 
+        db_table    = 'genome_reference_%s"."sequence_identifier' % current_settings.GENOME
+        app_label   = 'Genome_Reference'
+    
+    def __unicode__(self): return self.sequence_identifier
     
     _sequence_detail = None
     @property 
     def sequence_detail(self):
         if not self._sequence_detail:
-            self._sequence_detail = SequenceDetail.objects.get(sequence_identifier=self)
+            detail = SequenceDetail.objects.filter(sequence_identifier=self).order_by('-gene_name')[:1]
+            if detail: self._sequence_detail =  detail[0]
         return self._sequence_detail
+    
+    _sequence_transcription_region = None
+    @property 
+    def sequence_transcription_region(self):
+        if not self._sequence_transcription_region:
+            reg = SequenceTranscriptionRegion.objects.filter(sequence_identifier=self).order_by('transcription_start')[:1]
+            if reg: self._sequence_transcription_region =  reg[0]
+        return self._sequence_transcription_region
 
 class SequenceDetail(models.Model):
     '''
     Gene details, keyed to unique sequences.
     '''
     sequence_identifier = models.ForeignKey(SequenceIdentifier)
-    unigene_identifier  = models.CharField(max_length=255, blank=True)
-    ensembl_identifier  = models.CharField(max_length=255, blank=True)
-    gene_name           = models.CharField(max_length=255, blank=True)
-    gene_alias          = models.CharField(max_length=255, blank=True)
-    gene_description    = models.CharField(max_length=255, blank=True)
-    refseq_gene_id      = models.IntegerField(max_length=12, blank=True)
+    gene_name           = models.CharField(max_length=100, blank=True)
+    description         = models.CharField(max_length=255, blank=True)
+    ensembl_id          = models.CharField(max_length=100, blank=True)
+    pfam_id             = models.CharField(max_length=100, blank=True)
     
-    class Meta: db_table = 'genome_reference_%s"."sequence_detail' % current_settings.GENOME
+    class Meta: 
+        db_table    = 'genome_reference_%s"."sequence_detail' % current_settings.GENOME
+        app_label   = 'Genome_Reference'
+    
+    def __unicode__(self): 
+        return '%s (%s)' % (self.gene_name, self.sequence_identifier.sequence_identifier)
  
 #######################################################
 # Chromosome region details 
@@ -90,7 +119,6 @@ class SequenceTranscriptionRegion(models.Model):
     Mappings of transcription regions and coding sites.
     '''
     sequence_identifier = models.ForeignKey(SequenceIdentifier)
-    full_bin            = models.IntegerField(max_length=7, help_text='5 digit, left-padded, bin, plus id of chromosome.')
     chromosome          = models.ForeignKey(Chromosome)
     bin                 = models.IntegerField(max_length=5, help_text='Base-2 determined bin.')
     strand              = models.IntegerField(max_length=1, help_text='0 for +, 1 for -')
@@ -99,8 +127,15 @@ class SequenceTranscriptionRegion(models.Model):
     coding_start        = models.IntegerField(max_length=12)
     coding_end          = models.IntegerField(max_length=12)
     
-    class Meta: db_table = 'genome_reference_%s"."sequence_transcription_region' % current_settings.GENOME
+    start_end           = CubeField(null=True, default=None, help_text='This is a placeholder for the PostgreSQL cube type.')
+    
+    class Meta: 
+        db_table    = 'genome_reference_%s"."sequence_transcription_region' % current_settings.GENOME
+        app_label   = 'Genome_Reference'
 
+    def __unicode__(self):
+        return 'Sequence Transcription Region for %s' % self.sequence_identifier.sequence_identifier.strip()
+    
 class SequenceExon(models.Model):
     '''
     Mappings of transcription regions and coding sites.
@@ -110,7 +145,9 @@ class SequenceExon(models.Model):
     exon_end   = models.IntegerField(max_length=12)    
     frame      = models.IntegerField(max_length=5, help_text='Number o nucleotides needed from prior exon to make a complete amino acid at the start of this exon.')
     
-    class Meta: db_table = 'genome_reference_%s"."sequence_exon' % current_settings.GENOME
+    class Meta: 
+        db_table    = 'genome_reference_%s"."sequence_exon' % current_settings.GENOME
+        app_label   = 'Genome_Reference'
     
 class SequenceKeggPathway(models.Model):
     '''
@@ -120,8 +157,33 @@ class SequenceKeggPathway(models.Model):
     kegg_pathway        = models.ForeignKey(KeggPathway)
     map_location        = models.CharField(max_length=50, help_text='Mappable identifier for this sequence and pathway; can be used in Kegg URLs.')
     
-    class Meta: db_table = 'genome_reference_%s"."sequence_kegg_pathway' % current_settings.GENOME
+    class Meta: 
+        db_table    = 'genome_reference_%s"."sequence_kegg_pathway' % current_settings.GENOME
+        app_label   = 'Genome_Reference'
 
+class NonCodingRna(models.Model):
+    '''
+    Unique name and type for ncRNA
+    
+    '''
+    type                = models.CharField(max_length=20)
+    name                = models.CharField(max_length=100)
+    
+    class Meta: 
+        db_table    = 'genome_reference_%s"."non_coding_rna' % current_settings.GENOME
+        app_label   = 'Genome_Reference'
+    
+    def __unicode__(self):
+        return '%s %s' % (self.type, self.name.strip())
+    
+    _non_coding_transcription_region = None
+    @property 
+    def non_coding_transcription_region(self):
+        if not self._non_coding_transcription_region:
+            reg = NonCodingTranscriptionRegion.objects.filter(non_coding_rna=self).order_by('transcription_start')[:1]
+            if reg: self._non_coding_transcription_region =  reg[0]
+        return self._non_coding_transcription_region
+    
 class NonCodingTranscriptionRegion(models.Model):
     '''
     Mappings of transcription regions that are not tied to RefSeq genes.
@@ -129,9 +191,7 @@ class NonCodingTranscriptionRegion(models.Model):
     Scores are 0 - 1000, higher indicating that the sequence is more likely to be true ncRNA.
     
     '''
-    type                = models.CharField(max_length=20)
-    name                = models.CharField(max_length=100)
-    full_bin            = models.IntegerField(max_length=7, help_text='5 digit, left-padded, bin, plus id of chromosome.')
+    non_coding_rna      = models.ForeignKey(NonCodingRna)
     chromosome          = models.ForeignKey(Chromosome)
     bin                 = models.IntegerField(max_length=5, help_text='Base-2 determined bin.')
     strand              = models.IntegerField(max_length=1, help_text='0 for +, 1 for -')
@@ -139,23 +199,36 @@ class NonCodingTranscriptionRegion(models.Model):
     transcription_end   = models.IntegerField(max_length=12)    
     score               = models.IntegerField(max_length=5)
     
-    class Meta: db_table = 'genome_reference_%s"."non_coding_transcription_region' % current_settings.GENOME
+    start_end           = CubeField(null=True, default=None, help_text='This is a placeholder for the PostgreSQL cube type.')
+    
+    class Meta: 
+        db_table    = 'genome_reference_%s"."non_coding_transcription_region' % current_settings.GENOME
+        app_label   = 'Genome_Reference'
 
+    def __unicode__(self):
+        return '%s Transcription Region for %s' % (self.non_coding_rna.type, self.non_coding_rna.name.strip())
+    
 class PatternedTranscriptionRegion(models.Model):
     '''
     Mappings of patterns-- i.e., repeats-- onto transcription regions.
     '''
     type                = models.CharField(max_length=20)
     name                = models.CharField(max_length=100)
-    full_bin            = models.IntegerField(max_length=7, help_text='5 digit, left-padded, bin, plus id of chromosome.')
     chromosome          = models.ForeignKey(Chromosome)
     bin                 = models.IntegerField(max_length=5, help_text='Base-2 determined bin.')
     strand              = models.IntegerField(max_length=1, help_text='0 for +, 1 for -. Default NULL')
     transcription_start = models.IntegerField(max_length=12)
     transcription_end   = models.IntegerField(max_length=12)
     
-    class Meta: db_table = 'genome_reference_%s"."patterned_transcription_region' % current_settings.GENOME
+    start_end           = CubeField(null=True, default=None, help_text='This is a placeholder for the PostgreSQL cube type.')
+    
+    class Meta: 
+        db_table    = 'genome_reference_%s"."patterned_transcription_region' % current_settings.GENOME
+        app_label   = 'Genome_Reference'
 
+    def __unicode__(self):
+        return 'Patterned Transcription Region for %s %s' % (self.type, self.name.strip())
+    
 class ConservedTranscriptionRegion(models.Model):
     '''
     Coservation records for transcription regions determined by the phastCons HMM algorithm.
@@ -168,11 +241,17 @@ class ConservedTranscriptionRegion(models.Model):
     Statistical Methods in Molecular Evolution, pp. 325-351, Springer, New York.
     
     '''
-    full_bin            = models.IntegerField(max_length=7, help_text='5 digit, left-padded, bin, plus id of chromosome.')
     chromosome          = models.ForeignKey(Chromosome)
     bin                 = models.IntegerField(max_length=5, help_text='Base-2 determined bin.')
     transcription_start = models.IntegerField(max_length=12)
     transcription_end   = models.IntegerField(max_length=12)
     score               = models.IntegerField(max_length=5)
     
-    class Meta: db_table = 'genome_reference_%s"."conserved_transcription_region' % current_settings.GENOME
+    start_end           = CubeField(null=True, default=None, help_text='This is a placeholder for the PostgreSQL cube type.')
+    
+    class Meta: 
+        db_table    = 'genome_reference_%s"."conserved_transcription_region' % current_settings.GENOME
+        app_label   = 'Genome_Reference'
+
+    def __unicode__(self):
+        return 'Conserved Transcription Region with score %d' % self.score
