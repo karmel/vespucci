@@ -61,7 +61,7 @@ class Chromosome(models.Model):
     name = models.CharField(max_length=25, blank=False)
     
     class Meta: 
-        db_table    = 'genome_reference_%s"."chromosome' % current_settings.GENOME
+        db_table    = 'genome_reference_%s"."chromosome' % current_settings.REFERENCE_GENOME
         app_label   = 'Genome_Reference'
     
     def __unicode__(self): return self.name
@@ -73,7 +73,7 @@ class SequenceIdentifier(models.Model):
     sequence_identifier = models.CharField(max_length=50, blank=False)
     
     class Meta: 
-        db_table    = 'genome_reference_%s"."sequence_identifier' % current_settings.GENOME
+        db_table    = 'genome_reference_%s"."sequence_identifier' % current_settings.REFERENCE_GENOME
         app_label   = 'Genome_Reference'
     
     def __unicode__(self): return self.sequence_identifier
@@ -105,7 +105,7 @@ class SequenceDetail(models.Model):
     pfam_id             = models.CharField(max_length=100, blank=True)
     
     class Meta: 
-        db_table    = 'genome_reference_%s"."sequence_detail' % current_settings.GENOME
+        db_table    = 'genome_reference_%s"."sequence_detail' % current_settings.REFERENCE_GENOME
         app_label   = 'Genome_Reference'
     
     def __unicode__(self): 
@@ -130,7 +130,7 @@ class SequenceTranscriptionRegion(models.Model):
     start_end           = CubeField(null=True, default=None, help_text='This is a placeholder for the PostgreSQL cube type.')
     
     class Meta: 
-        db_table    = 'genome_reference_%s"."sequence_transcription_region' % current_settings.GENOME
+        db_table    = 'genome_reference_%s"."sequence_transcription_region' % current_settings.REFERENCE_GENOME
         app_label   = 'Genome_Reference'
 
     def __unicode__(self):
@@ -146,7 +146,7 @@ class SequenceExon(models.Model):
     frame      = models.IntegerField(max_length=5, help_text='Number o nucleotides needed from prior exon to make a complete amino acid at the start of this exon.')
     
     class Meta: 
-        db_table    = 'genome_reference_%s"."sequence_exon' % current_settings.GENOME
+        db_table    = 'genome_reference_%s"."sequence_exon' % current_settings.REFERENCE_GENOME
         app_label   = 'Genome_Reference'
     
 class SequenceKeggPathway(models.Model):
@@ -158,7 +158,7 @@ class SequenceKeggPathway(models.Model):
     map_location        = models.CharField(max_length=50, help_text='Mappable identifier for this sequence and pathway; can be used in Kegg URLs.')
     
     class Meta: 
-        db_table    = 'genome_reference_%s"."sequence_kegg_pathway' % current_settings.GENOME
+        db_table    = 'genome_reference_%s"."sequence_kegg_pathway' % current_settings.REFERENCE_GENOME
         app_label   = 'Genome_Reference'
 
 class NonCodingRna(models.Model):
@@ -170,7 +170,7 @@ class NonCodingRna(models.Model):
     name                = models.CharField(max_length=100)
     
     class Meta: 
-        db_table    = 'genome_reference_%s"."non_coding_rna' % current_settings.GENOME
+        db_table    = 'genome_reference_%s"."non_coding_rna' % current_settings.REFERENCE_GENOME
         app_label   = 'Genome_Reference'
     
     def __unicode__(self):
@@ -202,7 +202,7 @@ class NonCodingTranscriptionRegion(models.Model):
     start_end           = CubeField(null=True, default=None, help_text='This is a placeholder for the PostgreSQL cube type.')
     
     class Meta: 
-        db_table    = 'genome_reference_%s"."non_coding_transcription_region' % current_settings.GENOME
+        db_table    = 'genome_reference_%s"."non_coding_transcription_region' % current_settings.REFERENCE_GENOME
         app_label   = 'Genome_Reference'
 
     def __unicode__(self):
@@ -223,7 +223,7 @@ class PatternedTranscriptionRegion(models.Model):
     start_end           = CubeField(null=True, default=None, help_text='This is a placeholder for the PostgreSQL cube type.')
     
     class Meta: 
-        db_table    = 'genome_reference_%s"."patterned_transcription_region' % current_settings.GENOME
+        db_table    = 'genome_reference_%s"."patterned_transcription_region' % current_settings.REFERENCE_GENOME
         app_label   = 'Genome_Reference'
 
     def __unicode__(self):
@@ -250,7 +250,7 @@ class ConservedTranscriptionRegion(models.Model):
     start_end           = CubeField(null=True, default=None, help_text='This is a placeholder for the PostgreSQL cube type.')
     
     class Meta: 
-        db_table    = 'genome_reference_%s"."conserved_transcription_region' % current_settings.GENOME
+        db_table    = 'genome_reference_%s"."conserved_transcription_region' % current_settings.REFERENCE_GENOME
         app_label   = 'Genome_Reference'
 
     def __unicode__(self):

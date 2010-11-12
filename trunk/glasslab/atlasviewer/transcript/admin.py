@@ -48,7 +48,7 @@ class GlassTranscriptAdmin(ReadOnlyAdmin):
     
     def ucsc_browser_link(self, obj):
         return '<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?db=%s&amp;position=%s%%3A+%d-%d" target="_blank">View</a>' \
-                        % (current_settings.GENOME, obj.chromosome.name.strip(), 
+                        % (current_settings.REFERENCE_GENOME, obj.chromosome.name.strip(), 
                            obj.transcription_start, obj.transcription_end)
     ucsc_browser_link.short_description = 'UCSC Browser' 
     ucsc_browser_link.allow_tags = True 

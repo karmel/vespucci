@@ -19,6 +19,11 @@ if __name__ == '__main__':
     parser = TranscriptsFromTagsParser()
     options, args = parser.parse_args()
     
+    run_from_cammand_line = True 
+    if not run_from_cammand_line:
+        options.schema_name = 'thiomac_groseq_nathan_2010_10'
+        options.tag_table = 'tag_ncor_ko_kla_1h'
+        
     if options.tag_table:
         GlassTag._meta.db_table = options.schema_name and '%s"."%s' % (options.schema_name, options.tag_table) \
                                     or options.tag_table

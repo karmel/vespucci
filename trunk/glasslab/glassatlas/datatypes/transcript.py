@@ -16,6 +16,9 @@ from glasslab.utils.datatypes.basic_model import CubeField
 from django.db.models.aggregates import Sum
 from multiprocessing import Pool
 
+MAX_SEQUENCE_GAP = 2000 # Max gap between transcripts that share sequence associations
+MAX_OTHER_GAP = 200 # Max gap between transcripts that share no sequence associations
+
 def multiprocess_all_chromosomes(func, cls, *args):
     ''' 
     Convenience method for splitting up queries based on glass tag id.
@@ -47,7 +50,7 @@ class GlassTranscript(models.Model):
     '''   
     # Use JS for browser link to auto-include in Django Admin form 
     ucsc_browser_link = '''<a href="#" onclick="window.open('http://genome.ucsc.edu/cgi-bin/hgTracks?db='''\
-                        + current_settings.GENOME + '''&amp;position=' + '''\
+                        + current_settings.REFERENCE_GENOME + '''&amp;position=' + '''\
                         + ''' document.getElementById('id_chromosome').title '''\
                         + ''' + '%3A+' + document.getElementById('id_transcription_start').value '''\
                         + ''' + '-' + document.getElementById('id_transcription_end').value,'GlassTranscript' + '''\
@@ -70,7 +73,7 @@ class GlassTranscript(models.Model):
     created         = models.DateTimeField(auto_now_add=True)
     
     class Meta:
-        db_table    = 'glass_atlas_%s"."glass_transcript' % current_settings.GENOME
+        db_table    = 'glass_atlas_%s"."glass_transcript' % current_settings.TRANSCRIPT_GENOME
         app_label   = 'Transcription'
         
     def __unicode__(self):
@@ -82,7 +85,7 @@ class GlassTranscript(models.Model):
     def add_transcripts_from_tags(cls,  tag_table):
         sequencing_run = SequencingRun.objects.get(source_table=tag_table)
         multiprocess_glass_tags(wrap_add_transcripts_from_tags, cls, sequencing_run)
-        #wrap_add_transcripts_from_tags(cls,[1],sequencing_run)
+        #wrap_add_transcripts_from_tags(cls,[21],sequencing_run)
 
     @classmethod
     def _add_transcripts_from_tags_for_chr_list(cls, chr_list, sequencing_run):
@@ -92,78 +95,15 @@ class GlassTranscript(models.Model):
     
     @classmethod
     def _add_transcripts_from_tags(cls, chromosome_id, sequencing_run):
-        for strand in (0,1):
-            query = """
-                SELECT * FROM glass_atlas_mm9.determine_transcripts_from_sequencing_run(%d,'%s',%d);
-                """ % (chromosome_id, sequencing_run.source_table.strip(), strand)
-            connection.close()
-            cursor = connection.cursor()
-            cursor.execute(query)
-            
-            rows = cursor.fetchall()
-            for row in rows:
-                cls._add_transcript_row(row, sequencing_run)
-
-    @classmethod 
-    def _add_transcript_row(cls, row, sequencing_run):
-        '''
-        Handles individual transcript row::
-        
-            chromosome_id, strand_0, strand_1, transcription_start , transcription_end, tag_count, gaps
-            
-        Checks for overlapping existing transcripts; if one matches,
-        it is updated and a new source record is added.
-        
-        If none matches, the new transcript is added.
-        '''
-        labels = ('chromosome_id', 'strand_0', 'strand_1', 
-                  'transcription_start', 'transcription_end', 'tag_count', 'gaps')
-        row = dict(zip(labels,row))
-        
-        where = ['start_end OPERATOR(public.&&) public.cube(%d, %d)' % (row['transcription_start'], 
-                                                                       row['transcription_start'])]
-        existing = cls.objects.filter(chromosome__id = row['chromosome_id']
-                            ).extra(where=where).order_by('transcription_start','-transcription_end')
-        
-        transcript = None
-        if existing:
-            for old in existing:
-                # Is there substantial overlap here?
-                if abs(old.transcription_start - row['transcription_start']) <= 200 \
-                    and abs(old.transcription_end - row['transcription_end']) <= 200:
-                        # This is it!
-                        transcript = old
-                        break
-            if transcript:
-                print 'Existing transcript match found: %s' % str(transcript)
-                # Update the old with the new info.
-                # Don't overwrite the existing strand info unless it's in the positive.
-                if row['strand_0']: transcript.strand_0 = True
-                elif row['strand_1']: transcript.strand_1 = True
-                # Use widest possible bounds.
-                transcript.transcription_start = min(transcript.transcription_start, row['transcription_start'])
-                transcript.transcription_end = max(transcript.transcription_end, row['transcription_end'])
-                transcript.start_end = (transcript.transcription_start, transcript.transcription_end)
-
-        if not existing or not transcript:
-            # This is new. Save what we've got.
-            transcript = cls(chromosome_id = row['chromosome_id'],
-                             strand_0 = row['strand_0'],
-                             strand_1 = row['strand_1'],
-                             transcription_start = row['transcription_start'],
-                             transcription_end = row['transcription_end'],
-                             start_end = (row['transcription_start'], row['transcription_end']),
-                            )
-        transcript.save()
-        
-        # And save a record of the transcription in the sequencing run.
-        GlassTranscriptSource.objects.get_or_create(glass_transcript = transcript,
-                                                    sequencing_run = sequencing_run,
-                                                    strand = 1 and row['strand_1'] or 0,
-                                                    defaults = {'tag_count': row['tag_count'],
-                                                                'gaps': row['gaps'],
-                                                                })
-        transcript.save_final_transcript()
+        query = """
+            SELECT glass_atlas_%s.save_transcripts_from_sequencing_run(%d, %d,'%s', %d);
+            """ % (current_settings.TRANSCRIPT_GENOME,
+                   sequencing_run.id, chromosome_id, 
+                   sequencing_run.source_table.strip(), MAX_OTHER_GAP)
+        connection.close()
+        cursor = connection.cursor()
+        cursor.execute(query)
+        transaction.commit_unless_managed()
     
     def save_final_transcript(self):
         self.set_score()
@@ -185,79 +125,81 @@ class GlassTranscript(models.Model):
                                             ).values('sequencing_run_id').distinct().count()
         total_runs = GlassTranscriptSource.objects.values('sequencing_run_id').distinct().count()
        
-        self.score = (total_tags*relevant_runs)/total_runs
+        try: self.score = (total_tags*relevant_runs)/total_runs
+        except Exception:
+            print 'Erroneous score calculation: total tags = %s, relevant_runs = %s for transcript %s'\
+                         % (str(total_tags), str(relevant_runs), str(self))
+            raise
     
     def save_all_transcription_region_matches(self):
         for region_class in GlassTranscriptTranscriptionRegionTable.get_children():
             self.save_transcription_region_matches(region_class)
-            
-    @transaction.commit_manually
+        
     def save_transcription_region_matches(self, region_class):
         '''
         Find all transcription regions that overlap this one.
         Save or update records accordingly.
         
-        Commit only after completion, to avoid stopping after initial delete.
+        Not explicitly transaction wrappe din case it's part of a larger process.
         '''
-        try:
-            # First get existing records.
-            existing = region_class.objects.filter(glass_transcript=self)
-            
-            # Find any new records, matching by strand if necessary
-            if not region_class.match_strand: strand_query = ''
-            elif self.strand_0 and not self.strand_1: strand_query = ' AND reg.strand = 0 '
-            elif self.strand_1 and not self.strand_0: strand_query = ' AND reg.strand = 1 '
-            else: strand_query = ''
-            
-            current = region_class.related_class.objects.raw("""
-                            SELECT reg.* FROM "%s" reg
-                            JOIN "%s" transcript
-                            ON reg.chromosome_id = transcript.chromosome_id 
-                            AND reg.start_end OPERATOR(public.&&) transcript.start_end
-                            WHERE transcript.id = %d
-                            %s;"""  % (region_class.related_class._meta.db_table,
-                                       GlassTranscript._meta.db_table,
-                                       self.id, strand_query),)
-            
-            saved_ids = []
-            for region in current:
-                try:
-                    record = existing.get(**{'%s_transcription_region__id' % region_class.table_type: region.id})
-                except region_class.DoesNotExist:
-                    record = region_class(**{'glass_transcript': self,
-                                             '%s_transcription_region' % region_class.table_type: region})
-                # Who contains who?
-                if abs(self.transcription_start - region.transcription_start) <= 10 \
-                    and abs(self.transcription_end - region.transcription_end) <= 10:
-                        record.relationship = 'is equal to'
-                elif self.transcription_start <= region.transcription_start \
-                    and self.transcription_end >= region.transcription_end:
-                        record.relationship = 'contains'
-                elif self.transcription_start >= region.transcription_start \
-                    and self.transcription_end <= region.transcription_end:
-                        record.relationship = 'is contained by'
-                else: record.relationship = 'overlaps with'
-                
-                record.save()
-                saved_ids.append(record.id)
-            
-            # Finally, delete excess records.
-            existing.exclude(id__in=saved_ids).delete()
-            
-            # And commit.
-            transaction.commit()
+        # First get existing records.
+        existing = region_class.objects.filter(glass_transcript=self)
         
-        except Exception:
-            transaction.rollback()
-            raise
+        current = region_class.related_class.objects.raw("""
+                        SELECT reg.* FROM "%s" reg
+                        JOIN "%s" transcript
+                        ON reg.chromosome_id = transcript.chromosome_id 
+                        AND reg.start_end OPERATOR(public.&&) transcript.start_end
+                        WHERE transcript.id = %d;"""  % (
+                                            region_class.related_class._meta.db_table,
+                                            GlassTranscript._meta.db_table,
+                                            self.id),)
+        
+        saved_ids = []
+        for region in current:
+            try:
+                record = existing.get(**{'%s_transcription_region__id' % region_class.table_type: region.id})
+            except region_class.DoesNotExist:
+                record = region_class(**{'glass_transcript': self,
+                                         '%s_transcription_region' % region_class.table_type: region})
+            # Who contains who?
+            if abs(self.transcription_start - region.transcription_start) <= 10 \
+                and abs(self.transcription_end - region.transcription_end) <= 10:
+                    record.relationship = 'is equal to'
+            elif self.transcription_start <= region.transcription_start \
+                and self.transcription_end >= region.transcription_end:
+                    record.relationship = 'contains'
+            elif self.transcription_start >= region.transcription_start \
+                and self.transcription_end <= region.transcription_end:
+                    record.relationship = 'is contained by'
+            else: record.relationship = 'overlaps with'
+            
+            record.save()
+            saved_ids.append(record.id)
+        
+        # Finally, delete excess records.
+        existing.exclude(id__in=saved_ids).delete()
         
     @classmethod
     def stitch_together_transcripts(cls):
         multiprocess_all_chromosomes(wrap_stitch_together_transcripts, cls)
-        #wrap_stitch_together_transcripts(cls,[1])
-        
+        #wrap_stitch_together_transcripts(cls,[21])
+    
     @classmethod
     def _stitch_together_transcripts(cls, chr_list):
+        for chr_id in chr_list:
+            print 'Stitching together transcripts for chromosome %d' % chr_id
+            query = """
+                SELECT glass_atlas_%s.stitch_transcripts_together(%d, %d, %d);
+                """ % (current_settings.TRANSCRIPT_GENOME, 
+                       chr_id, MAX_SEQUENCE_GAP, MAX_OTHER_GAP)
+            connection.close()
+            cursor = connection.cursor()
+            cursor.execute(query)
+            transaction.commit_unless_managed()
+        
+    @classmethod
+    def _stitch_together_transcripts_x(cls, chr_list):
         '''
         Gapping causes us to get little transcripts where we should have one large one.
         
@@ -271,34 +213,29 @@ class GlassTranscript(models.Model):
         for chr_id in chr_list:
             print 'Stitching together transcripts for chromosome %d' % chr_id
             seq_groups = cls._get_transcript_groups(chr_id)
-            for id_group in seq_groups:
-                seq_transcripts = cls.objects.filter(id__in=id_group).order_by('transcription_start')
-                cls._merge_transcript_group(seq_transcripts, max_gap=2000)
-            # And repeat for non-sequence associated transcripts
-            groups = cls._get_transcript_groups_without_sequences(chr_id)
-            for id_group in groups:
-                seq_transcripts = cls.objects.filter(id__in=id_group).order_by('transcription_start')
-                # Smaller gap, since we don't want to merge transcripts that we 
-                # have no reason to believe belong together
-                cls._merge_transcript_group(seq_transcripts, max_gap=200)  
-                
+            for id_group, seq_group in seq_groups:
+                if seq_group: max_gap = 2000
+                else: max_gap = 200 # Allow a smaller gap for transcripts not associated with sequences.
+                transcripts = cls.objects.filter(id__in=id_group).order_by('transcription_start','-transcription_end')
+                cls._merge_transcript_group(transcripts, max_gap=max_gap)        
         
     @classmethod
     def _get_transcript_groups(cls, chr_id):
         # First, pull groups of transcript ids.
         query = """
         SELECT 
-            array_agg(transcript.id)
+            array_agg(transcript.id),
+            grouped_seq.regions
         FROM "%s" transcript
-        JOIN (SELECT 
+        LEFT OUTER JOIN (SELECT 
                 glass_transcript_id, 
-                array_agg(sequence_transcription_region_id) as regions
+                public.sort(array_agg(sequence_transcription_region_id)::int[]) as regions
             FROM "%s"
             GROUP BY glass_transcript_id) grouped_seq
         ON transcript.id = grouped_seq.glass_transcript_id
         LEFT OUTER JOIN (SELECT 
                 glass_transcript_id, 
-                array_agg(non_coding_transcription_region_id) as regions
+                public.sort(array_agg(non_coding_transcription_region_id)::int[]) as regions
             FROM "%s"
             GROUP BY glass_transcript_id) grouped_nc
         ON transcript.id = grouped_nc.glass_transcript_id
@@ -316,52 +253,7 @@ class GlassTranscript(models.Model):
         
         # Returns rows of arrays: [([29695, 29700,],),([28574, 2875440,])]
         # Flatten into list of lists and return
-        if not rows: return [] 
-        return list(zip(*rows)[0])
-    
-    @classmethod
-    def _get_transcript_groups_without_sequences(cls, chr_id):
-        '''
-        Similar to the query to get transcripts grouped by sequence groups,
-        but here we specifically want transcripts that don't map
-        to any sequence. Mapping to the same non-coding region is ok.
-        
-        We separate by chromosome and will run all through the looping checker
-        to smooth out any gaps.
-        '''
-        query = """
-        SELECT 
-            array_agg(transcript.id)
-        FROM "%s" transcript
-        LEFT OUTER JOIN (SELECT 
-                glass_transcript_id, 
-                array_agg(sequence_transcription_region_id) as regions
-            FROM "%s"
-            GROUP BY glass_transcript_id) grouped_seq
-        ON transcript.id = grouped_seq.glass_transcript_id
-        LEFT OUTER JOIN (SELECT 
-                glass_transcript_id, 
-                array_agg(non_coding_transcription_region_id) as regions
-            FROM "%s"
-            GROUP BY glass_transcript_id) grouped_nc
-        ON transcript.id = grouped_nc.glass_transcript_id
-        WHERE transcript.chromosome_id = %d
-            AND grouped_seq.glass_transcript_id IS NULL
-        GROUP BY grouped_nc.regions
-        HAVING count(transcript.id) > 1;""" % (GlassTranscript._meta.db_table,
-                                               GlassTranscriptSequence._meta.db_table,
-                                               GlassTranscriptNonCoding._meta.db_table,
-                                               chr_id)
-        connection.close()
-        cursor = connection.cursor()
-        cursor.execute(query)
-        
-        rows = cursor.fetchall()
-        
-        # Returns rows of arrays: [([29695, 29700,],),([28574, 2875440,])]
-        # Flatten into list of lists and return
-        if not rows: return [] 
-        return list(zip(*rows)[0])
+        return rows
     
     @classmethod
     @transaction.commit_manually
@@ -377,7 +269,7 @@ class GlassTranscript(models.Model):
             merged = False
             for trans in transcripts[1:]:
                 if merged_trans.transcription_end >= trans.transcription_start \
-                    or trans.transcription_start - merged_trans.transcription_end <= max_gap:  
+                    or trans.transcription_start - merged_trans.transcription_end <= max_gap:
                         merged_trans.transcription_end = max(merged_trans.transcription_end, trans.transcription_end)
                         if trans.strand_0: merged_trans.strand_0 = True
                         if trans.strand_1: merged_trans.strand_1 = True
@@ -397,7 +289,6 @@ class GlassTranscript(models.Model):
             
             # Close off final merged_trans
             if merged: merged_trans.save_final_transcript()
-            
             transaction.commit()
         
         except Exception:
@@ -416,8 +307,7 @@ class GlassTranscript(models.Model):
         for rel in GlassTranscriptSource.objects.filter(glass_transcript=self):
             try:
                 existing = GlassTranscriptSource.objects.get(glass_transcript = new_trans,
-                                                            sequencing_run = rel.sequencing_run,
-                                                            strand = rel.strand)
+                                                            sequencing_run = rel.sequencing_run)
                 existing.tag_count += rel.tag_count
                 existing.gaps += rel.gaps
                 existing.save()
@@ -439,12 +329,11 @@ class GlassTranscript(models.Model):
 class GlassTranscriptSource(models.Model):
     glass_transcript        = models.ForeignKey(GlassTranscript)
     sequencing_run          = models.ForeignKey(SequencingRun)
-    strand                  = models.IntegerField(max_length=1)
     tag_count               = models.IntegerField(max_length=12)
     gaps                    = models.IntegerField(max_length=12)
     
     class Meta:
-        db_table    = 'glass_atlas_%s"."glass_transcript_source' % current_settings.GENOME
+        db_table    = 'glass_atlas_%s"."glass_transcript_source' % current_settings.TRANSCRIPT_GENOME
         app_label   = 'Transcription'
         
     def __unicode__(self):
@@ -459,8 +348,6 @@ class GlassTranscriptTranscriptionRegionTable(models.Model):
     
     table_type      = None
     related_class   = None    
-    
-    match_strand    = False # Only match transcript is strand matches too?
     
     class Meta: 
         abstract = True        
@@ -488,7 +375,7 @@ class GlassTranscriptSequence(GlassTranscriptTranscriptionRegionTable):
     related_class = SequenceTranscriptionRegion
     
     class Meta: 
-        db_table    = 'glass_atlas_%s"."glass_transcript_sequence' % current_settings.GENOME
+        db_table    = 'glass_atlas_%s"."glass_transcript_sequence' % current_settings.TRANSCRIPT_GENOME
         app_label   = 'Transcription'
             
 class GlassTranscriptNonCoding(GlassTranscriptTranscriptionRegionTable):
@@ -500,10 +387,8 @@ class GlassTranscriptNonCoding(GlassTranscriptTranscriptionRegionTable):
     table_type = 'non_coding'
     related_class = NonCodingTranscriptionRegion
 
-    match_strand    = True
-    
     class Meta: 
-        db_table    = 'glass_atlas_%s"."glass_transcript_non_coding' % current_settings.GENOME
+        db_table    = 'glass_atlas_%s"."glass_transcript_non_coding' % current_settings.TRANSCRIPT_GENOME
         app_label   = 'Transcription'
         
 class GlassTranscriptPatterned(GlassTranscriptTranscriptionRegionTable):
@@ -516,7 +401,7 @@ class GlassTranscriptPatterned(GlassTranscriptTranscriptionRegionTable):
     related_class   = PatternedTranscriptionRegion
     
     class Meta: 
-        db_table    = 'glass_atlas_%s"."glass_transcript_patterned' % current_settings.GENOME
+        db_table    = 'glass_atlas_%s"."glass_transcript_patterned' % current_settings.TRANSCRIPT_GENOME
         app_label   = 'Transcription'
         
 class GlassTranscriptConserved(GlassTranscriptTranscriptionRegionTable):
@@ -529,6 +414,6 @@ class GlassTranscriptConserved(GlassTranscriptTranscriptionRegionTable):
     related_class   = ConservedTranscriptionRegion
 
     class Meta: 
-        db_table    = 'glass_atlas_%s"."glass_transcript_conserved' % current_settings.GENOME
+        db_table    = 'glass_atlas_%s"."glass_transcript_conserved' % current_settings.TRANSCRIPT_GENOME
         app_label   = 'Transcription'
     

@@ -41,10 +41,10 @@ class SequenceIdentifierAdmin(ReadOnlyAdmin):
     def ucsc_browser_link(self, obj):
         if not obj.sequence_transcription_region: 
             return 'http://genome.ucsc.edu/cgi-bin/hgTracks?db=%s&amp;position=%s' \
-                    % (current_settings.GENOME, obj.sequence_identifier)
+                    % (current_settings.REFERENCE_GENOME, obj.sequence_identifier)
                     
         return '<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?db=%s&amp;position=%s%%3A+%d-%d" target="_blank">View</a>' \
-                        % (current_settings.GENOME, 
+                        % (current_settings.REFERENCE_GENOME, 
                            obj.sequence_transcription_region.chromosome.name.strip(), 
                            obj.sequence_transcription_region.transcription_start, 
                            obj.sequence_transcription_region.transcription_end)
@@ -67,10 +67,10 @@ class NonCodingRnaAdmin(ReadOnlyAdmin):
     def ucsc_browser_link(self, obj):
         if not obj.non_coding_transcription_region: 
             return 'http://genome.ucsc.edu/cgi-bin/hgTracks?db=%s&amp;position=%s' \
-                    % (current_settings.GENOME, obj.name)
+                    % (current_settings.REFERENCE_GENOME, obj.name)
                     
         return '<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?db=%s&amp;position=%s%%3A+%d-%d" target="_blank">View</a>' \
-                        % (current_settings.GENOME, 
+                        % (current_settings.REFERENCE_GENOME, 
                            obj.non_coding_transcription_region.chromosome.name.strip(), 
                            obj.non_coding_transcription_region.transcription_start, 
                            obj.non_coding_transcription_region.transcription_end)

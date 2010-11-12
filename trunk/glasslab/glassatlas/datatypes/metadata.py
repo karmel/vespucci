@@ -21,7 +21,7 @@ class SequencingRun(models.Model):
     created         = models.DateTimeField(auto_now_add=True)
     
     class Meta:
-        db_table    = 'glass_atlas_%s"."sequencing_run' % current_settings.GENOME
+        db_table    = 'glass_atlas_%s"."sequencing_run' % current_settings.TRANSCRIPT_GENOME
         app_label   = 'Transcription'
         
     def __unicode__(self):
