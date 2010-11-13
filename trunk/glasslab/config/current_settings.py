@@ -9,7 +9,7 @@ should be set on a run-wide basis.
 GENOME_CHOICES = ['test','mm9']
 
 REFERENCE_GENOME = 'mm9'
-TRANSCRIPT_GENOME = 'test' # Separated for easy use of the 'test' DB while keeping reference DB
+TRANSCRIPT_GENOME = 'mm9' # Separated for easy use of the 'test' DB while keeping reference DB
 GENOME = REFERENCE_GENOME
 
 CURRENT_SCHEMA = 'current_projects'

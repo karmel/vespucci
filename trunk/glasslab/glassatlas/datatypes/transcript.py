@@ -85,7 +85,7 @@ class GlassTranscript(models.Model):
     def add_transcripts_from_tags(cls,  tag_table):
         sequencing_run = SequencingRun.objects.get(source_table=tag_table)
         multiprocess_glass_tags(wrap_add_transcripts_from_tags, cls, sequencing_run)
-        #wrap_add_transcripts_from_tags(cls,[21],sequencing_run)
+        #wrap_add_transcripts_from_tags(cls,[21, 22],sequencing_run)
 
     @classmethod
     def _add_transcripts_from_tags_for_chr_list(cls, chr_list, sequencing_run):
@@ -183,7 +183,7 @@ class GlassTranscript(models.Model):
     @classmethod
     def stitch_together_transcripts(cls):
         multiprocess_all_chromosomes(wrap_stitch_together_transcripts, cls)
-        #wrap_stitch_together_transcripts(cls,[21])
+        #wrap_stitch_together_transcripts(cls,[21, 22])
     
     @classmethod
     def _stitch_together_transcripts(cls, chr_list):
