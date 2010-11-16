@@ -30,3 +30,5 @@ if __name__ == '__main__':
         GlassTranscript.add_transcripts_from_tags(GlassTag._meta.db_table)
         
     GlassTranscript.stitch_together_transcripts()
+    GlassTranscript.set_scores()
+    GlassTranscript.delete_invalid_transcripts()

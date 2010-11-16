@@ -1,0 +1,52 @@
+{% extends "admin/base_site.html" %}
+{% load adminmedia %}
+
+{% block extrastyle %}
+  {{ block.super }}
+  <link rel="stylesheet" type="text/css" href="{% admin_media_prefix %}css/changelists.css" />
+  <link rel="stylesheet" type="text/css" href="{% admin_media_prefix %}css/forms.css" />
+{% endblock %}
+
+{% block bodyclass %}change-list{% endblock %}
+
+{% block content %}
+<h1>Custom Query</h1>
+<div style="border: 1px solid red; padding: 5px; width:80%;">
+	<h2 style="margin-top:0px;">WARNING:</h2>
+	<p>These queries are sent to the database raw and unmodified.<br />
+	Please query with caution, and only if you know what you are doing.</p>
+</div>
+<br />
+Query:<br />
+<form action="/transcript/custom_query" method="get">
+	<textarea id="id_query" name="query" style="width:80%; height: 200px;">{{ query }}</textarea>
+	<br />
+	<input type="submit" value="Submit" />
+</form>
+
+{% if field_names %}
+<br />
+<div style="float:right;">
+<a href="/transcript/custom_query_export/?query={{ query|urlencode }}" target="_blank">Export to TSV</a>
+</div>
+<h2>{{ rows|length }} Results:</h2>
+	<table>
+		<thead>
+			<th>&nbsp;</th>
+			{% for field in field_names %}
+				<th>{{ field.0 }}</th>
+			{% endfor %}
+		</thead>
+		{% for row in rows %}
+		<tr class="{% cycle 'row1' 'row2' %}">
+			<td>{{ forloop.counter }}
+			{% for cell in row %}
+				<td>{{ cell|safe }}</td>
+			{% endfor %}
+		</tr>
+		{% endfor %}
+	</table>
+
+{% endif %}
+
+{% endblock %}

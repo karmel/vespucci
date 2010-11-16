@@ -6,7 +6,7 @@ Created on Nov 12, 2010
 Convenience script for generated create table statements for transcript tables.
 '''
 
-genome = 'test'
+genome = 'mm9'
 sql = """
 CREATE TABLE "glass_atlas_%s"."glass_transcript" (
     "id" int4 NOT NULL,
@@ -17,7 +17,7 @@ CREATE TABLE "glass_atlas_%s"."glass_transcript" (
     "transcription_end" int8 DEFAULT NULL,
     "start_end" "public"."cube" DEFAULT NULL,
     "spliced" boolean DEFAULT NULL,
-    "score" int4 DEFAULT NULL,
+    "score" numeric DEFAULT NULL,
     "modified" timestamp(6) NULL DEFAULT NULL,
     "created" timestamp(6) NULL DEFAULT NULL
 );

@@ -25,7 +25,7 @@ class DynamicTable(models.Model):
         '''
         cls._meta.db_table = '%s"."%s' % (cls.schema, table_name)
         cls.name = table_name 
-        
+
 class CubeField(models.Field):
     '''
     Field for the PostgreSQL type cube (public.cube in the current DB).

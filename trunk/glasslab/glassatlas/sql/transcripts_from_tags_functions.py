@@ -15,6 +15,7 @@ DROP FUNCTION IF EXISTS glass_atlas_%s.insert_associated_transcript_regions(glas
 DROP FUNCTION IF EXISTS glass_atlas_%s.save_transcript(glass_atlas_%s.glass_transcript);
 DROP FUNCTION IF EXISTS glass_atlas_%s.determine_transcripts_from_sequencing_run(integer, text, integer);
 DROP FUNCTION IF EXISTS glass_atlas_%s.save_transcripts_from_sequencing_run(integer, integer, text, integer);
+DROP FUNCTION IF EXISTS glass_atlas_%s.calculate_scores(integer);
 DROP TYPE IF EXISTS glass_atlas_%s.glass_transcript_row;
 
 CREATE TYPE glass_atlas_%s.glass_transcript_row AS ("chromosome_id" integer, "strand_0" boolean, "strand_1" boolean, 
@@ -96,21 +97,10 @@ BEGIN
 	RETURN;
 END;
 $$ LANGUAGE 'plpgsql';
-	
+			
 CREATE FUNCTION glass_atlas_%s.save_transcript(rec glass_atlas_%s.glass_transcript)
 RETURNS VOID AS $$
-DECLARE
-	total_runs integer;
-	relevant_runs integer;
-	total_tags integer;
-BEGIN 
-	-- Calculate score
-	total_runs := (SELECT COUNT(DISTINCT sequencing_run_id) FROM glass_atlas_%s.glass_transcript_source);
-	relevant_runs := (SELECT COUNT(DISTINCT sequencing_run_id) FROM glass_atlas_%s.glass_transcript_source 
-		WHERE glass_transcript_id = rec.id);
-	total_tags := (SELECT SUM(tag_count) FROM glass_atlas_%s.glass_transcript_source 
-		WHERE glass_transcript_id = rec.id);
-	
+BEGIN 	
 	-- Update record
 	UPDATE glass_atlas_%s.glass_transcript SET
 		strand_0 = rec.strand_0,
@@ -118,7 +108,6 @@ BEGIN
 		transcription_start = rec.transcription_start,
 		transcription_end = rec.transcription_end,
 		spliced = rec.spliced,
-		score = (total_tags*relevant_runs/total_runs),
 		modified = NOW()
 	WHERE id = rec.id;
 	
@@ -209,28 +198,19 @@ CREATE FUNCTION glass_atlas_%s.save_transcripts_from_sequencing_run(seq_run_id i
 RETURNS VOID AS $$
  DECLARE
 	rec glass_atlas_%s.glass_transcript_row;
-	score integer;
 	transcript glass_atlas_%s.glass_transcript;
  BEGIN
 	FOR rec IN 
 		SELECT * FROM glass_atlas_%s.determine_transcripts_from_sequencing_run(chr_id, source_t, max_gap)
 	LOOP
-			-- Calculate the score, assuming this is the only record of this transcript.
-			-- We omit this sequencing run from the query for the count, and add it 
-			-- in afterwards to ensure that it is included for even the first transcript
-			-- from a new run.
-			score := (SELECT COUNT(DISTINCT sequencing_run_id)
-						FROM "glass_atlas_%s"."glass_transcript_source"
-						WHERE sequencing_run_id != seq_run_id);
-			score := rec.tag_count/(score + 1);
 			-- Save the transcript.
 			INSERT INTO glass_atlas_%s.glass_transcript 
 				("chromosome_id", "strand_0", "strand_1", 
 				"transcription_start", "transcription_end", 
-				"start_end", "score", "modified", "created")
+				"start_end", "modified", "created")
 				VALUES (rec.chromosome_id, rec.strand_0, rec.strand_1, 
 				rec.transcription_start, rec.transcription_end, 
-				public.cube(rec.transcription_start, rec.transcription_end), score,
+				public.cube(rec.transcription_start, rec.transcription_end), 
 				NOW(), NOW())
 				RETURNING * INTO transcript;
 
@@ -307,6 +287,7 @@ BEGIN
 						IF trans.spliced = true THEN merged_trans.spliced := true;
 						END IF;
 						merged_trans.start_end := public.cube(merged_trans.transcription_start, merged_trans.transcription_end);
+						merged_trans.score := NULL;
 						-- Delete/update old associations
 						PERFORM glass_atlas_%s.remove_transcript_source_records(merged_trans, trans);
 						PERFORM glass_atlas_%s.remove_transcript_region_records(merged_trans);
@@ -336,6 +317,28 @@ BEGIN
 	RETURN;
 END;
 $$ LANGUAGE 'plpgsql';
-""" % tuple([genome]*62)
+
+CREATE FUNCTION glass_atlas_%s.calculate_scores(chr_id integer)
+RETURNS VOID AS $$
+BEGIN 
+	UPDATE glass_atlas_%s.glass_transcript transcript
+		SET score = derived.score 
+		FROM (SELECT 
+				transcript.id, 
+				log(COUNT(DISTINCT source.sequencing_run_id)::numeric*SUM(source.tag_count)::numeric) as score
+			FROM glass_atlas_%s.glass_transcript transcript, 
+				glass_atlas_%s.glass_transcript_source source
+			WHERE source.glass_transcript_id = transcript.id
+				AND transcript.chromosome_id = chr_id
+				AND transcript.score IS NULL
+			GROUP BY transcript.id
+		) derived
+		WHERE transcript.id = derived.id;
+
+	RETURN;
+END;
+$$ LANGUAGE 'plpgsql';
+
+""" % tuple([genome]*63)
 
 print sql

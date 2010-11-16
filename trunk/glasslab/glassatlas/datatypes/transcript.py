@@ -5,7 +5,7 @@ Created on Nov 8, 2010
 '''
 from __future__ import division
 from glasslab.config import current_settings
-from django.db import models, connection, transaction
+from django.db import models, connection
 from glasslab.utils.datatypes.genome_reference import Chromosome,\
     SequenceTranscriptionRegion, PatternedTranscriptionRegion,\
     ConservedTranscriptionRegion, NonCodingTranscriptionRegion
@@ -13,11 +13,12 @@ from glasslab.glassatlas.datatypes.metadata import SequencingRun
 from glasslab.sequencing.datatypes.tag import multiprocess_glass_tags,\
     wrap_errors
 from glasslab.utils.datatypes.basic_model import CubeField
-from django.db.models.aggregates import Sum
 from multiprocessing import Pool
+from glasslab.utils.database import execute_query
 
 MAX_SEQUENCE_GAP = 2000 # Max gap between transcripts that share sequence associations
 MAX_OTHER_GAP = 200 # Max gap between transcripts that share no sequence associations
+MIN_SCORE = 1 # Delete transcripts with scores below this threshold.
 
 def multiprocess_all_chromosomes(func, cls, *args):
     ''' 
@@ -41,8 +42,8 @@ def multiprocess_all_chromosomes(func, cls, *args):
 def wrap_add_transcripts_from_tags(cls, chr_list, *args): 
     wrap_errors(cls._add_transcripts_from_tags_for_chr_list, chr_list, *args)
 
-def wrap_stitch_together_transcripts(cls, chr_list): 
-    wrap_errors(cls._stitch_together_transcripts, chr_list)
+def wrap_stitch_together_transcripts(cls, chr_list): wrap_errors(cls._stitch_together_transcripts, chr_list)
+def wrap_set_scores(cls, chr_list): wrap_errors(cls._set_scores, chr_list)
 
 class GlassTranscript(models.Model):
     '''
@@ -91,95 +92,13 @@ class GlassTranscript(models.Model):
     def _add_transcripts_from_tags_for_chr_list(cls, chr_list, sequencing_run):
         for chr_id in chr_list:
             print 'Adding transcripts for chromosome %d' % chr_id
-            cls._add_transcripts_from_tags(chr_id, sequencing_run)
+            query = """
+                SELECT glass_atlas_%s.save_transcripts_from_sequencing_run(%d, %d,'%s', %d);
+                """ % (current_settings.TRANSCRIPT_GENOME,
+                       sequencing_run.id, chr_id, 
+                       sequencing_run.source_table.strip(), MAX_OTHER_GAP)
+            execute_query(query)
     
-    @classmethod
-    def _add_transcripts_from_tags(cls, chromosome_id, sequencing_run):
-        query = """
-            SELECT glass_atlas_%s.save_transcripts_from_sequencing_run(%d, %d,'%s', %d);
-            """ % (current_settings.TRANSCRIPT_GENOME,
-                   sequencing_run.id, chromosome_id, 
-                   sequencing_run.source_table.strip(), MAX_OTHER_GAP)
-        connection.close()
-        cursor = connection.cursor()
-        cursor.execute(query)
-        transaction.commit_unless_managed()
-    
-    def save_final_transcript(self):
-        self.set_score()
-        self.save()
-        self.save_all_transcription_region_matches()      
-        
-    def set_score(self):
-        '''
-        Scoring, currently, is rudimentary::
-         
-            total tags recorded for this transcript across all sequencing runs
-            x number of sequencing runs this transcript appears in
-            / total number of sequencing runs possible
-        
-        '''
-        total_tags = GlassTranscriptSource.objects.filter(glass_transcript=self
-                                            ).aggregate(total_tags=Sum('tag_count'))['total_tags']
-        relevant_runs = GlassTranscriptSource.objects.filter(glass_transcript=self
-                                            ).values('sequencing_run_id').distinct().count()
-        total_runs = GlassTranscriptSource.objects.values('sequencing_run_id').distinct().count()
-       
-        try: self.score = (total_tags*relevant_runs)/total_runs
-        except Exception:
-            print 'Erroneous score calculation: total tags = %s, relevant_runs = %s for transcript %s'\
-                         % (str(total_tags), str(relevant_runs), str(self))
-            raise
-    
-    def save_all_transcription_region_matches(self):
-        for region_class in GlassTranscriptTranscriptionRegionTable.get_children():
-            self.save_transcription_region_matches(region_class)
-        
-    def save_transcription_region_matches(self, region_class):
-        '''
-        Find all transcription regions that overlap this one.
-        Save or update records accordingly.
-        
-        Not explicitly transaction wrappe din case it's part of a larger process.
-        '''
-        # First get existing records.
-        existing = region_class.objects.filter(glass_transcript=self)
-        
-        current = region_class.related_class.objects.raw("""
-                        SELECT reg.* FROM "%s" reg
-                        JOIN "%s" transcript
-                        ON reg.chromosome_id = transcript.chromosome_id 
-                        AND reg.start_end OPERATOR(public.&&) transcript.start_end
-                        WHERE transcript.id = %d;"""  % (
-                                            region_class.related_class._meta.db_table,
-                                            GlassTranscript._meta.db_table,
-                                            self.id),)
-        
-        saved_ids = []
-        for region in current:
-            try:
-                record = existing.get(**{'%s_transcription_region__id' % region_class.table_type: region.id})
-            except region_class.DoesNotExist:
-                record = region_class(**{'glass_transcript': self,
-                                         '%s_transcription_region' % region_class.table_type: region})
-            # Who contains who?
-            if abs(self.transcription_start - region.transcription_start) <= 10 \
-                and abs(self.transcription_end - region.transcription_end) <= 10:
-                    record.relationship = 'is equal to'
-            elif self.transcription_start <= region.transcription_start \
-                and self.transcription_end >= region.transcription_end:
-                    record.relationship = 'contains'
-            elif self.transcription_start >= region.transcription_start \
-                and self.transcription_end <= region.transcription_end:
-                    record.relationship = 'is contained by'
-            else: record.relationship = 'overlaps with'
-            
-            record.save()
-            saved_ids.append(record.id)
-        
-        # Finally, delete excess records.
-        existing.exclude(id__in=saved_ids).delete()
-        
     @classmethod
     def stitch_together_transcripts(cls):
         multiprocess_all_chromosomes(wrap_stitch_together_transcripts, cls)
@@ -193,138 +112,32 @@ class GlassTranscript(models.Model):
                 SELECT glass_atlas_%s.stitch_transcripts_together(%d, %d, %d);
                 """ % (current_settings.TRANSCRIPT_GENOME, 
                        chr_id, MAX_SEQUENCE_GAP, MAX_OTHER_GAP)
-            connection.close()
-            cursor = connection.cursor()
-            cursor.execute(query)
-            transaction.commit_unless_managed()
-        
+            execute_query(query)
+            
     @classmethod
-    def _stitch_together_transcripts_x(cls, chr_list):
-        '''
-        Gapping causes us to get little transcripts where we should have one large one.
-        
-        Here we stitch smaller transcripts together if and only if
-        they share the exact same set of sequence and non_coding region mappings
-        and the gap between any two regions is less than 2kb.
-        
-        Next, we stitch together transcripts not matched to any sequences
-        if the gap is less than 200bp, and the non-coding regions match.
-        '''
-        for chr_id in chr_list:
-            print 'Stitching together transcripts for chromosome %d' % chr_id
-            seq_groups = cls._get_transcript_groups(chr_id)
-            for id_group, seq_group in seq_groups:
-                if seq_group: max_gap = 2000
-                else: max_gap = 200 # Allow a smaller gap for transcripts not associated with sequences.
-                transcripts = cls.objects.filter(id__in=id_group).order_by('transcription_start','-transcription_end')
-                cls._merge_transcript_group(transcripts, max_gap=max_gap)        
-        
-    @classmethod
-    def _get_transcript_groups(cls, chr_id):
-        # First, pull groups of transcript ids.
-        query = """
-        SELECT 
-            array_agg(transcript.id),
-            grouped_seq.regions
-        FROM "%s" transcript
-        LEFT OUTER JOIN (SELECT 
-                glass_transcript_id, 
-                public.sort(array_agg(sequence_transcription_region_id)::int[]) as regions
-            FROM "%s"
-            GROUP BY glass_transcript_id) grouped_seq
-        ON transcript.id = grouped_seq.glass_transcript_id
-        LEFT OUTER JOIN (SELECT 
-                glass_transcript_id, 
-                public.sort(array_agg(non_coding_transcription_region_id)::int[]) as regions
-            FROM "%s"
-            GROUP BY glass_transcript_id) grouped_nc
-        ON transcript.id = grouped_nc.glass_transcript_id
-        WHERE transcript.chromosome_id = %d
-        GROUP BY grouped_seq.regions, grouped_nc.regions
-        HAVING count(transcript.id) > 1;""" % (GlassTranscript._meta.db_table,
-                                               GlassTranscriptSequence._meta.db_table,
-                                               GlassTranscriptNonCoding._meta.db_table,
-                                               chr_id)
-        connection.close()
-        cursor = connection.cursor()
-        cursor.execute(query)
-        
-        rows = cursor.fetchall()
-        
-        # Returns rows of arrays: [([29695, 29700,],),([28574, 2875440,])]
-        # Flatten into list of lists and return
-        return rows
+    def set_scores(cls):
+        multiprocess_all_chromosomes(wrap_set_scores, cls)
+        #wrap_set_scores(cls,[21, 22])
     
     @classmethod
-    @transaction.commit_manually
-    def _merge_transcript_group(cls, transcripts, max_gap=0):
-        '''
-        Transcripts all share sequence and non_coding region mappings,
-        and are ordered by start ascending.
-        
-        Merge together as many as possible without any gaps > 2kb
-        '''
-        try:
-            merged_trans = transcripts[0]
-            merged = False
-            for trans in transcripts[1:]:
-                if merged_trans.transcription_end >= trans.transcription_start \
-                    or trans.transcription_start - merged_trans.transcription_end <= max_gap:
-                        merged_trans.transcription_end = max(merged_trans.transcription_end, trans.transcription_end)
-                        if trans.strand_0: merged_trans.strand_0 = True
-                        if trans.strand_1: merged_trans.strand_1 = True
-                        if trans.spliced: merged_trans.spliced = True
-                        merged_trans.start_end = (merged_trans.transcription_start, merged_trans.transcription_end)
-                        trans.replace_records(merged_trans)
-                        trans.delete()
-                        merged = True
-                else:
-                    if merged:
-                        # Close off current merged transcript
-                        merged_trans.save_final_transcript()
-                    
-                    # And reset
-                    merged_trans = trans
-                    merged = False
+    def _set_scores(cls, chr_list):
+        for chr_id in chr_list:
+            print 'Scoring transcripts for chromosome %d' % chr_id
+            query = """
+                SELECT glass_atlas_%s.calculate_scores(%d);
+                """ % (current_settings.TRANSCRIPT_GENOME, chr_id)
+            execute_query(query)
             
-            # Close off final merged_trans
-            if merged: merged_trans.save_final_transcript()
-            transaction.commit()
-        
-        except Exception:
-            transaction.rollback()
-            raise
-
-    def replace_records(self, new_trans):
+    @classmethod
+    def delete_invalid_transcripts(cls):
         '''
-        Replace all associations of this transcript with the new transcript.
-        ''' 
-        self._replace_records_for_source(new_trans)
-        for region_class in GlassTranscriptTranscriptionRegionTable.get_children():
-            self._replace_records_for_region(new_trans, region_class)
-        
-    def _replace_records_for_source(self, new_trans):
-        for rel in GlassTranscriptSource.objects.filter(glass_transcript=self):
-            try:
-                existing = GlassTranscriptSource.objects.get(glass_transcript = new_trans,
-                                                            sequencing_run = rel.sequencing_run)
-                existing.tag_count += rel.tag_count
-                existing.gaps += rel.gaps
-                existing.save()
-                rel.delete()
-            except GlassTranscriptSource.DoesNotExist:
-                rel.glass_transcript = new_trans
-                rel.save()
-                
-    def _replace_records_for_region(self, new_trans, region_class):
-        for rel in region_class.objects.filter(glass_transcript=self):
-            try:
-                existing = region_class.objects.get(**{'glass_transcript': new_trans,
-                                '%s_transcription_region' % region_class.table_type: rel.foreign_key_field()})
-                rel.delete()
-            except region_class.DoesNotExist:
-                rel.glass_transcript = new_trans
-                rel.save()
+        Delete transcripts falling below a certain score threshold.
+        '''
+        query = """
+            DELETE FROM  "%s" WHERE score IS NOT NULL AND score < %d;
+            """ % (GlassTranscript._meta.db_table, MIN_SCORE)
+        execute_query(query)
+        print 'Deleted transcripts below score threshold of %d' % MIN_SCORE    
         
 class GlassTranscriptSource(models.Model):
     glass_transcript        = models.ForeignKey(GlassTranscript)
