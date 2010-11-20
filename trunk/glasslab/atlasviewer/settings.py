@@ -85,5 +85,6 @@ INSTALLED_APPS = (
     'django.contrib.admin',
     'glasslab.atlasviewer.transcript',
     'glasslab.atlasviewer.genomereference',
+    'glasslab.atlasviewer.shared',
     
 )

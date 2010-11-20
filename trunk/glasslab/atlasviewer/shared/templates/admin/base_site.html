@@ -1,5 +1,9 @@
 {% extends "admin/base_site.html" %}
 {% block extrastyle %}
-  {{ block.super }}
+  	{{ block.super }}
 	<link rel="stylesheet" type="text/css" href="{% admin_media_prefix %}css/forms.css" />
+{% endblock %}
+{% block extrahead %}
+	{{ block.super }}
+	<script type="text/javascript" src="/media/js/admin.js"></script>
 {% endblock %}
