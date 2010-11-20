@@ -7,5 +7,5 @@ from django.conf.urls.defaults import patterns
 urlpatterns = patterns('glasslab.atlasviewer.transcript.views',
     
     (r'^custom_query_export', 'custom_query_export'),
-    (r'^custom_query', 'custom_query'),    
+    (r'^custom_query', 'custom_query'),
 )

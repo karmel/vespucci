@@ -5,16 +5,18 @@ Created on Nov 12, 2010
 
 Convenience script for generated create table statements for transcript functions.
 '''
-genome = 'test'
+genome = 'mm9'
 sql = """
 -- Not run from within the codebase, but kept here in case functions need to be recreated.
 DROP FUNCTION IF EXISTS glass_atlas_%s.stitch_transcripts_together(integer, integer, integer);
 DROP FUNCTION IF EXISTS glass_atlas_%s.remove_transcript_source_records(glass_atlas_%s.glass_transcript, glass_atlas_%s.glass_transcript);
 DROP FUNCTION IF EXISTS glass_atlas_%s.remove_transcript_region_records(glass_atlas_%s.glass_transcript);
 DROP FUNCTION IF EXISTS glass_atlas_%s.insert_associated_transcript_regions(glass_atlas_%s.glass_transcript);
+DROP FUNCTION IF EXISTS glass_atlas_%s.merge_transcripts(glass_atlas_%s.glass_transcript, glass_atlas_%s.glass_transcript);
 DROP FUNCTION IF EXISTS glass_atlas_%s.save_transcript(glass_atlas_%s.glass_transcript);
 DROP FUNCTION IF EXISTS glass_atlas_%s.determine_transcripts_from_sequencing_run(integer, text, integer);
 DROP FUNCTION IF EXISTS glass_atlas_%s.save_transcripts_from_sequencing_run(integer, integer, text, integer);
+DROP FUNCTION IF EXISTS glass_atlas_%s.join_subtranscripts(integer);
 DROP FUNCTION IF EXISTS glass_atlas_%s.calculate_scores(integer);
 DROP TYPE IF EXISTS glass_atlas_%s.glass_transcript_row;
 
@@ -98,6 +100,24 @@ BEGIN
 END;
 $$ LANGUAGE 'plpgsql';
 			
+CREATE FUNCTION glass_atlas_%s.merge_transcripts(merged_trans glass_atlas_%s.glass_transcript, trans glass_atlas_%s.glass_transcript)
+RETURNS glass_atlas_%s.glass_transcript AS $$
+BEGIN
+	-- Update the merged transcript
+	merged_trans.transcription_start := (SELECT LEAST(merged_trans.transcription_start, trans.transcription_start));
+	merged_trans.transcription_end := (SELECT GREATEST(merged_trans.transcription_end, trans.transcription_end));
+	IF trans.strand_0 = true THEN merged_trans.strand_0 := true;
+	END IF;
+	IF trans.strand_1 = true THEN merged_trans.strand_1 := true;
+	END IF;
+	IF trans.spliced = true THEN merged_trans.spliced := true;
+	END IF;
+	merged_trans.start_end := public.cube(merged_trans.transcription_start, merged_trans.transcription_end);
+	merged_trans.score := NULL;
+	RETURN merged_trans;
+END;
+$$ LANGUAGE 'plpgsql';
+
 CREATE FUNCTION glass_atlas_%s.save_transcript(rec glass_atlas_%s.glass_transcript)
 RETURNS VOID AS $$
 BEGIN 	
@@ -107,7 +127,9 @@ BEGIN
 		strand_1 = rec.strand_1,
 		transcription_start = rec.transcription_start,
 		transcription_end = rec.transcription_end,
+		start_end = rec.start_end,
 		spliced = rec.spliced,
+		score = rec.score,
 		modified = NOW()
 	WHERE id = rec.id;
 	
@@ -278,16 +300,7 @@ BEGIN
 				IF (merged_trans.transcription_end >= trans.transcription_start)
 					OR (trans.transcription_start - merged_trans.transcription_end <= max_gap)
 					THEN 
-						-- Update the merged transcript
-						merged_trans.transcription_end := (SELECT GREATEST(merged_trans.transcription_end, trans.transcription_end));
-						IF trans.strand_0 = true THEN merged_trans.strand_0 := true;
-						END IF;
-						IF trans.strand_1 = true THEN merged_trans.strand_1 := true;
-						END IF;
-						IF trans.spliced = true THEN merged_trans.spliced := true;
-						END IF;
-						merged_trans.start_end := public.cube(merged_trans.transcription_start, merged_trans.transcription_end);
-						merged_trans.score := NULL;
+						merged_trans := (SELECT glass_atlas_%s.merge_transcripts(merged_trans, trans));
 						-- Delete/update old associations
 						PERFORM glass_atlas_%s.remove_transcript_source_records(merged_trans, trans);
 						PERFORM glass_atlas_%s.remove_transcript_region_records(merged_trans);
@@ -318,6 +331,56 @@ BEGIN
 END;
 $$ LANGUAGE 'plpgsql';
 
+CREATE FUNCTION glass_atlas_%s.join_subtranscripts(chr_id integer)
+RETURNS VOID AS $$
+ DECLARE
+	transcript_pair record;
+	trans glass_atlas_%s.glass_transcript;
+	merged_trans glass_atlas_%s.glass_transcript;
+BEGIN
+	FOR transcript_pair IN
+		SELECT (transcript1.*)::record as t1,
+			(transcript2.*)::record as t2,
+			source1.runs as runs1,
+			source2.runs as runs2
+		FROM glass_atlas_%s.glass_transcript transcript1
+		JOIN glass_atlas_%s.glass_transcript transcript2
+		ON  transcript1.start_end OPERATOR(public.&&) transcript2.start_end
+		AND transcript1.strand_0 = transcript2.strand_0
+		AND transcript1.strand_1 = transcript2.strand_1
+		AND transcript1.id != transcript2.id
+		LEFT OUTER JOIN (
+			SELECT glass_transcript_id, public.sort(array_agg(sequencing_run_id)::int[]) as runs
+			FROM glass_atlas_%s.glass_transcript_source 
+			GROUP BY glass_transcript_id
+			) source1
+		ON transcript1.id = source1.glass_transcript_id
+		LEFT OUTER JOIN (
+			SELECT glass_transcript_id, public.sort(array_agg(sequencing_run_id)::int[]) as runs
+			FROM glass_atlas_%s.glass_transcript_source 
+			GROUP BY glass_transcript_id
+			) source2
+		ON transcript2.id = source2.glass_transcript_id
+		WHERE transcript1.chromosome_id = chr_id
+			AND transcript2.chromosome_id = chr_id
+			AND source1.runs @> source2.runs
+	LOOP
+		-- Transcript 1 contains Transcript 2. Unite and update references
+		-- where Transcript 1 has tags from the same sequencing runs as Transcript 2.
+		
+		merged_trans := transcript_pair.t1;
+		trans := transcript_pair.t2;
+		merged_trans := (SELECT glass_atlas_%s.merge_transcripts(merged_trans, trans));
+		PERFORM glass_atlas_%s.remove_transcript_source_records(merged_trans, trans);
+		PERFORM glass_atlas_%s.remove_transcript_region_records(trans);
+		DELETE FROM glass_atlas_%s.glass_transcript WHERE id = trans.id;
+		PERFORM glass_atlas_%s.save_transcript(merged_trans);
+	END LOOP;
+	RETURN;
+END;
+$$ LANGUAGE 'plpgsql';
+
+
 CREATE FUNCTION glass_atlas_%s.calculate_scores(chr_id integer)
 RETURNS VOID AS $$
 BEGIN 
@@ -339,6 +402,6 @@ BEGIN
 END;
 $$ LANGUAGE 'plpgsql';
 
-""" % tuple([genome]*63)
+""" % tuple([genome]*84)
 
 print sql

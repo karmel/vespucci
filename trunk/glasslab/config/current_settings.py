@@ -12,4 +12,6 @@ REFERENCE_GENOME = 'mm9'
 TRANSCRIPT_GENOME = 'mm9' # Separated for easy use of the 'test' DB while keeping reference DB
 GENOME = REFERENCE_GENOME
 
+GENOME_ASSEMBLY_PATHS = {'mm9': '/Volumes/Unknowme/kallison/Genomes/mm9/fasta',
+                         }
 CURRENT_SCHEMA = 'current_projects'

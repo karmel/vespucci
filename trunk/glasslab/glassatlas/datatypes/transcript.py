@@ -15,6 +15,7 @@ from glasslab.sequencing.datatypes.tag import multiprocess_glass_tags,\
 from glasslab.utils.datatypes.basic_model import CubeField
 from multiprocessing import Pool
 from glasslab.utils.database import execute_query
+import os
 
 MAX_SEQUENCE_GAP = 2000 # Max gap between transcripts that share sequence associations
 MAX_OTHER_GAP = 200 # Max gap between transcripts that share no sequence associations
@@ -44,13 +45,15 @@ def wrap_add_transcripts_from_tags(cls, chr_list, *args):
 
 def wrap_stitch_together_transcripts(cls, chr_list): wrap_errors(cls._stitch_together_transcripts, chr_list)
 def wrap_set_scores(cls, chr_list): wrap_errors(cls._set_scores, chr_list)
+def wrap_associate_nucleotides(cls, chr_list): wrap_errors(cls._associate_nucleotides, chr_list)
 
 class GlassTranscript(models.Model):
     '''
     Unique transcribed regions in the genome.
     '''   
     # Use JS for browser link to auto-include in Django Admin form 
-    ucsc_browser_link = '''<a href="#" onclick="window.open('http://genome.ucsc.edu/cgi-bin/hgTracks?db='''\
+    ucsc_browser_link = '''<a href="#" onclick="window.open('http://genome.ucsc.edu/cgi-bin/hgTracks?'''\
+                        + '''hgS_doLoadUrl=submit&amp;hgS_loadUrlName=http%3A%2F%2Fbiowhat.ucsd.edu%2Fkallison%2Fucsc%2Fsessions%2Fgro_seq.txt&db='''\
                         + current_settings.REFERENCE_GENOME + '''&amp;position=' + '''\
                         + ''' document.getElementById('id_chromosome').title '''\
                         + ''' + '%3A+' + document.getElementById('id_transcription_start').value '''\
@@ -110,8 +113,11 @@ class GlassTranscript(models.Model):
             print 'Stitching together transcripts for chromosome %d' % chr_id
             query = """
                 SELECT glass_atlas_%s.stitch_transcripts_together(%d, %d, %d);
+                SELECT glass_atlas_%s.join_subtranscripts(%d);
                 """ % (current_settings.TRANSCRIPT_GENOME, 
-                       chr_id, MAX_SEQUENCE_GAP, MAX_OTHER_GAP)
+                       chr_id, MAX_SEQUENCE_GAP, MAX_OTHER_GAP,
+                       current_settings.TRANSCRIPT_GENOME, 
+                       chr_id)
             execute_query(query)
             
     @classmethod
@@ -138,7 +144,56 @@ class GlassTranscript(models.Model):
             """ % (GlassTranscript._meta.db_table, MIN_SCORE)
         execute_query(query)
         print 'Deleted transcripts below score threshold of %d' % MIN_SCORE    
+    
+    @classmethod
+    def associate_nucleotides(cls):
+        multiprocess_all_chromosomes(wrap_associate_nucleotides, cls)
+        #wrap_associate_nucleotides(cls,[1])
         
+    @classmethod
+    def _associate_nucleotides(cls, chr_list):
+        '''
+        Pull and store sequence strings for transcripts for only those transcripts
+        that have been updated (score is null).
+        
+        Sequences information is stored in the local filesystem.
+        '''
+        for chr_id in chr_list:
+            connection.close()
+            
+            print 'Obtaining coding sequence for transcripts in chromosome %d' % chr_id
+            path = current_settings.GENOME_ASSEMBLY_PATHS[current_settings.REFERENCE_GENOME]
+            path = os.path.join(path, '%s.fa' % Chromosome.objects.get(id=chr_id).name.strip())
+            
+            fasta = map(lambda x: x[:-1], file(path).readlines()) # Read file and ditch '\n'
+            fasta = fasta[1:] # Ditch the first line, which is the chromosome identifier
+            length = len(fasta[0])
+            
+            for transcript in cls.objects.filter(chromosome__id=chr_id, score__isnull=True):
+                start = transcript.transcription_start
+                stop = transcript.transcription_end
+                beginning = fasta[start//length][start % length - 1:]
+                end = fasta[stop//length][:stop % length]
+                middle = fasta[(start//length + 1):(stop//length)]
+                seq = (beginning + ''.join(middle) + end).upper()
+                try: sequence = GlassTranscriptNucleotides.objects.get(glass_transcript=transcript)
+                except GlassTranscriptNucleotides.DoesNotExist:
+                    sequence = GlassTranscriptNucleotides(glass_transcript=transcript)
+                sequence.sequence = seq
+                sequence.save()
+            connection.close()
+            
+class GlassTranscriptNucleotides(models.Model):
+    glass_transcript  = models.ForeignKey(GlassTranscript)
+    sequence          = models.TextField()
+    
+    class Meta:
+        db_table    = 'glass_atlas_%s"."glass_transcript_nucleotides' % current_settings.TRANSCRIPT_GENOME
+        app_label   = 'Transcription'
+        
+    def __unicode__(self):
+        return 'GlassTranscriptNucleotides for transcript %d' % (self.glass_transcript.id)
+       
 class GlassTranscriptSource(models.Model):
     glass_transcript        = models.ForeignKey(GlassTranscript)
     sequencing_run          = models.ForeignKey(SequencingRun)

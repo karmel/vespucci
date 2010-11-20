@@ -14,6 +14,14 @@ class TranscriptsFromTagsParser(GlassOptionParser):
                            help='Table name from which to load tags. Appended to schema if schema is included. Otherwise used as is.'),
                make_option('--schema_name',action='store', type='string', dest='schema_name',  
                            help='Optional name to be used as schema for created DB tables.'),
+               make_option('--skip_stitching',action='store_true', dest='skip_stitching',  
+                           help='Should the stitching together of transcripts be skipped?'),
+               make_option('--skip_scoring',action='store_true', dest='skip_scoring',  
+                           help='Should the scoring of transcripts be skipped?'),
+               make_option('--skip_deletion',action='store_true', dest='skip_deletion',  
+                           help='Should the deletion of low-scoring transcripts be skipped?'),
+               make_option('--skip_nucleotides',action='store_true', dest='skip_nucleotides',  
+                           help='Should obtaining nucleotide sequences to transcripts be skipped?'),
                 ]
 if __name__ == '__main__':
     parser = TranscriptsFromTagsParser()
@@ -28,7 +36,13 @@ if __name__ == '__main__':
         GlassTag._meta.db_table = options.schema_name and '%s"."%s' % (options.schema_name, options.tag_table) \
                                     or options.tag_table
         GlassTranscript.add_transcripts_from_tags(GlassTag._meta.db_table)
-        
-    GlassTranscript.stitch_together_transcripts()
-    GlassTranscript.set_scores()
-    GlassTranscript.delete_invalid_transcripts()
+    
+    if not options.skip_stitching:
+        GlassTranscript.stitch_together_transcripts()
+    if not options.skip_nucleotides:
+        GlassTranscript.associate_nucleotides()
+    if not options.skip_scoring:
+        GlassTranscript.set_scores()
+    if not options.skip_deletion:
+        GlassTranscript.delete_invalid_transcripts()
+    

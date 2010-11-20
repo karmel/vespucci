@@ -6,12 +6,17 @@ Created on Nov 8, 2010
 from django.contrib import admin
 from glasslab.glassatlas.datatypes.transcript import GlassTranscript,\
     GlassTranscriptSource, GlassTranscriptSequence, GlassTranscriptNonCoding,\
-    GlassTranscriptConserved, GlassTranscriptPatterned
+    GlassTranscriptConserved, GlassTranscriptPatterned,\
+    GlassTranscriptNucleotides
 from glasslab.glassatlas.datatypes.metadata import SequencingRun
 from glasslab.config import current_settings
 from glasslab.atlasviewer.shared.admin import make_all_fields_readonly,\
     ReadOnlyInline, ReadOnlyAdmin
 
+class GlassTranscriptNucleotidesInline(ReadOnlyInline):
+    model = GlassTranscriptNucleotides    
+    readonly_fields = make_all_fields_readonly(model)
+    
 class GlassTranscriptSourceInline(ReadOnlyInline):
     model = GlassTranscriptSource    
     readonly_fields = make_all_fields_readonly(model)
@@ -35,7 +40,8 @@ class GlassTranscriptAdmin(ReadOnlyAdmin):
     list_filter     = ('chromosome','strand_0','strand_1')
     ordering        = ('chromosome','transcription_start')
     search_fields   = ['transcription_start','transcription_end',]
-    inlines         = [GlassTranscriptSourceInline, 
+    inlines         = [GlassTranscriptSourceInline,
+                       GlassTranscriptNucleotidesInline, 
                        GlassTranscriptSequenceInline,
                        GlassTranscriptNonCodingInline,
                        GlassTranscriptConservedInline,
@@ -47,9 +53,12 @@ class GlassTranscriptAdmin(ReadOnlyAdmin):
     transcript_length.short_description = 'Length'
     
     def ucsc_browser_link(self, obj):
-        return '<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?db=%s&amp;position=%s%%3A+%d-%d" target="_blank">View</a>' \
-                        % (current_settings.REFERENCE_GENOME, obj.chromosome.name.strip(), 
-                           obj.transcription_start, obj.transcription_end)
+        return '<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?db=%s&amp;position=%s%%3A+%d-%d' \
+                % (current_settings.REFERENCE_GENOME, obj.chromosome.name.strip(), 
+                           obj.transcription_start, obj.transcription_end) \
+                + '&amp;hgS_doLoadUrl=submit&amp;hgS_loadUrlName=http%3A%2F%2Fbiowhat.ucsd.edu%2Fkallison%2Fucsc%2Fsessions%2Fgro_seq.txt"' \
+                + ' target="_blank">View</a>'
+                        
     ucsc_browser_link.short_description = 'UCSC Browser' 
     ucsc_browser_link.allow_tags = True 
     
