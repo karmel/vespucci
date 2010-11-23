@@ -40,8 +40,8 @@ def multiprocess_all_chromosomes(func, cls, *args):
     p.close()
     p.join()
     
-def wrap_add_transcripts_from_tags(cls, chr_list, *args): 
-    wrap_errors(cls._add_transcripts_from_tags_for_chr_list, chr_list, *args)
+def wrap_add_transcripts_from_groseq(cls, chr_list, *args): wrap_errors(cls._add_transcripts_from_groseq, chr_list, *args)
+def wrap_add_transcripts_from_rnaseq(cls, chr_list, *args): wrap_errors(cls._add_transcripts_from_rnaseq, chr_list, *args)
 
 def wrap_stitch_together_transcripts(cls, chr_list): wrap_errors(cls._stitch_together_transcripts, chr_list)
 def wrap_set_scores(cls, chr_list): wrap_errors(cls._set_scores, chr_list)
@@ -84,15 +84,25 @@ class GlassTranscript(models.Model):
         return 'GlassTranscript: %s: %d-%d' % (self.chromosome.name.strip(), 
                                                self.transcription_start, 
                                                self.transcription_end)
-        
+    
     @classmethod 
     def add_transcripts_from_tags(cls,  tag_table):
         sequencing_run = SequencingRun.objects.get(source_table=tag_table)
-        multiprocess_glass_tags(wrap_add_transcripts_from_tags, cls, sequencing_run)
+        if sequencing_run.type.strip() == 'Gro-Seq':
+            cls.add_transcripts_from_groseq(tag_table, sequencing_run)
+        elif sequencing_run.type.strip() == 'RNA-Seq':
+            cls.add_transcripts_from_rnaseq(tag_table, sequencing_run)
+            
+    ################################################
+    # GRO-Seq to transcripts
+    ################################################
+    @classmethod 
+    def add_transcripts_from_groseq(cls,  tag_table, sequencing_run):
+        multiprocess_glass_tags(wrap_add_transcripts_from_groseq, cls, sequencing_run)
         #wrap_add_transcripts_from_tags(cls,[21, 22],sequencing_run)
-
+        
     @classmethod
-    def _add_transcripts_from_tags_for_chr_list(cls, chr_list, sequencing_run):
+    def _add_transcripts_from_groseq(cls, chr_list, sequencing_run):
         for chr_id in chr_list:
             print 'Adding transcripts for chromosome %d' % chr_id
             query = """
@@ -102,6 +112,27 @@ class GlassTranscript(models.Model):
                        sequencing_run.source_table.strip(), MAX_OTHER_GAP)
             execute_query(query)
     
+    ################################################
+    # RNA-Seq to transcripts
+    ################################################            
+    @classmethod 
+    def add_tags_from_rnaseq(cls,  tag_table, sequencing_run):
+        multiprocess_glass_tags(wrap_add_transcripts_from_rnaseq, cls, sequencing_run)
+        
+    @classmethod
+    def _add_transcripts_from_rnaseq(cls, chr_list, sequencing_run):
+        for chr_id in chr_list:
+            print 'Adding transcripts for chromosome %d' % chr_id
+            query = """
+                SELECT glass_atlas_%s.save_transcripts_from_sequencing_run(%d, %d,'%s', %d);
+                """ % (current_settings.TRANSCRIPT_GENOME,
+                       sequencing_run.id, chr_id, 
+                       sequencing_run.source_table.strip(), MAX_OTHER_GAP)
+            execute_query(query)
+            
+    ################################################
+    # Transcript cleanup and refinement
+    ################################################
     @classmethod
     def stitch_together_transcripts(cls):
         multiprocess_all_chromosomes(wrap_stitch_together_transcripts, cls)
@@ -190,6 +221,7 @@ class GlassTranscriptNucleotides(models.Model):
     class Meta:
         db_table    = 'glass_atlas_%s"."glass_transcript_nucleotides' % current_settings.TRANSCRIPT_GENOME
         app_label   = 'Transcription'
+        verbose_name = 'Glass transcript nucleotide sequence'
         
     def __unicode__(self):
         return 'GlassTranscriptNucleotides for transcript %d' % (self.glass_transcript.id)
@@ -245,7 +277,8 @@ class GlassTranscriptSequence(GlassTranscriptTranscriptionRegionTable):
     class Meta: 
         db_table    = 'glass_atlas_%s"."glass_transcript_sequence' % current_settings.TRANSCRIPT_GENOME
         app_label   = 'Transcription'
-            
+        verbose_name = 'Glass transcript sequence region'
+           
 class GlassTranscriptNonCoding(GlassTranscriptTranscriptionRegionTable):
     '''
     Relationship between GlassTranscript and the non coding region it maps to.
@@ -258,6 +291,7 @@ class GlassTranscriptNonCoding(GlassTranscriptTranscriptionRegionTable):
     class Meta: 
         db_table    = 'glass_atlas_%s"."glass_transcript_non_coding' % current_settings.TRANSCRIPT_GENOME
         app_label   = 'Transcription'
+        verbose_name = 'Glass transcript non-coding region'
         
 class GlassTranscriptPatterned(GlassTranscriptTranscriptionRegionTable):
     '''
@@ -271,6 +305,7 @@ class GlassTranscriptPatterned(GlassTranscriptTranscriptionRegionTable):
     class Meta: 
         db_table    = 'glass_atlas_%s"."glass_transcript_patterned' % current_settings.TRANSCRIPT_GENOME
         app_label   = 'Transcription'
+        verbose_name = 'Glass transcript patterned region'
         
 class GlassTranscriptConserved(GlassTranscriptTranscriptionRegionTable):
     '''
@@ -284,4 +319,5 @@ class GlassTranscriptConserved(GlassTranscriptTranscriptionRegionTable):
     class Meta: 
         db_table    = 'glass_atlas_%s"."glass_transcript_conserved' % current_settings.TRANSCRIPT_GENOME
         app_label   = 'Transcription'
+        verbose_name = 'Glass transcript conserved region'
     

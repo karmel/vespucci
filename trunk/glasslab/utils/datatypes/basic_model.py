@@ -14,8 +14,6 @@ class DynamicTable(models.Model):
     name = None
     table_created = None
     
-    schema = current_settings.CURRENT_SCHEMA
-    
     class Meta: abstract = True
     
     @classmethod
@@ -23,7 +21,7 @@ class DynamicTable(models.Model):
         '''
         Set table name for class, incorporating into schema specification.
         '''
-        cls._meta.db_table = '%s"."%s' % (cls.schema, table_name)
+        cls._meta.db_table = '%s"."%s' % (current_settings.CURRENT_SCHEMA, table_name)
         cls.name = table_name 
 
 class CubeField(models.Field):

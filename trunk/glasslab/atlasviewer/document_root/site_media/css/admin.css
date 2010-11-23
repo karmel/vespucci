@@ -1,0 +1,7 @@
+/****************************/
+/* Glass Transcripts */
+/****************************/
+.stop-codon { border-bottom: 1px solid red; }
+.antisense-stop-codon { border-bottom: 1px solid orange; }
+.start-codon { border-bottom: 1px solid blue; }
+.antisense-start-codon { border-bottom: 1px solid green; }

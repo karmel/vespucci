@@ -4,7 +4,7 @@ Created on Sep 27, 2010
 @author: karmel
 '''
 from __future__ import division
-from django.db import models, utils
+from django.db import models, utils, connection
 from glasslab.utils.datatypes.genome_reference import SequenceTranscriptionRegion,\
     NonCodingTranscriptionRegion, PatternedTranscriptionRegion, SequenceExon,\
     ConservedTranscriptionRegion, Chromosome
@@ -275,10 +275,11 @@ class GlassTag(DynamicTable):
         
         Should be called only after all tags have been added.
         '''
+        connection.close()
         SequencingRun.objects.get_or_create(source_table=cls._meta.db_table,
                                     defaults={'name': cls.name, 
                                               'total_tags': cls.objects.count(),
-                                              'description': description, }
+                                              'description': description }
                                            )
 
 class GlassTagTranscriptionRegionTable(DynamicTable):

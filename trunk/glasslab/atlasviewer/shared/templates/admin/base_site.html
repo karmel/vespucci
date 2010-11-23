@@ -1,9 +1,19 @@
-{% extends "admin/base_site.html" %}
+{% extends "admin/base.html" %}
 {% block extrastyle %}
   	{{ block.super }}
-	<link rel="stylesheet" type="text/css" href="{% admin_media_prefix %}css/forms.css" />
+	<link rel="stylesheet" type="text/css" href="/site_media/css/admin.css" />
 {% endblock %}
+{% comment %}
 {% block extrahead %}
 	{{ block.super }}
-	<script type="text/javascript" src="/media/js/admin.js"></script>
+	<script type="text/javascript" src="/site_media/js/admin.js"></script>
 {% endblock %}
+{% endcomment %}
+
+{% block title %}{% block title_part_1 %}{{ title }}{% endblock %} | Glass Atlas{% endblock %}
+	
+{% block branding %}
+	<h1 id="site-name">Glass Atlas administration</h1>
+{% endblock %}
+
+{% block nav-global %}{% endblock %}

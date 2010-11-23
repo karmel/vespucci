@@ -5,7 +5,7 @@ Created on Nov 12, 2010
 
 Convenience script for generated create table statements for transcript functions.
 '''
-genome = 'mm9'
+genome = 'mm10'
 sql = """
 -- Not run from within the codebase, but kept here in case functions need to be recreated.
 DROP FUNCTION IF EXISTS glass_atlas_%s.stitch_transcripts_together(integer, integer, integer);
@@ -14,8 +14,9 @@ DROP FUNCTION IF EXISTS glass_atlas_%s.remove_transcript_region_records(glass_at
 DROP FUNCTION IF EXISTS glass_atlas_%s.insert_associated_transcript_regions(glass_atlas_%s.glass_transcript);
 DROP FUNCTION IF EXISTS glass_atlas_%s.merge_transcripts(glass_atlas_%s.glass_transcript, glass_atlas_%s.glass_transcript);
 DROP FUNCTION IF EXISTS glass_atlas_%s.save_transcript(glass_atlas_%s.glass_transcript);
-DROP FUNCTION IF EXISTS glass_atlas_%s.determine_transcripts_from_sequencing_run(integer, text, integer);
+DROP FUNCTION IF EXISTS glass_atlas_%s.determine_transcripts_from_sequencing_run(integer, integer, text, integer);
 DROP FUNCTION IF EXISTS glass_atlas_%s.save_transcripts_from_sequencing_run(integer, integer, text, integer);
+DROP FUNCTION IF EXISTS glass_atlas_%s.save_transcribed_rna_from_sequencing_run(integer, integer, text, integer);
 DROP FUNCTION IF EXISTS glass_atlas_%s.join_subtranscripts(integer);
 DROP FUNCTION IF EXISTS glass_atlas_%s.calculate_scores(integer);
 DROP TYPE IF EXISTS glass_atlas_%s.glass_transcript_row;
@@ -140,7 +141,7 @@ BEGIN
 END;
 $$ LANGUAGE 'plpgsql';
 
-CREATE FUNCTION glass_atlas_%s.determine_transcripts_from_sequencing_run(chr_id integer, source_t text, max_gap integer)
+CREATE FUNCTION glass_atlas_%s.determine_transcripts_from_sequencing_run(chr_id integer, strand integer, source_t text, max_gap integer)
 RETURNS SETOF glass_atlas_%s.glass_transcript_row AS $$
  DECLARE
    rec record;
@@ -154,7 +155,8 @@ RETURNS SETOF glass_atlas_%s.glass_transcript_row AS $$
 	FOR rec IN 
 		EXECUTE 'SELECT * FROM "'
 		|| source_t || '_' || chr_id
-		|| '" ORDER BY start;'
+		|| '" WHERE strand = '
+		|| strand || ' ORDER BY start;'
 		LOOP
 			-- Initialize the start and end if necessary
 			IF (last_start = 0) THEN 
@@ -182,8 +184,10 @@ RETURNS SETOF glass_atlas_%s.glass_transcript_row AS $$
 			row.chromosome_id := chr_id;
 			IF (rec.strand = 0) THEN 
 				row.strand_0 := true;
+				row.strand_1 := false;
 			ELSE 
 				IF (rec.strand = 1) THEN
+					row.strand_0 := false;
 					row.strand_1 := true;
 				END IF;
 			END IF;
@@ -205,12 +209,12 @@ RETURNS SETOF glass_atlas_%s.glass_transcript_row AS $$
 				END IF;
 			END IF;
 	END LOOP;
-	
+		
 	-- One more left?
 	IF (row.tag_count > 5 AND row.gaps = 0) OR (row.tag_count > 8 AND row.tag_count > row.gaps*2) THEN 
 		RETURN NEXT row;
 	END IF;
-	
+		
 	-- And finally, return the set.
 	RETURN;
 END;
@@ -222,27 +226,83 @@ RETURNS VOID AS $$
 	rec glass_atlas_%s.glass_transcript_row;
 	transcript glass_atlas_%s.glass_transcript;
  BEGIN
-	FOR rec IN 
-		SELECT * FROM glass_atlas_%s.determine_transcripts_from_sequencing_run(chr_id, source_t, max_gap)
-	LOOP
-			-- Save the transcript.
-			INSERT INTO glass_atlas_%s.glass_transcript 
-				("chromosome_id", "strand_0", "strand_1", 
-				"transcription_start", "transcription_end", 
-				"start_end", "modified", "created")
-				VALUES (rec.chromosome_id, rec.strand_0, rec.strand_1, 
-				rec.transcription_start, rec.transcription_end, 
-				public.cube(rec.transcription_start, rec.transcription_end), 
-				NOW(), NOW())
-				RETURNING * INTO transcript;
+ 	FOR strand IN 0..1 
+ 	LOOP
+		FOR rec IN 
+			SELECT * FROM glass_atlas_%s.determine_transcripts_from_sequencing_run(chr_id, strand, source_t, max_gap)
+		LOOP
+				-- Save the transcript.
+				INSERT INTO glass_atlas_%s.glass_transcript 
+					("chromosome_id", "strand_0", "strand_1", 
+					"transcription_start", "transcription_end", 
+					"start_end", "modified", "created")
+					VALUES (rec.chromosome_id, rec.strand_0, rec.strand_1, 
+					rec.transcription_start, rec.transcription_end, 
+					public.cube(rec.transcription_start, rec.transcription_end), 
+					NOW(), NOW())
+					RETURNING * INTO transcript;
+	
+				-- Save the record of the sequencing run source
+				INSERT INTO glass_atlas_%s.glass_transcript_source 
+					("glass_transcript_id", "sequencing_run_id", "tag_count", "gaps") 
+					VALUES (transcript.id, seq_run_id, rec.tag_count, rec.gaps);
+					
+				-- Associate any sequencing regions
+				PERFORM glass_atlas_%s.insert_associated_transcript_regions(transcript);
+		END LOOP;
+	END LOOP;
+	
+	RETURN;
+END;
+$$ LANGUAGE 'plpgsql';
 
+CREATE FUNCTION glass_atlas_%s.save_transcribed_rna_from_sequencing_run(seq_run_id integer, chr_id integer, source_t text, max_gap integer)
+RETURNS VOID AS $$
+ DECLARE
+	rec glass_atlas_%s.glass_transcript_row;
+	transcript glass_atlas_%s.glass_transcript;
+	transcribed_rna glass_atlas_%s.glass_transcribed_rna;
+ BEGIN
+ 	FOR strand IN 0..1 
+ 	LOOP
+		FOR rec IN 
+			SELECT * FROM glass_atlas_%s.determine_transcripts_from_sequencing_run(chr_id, strand, source_t, max_gap)
+		LOOP
+			-- Find matching transcript
+			transcript := (SELECT * FROM glass_atlas_%s.glass_transcript 
+				WHERE chromosome_id = rec.chromosome_id 
+					AND strand_0 = rec.strand_0
+					AND strand_1 = rec.strand_1
+					AND start_end OPERATOR(public.@>) public.cube(rec.transcription_start, rec.transcription_end));
+			IF transcript IS NULL THEN
+				-- Save the transcript.
+				INSERT INTO glass_atlas_%s.glass_transcript
+					("chromosome_id", "strand_0", "strand_1", "start", "end", "start_end")
+					VALUES (rec.chromosome_id, rec.strand_0, rec.strand_1, 
+					rec.transcription_start, rec.transcription_end, 
+					public.cube(rec.transcription_start, rec.transcription_end))
+					RETURNING * INTO transcript;
+				PERFORM glass_atlas_%s.insert_associated_transcript_regions(transcript);
+			END IF;
+			-- Saved the Transcribed RNA
+			INSERT INTO glass_atlas_%s.glass_transcribed_rna 
+				("glass_transcript_id","strand_0", "strand_1", "start", "end", "start_end")
+				VALUES (transcript.id, rec.strand_0, rec.strand_1, 
+				rec.transcription_start, rec.transcription_end, 
+				public.cube(rec.transcription_start, rec.transcription_end))
+				RETURNING * INTO transcribed_rna;
+				
 			-- Save the record of the sequencing run source
 			INSERT INTO glass_atlas_%s.glass_transcript_source 
 				("glass_transcript_id", "sequencing_run_id", "tag_count", "gaps") 
 				VALUES (transcript.id, seq_run_id, rec.tag_count, rec.gaps);
 				
-			-- Associate any sequencing regions
-			PERFORM glass_atlas_%s.insert_associated_transcript_regions(transcript);
+			-- Update transcript
+			UPDATE glass_atlas_%s.glass_transcript 
+				SET spliced = true, score = NULL 
+				WHERE id = transcript.id;
+			
+		END LOOP;
 	END LOOP;
 	
 	RETURN;
@@ -276,7 +336,7 @@ BEGIN
 		    GROUP BY glass_transcript_id) grouped_nc
 		ON transcript.id = grouped_nc.glass_transcript_id
 		WHERE transcript.chromosome_id = chr_id
-		GROUP BY grouped_seq.regions, grouped_nc.regions
+		GROUP BY grouped_seq.regions, grouped_nc.regions, transcript.strand_0, transcript.strand_1
 		HAVING count(transcript.id) > 1
 	LOOP
 		-- Transcript_group is an array of transcripts and an array of associated sequences
@@ -402,6 +462,6 @@ BEGIN
 END;
 $$ LANGUAGE 'plpgsql';
 
-""" % tuple([genome]*84)
+""" % tuple([genome]*96)
 
 print sql

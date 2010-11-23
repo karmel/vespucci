@@ -23,7 +23,7 @@ class ReadOnlyInput(Input):
     Force non-editable display.
     '''
     input_type = 'hidden'
-
+    
     def render(self, name, value, attrs=None):
         if value is None:
             value = ''

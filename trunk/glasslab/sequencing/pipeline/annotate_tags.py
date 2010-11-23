@@ -184,14 +184,14 @@ def add_indices():
     GlassTag.add_indices()
     
 def associate_sequences(options, file_name):
-    GlassTagSequence.set_table_name('tag_sequence_' + file_name)
-    #GlassTagSequence.create_table(file_name)
-    #GlassTagSequence.insert_matching_tags()
-    #GlassTagSequence.add_indices()
+    #GlassTagSequence.set_table_name('tag_sequence_' + file_name)
+    GlassTagSequence.create_table(file_name)
+    GlassTagSequence.insert_matching_tags()
+    GlassTagSequence.add_indices()
     _print('Updating start sites.')
     GlassTagSequence.update_start_site_tags()
-    #_print('Updating exons.')
-    #GlassTagSequence.update_exon_tags()
+    _print('Updating exons.')
+    GlassTagSequence.update_exon_tags()
     
 def associate_region_table(options, file_name, table_class):
     table_class.create_table(file_name)

@@ -6,7 +6,7 @@ Created on Nov 12, 2010
 Convenience script for generated create table statements for transcript tables.
 '''
 
-genome = 'mm9'
+genome = 'mm10'
 sql = """
 CREATE TABLE "glass_atlas_%s"."glass_transcript" (
     "id" int4 NOT NULL,
@@ -35,6 +35,30 @@ CREATE INDEX glass_transcript_chr_idx ON "glass_atlas_%s"."glass_transcript" USI
 CREATE INDEX glass_transcript_start_idx ON "glass_atlas_%s"."glass_transcript" USING btree (transcription_start);
 CREATE INDEX glass_transcript_end_idx ON "glass_atlas_%s"."glass_transcript" USING btree (transcription_end);
 CREATE INDEX glass_transcript_start_end_idx ON "glass_atlas_%s"."glass_transcript" USING gist (start_end);
+
+CREATE TABLE "glass_atlas_%s"."glass_transcribed_rna" (
+    "id" int4 NOT NULL,
+    "glass_transcript_id" int4 DEFAULT NULL,
+    "strand_0" boolean DEFAULT NULL,
+    "strand_1" boolean DEFAULT NULL,
+    "start" int8 DEFAULT NULL,
+    "end" int8 DEFAULT NULL,
+    "start_end" "public"."cube" DEFAULT NULL
+);
+GRANT ALL ON TABLE "glass_atlas_%s"."glass_transcribed_rna" TO  "glass";
+CREATE SEQUENCE "glass_atlas_%s"."glass_transcribed_rna_id_seq"
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+ALTER SEQUENCE "glass_atlas_%s"."glass_transcribed_rna_id_seq" OWNED BY "glass_atlas_%s"."glass_transcribed_rna".id;
+ALTER TABLE "glass_atlas_%s"."glass_transcribed_rna" ALTER COLUMN id SET DEFAULT nextval('"glass_atlas_%s"."glass_transcribed_rna_id_seq"'::regclass);
+ALTER TABLE ONLY "glass_atlas_%s"."glass_transcribed_rna" ADD CONSTRAINT glass_transcribed_rna_pkey PRIMARY KEY (id);
+CREATE INDEX glass_transcribed_rna_transcript_idx ON "glass_atlas_%s"."glass_transcribed_rna" USING btree (transcript_id);
+CREATE INDEX glass_transcribed_rna_start_idx ON "glass_atlas_%s"."glass_transcribed_rna" USING btree (start);
+CREATE INDEX glass_transcribed_rna_end_idx ON "glass_atlas_%s"."glass_transcribed_rna" USING btree (end);
+CREATE INDEX glass_transcribed_rna_start_end_idx ON "glass_atlas_%s"."glass_transcribed_rna" USING gist (start_end);
 
 
 CREATE TABLE "glass_atlas_%s"."glass_transcript_nucleotides" (
@@ -178,5 +202,5 @@ ALTER SEQUENCE "glass_atlas_%s"."sequencing_run_id_seq" OWNED BY "glass_atlas_%s
 ALTER TABLE "glass_atlas_%s"."sequencing_run" ALTER COLUMN id SET DEFAULT nextval('"glass_atlas_%s"."sequencing_run_id_seq"'::regclass);
 ALTER TABLE ONLY "glass_atlas_%s"."sequencing_run" ADD CONSTRAINT sequencing_run_pkey PRIMARY KEY (id);
 CREATE UNIQUE INDEX sequencing_run_source_table_idx ON "glass_atlas_%s"."sequencing_run" USING btree (source_table);
-""" % tuple([genome]*82)
+""" % tuple([genome]*94)
 print sql

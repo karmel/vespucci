@@ -1,5 +1,8 @@
 # Django settings for atlasviewer project.
 from glasslab.config import django_settings
+import os
+
+current_dir = os.path.dirname(__file__)
 
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
@@ -38,6 +41,7 @@ USE_L10N = True
 # Absolute path to the directory that holds media.
 # Example: "/home/media/media.lawrence.com/"
 MEDIA_ROOT = ''
+STATIC_DOC_ROOT = os.path.join(current_dir,'document_root/site_media')
 
 # URL that handles the media served from MEDIA_ROOT. Make sure to use a
 # trailing slash if there is a path component (optional in other cases).
@@ -73,6 +77,7 @@ TEMPLATE_DIRS = (
     # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
+    os.path.join(current_dir,'shared/templates')
 )
 
 INSTALLED_APPS = (
@@ -85,6 +90,5 @@ INSTALLED_APPS = (
     'django.contrib.admin',
     'glasslab.atlasviewer.transcript',
     'glasslab.atlasviewer.genomereference',
-    'glasslab.atlasviewer.shared',
     
 )

@@ -172,7 +172,8 @@ class NonCodingRna(models.Model):
     class Meta: 
         db_table    = 'genome_reference_%s"."non_coding_rna' % current_settings.REFERENCE_GENOME
         app_label   = 'Genome_Reference'
-    
+        verbose_name = 'Non coding RNA'
+        
     def __unicode__(self):
         return '%s %s' % (self.type, self.name.strip())
     
