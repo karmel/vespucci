@@ -167,7 +167,7 @@ class NonCodingRna(models.Model):
     
     '''
     type                = models.CharField(max_length=20)
-    name                = models.CharField(max_length=100)
+    description         = models.CharField(max_length=100)
     
     class Meta: 
         db_table    = 'genome_reference_%s"."non_coding_rna' % current_settings.REFERENCE_GENOME
@@ -194,7 +194,6 @@ class NonCodingTranscriptionRegion(models.Model):
     '''
     non_coding_rna      = models.ForeignKey(NonCodingRna)
     chromosome          = models.ForeignKey(Chromosome)
-    bin                 = models.IntegerField(max_length=5, help_text='Base-2 determined bin.')
     strand              = models.IntegerField(max_length=1, help_text='0 for +, 1 for -')
     transcription_start = models.IntegerField(max_length=12)
     transcription_end   = models.IntegerField(max_length=12)    
@@ -207,7 +206,7 @@ class NonCodingTranscriptionRegion(models.Model):
         app_label   = 'Genome_Reference'
 
     def __unicode__(self):
-        return '%s Transcription Region for %s' % (self.non_coding_rna.type, self.non_coding_rna.name.strip())
+        return '%s Transcription Region for %s' % (self.non_coding_rna.type.strip(), self.non_coding_rna.description.strip())
     
 class PatternedTranscriptionRegion(models.Model):
     '''

@@ -188,6 +188,7 @@ CREATE TABLE "glass_atlas_%s"."sequencing_run" (
     "source_table" character(100) DEFAULT NULL,
     "description" character(255) DEFAULT NULL,
     "total_tags" int8 DEFAULT NULL,
+    "percent_mapped" numeric(5,2) DEFAULT NULL,
     "modified" timestamp(6) NULL DEFAULT NULL,
     "created" timestamp(6) NULL DEFAULT NULL
 );

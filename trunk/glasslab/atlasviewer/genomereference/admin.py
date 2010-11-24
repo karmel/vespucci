@@ -57,10 +57,10 @@ class NonCodingTranscriptionRegionInline(ReadOnlyInline):
     readonly_fields = make_all_fields_readonly(model)
     
 class NonCodingRnaAdmin(ReadOnlyAdmin):
-    list_display    = ('type', 'name', 'ucsc_browser_link')
+    list_display    = ('type', 'description', 'ucsc_browser_link')
     list_filter     = ('type',)
-    ordering        = ('name',)
-    search_fields   = ('name',)
+    ordering        = ('description',)
+    search_fields   = ('description',)
     
     inlines         = [NonCodingTranscriptionRegionInline, ]
     

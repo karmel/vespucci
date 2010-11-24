@@ -16,6 +16,8 @@ class SequencingRun(models.Model):
     source_table    = models.CharField(max_length=100)
     description     = models.CharField(max_length=255, blank=True)
     total_tags      = models.IntegerField(max_length=12)
+    percent_mapped  = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True, default=None,
+                                          help_text='What percent of tags were successfully mapped by Bowtie?')
     
     modified        = models.DateTimeField(auto_now=True)
     created         = models.DateTimeField(auto_now_add=True)

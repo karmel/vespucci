@@ -109,9 +109,9 @@ class GlassTranscriptAdmin(ReadOnlyAdmin):
     ucsc_browser_link.allow_tags = True 
     
 class SequencingRunAdmin(admin.ModelAdmin):
-    list_display    = ('type', 'name', 'source_table', 'total_tags')
+    list_display    = ('type', 'description', 'source_table', 'total_tags','percent_mapped')
     list_filter     = ('type',)
-    ordering        = ('modified','name')
+    ordering        = ('-modified',)
 
 admin.site.register(GlassTranscript, GlassTranscriptAdmin)
 admin.site.register(SequencingRun, SequencingRunAdmin)
