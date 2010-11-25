@@ -102,7 +102,8 @@ class GlassTranscriptAdmin(ReadOnlyAdmin):
         return '<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?db=%s&amp;position=%s%%3A+%d-%d' \
                 % (current_settings.REFERENCE_GENOME, obj.chromosome.name.strip(), 
                            obj.transcription_start, obj.transcription_end) \
-                + '&amp;hgS_doLoadUrl=submit&amp;hgS_loadUrlName=http%3A%2F%2Fbiowhat.ucsd.edu%2Fkallison%2Fucsc%2Fsessions%2Fgro_seq.txt"' \
+                + '&amp;hgS_doLoadUrl=submit&amp;hgS_loadUrlName=http%3A%2F%2Fbiowhat.ucsd.edu%2Fkallison%2Fucsc%2Fsessions%2F'\
+                + '%s_strands.txt"' % ((obj.strand_0 and 'sense') or (obj.strand_1 and 'antisense')) \
                 + ' target="_blank">View</a>'
                         
     ucsc_browser_link.short_description = 'UCSC Browser' 

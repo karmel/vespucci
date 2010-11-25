@@ -19,7 +19,7 @@ import os
 
 MAX_SEQUENCE_GAP = 2000 # Max gap between transcripts that share sequence associations
 MAX_OTHER_GAP = 200 # Max gap between transcripts that share no sequence associations
-MIN_SCORE = 1 # Delete transcripts with scores below this threshold.
+MIN_SCORE = 1.4 # Delete transcripts with scores below this threshold.
 
 def multiprocess_all_chromosomes(func, cls, *args):
     ''' 
@@ -28,7 +28,7 @@ def multiprocess_all_chromosomes(func, cls, *args):
     connection.close()
     all_chr = Chromosome.objects.order_by('?').values_list('id', flat=True)
     total_count = len(all_chr)
-    processes = 6
+    processes = current_settings.ALLOWED_PROCESSES
     p = Pool(processes)
     # Chromosomes are sorted by count descending, so we want to interleave them
     # in order to create even-ish groups.
@@ -53,7 +53,8 @@ class GlassTranscript(models.Model):
     '''   
     # Use JS for browser link to auto-include in Django Admin form 
     ucsc_browser_link = '''<a href="#" onclick="window.open('http://genome.ucsc.edu/cgi-bin/hgTracks?'''\
-                        + '''hgS_doLoadUrl=submit&amp;hgS_loadUrlName=http%3A%2F%2Fbiowhat.ucsd.edu%2Fkallison%2Fucsc%2Fsessions%2Fgro_seq.txt&db='''\
+                        + '''hgS_doLoadUrl=submit&amp;hgS_loadUrlName=http%3A%2F%2Fbiowhat.ucsd.edu%2Fkallison%2Fucsc%2Fsessions%2F' '''\
+                        + ''' + (document.getElementById('id_strand_0').value=='True' && 'sense' || 'antisense') + '_strands.txt&db='''\
                         + current_settings.REFERENCE_GENOME + '''&amp;position=' + '''\
                         + ''' document.getElementById('id_chromosome').title '''\
                         + ''' + '%3A+' + document.getElementById('id_transcription_start').value '''\
@@ -171,10 +172,10 @@ class GlassTranscript(models.Model):
         Delete transcripts falling below a certain score threshold.
         '''
         query = """
-            DELETE FROM  "%s" WHERE score IS NOT NULL AND score < %d;
+            DELETE FROM  "%s" WHERE score IS NOT NULL AND score < %f;
             """ % (GlassTranscript._meta.db_table, MIN_SCORE)
         execute_query(query)
-        print 'Deleted transcripts below score threshold of %d' % MIN_SCORE    
+        print 'Deleted transcripts below score threshold of %f' % MIN_SCORE    
     
     @classmethod
     def associate_nucleotides(cls):

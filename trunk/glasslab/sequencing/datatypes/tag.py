@@ -20,7 +20,7 @@ def multiprocess_glass_tags(func, cls, *args):
     Convenience method for splitting up queries based on glass tag id.
     '''
     total_count = len(GlassTag.chromosomes())
-    processes = 6
+    processes = current_settings.ALLOWED_PROCESSES
     p = Pool(processes)
     # Chromosomes are sorted by count descending, so we want to interleave them
     # in order to create even-ish groups.

@@ -5,7 +5,7 @@ Created on Nov 12, 2010
 
 Convenience script for generated create table statements for transcript functions.
 '''
-genome = 'mm10'
+genome = 'mm9'
 sql = """
 -- Not run from within the codebase, but kept here in case functions need to be recreated.
 DROP FUNCTION IF EXISTS glass_atlas_%s.stitch_transcripts_together(integer, integer, integer);
@@ -75,9 +75,13 @@ DECLARE
 	counter integer;
 	cube text;
 	table_type text;
+	strand integer;
 BEGIN
 	-- Associate any sequencing regions
 	cube = 'public.cube(' || rec.transcription_start || ',' || rec.transcription_end || ')';
+	IF rec.strand_0 THEN strand := 0;
+	ELSE strand := 1;
+	END IF;
 	FOR counter IN array_lower(region_types,1)..array_upper(region_types,1)
 	LOOP
 		table_type := region_types[counter];
@@ -95,6 +99,7 @@ BEGIN
 		|| ' FROM genome_reference_mm9.'
 		|| table_type || '_transcription_region '
 		|| ' WHERE chromosome_id = ' || rec.chromosome_id 
+		|| ' AND (strand IS NULL OR strand = ' || strand || ')'
 		|| ' AND start_end OPERATOR(public.&&) ' || cube || ' )';
 	END LOOP;
 	RETURN;
@@ -448,7 +453,7 @@ BEGIN
 		SET score = derived.score 
 		FROM (SELECT 
 				transcript.id, 
-				log(COUNT(DISTINCT source.sequencing_run_id)::numeric*SUM(source.tag_count)::numeric) as score
+				log(SUM(source.tag_count)::numeric) as score
 			FROM glass_atlas_%s.glass_transcript transcript, 
 				glass_atlas_%s.glass_transcript_source source
 			WHERE source.glass_transcript_id = transcript.id
