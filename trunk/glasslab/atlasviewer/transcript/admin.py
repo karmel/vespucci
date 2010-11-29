@@ -32,8 +32,9 @@ class NucleotideSequenceInput(ReadOnlyInput):
         
         # And add a key at the end
         key = '<br /><br />'
-        for codon_type in ('stop','antisense-stop','start','antisense-start'):
-            key += '<span class="%s-codon">%s codon</span>&nbsp;&nbsp;&nbsp;&nbsp;' % (
+        for codon_type in ('stop','start'):
+            key += '<span class="%s-codon antisense-%s-codon">%s codon</span>&nbsp;&nbsp;&nbsp;&nbsp;' % (
+                                                            codon_type,
                                                             codon_type,
                                                             codon_type.replace('-',' '))
         return value + key
@@ -83,9 +84,9 @@ class GlassTranscriptAdmin(ReadOnlyAdmin):
         context.update(extra) 
         return super(GlassTranscriptAdmin, self).render_change_form(request, context, *args, **kwargs)
         
-    list_display    = ('chromosome','transcription_start','transcription_end','strand_0', 'strand_1',
+    list_display    = ('chromosome','transcription_start','transcription_end','strand',
                        'transcript_length', 'score', 'ucsc_browser_link', 'modified')
-    list_filter     = ('chromosome','strand_0','strand_1')
+    list_filter     = ('chromosome','strand',)
     ordering        = ('chromosome','transcription_start')
     search_fields   = ['transcription_start','transcription_end',]
     inlines         = [GlassTranscriptSequenceInline,
@@ -103,7 +104,7 @@ class GlassTranscriptAdmin(ReadOnlyAdmin):
                 % (current_settings.REFERENCE_GENOME, obj.chromosome.name.strip(), 
                            obj.transcription_start, obj.transcription_end) \
                 + '&amp;hgS_doLoadUrl=submit&amp;hgS_loadUrlName=http%3A%2F%2Fbiowhat.ucsd.edu%2Fkallison%2Fucsc%2Fsessions%2F'\
-                + '%s_strands.txt"' % ((obj.strand_0 and 'sense') or (obj.strand_1 and 'antisense')) \
+                + '%s_strands.txt"' % ((not obj.strand and 'sense') or (obj.strand and 'antisense')) \
                 + ' target="_blank">View</a>'
                         
     ucsc_browser_link.short_description = 'UCSC Browser' 

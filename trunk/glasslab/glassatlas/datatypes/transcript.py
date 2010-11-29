@@ -54,7 +54,7 @@ class GlassTranscript(models.Model):
     # Use JS for browser link to auto-include in Django Admin form 
     ucsc_browser_link = '''<a href="#" onclick="window.open('http://genome.ucsc.edu/cgi-bin/hgTracks?'''\
                         + '''hgS_doLoadUrl=submit&amp;hgS_loadUrlName=http%3A%2F%2Fbiowhat.ucsd.edu%2Fkallison%2Fucsc%2Fsessions%2F' '''\
-                        + ''' + (document.getElementById('id_strand_0').value=='True' && 'sense' || 'antisense') + '_strands.txt&db='''\
+                        + ''' + (document.getElementById('id_strand').value=='0' && 'sense' || 'antisense') + '_strands.txt&db='''\
                         + current_settings.REFERENCE_GENOME + '''&amp;position=' + '''\
                         + ''' document.getElementById('id_chromosome').title '''\
                         + ''' + '%3A+' + document.getElementById('id_transcription_start').value '''\
@@ -63,8 +63,7 @@ class GlassTranscript(models.Model):
                         + ''' >View in UCSC Browser</a> '''
                         
     chromosome              = models.ForeignKey(Chromosome, help_text=ucsc_browser_link)
-    strand_0                = models.BooleanField(default=False, help_text='Do we see tags on the + strand?')
-    strand_1                = models.BooleanField(default=False, help_text='Do we see tags on the - strand?')
+    strand                  = models.IntegerField(max_length=1, help_text='0 for +, 1 for -')
     transcription_start     = models.IntegerField(max_length=12)
     transcription_end       = models.IntegerField(max_length=12)
     

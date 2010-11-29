@@ -4,12 +4,12 @@ Created on Nov 24, 2010
 @author: karmel
 '''
 
-sql = """CREATE OR REPLACE FUNCTION public.ucsc_link_mm9(chr_name character, transcription_start bigint, transcription_end bigint, strand_0 boolean)
+sql = """CREATE OR REPLACE FUNCTION public.ucsc_link_mm9(chr_name character, transcription_start bigint, transcription_end bigint, strand smallint)
 RETURNS text AS $$
 DECLARE
     file_name character(10);
 BEGIN
-    IF strand_0 = true THEN file_name := 'sense';
+    IF strand = 0 THEN file_name := 'sense';
     ELSE file_name := 'antisense';
     END IF;
     
