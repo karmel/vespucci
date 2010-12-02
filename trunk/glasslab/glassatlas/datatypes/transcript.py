@@ -17,8 +17,7 @@ from multiprocessing import Pool
 from glasslab.utils.database import execute_query
 import os
 
-MAX_SEQUENCE_GAP = 2000 # Max gap between transcripts that share sequence associations
-MAX_OTHER_GAP = 200 # Max gap between transcripts that share no sequence associations
+MAX_GAP = 200 # Max gap between transcripts that share no sequence associations
 MIN_SCORE = 1.4 # Delete transcripts with scores below this threshold.
 
 def multiprocess_all_chromosomes(func, cls, *args):
@@ -109,7 +108,7 @@ class GlassTranscript(models.Model):
                 SELECT glass_atlas_%s.save_transcripts_from_sequencing_run(%d, %d,'%s', %d);
                 """ % (current_settings.TRANSCRIPT_GENOME,
                        sequencing_run.id, chr_id, 
-                       sequencing_run.source_table.strip(), MAX_OTHER_GAP)
+                       sequencing_run.source_table.strip(), MAX_GAP)
             execute_query(query)
     
     ################################################
@@ -127,7 +126,7 @@ class GlassTranscript(models.Model):
                 SELECT glass_atlas_%s.save_transcripts_from_sequencing_run(%d, %d,'%s', %d);
                 """ % (current_settings.TRANSCRIPT_GENOME,
                        sequencing_run.id, chr_id, 
-                       sequencing_run.source_table.strip(), MAX_OTHER_GAP)
+                       sequencing_run.source_table.strip(), MAX_GAP)
             execute_query(query)
             
     ################################################
@@ -143,10 +142,10 @@ class GlassTranscript(models.Model):
         for chr_id in chr_list:
             print 'Stitching together transcripts for chromosome %d' % chr_id
             query = """
-                SELECT glass_atlas_%s.stitch_transcripts_together(%d, %d, %d);
+                SELECT glass_atlas_%s.stitch_transcripts_together(%d, %d);
                 SELECT glass_atlas_%s.join_subtranscripts(%d);
                 """ % (current_settings.TRANSCRIPT_GENOME, 
-                       chr_id, MAX_SEQUENCE_GAP, MAX_OTHER_GAP,
+                       chr_id, MAX_GAP,
                        current_settings.TRANSCRIPT_GENOME, 
                        chr_id)
             execute_query(query)

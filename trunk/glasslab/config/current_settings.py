@@ -26,5 +26,5 @@ CURRENT_SCHEMA = 'current_projects'
 #####################################
 # Compute power
 #####################################
-ALLOWED_PROCESSES = 5
+ALLOWED_PROCESSES = 3
 

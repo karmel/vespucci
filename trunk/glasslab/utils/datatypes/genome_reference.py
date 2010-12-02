@@ -175,7 +175,7 @@ class NonCodingRna(models.Model):
         verbose_name = 'Non coding RNA'
         
     def __unicode__(self):
-        return '%s %s' % (self.type, self.name.strip())
+        return '%s %s' % (self.type, self.description.strip())
     
     _non_coding_transcription_region = None
     @property 

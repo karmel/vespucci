@@ -14,21 +14,64 @@ from glasslab.atlasviewer.shared.admin import make_all_fields_readonly,\
     ReadOnlyInline, ReadOnlyAdmin, ReadOnlyInput
 from django.db import models
 import re
+from django.utils.safestring import mark_safe
 
 class NucleotideSequenceInput(ReadOnlyInput):
     '''
     Subclassed to add custom formatting.
     '''
+    start_codons = [['ATG'],['TAC']]
+    stop_codons = [['TAA','TAG','TGA'],['TTA','CTA','TCA']]
+    def render(self, name, value, attrs=None):
+        if value is None:
+            value = ''
+        return mark_safe(self.value_for_display(value))
+    
     def value_for_display(self, value):
         if value is None or value is '': return '&nbsp;'
-        # Force line breaks
-        step = 135
-        value = ' '.join([value[start:start + step] for start in xrange(0,len(value),step)])
+        # Create the antisense string
+        antisense = value.replace('A','t').replace('T','a').replace('G','c').replace('C','g').upper()[::1]
+        # Look at each Reading Frame, starting from the 0th, 1st, and 2nd nucleotide
+        display_vals = []
+        for strand, sequence in enumerate((value, antisense)):
+            all_codons = [[],[],[]]
+            stop_codons = [[],[],[]]
+            start_codons = [[],[],[]]
+            max_orf = (0, 0)
+            for offset in xrange(0,3):
+                current = sequence[offset:]
+                # Split into codons, omitting any leftovers (less than three bases) at the end
+                codons = [current[start:start+3] for start in xrange(0,len(current),3) if start + 3 <= len(current)]
+                all_codons[offset] = codons
+                current_orf = []
+                for i, codon in enumerate(codons):
+                    if codon in self.start_codons[strand]:
+                        start_codons[offset].append(i)
+                    if codon in self.stop_codons[strand]:
+                        if len(current_orf) > max_orf[1]:
+                            max_orf = (offset, len(current_orf)) 
+                        stop_codons[offset].append(i)
+                        current_orf = []
+                    else: current_orf.append(codon)
+            # For the max orf, insert spans to show coloring and reassemble
+            chosen_codons = all_codons[max_orf[0]]
+            for i in stop_codons[max_orf[0]]:
+                chosen_codons[i] = '<span class="stop-codon">' + chosen_codons[i] + '</span>' 
+            for i in start_codons[max_orf[0]]:
+                chosen_codons[i] = '<span class="start-codon">' + chosen_codons[i] + '</span>'
+            # Add in line breaks to force wrapping
+            step = 45 
+            for i in xrange(step,len(chosen_codons),step):
+                chosen_codons[i] = '<br />' + chosen_codons[i]
+            
+            # Join, adding in beginning and end pieces
+            end_piece = -((len(sequence) - max_orf[0]) % 3)
+            final = sequence[:max_orf[0]] + ''.join(chosen_codons) + (end_piece and sequence[end_piece:] or '')
+            
+            display_vals.append((max_orf[0],final))
         
-        value = self.wrap_codon(value, ['TAA','TAG','TGA'], 'stop-codon')
-        value = self.wrap_codon(value, ['ATT','ATC','ACT'], 'antisense-stop-codon')
-        value = self.wrap_codon(value, ['ATG'], 'start-codon')
-        value = self.wrap_codon(value, ['TAC'], 'antisense-start-codon')
+        display = '<div class="sense-sequence"><strong>Max ORF starting with nucleotide %d:</strong><br />%s</div>' % display_vals[0]
+        display += '<div class="antisense-sequence"><strong>Max ORF starting with nucleotide %d:</strong><br />%s</div>' % display_vals[1]
         
         # And add a key at the end
         key = '<br /><br />'
@@ -37,9 +80,9 @@ class NucleotideSequenceInput(ReadOnlyInput):
                                                             codon_type,
                                                             codon_type,
                                                             codon_type.replace('-',' '))
-        return value + key
+        return display + key
     
-    def wrap_codon(self, value, codons, css_class):
+    def wrap_codon(self, original, value, codons, css_class):
         for codon in codons:
             find = '(?P<codon>' + '\s*'.join(codon) + ')'
             value = re.sub(find, '<span class="%s">\g<codon></span>' % css_class, value)
