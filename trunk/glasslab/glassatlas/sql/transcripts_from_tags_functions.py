@@ -298,7 +298,7 @@ RETURNS VOID AS $$
 				ORDER BY (transcription_end - transcription_start) DESC
 				LIMIT 1;
 				
-		IF transcript IS NULL THEN transcript_id = NULL;
+		IF NOT FOUND THEN transcript_id = NULL;
 		ELSE transcript_id = transcript.id;
 		END IF;
 		
@@ -536,32 +536,16 @@ BEGIN
 		ON transcript1.id = grouped_seq1.glass_transcript_id
 		LEFT OUTER JOIN (SELECT 
 		        glass_transcript_id, 
-		        public.sort(array_agg(non_coding_transcription_region_id)::int[]) as regions
-		    FROM "glass_atlas_mm10"."glass_transcript_non_coding"
-		    GROUP BY glass_transcript_id) grouped_nc1
-		ON transcript1.id = grouped_nc1.glass_transcript_id
-		LEFT OUTER JOIN (SELECT 
-		        glass_transcript_id, 
 		        public.sort(array_agg(sequence_transcription_region_id)::int[]) as regions
 		    FROM "glass_atlas_mm10"."glass_transcript_sequence"
 		    GROUP BY glass_transcript_id) grouped_seq2
 		ON transcript2.id = grouped_seq2.glass_transcript_id
-		LEFT OUTER JOIN (SELECT 
-		        glass_transcript_id, 
-		        public.sort(array_agg(non_coding_transcription_region_id)::int[]) as regions
-		    FROM "glass_atlas_mm10"."glass_transcript_non_coding"
-		    GROUP BY glass_transcript_id) grouped_nc2
-		ON transcript2.id = grouped_nc2.glass_transcript_id
 		WHERE transcript1.chromosome_id = chr_id
 			AND transcript2.chromosome_id = chr_id
 			AND ((grouped_seq1.regions @> grouped_seq2.regions
 				-- Prevent equivalent region arrays from appearing as two separate rows
 				AND (grouped_seq1.regions != grouped_seq2.regions OR transcript1.id > transcript2.id)) 
 				OR grouped_seq2.regions IS NULL)
-			AND ((grouped_nc1.regions @> grouped_nc2.regions
-				-- Prevent equivalent region arrays from appearing as two separate rows
-				AND (grouped_nc1.regions != grouped_nc2.regions OR transcript1.id > transcript2.id))  
-				OR grouped_nc2.regions IS NULL)
 		);
 END;
 $$ LANGUAGE 'plpgsql';
