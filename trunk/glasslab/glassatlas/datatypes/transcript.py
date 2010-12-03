@@ -76,7 +76,7 @@ class GlassTranscript(models.Model):
     created         = models.DateTimeField(auto_now_add=True)
     
     class Meta:
-        db_table    = 'glass_atlas_%s"."glass_transcript' % current_settings.TRANSCRIPT_GENOME
+        db_table    = 'glass_atlas_%s"."glass_transcript_all' % current_settings.TRANSCRIPT_GENOME
         app_label   = 'Transcription'
         
     def __unicode__(self):
