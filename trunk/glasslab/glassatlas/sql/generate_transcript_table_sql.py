@@ -31,6 +31,7 @@ ALTER SEQUENCE "glass_atlas_%s"."glass_transcript_id_seq" OWNED BY "glass_atlas_
 ALTER TABLE "glass_atlas_%s"."glass_transcript_all" ALTER COLUMN id SET DEFAULT nextval('"glass_atlas_%s"."glass_transcript_id_seq"'::regclass);
 ALTER TABLE ONLY "glass_atlas_%s"."glass_transcript_all" ADD CONSTRAINT glass_transcript_pkey PRIMARY KEY (id);
 CREATE INDEX glass_transcript_chr_idx ON "glass_atlas_%s"."glass_transcript_all" USING btree (chromosome_id);
+CREATE INDEX glass_transcript_strand_idx ON "glass_atlas_%s"."glass_transcript_all" USING btree (strand);
 CREATE INDEX glass_transcript_start_idx ON "glass_atlas_%s"."glass_transcript_all" USING btree (transcription_start);
 CREATE INDEX glass_transcript_end_idx ON "glass_atlas_%s"."glass_transcript_all" USING btree (transcription_end);
 CREATE INDEX glass_transcript_start_end_idx ON "glass_atlas_%s"."glass_transcript_all" USING gist (start_end);
@@ -203,5 +204,5 @@ ALTER SEQUENCE "glass_atlas_%s"."sequencing_run_id_seq" OWNED BY "glass_atlas_%s
 ALTER TABLE "glass_atlas_%s"."sequencing_run" ALTER COLUMN id SET DEFAULT nextval('"glass_atlas_%s"."sequencing_run_id_seq"'::regclass);
 ALTER TABLE ONLY "glass_atlas_%s"."sequencing_run" ADD CONSTRAINT sequencing_run_pkey PRIMARY KEY (id);
 CREATE UNIQUE INDEX sequencing_run_source_table_idx ON "glass_atlas_%s"."sequencing_run" USING btree (source_table);
-""" % tuple([genome]*96)
+""" % tuple([genome]*97)
 print sql

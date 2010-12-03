@@ -217,9 +217,9 @@ RETURNS SETOF glass_atlas_%s.glass_transcript_row AS $$
 	END LOOP;
 		
 	-- One more left?
-	IF (row.tag_count > 5 AND row.gaps = 0) OR (row.tag_count > 8 AND row.tag_count > row.gaps*2) THEN 
-		RETURN NEXT row;
-	END IF;
+	-- IF (row.tag_count > 5 AND row.gaps = 0) OR (row.tag_count > 8 AND row.tag_count > row.gaps*2) THEN
+	RETURN NEXT row;
+	-- END IF;
 		
 	-- And finally, return the set.
 	RETURN;

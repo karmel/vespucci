@@ -31,7 +31,8 @@ if __name__ == '__main__':
     if not run_from_cammand_line:
         options.schema_name = 'thiomac_groseq_nathan_2010_10'
         options.tag_table = 'tag_ncor_ko_kla_1h'
-        
+    
+    GlassTranscriptAll.turn_off_autovacuum()    
     if options.tag_table:
         GlassTag._meta.db_table = options.schema_name and '%s"."%s' % (options.schema_name, options.tag_table) \
                                     or options.tag_table
@@ -45,4 +46,5 @@ if __name__ == '__main__':
         GlassTranscriptAll.set_scores()
     #if not options.skip_deletion:
         #GlassTranscriptAll.delete_invalid_transcripts()
+    GlassTranscriptAll.turn_on_autovacuum()
     
