@@ -28,7 +28,7 @@ CREATE SEQUENCE "glass_atlas_%s"."glass_transcript_id_seq"
     NO MAXVALUE
     CACHE 1;
 ALTER SEQUENCE "glass_atlas_%s"."glass_transcript_id_seq" OWNED BY "glass_atlas_%s"."glass_transcript_all".id;
-ALTER TABLE "glass_atlas_%s"."glass_transcript" ALTER COLUMN id SET DEFAULT nextval('"glass_atlas_%s"."glass_transcript_id_seq"'::regclass);
+ALTER TABLE "glass_atlas_%s"."glass_transcript_all" ALTER COLUMN id SET DEFAULT nextval('"glass_atlas_%s"."glass_transcript_id_seq"'::regclass);
 ALTER TABLE ONLY "glass_atlas_%s"."glass_transcript_all" ADD CONSTRAINT glass_transcript_pkey PRIMARY KEY (id);
 CREATE INDEX glass_transcript_chr_idx ON "glass_atlas_%s"."glass_transcript_all" USING btree (chromosome_id);
 CREATE INDEX glass_transcript_start_idx ON "glass_atlas_%s"."glass_transcript_all" USING btree (transcription_start);

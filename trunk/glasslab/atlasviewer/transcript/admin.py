@@ -4,7 +4,7 @@ Created on Nov 8, 2010
 @author: karmel
 '''
 from django.contrib import admin
-from glasslab.glassatlas.datatypes.transcript import GlassTranscript,\
+from glasslab.glassatlas.datatypes.transcript import GlassTranscriptAll as GlassTranscript,\
     GlassTranscriptSource, GlassTranscriptSequence, GlassTranscriptNonCoding,\
     GlassTranscriptConserved, GlassTranscriptPatterned,\
     GlassTranscriptNucleotides

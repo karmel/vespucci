@@ -3,7 +3,7 @@ Created on Nov 8, 2010
 
 @author: karmel
 '''
-from glasslab.glassatlas.datatypes.transcript import GlassTranscript
+from glasslab.glassatlas.datatypes.transcript import GlassTranscriptAll
 from glasslab.sequencing.datatypes.tag import GlassTag
 from glasslab.utils.scripting import GlassOptionParser
 from optparse import make_option
@@ -35,14 +35,14 @@ if __name__ == '__main__':
     if options.tag_table:
         GlassTag._meta.db_table = options.schema_name and '%s"."%s' % (options.schema_name, options.tag_table) \
                                     or options.tag_table
-        GlassTranscript.add_transcripts_from_tags(GlassTag._meta.db_table)
+        GlassTranscriptAll.add_transcripts_from_tags(GlassTag._meta.db_table)
     
     if not options.skip_stitching:
-        GlassTranscript.stitch_together_transcripts()
-    if not options.skip_nucleotides:
-        GlassTranscript.associate_nucleotides()
+        GlassTranscriptAll.stitch_together_transcripts()
+    #if not options.skip_nucleotides:
+        #GlassTranscriptAll.associate_nucleotides()
     if not options.skip_scoring:
-        GlassTranscript.set_scores()
-    if not options.skip_deletion:
-        GlassTranscript.delete_invalid_transcripts()
+        GlassTranscriptAll.set_scores()
+    #if not options.skip_deletion:
+        #GlassTranscriptAll.delete_invalid_transcripts()
     

@@ -46,7 +46,7 @@ def wrap_stitch_together_transcripts(cls, chr_list): wrap_errors(cls._stitch_tog
 def wrap_set_scores(cls, chr_list): wrap_errors(cls._set_scores, chr_list)
 def wrap_associate_nucleotides(cls, chr_list): wrap_errors(cls._associate_nucleotides, chr_list)
 
-class GlassTranscript(models.Model):
+class GlassTranscriptAll(models.Model):
     '''
     Unique transcribed regions in the genome.
     '''   
@@ -170,8 +170,8 @@ class GlassTranscript(models.Model):
         Delete transcripts falling below a certain score threshold.
         '''
         query = """
-            DELETE FROM  "%s" WHERE score IS NOT NULL AND score < %f;
-            """ % (GlassTranscript._meta.db_table, MIN_SCORE)
+            -- DELETE FROM  "%s" WHERE score IS NOT NULL AND score < %f;
+            """ % (GlassTranscriptAll._meta.db_table, MIN_SCORE)
         execute_query(query)
         print 'Deleted transcripts below score threshold of %f' % MIN_SCORE    
     
@@ -214,7 +214,7 @@ class GlassTranscript(models.Model):
             connection.close()
             
 class GlassTranscriptNucleotides(models.Model):
-    glass_transcript  = models.ForeignKey(GlassTranscript)
+    glass_transcript  = models.ForeignKey(GlassTranscriptAll)
     sequence          = models.TextField()
     
     class Meta:
@@ -226,7 +226,7 @@ class GlassTranscriptNucleotides(models.Model):
         return 'GlassTranscriptNucleotides for transcript %d' % (self.glass_transcript.id)
        
 class GlassTranscriptSource(models.Model):
-    glass_transcript        = models.ForeignKey(GlassTranscript)
+    glass_transcript        = models.ForeignKey(GlassTranscriptAll)
     sequencing_run          = models.ForeignKey(SequencingRun)
     tag_count               = models.IntegerField(max_length=12)
     gaps                    = models.IntegerField(max_length=12)
@@ -241,7 +241,7 @@ class GlassTranscriptSource(models.Model):
                                                                              self.sequencing_run.source_table.strip())
         
 class GlassTranscriptTranscriptionRegionTable(models.Model):
-    glass_transcript= models.ForeignKey(GlassTranscript)
+    glass_transcript= models.ForeignKey(GlassTranscriptAll)
     relationship    = models.CharField(max_length=100, choices=[(x,x) 
                                                     for x in ('contains','is contained by','overlaps with','is equal to')])
     

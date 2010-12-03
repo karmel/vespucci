@@ -210,9 +210,9 @@ RETURNS SETOF glass_atlas_%s.glass_transcript_row AS $$
 				gaps := 0;
 				finish_row := false;
 				
-				IF (row.tag_count > 5 AND row.gaps = 0) OR (row.tag_count > 8) THEN 
-					RETURN NEXT row;
-				END IF;
+				-- IF (row.tag_count > 5 AND row.gaps = 0) OR (row.tag_count > 8) THEN 
+				RETURN NEXT row;
+				-- END IF;
 			END IF;
 	END LOOP;
 		
