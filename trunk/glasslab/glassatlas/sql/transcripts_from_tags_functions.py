@@ -203,6 +203,10 @@ RETURNS SETOF glass_atlas_%s.glass_transcript_row AS $$
 			row.gaps := gaps;
 			
 			IF finish_row THEN
+				-- IF (row.tag_count > 5 AND row.gaps = 0) OR (row.tag_count > 8) THEN 
+				RETURN NEXT row;
+				-- END IF;
+				
 				-- Restart vars for next loop
 				last_start := rec.start;
 				last_end := rec."end";
@@ -210,9 +214,14 @@ RETURNS SETOF glass_atlas_%s.glass_transcript_row AS $$
 				gaps := 0;
 				finish_row := false;
 				
-				-- IF (row.tag_count > 5 AND row.gaps = 0) OR (row.tag_count > 8) THEN 
-				RETURN NEXT row;
-				-- END IF;
+				-- Store row even if not done, in case this is the last loop	
+				row.chromosome_id := chr_id;
+				row.strand = strand;
+				row.transcription_start := last_start;
+				row.transcription_end := last_end;
+				row.tag_count := tag_count;
+				row.gaps := gaps;
+				
 			END IF;
 	END LOOP;
 		
