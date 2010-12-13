@@ -4,7 +4,7 @@ Created on Nov 8, 2010
 @author: karmel
 '''
 from django.contrib import admin
-from glasslab.glassatlas.datatypes.transcript import GlassTranscriptAll as GlassTranscript,\
+from glasslab.glassatlas.datatypes.transcript import FilteredGlassTranscript, GlassTranscript,\
     GlassTranscriptSource, GlassTranscriptSequence, GlassTranscriptNonCoding,\
     GlassTranscriptConserved, GlassTranscriptPatterned,\
     GlassTranscriptNucleotides
@@ -158,5 +158,6 @@ class SequencingRunAdmin(admin.ModelAdmin):
     list_filter     = ('type',)
     ordering        = ('-modified',)
 
+admin.site.register(FilteredGlassTranscript, GlassTranscriptAdmin)
 admin.site.register(GlassTranscript, GlassTranscriptAdmin)
 admin.site.register(SequencingRun, SequencingRunAdmin)

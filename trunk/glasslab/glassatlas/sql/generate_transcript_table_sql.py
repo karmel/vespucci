@@ -8,7 +8,7 @@ Convenience script for generated create table statements for transcript tables.
 
 genome = 'mm10'
 sql = """
-CREATE TABLE "glass_atlas_%s"."glass_transcript_all" (
+CREATE TABLE "glass_atlas_%s"."glass_transcript" (
     "id" int4 NOT NULL,
     "chromosome_id" int4 DEFAULT NULL,
     "strand" int2 DEFAULT NULL,
@@ -20,23 +20,23 @@ CREATE TABLE "glass_atlas_%s"."glass_transcript_all" (
     "modified" timestamp(6) NULL DEFAULT NULL,
     "created" timestamp(6) NULL DEFAULT NULL
 );
-GRANT ALL ON TABLE "glass_atlas_%s"."glass_transcript_all" TO  "glass";
+GRANT ALL ON TABLE "glass_atlas_%s"."glass_transcript" TO  "glass";
 CREATE SEQUENCE "glass_atlas_%s"."glass_transcript_id_seq"
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
     NO MAXVALUE
     CACHE 1;
-ALTER SEQUENCE "glass_atlas_%s"."glass_transcript_id_seq" OWNED BY "glass_atlas_%s"."glass_transcript_all".id;
-ALTER TABLE "glass_atlas_%s"."glass_transcript_all" ALTER COLUMN id SET DEFAULT nextval('"glass_atlas_%s"."glass_transcript_id_seq"'::regclass);
-ALTER TABLE ONLY "glass_atlas_%s"."glass_transcript_all" ADD CONSTRAINT glass_transcript_pkey PRIMARY KEY (id);
-CREATE INDEX glass_transcript_chr_idx ON "glass_atlas_%s"."glass_transcript_all" USING btree (chromosome_id);
-CREATE INDEX glass_transcript_strand_idx ON "glass_atlas_%s"."glass_transcript_all" USING btree (strand);
-CREATE INDEX glass_transcript_start_idx ON "glass_atlas_%s"."glass_transcript_all" USING btree (transcription_start);
-CREATE INDEX glass_transcript_end_idx ON "glass_atlas_%s"."glass_transcript_all" USING btree (transcription_end);
-CREATE INDEX glass_transcript_start_end_idx ON "glass_atlas_%s"."glass_transcript_all" USING gist (start_end);
+ALTER SEQUENCE "glass_atlas_%s"."glass_transcript_id_seq" OWNED BY "glass_atlas_%s"."glass_transcript".id;
+ALTER TABLE "glass_atlas_%s"."glass_transcript" ALTER COLUMN id SET DEFAULT nextval('"glass_atlas_%s"."glass_transcript_id_seq"'::regclass);
+ALTER TABLE ONLY "glass_atlas_%s"."glass_transcript" ADD CONSTRAINT glass_transcript_pkey PRIMARY KEY (id);
+CREATE INDEX glass_transcript_chr_idx ON "glass_atlas_%s"."glass_transcript" USING btree (chromosome_id);
+CREATE INDEX glass_transcript_strand_idx ON "glass_atlas_%s"."glass_transcript" USING btree (strand);
+CREATE INDEX glass_transcript_strand_idx ON "glass_atlas_%s"."glass_transcript" USING btree (strand);
+CREATE INDEX glass_transcript_start_idx ON "glass_atlas_%s"."glass_transcript" USING btree (transcription_start);
+CREATE INDEX glass_transcript_end_idx ON "glass_atlas_%s"."glass_transcript" USING btree (transcription_end);
+CREATE INDEX glass_transcript_start_end_idx ON "glass_atlas_%s"."glass_transcript" USING gist (start_end);
 
-CREATE VIEW "glass_atlas_%s"."glass_transcript" AS SELECT * FROM "glass_atlas_%s"."glass_transcript_all" WHERE score >= 1.4;
 
 CREATE TABLE "glass_atlas_%s"."glass_transcribed_rna" (
     "id" int4 NOT NULL,
@@ -204,5 +204,5 @@ ALTER SEQUENCE "glass_atlas_%s"."sequencing_run_id_seq" OWNED BY "glass_atlas_%s
 ALTER TABLE "glass_atlas_%s"."sequencing_run" ALTER COLUMN id SET DEFAULT nextval('"glass_atlas_%s"."sequencing_run_id_seq"'::regclass);
 ALTER TABLE ONLY "glass_atlas_%s"."sequencing_run" ADD CONSTRAINT sequencing_run_pkey PRIMARY KEY (id);
 CREATE UNIQUE INDEX sequencing_run_source_table_idx ON "glass_atlas_%s"."sequencing_run" USING btree (source_table);
-""" % tuple([genome]*97)
+""" % tuple([genome]*98)
 print sql

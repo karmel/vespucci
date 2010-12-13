@@ -46,7 +46,7 @@ def wrap_stitch_together_transcripts(cls, chr_list): wrap_errors(cls._stitch_tog
 def wrap_set_scores(cls, chr_list): wrap_errors(cls._set_scores, chr_list)
 def wrap_associate_nucleotides(cls, chr_list): wrap_errors(cls._associate_nucleotides, chr_list)
 
-class GlassTranscriptAll(models.Model):
+class GlassTranscript(models.Model):
     '''
     Unique transcribed regions in the genome.
     '''   
@@ -76,8 +76,9 @@ class GlassTranscriptAll(models.Model):
     created         = models.DateTimeField(auto_now_add=True)
     
     class Meta:
-        db_table    = 'glass_atlas_%s"."glass_transcript_all' % current_settings.TRANSCRIPT_GENOME
+        db_table    = 'glass_atlas_%s"."glass_transcript' % current_settings.TRANSCRIPT_GENOME
         app_label   = 'Transcription'
+        verbose_name= 'Unfiltered Glass transcripts'
         
     def __unicode__(self):
         return 'GlassTranscript: %s: %d-%d' % (self.chromosome.name.strip(), 
@@ -201,7 +202,7 @@ class GlassTranscriptAll(models.Model):
         '''
         query = """
             -- DELETE FROM  "%s" WHERE score IS NOT NULL AND score < %f;
-            """ % (GlassTranscriptAll._meta.db_table, MIN_SCORE)
+            """ % (GlassTranscript._meta.db_table, MIN_SCORE)
         execute_query(query)
         print 'Deleted transcripts below score threshold of %f' % MIN_SCORE    
     
@@ -242,9 +243,24 @@ class GlassTranscriptAll(models.Model):
                 sequence.sequence = seq
                 sequence.save()
             connection.close()
-            
+
+class FilteredGlassTranscriptManager(models.Manager):
+    def get_query_set(self):
+        return super(FilteredGlassTranscriptManager, self).get_query_set().filter(score__gte=MIN_SCORE)
+    
+class FilteredGlassTranscript(GlassTranscript):
+    '''
+    Glass Transcripts above a certain score threshhold, filtered for
+    easy viewing in the admin.
+    '''
+    objects = FilteredGlassTranscriptManager()
+    class Meta:
+        proxy = True
+        app_label   = 'Transcription'
+        verbose_name= 'Glass transcript'
+        
 class GlassTranscriptNucleotides(models.Model):
-    glass_transcript  = models.ForeignKey(GlassTranscriptAll)
+    glass_transcript  = models.ForeignKey(GlassTranscript)
     sequence          = models.TextField()
     
     class Meta:
@@ -256,7 +272,7 @@ class GlassTranscriptNucleotides(models.Model):
         return 'GlassTranscriptNucleotides for transcript %d' % (self.glass_transcript.id)
        
 class GlassTranscriptSource(models.Model):
-    glass_transcript        = models.ForeignKey(GlassTranscriptAll)
+    glass_transcript        = models.ForeignKey(GlassTranscript)
     sequencing_run          = models.ForeignKey(SequencingRun)
     tag_count               = models.IntegerField(max_length=12)
     gaps                    = models.IntegerField(max_length=12)
@@ -271,7 +287,7 @@ class GlassTranscriptSource(models.Model):
                                                                              self.sequencing_run.source_table.strip())
         
 class GlassTranscriptTranscriptionRegionTable(models.Model):
-    glass_transcript= models.ForeignKey(GlassTranscriptAll)
+    glass_transcript= models.ForeignKey(GlassTranscript)
     relationship    = models.CharField(max_length=100, choices=[(x,x) 
                                                     for x in ('contains','is contained by','overlaps with','is equal to')])
     

@@ -3,7 +3,7 @@ Created on Nov 8, 2010
 
 @author: karmel
 '''
-from glasslab.glassatlas.datatypes.transcript import GlassTranscriptAll
+from glasslab.glassatlas.datatypes.transcript import GlassTranscript
 from glasslab.sequencing.datatypes.tag import GlassTag
 from glasslab.utils.scripting import GlassOptionParser
 from optparse import make_option
@@ -18,8 +18,6 @@ class TranscriptsFromTagsParser(GlassOptionParser):
                            help='Should the stitching together of transcripts be skipped?'),
                make_option('--skip_scoring',action='store_true', dest='skip_scoring',  
                            help='Should the scoring of transcripts be skipped?'),
-               make_option('--skip_deletion',action='store_true', dest='skip_deletion',  
-                           help='Should the deletion of low-scoring transcripts be skipped?'),
                make_option('--skip_nucleotides',action='store_true', dest='skip_nucleotides',  
                            help='Should obtaining nucleotide sequences to transcripts be skipped?'),
                 ]
@@ -32,19 +30,18 @@ if __name__ == '__main__':
         options.schema_name = 'thiomac_groseq_nathan_2010_10'
         options.tag_table = 'tag_ncor_ko_kla_1h'
     
-    GlassTranscriptAll.turn_off_autovacuum()    
+    GlassTranscript.turn_off_autovacuum()    
     if options.tag_table:
         GlassTag._meta.db_table = options.schema_name and '%s"."%s' % (options.schema_name, options.tag_table) \
                                     or options.tag_table
-        GlassTranscriptAll.add_transcripts_from_tags(GlassTag._meta.db_table)
+        GlassTranscript.add_transcripts_from_tags(GlassTag._meta.db_table)
     
     if not options.skip_stitching:
-        GlassTranscriptAll.stitch_together_transcripts()
+        GlassTranscript.stitch_together_transcripts()
     #if not options.skip_nucleotides:
-        #GlassTranscriptAll.associate_nucleotides()
+        #GlassTranscript.associate_nucleotides()
     if not options.skip_scoring:
-        GlassTranscriptAll.set_scores()
-    #if not options.skip_deletion:
-        #GlassTranscriptAll.delete_invalid_transcripts()
-    GlassTranscriptAll.turn_on_autovacuum()
+        GlassTranscript.set_scores()
+
+    GlassTranscript.turn_on_autovacuum()
     
