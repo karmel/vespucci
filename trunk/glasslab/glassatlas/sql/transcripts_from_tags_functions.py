@@ -151,7 +151,7 @@ BEGIN
 		|| ' strand = ' || rec.strand || ','
 		|| ' transcription_start = ' || rec.transcription_start || ','
 		|| ' transcription_end = ' || rec.transcription_end || ','
-		|| ' start_end = public.cube(' || rec.transcription_end || '::float,' || rec.transcription_end || '::float),'
+		|| ' start_end = public.cube(' || rec.transcription_start || '::float,' || rec.transcription_end || '::float),'
 		|| spliced_sql || ','
 		|| score_sql || ','
 		|| ' modified = NOW()'
@@ -261,7 +261,7 @@ RETURNS VOID AS $$
 					|| ' VALUES (' || rec.chromosome_id || ' , ' || rec.strand || ' , '
 					|| rec.transcription_start || ' , ' || rec.transcription_end || ' , '
 					|| ' public.cube(' || rec.transcription_start || ' , ' || rec.transcription_end || ' ),' 
-					|| ' NOW(), NOW())' INTO transcript;
+					|| ' NOW(), NOW()) RETURNING *' INTO transcript;
 	
 				-- Save the record of the sequencing run source
 				INSERT INTO glass_atlas_%s.glass_transcript_source 
@@ -308,12 +308,12 @@ RETURNS VOID AS $$
 		END LOOP;
 		
 		-- Find matching transcript, preferring the longest available where more than one match
-		EXECUTE 'SELECT * INTO transcript FROM glass_atlas_%s.glass_transcript_' || rec.chromosome_id
+		EXECUTE 'SELECT * FROM glass_atlas_%s.glass_transcript_' || rec.chromosome_id
 			|| ' WHERE chromosome_id = rec.chromosome_id '
 				|| ' AND start_end OPERATOR(public.@>) public.cube(' || rec.transcription_start 
 					|| ', ' || rec.transcription_end || ') '
 				|| ' ORDER BY (transcription_end - transcription_start) DESC'
-				|| ' LIMIT 1';
+				|| ' LIMIT 1' INTO transcript;
 				
 		IF NOT FOUND THEN transcript_id = NULL;
 		ELSE transcript_id = transcript.id;
