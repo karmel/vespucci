@@ -173,10 +173,9 @@ class GlassTranscript(models.Model):
         for chr_id in chr_list:
             print 'Stitching together transcripts for chromosome %d' % chr_id
             query = """
-                select glass_atlas_mm10.update_transcript_associations(%d)
-                --SELECT glass_atlas_%s.stitch_transcripts_together(%d, %d);
-                --SELECT glass_atlas_%s.join_subtranscripts(%d);
-                """ % (chr_id, current_settings.TRANSCRIPT_GENOME, 
+                SELECT glass_atlas_%s.stitch_transcripts_together(%d, %d);
+                SELECT glass_atlas_%s.join_subtranscripts(%d);
+                """ % (current_settings.TRANSCRIPT_GENOME, 
                        chr_id, MAX_GAP,
                        current_settings.TRANSCRIPT_GENOME, 
                        chr_id)
