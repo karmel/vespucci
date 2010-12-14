@@ -11,6 +11,8 @@ from django.template.context import RequestContext
 from django.template.loader import render_to_string
 from django.http import HttpResponse
 from random import randint
+from glasslab.glassatlas.datatypes.transcript import FilteredGlassTranscript
+from django.db.models.aggregates import Max
 
 @login_required
 def custom_query(request):
@@ -48,4 +50,17 @@ def _custom_query(request):
     return {'rows': rows,
            'field_names': field_names,
            'query': query, }
+
+def transcripts_ucsc_track(request):
+    transcripts = FilteredGlassTranscript.objects.order_by('chromosome__id',
+                                                           'transcription_start',
+                                                           '-transcription_end').iterator()
+    max_score = FilteredGlassTranscript.objects.aggregate(max=Max('score'))['max']
+    output = render_to_string('transcripts_ucsc_track.bed',
+                              {'transcripts': transcripts,
+                               'max_score': max_score},
+                              context_instance=RequestContext(request))
+    f = file.open('/Users/karmel/Desktop/transcripts_ucsc_track.bed','w')
+    f.write(output)
+    f.close()
     

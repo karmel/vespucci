@@ -1,0 +1,3 @@
+track name=glass_transcripts description="Glass Atlas Transcripts" useScore=1 itemRgb=On
+{% for t in transcripts %}{{ t.chromosome.name }}	{{ t.transcription_start }}	{{ t.transcription_end }}	Transcript {{ t.id }}	{% widthratio t.score max_score 1000 %}	{% if not t.strand %}+{% else %}-{% endif %}	{{ t.transcription_start }}	{{ t.transcription_end }}	{% if not t.strand %}0,0,255{% else %}0,255,0{% endif %}
+{% endfor %}
