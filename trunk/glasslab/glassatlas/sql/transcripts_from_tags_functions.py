@@ -499,6 +499,7 @@ BEGIN
 			EXECUTE 'DELETE FROM glass_atlas_%s.glass_transcript_' || trans.chromosome_id || ' WHERE id = ' || trans.id;
 			PERFORM glass_atlas_%s.save_transcript(merged_trans);
 			consumed = consumed || trans.id;
+			consumed = consumed || merged_trans.id;
 	END IF;
 	RETURN consumed;
 END;

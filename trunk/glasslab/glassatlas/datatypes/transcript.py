@@ -16,6 +16,7 @@ from glasslab.utils.datatypes.basic_model import CubeField
 from multiprocessing import Pool
 from glasslab.utils.database import execute_query
 import os
+from random import randint
 
 MAX_GAP = 200 # Max gap between transcripts that share no sequence associations
 MIN_SCORE = 1.4 # Delete transcripts with scores below this threshold.
@@ -40,25 +41,25 @@ def multiprocess_all_chromosomes(func, cls, *args):
     p.join()
     
 def wrap_add_transcripts_from_groseq(cls, chr_list, *args): wrap_errors(cls._add_transcripts_from_groseq, chr_list, *args)
-def wrap_add_transcripts_from_rnaseq(cls, chr_list, *args): wrap_errors(cls._add_transcripts_from_rnaseq, chr_list, *args)
 
 def wrap_stitch_together_transcripts(cls, chr_list): wrap_errors(cls._stitch_together_transcripts, chr_list)
 def wrap_set_scores(cls, chr_list): wrap_errors(cls._set_scores, chr_list)
 def wrap_associate_nucleotides(cls, chr_list): wrap_errors(cls._associate_nucleotides, chr_list)
 
-class GlassTranscript(models.Model):
+class TranscriptBase(models.Model):
     '''
-    Unique transcribed regions in the genome.
+    Unique transcribed regions in the genome, as determined via GRO-Seq.
     '''   
     # Use JS for browser link to auto-include in Django Admin form 
+    ucsc_session_url = 'http%3A%2F%2Fbiowhat.ucsd.edu%2Fkallison%2Fucsc%2Fsessions%2F'
     ucsc_browser_link = '''<a href="#" onclick="window.open('http://genome.ucsc.edu/cgi-bin/hgTracks?'''\
-                        + '''hgS_doLoadUrl=submit&amp;hgS_loadUrlName=http%3A%2F%2Fbiowhat.ucsd.edu%2Fkallison%2Fucsc%2Fsessions%2F' '''\
+                        + '''hgS_doLoadUrl=submit&amp;hgS_loadUrlName='%s' ''' % ucsc_session_url\
                         + ''' + (document.getElementById('id_strand').value=='0' && 'sense' || 'antisense') + '_strands.txt&db='''\
                         + current_settings.REFERENCE_GENOME + '''&amp;position=' + '''\
                         + ''' document.getElementById('id_chromosome').title '''\
                         + ''' + '%3A+' + document.getElementById('id_transcription_start').value '''\
-                        + ''' + '-' + document.getElementById('id_transcription_end').value,'GlassTranscript' + '''\
-                        + ''' document.getElementById('id_glasstranscriptsource_set-0-id').value); return false;"'''\
+                        + ''' + '-' + document.getElementById('id_transcription_end').value,'Glass Atlas UCSC View ' + '''\
+                        + str(randint(100,99999)) + '''); return false;"'''\
                         + ''' >View in UCSC Browser</a> '''
                         
     chromosome              = models.ForeignKey(Chromosome, help_text=ucsc_browser_link)
@@ -66,24 +67,19 @@ class GlassTranscript(models.Model):
     transcription_start     = models.IntegerField(max_length=12)
     transcription_end       = models.IntegerField(max_length=12)
     
-    spliced                 = models.NullBooleanField(default=None, help_text='Do we have RNA-Seq confirmation?')
-    score                   = models.FloatField(null=True, default=None, 
-                                    help_text='Total mapped tags x sequencing runs transcribed in / total sequencing runs possible')
-    
     start_end               = CubeField(null=True, default=None, help_text='This is a placeholder for the PostgreSQL cube type.')
     
     modified        = models.DateTimeField(auto_now=True)
     created         = models.DateTimeField(auto_now_add=True)
     
     class Meta:
-        db_table    = 'glass_atlas_%s"."glass_transcript' % current_settings.TRANSCRIPT_GENOME
-        app_label   = 'Transcription'
-        verbose_name= 'Unfiltered Glass transcripts'
-        
+        abstract = True
+    
     def __unicode__(self):
-        return 'GlassTranscript: %s: %d-%d' % (self.chromosome.name.strip(), 
-                                               self.transcription_start, 
-                                               self.transcription_end)
+        return '%s: %s: %d-%d' % (self.__class__.__name__, 
+                                  self.chromosome.name.strip(), 
+                                  self.transcription_start, 
+                                  self.transcription_end)
     
     @classmethod 
     def add_transcripts_from_tags(cls,  tag_table):
@@ -123,6 +119,18 @@ class GlassTranscript(models.Model):
         '''
         cls.toggle_autovacuum(on=False)
         
+class GlassTranscript(TranscriptBase):
+    ucsc_session_url = 'http%3A%2F%2Fbiowhat.ucsd.edu%2Fkallison%2Fucsc%2Fsessions%2Fglass_transcript_'
+    
+    spliced                 = models.NullBooleanField(default=None, help_text='Do we have RNA-Seq confirmation?')
+    score                   = models.FloatField(null=True, default=None, 
+                                    help_text='Total mapped tags x sequencing runs transcribed in / total sequencing runs possible')
+    
+    class Meta:
+        db_table    = 'glass_atlas_%s"."glass_transcript' % current_settings.TRANSCRIPT_GENOME
+        app_label   = 'Transcription'
+        verbose_name= 'Unfiltered Glass transcript'
+            
     ################################################
     # GRO-Seq to transcripts
     ################################################
@@ -142,24 +150,6 @@ class GlassTranscript(models.Model):
                        sequencing_run.source_table.strip(), MAX_GAP)
             execute_query(query)
     
-    ################################################
-    # RNA-Seq to transcripts
-    ################################################            
-    @classmethod 
-    def add_tags_from_rnaseq(cls,  tag_table, sequencing_run):
-        multiprocess_glass_tags(wrap_add_transcripts_from_rnaseq, cls, sequencing_run)
-        
-    @classmethod
-    def _add_transcripts_from_rnaseq(cls, chr_list, sequencing_run):
-        for chr_id in chr_list:
-            print 'Adding transcripts for chromosome %d' % chr_id
-            query = """
-                SELECT glass_atlas_%s.save_transcripts_from_sequencing_run(%d, %d,'%s', %d);
-                """ % (current_settings.TRANSCRIPT_GENOME,
-                       sequencing_run.id, chr_id, 
-                       sequencing_run.source_table.strip(), MAX_GAP)
-            execute_query(query)
-            
     ################################################
     # Transcript cleanup and refinement
     ################################################
@@ -193,18 +183,7 @@ class GlassTranscript(models.Model):
             query = """
                 SELECT glass_atlas_%s.calculate_scores(%d);
                 """ % (current_settings.TRANSCRIPT_GENOME, chr_id)
-            execute_query(query)
-            
-    @classmethod
-    def delete_invalid_transcripts(cls):
-        '''
-        Delete transcripts falling below a certain score threshold.
-        '''
-        query = """
-            -- DELETE FROM  "%s" WHERE score IS NOT NULL AND score < %f;
-            """ % (GlassTranscript._meta.db_table, MIN_SCORE)
-        execute_query(query)
-        print 'Deleted transcripts below score threshold of %f' % MIN_SCORE    
+            execute_query(query) 
     
     @classmethod
     def associate_nucleotides(cls):

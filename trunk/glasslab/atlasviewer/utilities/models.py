@@ -18,3 +18,4 @@ class SavedQuery(models.Model):
     
     class Meta:
         db_table = 'atlas_viewer_utilities"."saved_query'
+        verbose_name_plural = 'Saved queries'

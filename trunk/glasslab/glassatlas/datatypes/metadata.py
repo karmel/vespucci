@@ -27,4 +27,4 @@ class SequencingRun(models.Model):
         app_label   = 'Transcription'
         
     def __unicode__(self):
-        return '%s (%s, "%s")' % (self.name, self.type, self.source_table)
+        return '%s (%s, "%s")' % (self.name, self.type, self.source_table.strip())
