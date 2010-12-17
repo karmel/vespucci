@@ -218,6 +218,7 @@ class GlassTag(DynamicTable):
                    chr_id, cls.bowtie_table,
                    Chromosome._meta.db_table,
                    chr_id)
+            
             execute_query(update_query)
                     
     @classmethod
@@ -259,12 +260,12 @@ class GlassTag(DynamicTable):
         for chr_id in chr_list:
             update_query = """
             CREATE INDEX %s_%d_chr_idx ON "%s_%d" USING btree (chromosome_id);
+            CREATE INDEX %s_%d_strand_idx ON "%s_%d" USING btree (strand);
             CREATE INDEX %s_%d_start_end_idx ON "%s_%d" USING gist (start_end);
             ANALYZE "%s_%d";
-            """ % (cls.name, chr_id,
-                   cls._meta.db_table, chr_id,
-                   cls.name, chr_id,
-                   cls._meta.db_table, chr_id,
+            """ % (cls.name, chr_id, cls._meta.db_table, chr_id,
+                   cls.name, chr_id, cls._meta.db_table, chr_id,
+                   cls.name, chr_id, cls._meta.db_table, chr_id,
                    cls._meta.db_table, chr_id)
             execute_query(update_query)
     

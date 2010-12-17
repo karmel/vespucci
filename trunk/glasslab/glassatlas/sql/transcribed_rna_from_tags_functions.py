@@ -8,23 +8,16 @@ Convenience script for generated create table statements for transcribed RNA fun
 genome = 'mm10'
 sql = """
 -- Not run from within the codebase, but kept here in case functions need to be recreated.
-DROP FUNCTION IF EXISTS glass_atlas_%s.stitch_transcripts_together(integer, integer);
-DROP FUNCTION IF EXISTS glass_atlas_%s.update_transcript_source_records(glass_atlas_%s.glass_transcript, glass_atlas_%s.glass_transcript);
-DROP FUNCTION IF EXISTS glass_atlas_%s.update_transcribed_rna_records(glass_atlas_%s.glass_transcript, glass_atlas_%s.glass_transcript);
-DROP FUNCTION IF EXISTS glass_atlas_%s.remove_transcript_region_records(glass_atlas_%s.glass_transcript);
-DROP FUNCTION IF EXISTS glass_atlas_%s.insert_associated_transcript_regions(glass_atlas_%s.glass_transcript);
-DROP FUNCTION IF EXISTS glass_atlas_%s.merge_transcripts(glass_atlas_%s.glass_transcript, glass_atlas_%s.glass_transcript);
-DROP FUNCTION IF EXISTS glass_atlas_%s.save_transcript(glass_atlas_%s.glass_transcript);
-DROP FUNCTION IF EXISTS glass_atlas_%s.determine_transcripts_from_sequencing_run(integer, integer, text, integer);
-DROP FUNCTION IF EXISTS glass_atlas_%s.save_transcripts_from_sequencing_run(integer, integer, text, integer);
+DROP FUNCTION IF EXISTS glass_atlas_%s.update_transcribed_rna_source_records(glass_atlas_%s.glass_transcribed_rna, glass_atlas_%s.glass_transcribed_rna);
+DROP FUNCTION IF EXISTS glass_atlas_%s.merge_transcribed_rna(glass_atlas_%s.glass_transcribed_rna, glass_atlas_%s.glass_transcribed_rna);
+DROP FUNCTION IF EXISTS glass_atlas_%s.save_transcribed_rna(glass_atlas_%s.glass_transcribed_rna);
 DROP FUNCTION IF EXISTS glass_atlas_%s.save_transcribed_rna_from_sequencing_run(integer, integer, text, integer);
-DROP FUNCTION IF EXISTS glass_atlas_%s.join_subtranscripts(integer);
-DROP FUNCTION IF EXISTS glass_atlas_%s.process_transcript_pair(glass_atlas_%s.glass_transcript_pair, integer[]);
-DROP FUNCTION IF EXISTS glass_atlas_%s.get_subtranscripts_by_sequencing_run(integer);
-DROP FUNCTION IF EXISTS glass_atlas_%s.get_subtranscripts_by_transcription_region(integer);
-DROP FUNCTION IF EXISTS glass_atlas_%s.calculate_scores(integer);
-DROP TYPE IF EXISTS glass_atlas_%s.glass_transcript_row;
-DROP TYPE IF EXISTS glass_atlas_%s.glass_transcript_pair;
+DROP FUNCTION IF EXISTS glass_atlas_%s.join_overlapping_transcribed_rna(integer);
+DROP FUNCTION IF EXISTS glass_atlas_%s.process_transcribed_rna_pair(glass_atlas_%s.glass_transcribed_rna_pair, integer[]);
+DROP FUNCTION IF EXISTS glass_atlas_%s.get_overlapping_transcribed_rna(integer);
+DROP FUNCTION IF EXISTS glass_atlas_%s.associate_transcribed_rna(integer);
+DROP FUNCTION IF EXISTS glass_atlas_%s.mark_transcripts_as_spliced(integer);
+DROP TYPE IF EXISTS glass_atlas_%s.glass_transcribed_rna_pair;
 
 CREATE TYPE glass_atlas_%s.glass_transcribed_rna_pair AS ("t1" glass_atlas_%s.glass_transcribed_rna, "t2" glass_atlas_%s.glass_transcribed_rna);
 
@@ -89,9 +82,6 @@ CREATE FUNCTION glass_atlas_%s.save_transcribed_rna_from_sequencing_run(seq_run_
 RETURNS VOID AS $$
  DECLARE
 	rec glass_atlas_%s.glass_transcript_row;
-	transcript glass_atlas_%s.glass_transcript;
-	transcript_id integer;
-	existing glass_atlas_%s.glass_transcribed_rna;
 	transcribed_rna glass_atlas_%s.glass_transcribed_rna;
  BEGIN
  	FOR strand IN 0..1 
@@ -99,21 +89,9 @@ RETURNS VOID AS $$
 		FOR rec IN 
 			SELECT * FROM glass_atlas_%s.determine_transcripts_from_sequencing_run(chr_id, strand, source_t, max_gap)
 		LOOP		
-			-- Find matching transcript, preferring the longest available where more than one match
-			EXECUTE 'SELECT * FROM glass_atlas_%s.glass_transcript_' || rec.chromosome_id
-				|| ' WHERE chromosome_id = rec.chromosome_id '
-					|| ' AND start_end OPERATOR(public.@>) public.cube(' || rec.transcription_start 
-						|| ', ' || rec.transcription_end || ') '
-					|| ' ORDER BY (transcription_end - transcription_start) DESC'
-					|| ' LIMIT 1' INTO transcript;
-					
-			IF NOT FOUND THEN transcript_id = NULL;
-			ELSE transcript_id = transcript.id;
-			END IF;
-			
 			-- Saved the Transcribed RNA
 			INSERT INTO glass_atlas_%s.glass_transcribed_rna 
-				("chromosome_id", "strand", "start", "end", "start_end")
+				("chromosome_id", "strand", "transcription_start", "transcriptioin_end", "start_end")
 				VALUES (chr_id, strand, rec.transcription_start, rec.transcription_end, 
 				public.cube(rec.transcription_start, rec.transcription_end))
 				RETURNING * INTO transcribed_rna;
@@ -131,104 +109,43 @@ END;
 $$ LANGUAGE 'plpgsql';
 
 
-
-CREATE FUNCTION glass_atlas_%s.stitch_transcripts_together(chr_id integer, allowed_gap integer)
+CREATE FUNCTION glass_atlas_%s.associate_transcribed_rna(chr_id integer)
 RETURNS VOID AS $$
- DECLARE
-	transcript_group record;
-	trans glass_atlas_%s.glass_transcript;
-	merged_trans glass_atlas_%s.glass_transcript;
-	overlapping_length integer;
-	should_merge boolean := false;
-	merged boolean := false;
-	max_gap integer;
-	length_gap integer;
-BEGIN
-	FOR transcript_group IN 
-		EXECUTE 'SELECT' 
-		    || ' array_agg(transcript.*) as transcripts,'
-			|| ' grouped_seq.regions'
-		|| ' FROM "glass_atlas_%s"."glass_transcript_' || chr_id ||'" transcript'
-		|| ' LEFT OUTER JOIN (SELECT '
-		        || ' glass_transcript_id, '
-		        || ' public.sort(array_agg(sequence_transcription_region_id)::int[]) as regions'
-		    || ' FROM "glass_atlas_%s"."glass_transcript_sequence"'
-		    || ' GROUP BY glass_transcript_id) grouped_seq'
-		|| ' ON transcript.id = grouped_seq.glass_transcript_id'
-		|| ' LEFT OUTER JOIN (SELECT '
-		        || ' glass_transcript_id, '
-		        || ' public.sort(array_agg(non_coding_transcription_region_id)::int[]) as regions'
-		    || ' FROM "glass_atlas_%s"."glass_transcript_non_coding"'
-		    || ' GROUP BY glass_transcript_id) grouped_nc'
-		|| ' ON transcript.id = grouped_nc.glass_transcript_id'
-		|| ' WHERE transcript.chromosome_id = ' || chr_id
-		|| ' GROUP BY grouped_seq.regions, grouped_nc.regions, transcript.strand'
-		|| ' HAVING count(transcript.id) > 1'
-	LOOP
-		-- Transcript_group is an array of transcripts and an array of associated sequences
-		-- such that the group of transcripts all share the same associated sequences,
-		-- and therefore are good candidates for stitching together.
-		
-		-- Try to group each transcript, bailing if the gap is passed.
-		FOR trans IN
-			SELECT * FROM unnest(transcript_group.transcripts)
-			ORDER BY transcription_start ASC, transcription_end DESC
-		LOOP
-			max_gap := allowed_gap;
-			IF merged_trans IS NULL THEN merged_trans := trans;
-			ELSE
-				should_merge := false;
-				-- Does this transcript connect?
-				IF (merged_trans.transcription_end >= trans.transcription_start) THEN should_merge := true;
-				ELSE
-					IF (transcript_group.regions IS NOT NULL) THEN
-						-- Should this gap be considered in light of an overlapping sequence?
-						overlapping_length := (SELECT (transcription_end - transcription_start) 
-											FROM genome_reference_mm9.sequence_transcription_region
-											WHERE chromosome_id = chr_id
-												AND strand = merged_trans.strand
-												AND start_end OPERATOR(public.@>) 
-													public.cube(merged_trans.transcription_end, trans.transcription_start)
-											ORDER BY (transcription_end - transcription_start) DESC
-											LIMIT 1);
-						-- Allow up to a fifth of the sequence as a gap
-						length_gap := (overlapping_length::float*.2)::integer;
-						max_gap := (SELECT GREATEST(max_gap, length_gap));
-						max_gap := (SELECT LEAST(max_gap, 5000));
-					END IF;
-					IF (trans.transcription_start - merged_trans.transcription_end) <= max_gap THEN should_merge := true;
-					END IF;
-				END IF;
-				
-				IF should_merge = true
-					THEN 
-						merged_trans := (SELECT glass_atlas_%s.merge_transcripts(merged_trans, trans));
-						-- Delete/update old associations
-						PERFORM glass_atlas_%s.update_transcript_source_records(merged_trans, trans);
-						PERFORM glass_atlas_%s.update_transcribed_rna_records(merged_trans, trans);
-						PERFORM glass_atlas_%s.remove_transcript_region_records(trans);
-						EXECUTE 'DELETE FROM glass_atlas_%s.glass_transcript_' || trans.chromosome_id || ' WHERE id = ' || trans.id;
-						merged := true;
-				ELSE
-					-- We have reached a gap; close off any open merged_transcripts
-					IF merged THEN
-						PERFORM glass_atlas_%s.save_transcript(merged_trans);
-					END IF;
-					-- And reset the merged transcript
-					merged_trans := trans;
-					merged := false;
-				END IF;
-			END IF;
-		END LOOP;
-		
-		-- We may have one final merged transcript awaiting a save:
-		IF merged THEN
-			PERFORM glass_atlas_%s.save_transcript(merged_trans);
-		END IF;
-		-- And reset the merged transcript
-		merged_trans := NULL;
-		merged := false;
-	END LOOP;
+	-- Match transcribed RNA to transcripts, preferring transcripts according to:
+	-- 1. Largest transcript containing transcribed RNA
+	-- 2. Transcript overlapping with transcribed RNA with minimal distance of extension
+	UPDATE glass_atlas_%s.glass_transcribed_rna 
+		SET glass_transcript_id = NULL, modified = NOW()
+		WHERE chromosome_id = chr_id;
+	
+	UPDATE glass_atlas_%s.glass_transcribed_rna rna
+		SET glass_transcript_id = transcript.id, modified = NOW()
+		FROM (SELECT row_number() OVER (PARTITION BY rna.id) as row_num,
+				rna.id as rna_id, t.id as id
+			FROM glass_atlas_%s.glass_transcript t
+			JOIN glass_atlas_%s.glass_transcribed_rna rna
+			ON t.chromosome_id = rna.chromosome_id
+			AND transcript.start_end OPERATOR(public.@>) rna.start_end
+			WHERE rna.chromosome_id = chr_id
+			ORDER BY (t.transcription_end - t.transcription_start) DESC
+		) transcript
+		WHERE transcript.rna_id = rna.id
+		AND transcript.row_num = 1;
+	
+	UPDATE glass_atlas_%s.glass_transcribed_rna rna
+		SET glass_transcript_id = transcript.id, modified = NOW()
+		FROM (SELECT row_number() OVER (PARTITION BY rna.id) as row_num,
+				rna.id as rna_id, t.id as id
+			FROM glass_atlas_%s.glass_transcript t
+			JOIN glass_atlas_%s.glass_transcribed_rna rna
+			ON t.chromosome_id = rna.chromosome_id
+			AND transcript.start_end OPERATOR(public.&&) rna.start_end
+			WHERE rna.chromosome_id = chr_id
+			ORDER BY (GREATEST((t.transcription_start - rna.transcription_start),0)
+				+ GREATEST((rna.transcription_end - t.transcription_end),0)) ASC
+		) transcript
+		WHERE transcript.rna_id = rna.id
+		AND transcript.row_num = 1;
 
 	RETURN;
 END;
@@ -279,48 +196,6 @@ BEGIN
 END;
 $$ LANGUAGE 'plpgsql';
 
-CREATE FUNCTION glass_atlas_%s.associate_transcribed_rna(chr_id integer)
-RETURNS VOID AS $$
-	-- Match transcribed RNA to transcripts, preferring transcripts according to:
-	-- 1. Largest transcript containing transcribed RNA
-	-- 2. Transcript overlapping with transcribed RNA with minimal distance of extension
-	UPDATE glass_atlas_%s.glass_transcribed_rna 
-		SET glass_transcript_id = NULL, modified = NOW()
-		WHERE chromosome_id = chr_id;
-	
-	UPDATE glass_atlas_%s.glass_transcribed_rna rna
-		SET glass_transcript_id = transcript.id, modified = NOW()
-		FROM (SELECT row_number() OVER (PARTITION BY rna.id) as row_num,
-				rna.id as rna_id, t.id as id
-			FROM glass_atlas_%s.glass_transcript t
-			JOIN glass_atlas_%s.glass_transcribed_rna rna
-			ON t.chromosome_id = rna.chromosome_id
-			AND transcript.start_end OPERATOR(public.@>) rna.start_end
-			WHERE rna.chromosome_id = chr_id
-			ORDER BY (t.transcription_end - t.transcription_start) DESC
-		) transcript
-		WHERE transcript.rna_id = rna.id
-		AND transcript.row_num = 1;
-	
-	UPDATE glass_atlas_%s.glass_transcribed_rna rna
-		SET glass_transcript_id = transcript.id, modified = NOW()
-		FROM (SELECT row_number() OVER (PARTITION BY rna.id) as row_num,
-				rna.id as rna_id, t.id as id
-			FROM glass_atlas_%s.glass_transcript t
-			JOIN glass_atlas_%s.glass_transcribed_rna rna
-			ON t.chromosome_id = rna.chromosome_id
-			AND transcript.start_end OPERATOR(public.&&) rna.start_end
-			WHERE rna.chromosome_id = chr_id
-			ORDER BY (GREATEST((t.transcription_start - rna.transcription_start),0)
-				+ GREATEST((rna.transcription_end - t.transcription_end),0)) ASC
-		) transcript
-		WHERE transcript.rna_id = rna.id
-		AND transcript.row_num = 1;
-
-	RETURN;
-END;
-$$ LANGUAGE 'plpgsql';
-
 CREATE FUNCTION glass_atlas_%s.get_overlapping_transcribed_rna(chr_id integer)
 RETURNS SETOF glass_atlas_%s.glass_transcribed_rna_pair AS $$
 BEGIN
@@ -354,6 +229,6 @@ RETURNS VOID AS $$
 END;
 $$ LANGUAGE 'plpgsql';
 
-""" % tuple([genome]*133)
+""" % tuple([genome]*70)
 
 print sql

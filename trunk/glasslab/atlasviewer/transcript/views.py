@@ -16,14 +16,14 @@ from django.db.models.aggregates import Max
 
 @login_required
 def custom_query(request):
-    context = _custom_query(request)
+    context = _custom_query(request, limit=10000)
     return render_to_response('custom_query.html',
                               context,
                               context_instance=RequestContext(request))
 
 @login_required
 def custom_query_export(request):
-    context = _custom_query(request)
+    context = _custom_query(request, limit=100000)
     data = render_to_string('custom_query_export.txt',
                               context,
                               context_instance=RequestContext(request))
@@ -31,7 +31,7 @@ def custom_query_export(request):
     response['Content-Disposition'] = 'attachment; filename=custom_query_%s.tsv' % randint(0,9999)
     return response
         
-def _custom_query(request):
+def _custom_query(request, limit=10000):
     '''
     DANGEROUS! Accepts custom, raw SQL queries for searches.
     
@@ -47,9 +47,10 @@ def _custom_query(request):
         rows, cursor = fetch_rows(query, return_cursor=True, using='read_only')
         field_names = cursor.description
 
-    return {'rows': rows,
+    return {'rows': rows[:limit],
            'field_names': field_names,
-           'query': query, }
+           'query': query, 
+           'limit': limit, }
 
 def transcripts_ucsc_track(request):
     transcripts = FilteredGlassTranscript.objects.order_by('chromosome__id',

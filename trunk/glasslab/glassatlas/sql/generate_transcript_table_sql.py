@@ -303,30 +303,6 @@ END;
 $$
 LANGUAGE 'plpgsql';
 
-CREATE TABLE "glass_atlas_%s"."glass_transcribed_rna" (
-    "id" int4 NOT NULL,
-    "glass_transcript_id" int4 DEFAULT NULL,
-    "chromosome_id" int4 DEFAULT NULL,
-    "start" int8 DEFAULT NULL,
-    "end" int8 DEFAULT NULL,
-    "start_end" "public"."cube" DEFAULT NULL
-);
-GRANT ALL ON TABLE "glass_atlas_%s"."glass_transcribed_rna" TO  "glass";
-CREATE SEQUENCE "glass_atlas_%s"."glass_transcribed_rna_id_seq"
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-ALTER SEQUENCE "glass_atlas_%s"."glass_transcribed_rna_id_seq" OWNED BY "glass_atlas_%s"."glass_transcribed_rna".id;
-ALTER TABLE "glass_atlas_%s"."glass_transcribed_rna" ALTER COLUMN id SET DEFAULT nextval('"glass_atlas_%s"."glass_transcribed_rna_id_seq"'::regclass);
-ALTER TABLE ONLY "glass_atlas_%s"."glass_transcribed_rna" ADD CONSTRAINT glass_transcribed_rna_pkey PRIMARY KEY (id);
-CREATE INDEX glass_transcribed_rna_transcript_idx ON "glass_atlas_%s"."glass_transcribed_rna" USING btree (glass_transcript_id);
-CREATE INDEX glass_transcribed_rna_start_idx ON "glass_atlas_%s"."glass_transcribed_rna" USING btree (start);
-CREATE INDEX glass_transcribed_rna_end_idx ON "glass_atlas_%s"."glass_transcribed_rna" USING btree ("end");
-CREATE INDEX glass_transcribed_rna_start_end_idx ON "glass_atlas_%s"."glass_transcribed_rna" USING gist (start_end);
-
-
 CREATE TABLE "glass_atlas_%s"."glass_transcript_nucleotides" (
     "id" int4 NOT NULL,
     "glass_transcript_id" int4 DEFAULT NULL,

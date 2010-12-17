@@ -49,14 +49,14 @@ class FastqOptionParser(GlassOptionParser):
                            help='Skip transferring bowtie tags to table; bowtie tag table will be used directly.'),
                make_option('--tag_table',action='store', dest='tag_table',
                            help='Skip translating bowtie tags to Glass tags; tag table will be used directly.'),
-               make_option('--skip_sequences',action='store_true', dest='skip_sequences', default=False, 
-                           help='Skip association of tags with sequence transcriptions regions.'),
-               make_option('--skip_non_coding',action='store_true', dest='skip_non_coding', default=False, 
-                           help='Skip association of tags with non coding transcriptions regions.'),
-               make_option('--skip_patterned',action='store_true', dest='skip_patterned', default=False, 
-                           help='Skip association of tags with patterned transcriptions regions (i.e., repeats).'),
-               make_option('--skip_conserved',action='store_true', dest='skip_conserved', default=False, 
-                           help='Skip association of tags with conserved transcriptions regions (according to phastCons score).'),
+               make_option('--do_sequences',action='store_true', dest='do_sequences', default=False, 
+                           help='Associate tags with sequence transcriptions regions.'),
+               make_option('--do_non_coding',action='store_true', dest='do_non_coding', default=False, 
+                           help='Associate tags with non coding transcriptions regions.'),
+               make_option('--do_patterned',action='store_true', dest='do_patterned', default=False, 
+                           help='Associate tags with patterned transcriptions regions (i.e., repeats).'),
+               make_option('--do_conserved',action='store_true', dest='do_conserved', default=False, 
+                           help='Associate tags with conserved transcriptions regions (according to phastCons score).'),
                
                make_option('--go',action='store_true', dest='go', default=True,
                            help='Run and output gene ontological analysis.'),
@@ -154,7 +154,7 @@ def upload_bowtie_files(options, file_name, bowtie_split_dir):
     GlassTag.create_bowtie_table(file_name)
     
     file_names = os.listdir(bowtie_split_dir)
-    processes = 8
+    processes = current_settings.ALLOWED_PROCESSES
     step_size = len(file_names)//processes
     p = Pool(processes) 
     for start in xrange(0,len(file_names),step_size):
@@ -173,6 +173,7 @@ def translate_bowtie_columns(file_name):
     '''
     Transfer bowtie tags to indexed, streamlined Glass tags for annotation.
     '''
+    #GlassTag.set_table_name('tag_' + file_name)
     GlassTag.create_parent_table(file_name)
     GlassTag.create_partition_tables()
     GlassTag.translate_from_bowtie()
@@ -206,7 +207,7 @@ if __name__ == '__main__':
     
     # Allow for easy running from Eclipse
     if not run_from_command_line:
-        options.skip_bowtie = True
+        options.do_bowtie = False
         options.file_path = '/Volumes/Unknowme/kallison/Sequencing/GroSeq/Nathan_NCoR_KO_2010_10_08/tags/ncor_ko_kla_1h/ncor_ko_kla_1h_bowtie.map'
         options.output_dir = '/Volumes/Unknowme/kallison/Sequencing/GroSeq/Nathan_NCoR_KO_2010_10_08/tags/ncor_ko_kla_1h'
         options.project_name = 'ncor_ko_kla_1h_2'
@@ -241,15 +242,15 @@ if __name__ == '__main__':
         GlassTag.set_table_name(options.tag_table)
     
     
-    if not options.skip_sequences:
+    if options.do_sequences:
         _print('Associating tags with sequences.')
         associate_sequences(options, file_name)
-    if not options.skip_non_coding:
+    if options.do_non_coding:
         _print('Associating tags with non coding regions.')
         associate_region_table(options, file_name, GlassTagNonCoding)    
-    if not options.skip_patterned:
+    if options.do_patterned:
         _print('Associating tags with patterned regions.')
         associate_region_table(options, file_name, GlassTagPatterned)
-    if not options.skip_conserved:
+    if options.do_conserved:
         _print('Associating tags with conserved regions.')
         associate_region_table(options, file_name, GlassTagConserved)

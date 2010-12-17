@@ -53,7 +53,7 @@ class TranscriptBase(models.Model):
     # Use JS for browser link to auto-include in Django Admin form 
     ucsc_session_url = 'http%3A%2F%2Fbiowhat.ucsd.edu%2Fkallison%2Fucsc%2Fsessions%2F'
     ucsc_browser_link = '''<a href="#" onclick="window.open('http://genome.ucsc.edu/cgi-bin/hgTracks?'''\
-                        + '''hgS_doLoadUrl=submit&amp;hgS_loadUrlName='%s' ''' % ucsc_session_url\
+                        + '''hgS_doLoadUrl=submit&amp;hgS_loadUrlName=%s' ''' % ucsc_session_url\
                         + ''' + (document.getElementById('id_strand').value=='0' && 'sense' || 'antisense') + '_strands.txt&db='''\
                         + current_settings.REFERENCE_GENOME + '''&amp;position=' + '''\
                         + ''' document.getElementById('id_chromosome').title '''\
@@ -87,7 +87,7 @@ class TranscriptBase(models.Model):
         if sequencing_run.type.strip() == 'Gro-Seq':
             cls.add_transcripts_from_groseq(tag_table, sequencing_run)
         elif sequencing_run.type.strip() == 'RNA-Seq':
-            cls.add_transcripts_from_rnaseq(tag_table, sequencing_run)
+            cls.add_transcribed_rna_from_rnaseq(tag_table, sequencing_run)
             
     ################################################
     # Maintenance

@@ -31,7 +31,7 @@ Query:<br />
 <div style="float:right;">
 <a href="/transcript/custom_query_export/?query={{ query|urlencode }}" target="_blank">Export to TSV</a>
 </div>
-<h2>{{ rows|length }} Results:</h2>
+<h2>{% ifequal rows|length limit %}Limited to {% endifequal %}{{ rows|length }} Results:</h2>
 	<table>
 		<thead>
 			<th>&nbsp;</th>
