@@ -5,7 +5,7 @@ Created on Nov 12, 2010
 
 Convenience script for generated create table statements for transcript functions.
 '''
-genome = 'mm10'
+genome = 'test'
 sql = """
 -- Not run from within the codebase, but kept here in case functions need to be recreated.
 DROP FUNCTION IF EXISTS glass_atlas_%s.stitch_transcripts_together(integer, integer);
@@ -181,7 +181,7 @@ RETURNS SETOF glass_atlas_%s.glass_transcript_row AS $$
 	FOR rec IN 
 		EXECUTE 'SELECT * FROM "'
 		|| source_t || '_' || chr_id
-		|| strand_query || ' ORDER BY start;'
+		|| strand_query || ' ORDER BY start_end ASC;'
 		LOOP
 			-- Initialize the start and end if necessary
 			IF (last_start = 0) THEN 
@@ -318,7 +318,7 @@ BEGIN
 		-- Try to group each transcript, bailing if the gap is passed.
 		FOR trans IN
 			SELECT * FROM unnest(transcript_group.transcripts)
-			ORDER BY transcription_start ASC, transcription_end DESC
+			ORDER BY start_end ASC
 		LOOP
 			max_gap := allowed_gap;
 			IF merged_trans IS NULL THEN merged_trans := trans;
@@ -468,7 +468,7 @@ BEGIN
 			|| ' AND source1.runs @> source2.runs'
 			-- Prevent equivalent run arrays from appearing as two separate rows
 			|| ' AND (source1.runs != source2.runs OR transcript1.id > transcript2.id)'
-		|| ' ORDER BY transcript1.transcription_start ASC, transcript1.transcription_end DESC)';
+		|| ' ORDER BY transcript1.start_end ASC)';
 END;
 $$ LANGUAGE 'plpgsql';
 
@@ -501,7 +501,7 @@ BEGIN
 				-- Prevent equivalent region arrays from appearing as two separate rows
 				|| ' AND (grouped_seq1.regions != grouped_seq2.regions OR transcript1.id > transcript2.id)) '
 				|| ' OR grouped_seq2.regions IS NULL)'
-		|| ' ORDER by transcript1.transcription_start ASC, transcript1.transcription_end DESC)';
+		|| ' ORDER by transcript1.start_end ASC)';
 END;
 $$ LANGUAGE 'plpgsql';
 
@@ -526,6 +526,6 @@ BEGIN
 END;
 $$ LANGUAGE 'plpgsql';
 
-""" % tuple([genome]*133)
+""" % tuple([genome]*121)
 
 print sql

@@ -5,7 +5,7 @@ Created on Nov 12, 2010
 
 Convenience script for generated create table statements for transcribed RNA functions.
 '''
-genome = 'mm10'
+genome = 'test'
 sql = """
 -- Not run from within the codebase, but kept here in case functions need to be recreated.
 DROP FUNCTION IF EXISTS glass_atlas_%s.update_transcribed_rna_source_records(glass_atlas_%s.glass_transcribed_rna, glass_atlas_%s.glass_transcribed_rna);
@@ -91,9 +91,10 @@ RETURNS VOID AS $$
 		LOOP		
 			-- Saved the Transcribed RNA
 			INSERT INTO glass_atlas_%s.glass_transcribed_rna 
-				("chromosome_id", "strand", "transcription_start", "transcriptioin_end", "start_end")
+				("chromosome_id", "strand", "transcription_start", "transcription_end", "start_end",
+				modified, created)
 				VALUES (chr_id, strand, rec.transcription_start, rec.transcription_end, 
-				public.cube(rec.transcription_start, rec.transcription_end))
+				public.cube(rec.transcription_start, rec.transcription_end), NOW(), NOW())
 				RETURNING * INTO transcribed_rna;
 				
 			-- Save the record of the sequencing run source
@@ -111,6 +112,7 @@ $$ LANGUAGE 'plpgsql';
 
 CREATE FUNCTION glass_atlas_%s.associate_transcribed_rna(chr_id integer)
 RETURNS VOID AS $$
+BEGIN
 	-- Match transcribed RNA to transcripts, preferring transcripts according to:
 	-- 1. Largest transcript containing transcribed RNA
 	-- 2. Transcript overlapping with transcribed RNA with minimal distance of extension
@@ -120,29 +122,33 @@ RETURNS VOID AS $$
 	
 	UPDATE glass_atlas_%s.glass_transcribed_rna rna
 		SET glass_transcript_id = transcript.id, modified = NOW()
-		FROM (SELECT row_number() OVER (PARTITION BY rna.id) as row_num,
+		FROM (SELECT row_number() OVER (
+					PARTITION BY rna.id
+					ORDER BY (t.transcription_end - t.transcription_start) DESC
+				) as row_num,
 				rna.id as rna_id, t.id as id
 			FROM glass_atlas_%s.glass_transcript t
 			JOIN glass_atlas_%s.glass_transcribed_rna rna
 			ON t.chromosome_id = rna.chromosome_id
-			AND transcript.start_end OPERATOR(public.@>) rna.start_end
+			AND t.start_end OPERATOR(public.@>) rna.start_end
 			WHERE rna.chromosome_id = chr_id
-			ORDER BY (t.transcription_end - t.transcription_start) DESC
 		) transcript
 		WHERE transcript.rna_id = rna.id
 		AND transcript.row_num = 1;
 	
 	UPDATE glass_atlas_%s.glass_transcribed_rna rna
 		SET glass_transcript_id = transcript.id, modified = NOW()
-		FROM (SELECT row_number() OVER (PARTITION BY rna.id) as row_num,
+		FROM (SELECT row_number() OVER (
+					PARTITION BY rna.id
+					ORDER BY (GREATEST((t.transcription_start - rna.transcription_start),0)
+					+ GREATEST((rna.transcription_end - t.transcription_end),0)) ASC
+				) as row_num,
 				rna.id as rna_id, t.id as id
 			FROM glass_atlas_%s.glass_transcript t
 			JOIN glass_atlas_%s.glass_transcribed_rna rna
 			ON t.chromosome_id = rna.chromosome_id
-			AND transcript.start_end OPERATOR(public.&&) rna.start_end
+			AND t.start_end OPERATOR(public.&&) rna.start_end
 			WHERE rna.chromosome_id = chr_id
-			ORDER BY (GREATEST((t.transcription_start - rna.transcription_start),0)
-				+ GREATEST((rna.transcription_end - t.transcription_end),0)) ASC
 		) transcript
 		WHERE transcript.rna_id = rna.id
 		AND transcript.row_num = 1;
@@ -164,10 +170,10 @@ BEGIN
 		FOR transcribed_rna_pair IN
 			SELECT * FROM glass_atlas_%s.get_overlapping_transcribed_rna(chr_id)
 		LOOP
-			-- Transcript 1 overlapps with Transcript 2,
+			-- Transcript 1 overlaps with Transcript 2,
 			-- and further has the same glass_transcript_id.
 			-- Keep track of consumed transcripts to ensure we do not try to process an already deleted transcript
-			consumed1 = (SELECT glass_atlas_%s.process_transcript_pair(transcript_pair, consumed1));
+			consumed1 = (SELECT glass_atlas_%s.process_transcribed_rna_pair(transcribed_rna_pair, consumed1));
 		END LOOP;
 	END LOOP;
 
@@ -204,20 +210,21 @@ BEGIN
 			|| ' (transcribed_rna2.*)::glass_atlas_%s.glass_transcribed_rna as t2'
 		|| ' FROM glass_atlas_%s.glass_transcribed_rna transcribed_rna1'
 		|| ' JOIN glass_atlas_%s.glass_transcribed_rna transcribed_rna2'
-		|| ' ON transcribed_rna1.chromosome_id = transcribed_rna2.chromosome_id
+		|| ' ON transcribed_rna1.chromosome_id = transcribed_rna2.chromosome_id'
 		|| ' AND transcribed_rna1.glass_transcript_id = transcribed_rna2.glass_transcript_id'
 		|| ' AND transcribed_rna1.strand = transcribed_rna2.strand'
 		|| ' AND transcribed_rna1.start_end OPERATOR(public.&&) transcribed_rna2.start_end'
 		|| ' AND transcribed_rna1.id != transcribed_rna2.id'
 		|| ' WHERE transcribed_rna1.chromosome_id = ' || chr_id
 			-- Prevent equivalent run arrays from appearing as two separate rows
-			|| ' AND transcribed_rna1.id > transcribed_rna2.id)'
-		|| ' ORDER BY transcribed_rna1.transcription_start ASC, transcribed_rna1.transcription_end DESC)';
+			|| ' AND transcribed_rna1.id > transcribed_rna2.id'
+		|| ' ORDER BY transcribed_rna1.start_end ASC)';
 END;
 $$ LANGUAGE 'plpgsql';
 
 CREATE FUNCTION glass_atlas_%s.mark_transcripts_as_spliced(chr_id integer)
 RETURNS VOID AS $$
+BEGIN
 	UPDATE glass_atlas_%s.glass_transcript 
 		SET spliced = NULL, modified = NOW()
 		WHERE chromosome_id = chr_id;

@@ -144,11 +144,12 @@ class SequenceExon(models.Model):
     exon_start = models.IntegerField(max_length=12)
     exon_end   = models.IntegerField(max_length=12)    
     frame      = models.IntegerField(max_length=5, help_text='Number o nucleotides needed from prior exon to make a complete amino acid at the start of this exon.')
-    
+    start_end  = CubeField(null=True, default=None, help_text='This is a placeholder for the PostgreSQL cube type.')
     class Meta: 
         db_table    = 'genome_reference_%s"."sequence_exon' % current_settings.REFERENCE_GENOME
         app_label   = 'Genome_Reference'
-    
+        ordering = ['start_end']
+        
 class SequenceKeggPathway(models.Model):
     '''
     Mappings of transcription regions and coding sites.

@@ -6,7 +6,7 @@ Created on Nov 12, 2010
 Convenience script for generated create table statements for transcript tables.
 '''
 
-genome = 'mm10'
+genome = 'test'
 sql = """
 CREATE TABLE "glass_atlas_%s"."glass_transcribed_rna" (
     "id" int4 NOT NULL,
@@ -53,5 +53,5 @@ ALTER TABLE "glass_atlas_%s"."glass_transcribed_rna_source" ALTER COLUMN id SET 
 ALTER TABLE ONLY "glass_atlas_%s"."glass_transcribed_rna_source" ADD CONSTRAINT glass_transcribed_rna_source_pkey PRIMARY KEY (id);
 CREATE INDEX glass_transcribed_rna_source_transcript_idx ON "glass_atlas_%s"."glass_transcribed_rna_source" USING btree (glass_transcribed_rna_id);
 
-""" % tuple([genome]*269)
+""" % tuple([genome]*21)
 print sql

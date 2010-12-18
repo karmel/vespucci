@@ -12,9 +12,10 @@ from glasslab.glassatlas.datatypes.metadata import SequencingRun
 from glasslab.config import current_settings
 from glasslab.atlasviewer.shared.admin import make_all_fields_readonly,\
     ReadOnlyInline, ReadOnlyAdmin, ReadOnlyInput
-from django.db import models
 import re
 from django.utils.safestring import mark_safe
+from glasslab.glassatlas.datatypes.transcribed_rna import GlassTranscribedRna,\
+    GlassTranscribedRnaSource
 
 class NucleotideSequenceInput(ReadOnlyInput):
     '''
@@ -99,6 +100,10 @@ class GlassTranscriptNucleotidesInline(ReadOnlyInline):
 class GlassTranscriptSourceInline(ReadOnlyInline):
     model = GlassTranscriptSource    
     readonly_fields = make_all_fields_readonly(model)
+
+class GlassTranscribedRnaInline(ReadOnlyInline):
+    model = GlassTranscribedRna
+    readonly_fields = make_all_fields_readonly(model)
     
 class GlassTranscriptSequenceInline(ReadOnlyInline):
     model = GlassTranscriptSequence
@@ -113,7 +118,27 @@ class GlassTranscriptPatternedInline(ReadOnlyInline):
     model = GlassTranscriptPatterned
     readonly_fields = make_all_fields_readonly(model)
     
-class GlassTranscriptAdmin(ReadOnlyAdmin):
+class TranscriptBase(ReadOnlyAdmin):
+    list_filter     = ('chromosome','strand',)
+    ordering        = ('chromosome','transcription_start')
+    search_fields   = ['transcription_start','transcription_end',]
+    
+    def transcript_length(self, obj):
+        return obj.transcription_end - obj.transcription_start
+    transcript_length.short_description = 'Length'
+    
+    def ucsc_browser_link(self, obj):
+        return '<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?db=%s&amp;position=%s%%3A+%d-%d' \
+                % (current_settings.REFERENCE_GENOME, obj.chromosome.name.strip(), 
+                           obj.transcription_start, obj.transcription_end) \
+                + '&amp;hgS_doLoadUrl=submit&amp;hgS_loadUrlName=' + obj.ucsc_session_url\
+                + '%s_strands.txt"' % ((not obj.strand and 'sense') or (obj.strand and 'antisense')) \
+                + ' target="_blank">View</a>'
+                        
+    ucsc_browser_link.short_description = 'UCSC Browser' 
+    ucsc_browser_link.allow_tags = True 
+
+class GlassTranscriptAdmin(TranscriptBase):
     def render_change_form(self, request, context, *args, **kwargs):
         '''
         Add in variables to display in custom template. 
@@ -126,32 +151,34 @@ class GlassTranscriptAdmin(ReadOnlyAdmin):
 
         context.update(extra) 
         return super(GlassTranscriptAdmin, self).render_change_form(request, context, *args, **kwargs)
-        
+    
     list_display    = ('chromosome','transcription_start','transcription_end','strand',
-                       'transcript_length', 'score', 'ucsc_browser_link', 'modified')
-    list_filter     = ('chromosome','strand',)
-    ordering        = ('chromosome','transcription_start')
-    search_fields   = ['transcription_start','transcription_end',]
+                       'transcript_length', 'score', 'spliced', 'ucsc_browser_link', 'modified')
+    
     inlines         = [GlassTranscriptSequenceInline,
                        GlassTranscriptNonCodingInline,
                        GlassTranscriptSourceInline, 
+                       GlassTranscribedRnaInline, 
                        GlassTranscriptNucleotidesInline, 
                        ]
+
+class GlassTranscribedRnaSourceInline(ReadOnlyInline):
+    model = GlassTranscribedRnaSource   
+    readonly_fields = make_all_fields_readonly(model)
     
-    def transcript_length(self, obj):
-        return obj.transcription_end - obj.transcription_start
-    transcript_length.short_description = 'Length'
+class GlassTranscribedRnaAdmin(TranscriptBase):
+    list_display    = ('chromosome','transcription_start','transcription_end','strand',
+                       'transcript_length', 'glass_transcript_link','ucsc_browser_link', 'modified')
     
-    def ucsc_browser_link(self, obj):
-        return '<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?db=%s&amp;position=%s%%3A+%d-%d' \
-                % (current_settings.REFERENCE_GENOME, obj.chromosome.name.strip(), 
-                           obj.transcription_start, obj.transcription_end) \
-                + '&amp;hgS_doLoadUrl=submit&amp;hgS_loadUrlName=http%3A%2F%2Fbiowhat.ucsd.edu%2Fkallison%2Fucsc%2Fsessions%2F'\
-                + '%s_strands.txt"' % ((not obj.strand and 'sense') or (obj.strand and 'antisense')) \
-                + ' target="_blank">View</a>'
+    inlines         = [GlassTranscribedRnaSourceInline]
+    
+    def glass_transcript_link(self, obj):
+        if not obj.glass_transcript: return ''
+        return '<a href="/admin/Transcription/glasstranscript/%d" target="_blank">%s</a>'\
+                            % (obj.glass_transcript.id, str(obj.glass_transcript))
                         
-    ucsc_browser_link.short_description = 'UCSC Browser' 
-    ucsc_browser_link.allow_tags = True 
+    glass_transcript_link.short_description = 'Glass Transcript' 
+    glass_transcript_link.allow_tags = True 
     
 class SequencingRunAdmin(admin.ModelAdmin):
     list_display    = ('type', 'description', 'source_table', 'total_tags','percent_mapped')
@@ -160,4 +187,5 @@ class SequencingRunAdmin(admin.ModelAdmin):
 
 admin.site.register(FilteredGlassTranscript, GlassTranscriptAdmin)
 admin.site.register(GlassTranscript, GlassTranscriptAdmin)
+admin.site.register(GlassTranscribedRna, GlassTranscribedRnaAdmin)
 admin.site.register(SequencingRun, SequencingRunAdmin)

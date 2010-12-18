@@ -6,7 +6,7 @@ Created on Nov 12, 2010
 Convenience script for generated create table statements for transcript tables.
 '''
 
-genome = 'mm10'
+genome = 'test'
 sql = """
 CREATE TABLE "glass_atlas_%s"."glass_transcript" (
     "id" int4 NOT NULL,
@@ -445,5 +445,5 @@ ALTER SEQUENCE "glass_atlas_%s"."sequencing_run_id_seq" OWNED BY "glass_atlas_%s
 ALTER TABLE "glass_atlas_%s"."sequencing_run" ALTER COLUMN id SET DEFAULT nextval('"glass_atlas_%s"."sequencing_run_id_seq"'::regclass);
 ALTER TABLE ONLY "glass_atlas_%s"."sequencing_run" ADD CONSTRAINT sequencing_run_pkey PRIMARY KEY (id);
 CREATE UNIQUE INDEX sequencing_run_source_table_idx ON "glass_atlas_%s"."sequencing_run" USING btree (source_table);
-""" % tuple([genome]*269)
+""" % tuple([genome]*257)
 print sql

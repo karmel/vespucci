@@ -4,7 +4,23 @@ Created on Nov 24, 2010
 @author: karmel
 '''
 
-sql = """CREATE OR REPLACE FUNCTION public.ucsc_link_mm9(chr_name character, transcription_start bigint, transcription_end bigint, strand smallint)
+sql = """
+CREATE OR REPLACE FUNCTION public.admin_link(id integer)
+RETURNS text AS $$
+BEGIN
+    RETURN '<a href="/admin/Transcription/glasstranscript/' || id || '" target="_blank">' || id || '</a>';
+END;
+$$ LANGUAGE 'plpgsql';
+
+CREATE OR REPLACE FUNCTION public.admin_link_rna(id integer)
+RETURNS text AS $$
+BEGIN
+    RETURN '<a href="/admin/Transcription/glasstranscribedrna/' || id || '" target="_blank">' || id || '</a>';
+END;
+$$ LANGUAGE 'plpgsql';
+
+
+CREATE OR REPLACE FUNCTION public.ucsc_link_mm9(chr_name character, transcription_start bigint, transcription_end bigint, strand smallint)
 RETURNS text AS $$
 DECLARE
     file_name character(10);

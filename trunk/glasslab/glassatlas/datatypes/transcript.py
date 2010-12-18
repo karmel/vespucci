@@ -54,11 +54,12 @@ class TranscriptBase(models.Model):
     ucsc_session_url = 'http%3A%2F%2Fbiowhat.ucsd.edu%2Fkallison%2Fucsc%2Fsessions%2F'
     ucsc_browser_link = '''<a href="#" onclick="window.open('http://genome.ucsc.edu/cgi-bin/hgTracks?'''\
                         + '''hgS_doLoadUrl=submit&amp;hgS_loadUrlName=%s' ''' % ucsc_session_url\
-                        + ''' + (document.getElementById('id_strand').value=='0' && 'sense' || 'antisense') + '_strands.txt&db='''\
+                        + ''' + django.jQuery('form')[0].id.replace('_form','') + '_' '''\
+                        + ''' + (django.jQuery('#id_strand').val()=='0' && 'sense' || 'antisense') + '_strands.txt&db='''\
                         + current_settings.REFERENCE_GENOME + '''&amp;position=' + '''\
-                        + ''' document.getElementById('id_chromosome').title '''\
-                        + ''' + '%3A+' + document.getElementById('id_transcription_start').value '''\
-                        + ''' + '-' + document.getElementById('id_transcription_end').value,'Glass Atlas UCSC View ' + '''\
+                        + ''' django.jQuery('#id_chromosome').attr('title') '''\
+                        + ''' + '%3A+' + django.jQuery('#id_transcription_start').val() '''\
+                        + ''' + '-' + django.jQuery('#id_transcription_end').val(),'Glass Atlas UCSC View ' + '''\
                         + str(randint(100,99999)) + '''); return false;"'''\
                         + ''' >View in UCSC Browser</a> '''
                         
@@ -76,13 +77,13 @@ class TranscriptBase(models.Model):
         abstract = True
     
     def __unicode__(self):
-        return '%s: %s: %d-%d' % (self.__class__.__name__, 
+        return '%s %d: %s: %d-%d' % (self.__class__.__name__, self.id,
                                   self.chromosome.name.strip(), 
                                   self.transcription_start, 
                                   self.transcription_end)
     
     @classmethod 
-    def add_transcripts_from_tags(cls,  tag_table):
+    def add_from_tags(cls,  tag_table):
         sequencing_run = SequencingRun.objects.get(source_table=tag_table)
         if sequencing_run.type.strip() == 'Gro-Seq':
             cls.add_transcripts_from_groseq(tag_table, sequencing_run)
@@ -93,6 +94,19 @@ class TranscriptBase(models.Model):
     # Maintenance
     ################################################
     @classmethod
+    def force_vacuum(cls):
+        '''
+        VACUUM ANALYZE all tables.
+        '''
+        print 'Vacuum analyzing all tables.'
+        for model in (cls, GlassTranscriptSource,
+                      GlassTranscriptNucleotides, GlassTranscriptSequence,
+                      GlassTranscriptNonCoding, GlassTranscriptConserved, GlassTranscriptPatterned):
+            execute_query('VACUUM FULL ANALYZE "%s";' % (model._meta.db_table))
+        for x in xrange(1,36):
+            execute_query('VACUUM FULL ANALYZE "%s_%d";' % (GlassTranscript._meta.db_table, x))
+
+    @classmethod
     def toggle_autovacuum(cls, on=True):
         '''
         Toggle per-table autovacuum enabled state.
@@ -102,6 +116,9 @@ class TranscriptBase(models.Model):
                       GlassTranscriptNonCoding, GlassTranscriptConserved, GlassTranscriptPatterned):
             execute_query('ALTER TABLE "%s" SET (autovacuum_enabled=%s);' \
                     % (model._meta.db_table, on and 'true' or 'false'))
+        for x in xrange(1,36):
+            execute_query('ALTER TABLE "%s_%d" SET (autovacuum_enabled=%s);' \
+                    % (GlassTranscript._meta.db_table, x, on and 'true' or 'false'))
     
     @classmethod
     def turn_on_autovacuum(cls):
@@ -120,8 +137,6 @@ class TranscriptBase(models.Model):
         cls.toggle_autovacuum(on=False)
         
 class GlassTranscript(TranscriptBase):
-    ucsc_session_url = 'http%3A%2F%2Fbiowhat.ucsd.edu%2Fkallison%2Fucsc%2Fsessions%2Fglass_transcript_'
-    
     spliced                 = models.NullBooleanField(default=None, help_text='Do we have RNA-Seq confirmation?')
     score                   = models.FloatField(null=True, default=None, 
                                     help_text='Total mapped tags x sequencing runs transcribed in / total sequencing runs possible')
@@ -250,20 +265,26 @@ class GlassTranscriptNucleotides(models.Model):
     def __unicode__(self):
         return 'GlassTranscriptNucleotides for transcript %d' % (self.glass_transcript.id)
        
-class GlassTranscriptSource(models.Model):
-    glass_transcript        = models.ForeignKey(GlassTranscript)
+
+class TranscriptSourceBase(models.Model):
     sequencing_run          = models.ForeignKey(SequencingRun)
     tag_count               = models.IntegerField(max_length=12)
     gaps                    = models.IntegerField(max_length=12)
     
     class Meta:
-        db_table    = 'glass_atlas_%s"."glass_transcript_source' % current_settings.TRANSCRIPT_GENOME
-        app_label   = 'Transcription'
+        abstract = True
         
     def __unicode__(self):
-        return 'GlassTranscriptSource: %d tags for transcript %d from %s' % (self.tag_count,
-                                                                             self.glass_transcript.id,
-                                                                             self.sequencing_run.source_table.strip())
+        return '%s: %d tags from %s' % (self.__class__.__name__,
+                                          self.tag_count,
+                                          self.sequencing_run.source_table.strip())
+        
+class GlassTranscriptSource(TranscriptSourceBase):
+    glass_transcript        = models.ForeignKey(GlassTranscript)
+    
+    class Meta:
+        db_table    = 'glass_atlas_%s"."glass_transcript_source' % current_settings.TRANSCRIPT_GENOME
+        app_label   = 'Transcription'
         
 class GlassTranscriptTranscriptionRegionTable(models.Model):
     glass_transcript= models.ForeignKey(GlassTranscript)

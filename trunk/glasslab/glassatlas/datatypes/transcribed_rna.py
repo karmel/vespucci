@@ -4,8 +4,8 @@ Created on Dec 16, 2010
 @author: karmel
 '''
 from glasslab.config import current_settings
-from glasslab.glassatlas.datatypes.transcript import TranscriptBase, MAX_GAP,\
-    multiprocess_all_chromosomes, GlassTranscript
+from glasslab.glassatlas.datatypes.transcript import TranscriptBase, \
+    multiprocess_all_chromosomes, GlassTranscript, TranscriptSourceBase
 from glasslab.sequencing.datatypes.tag import multiprocess_glass_tags,\
     wrap_errors
 from glasslab.utils.database import execute_query
@@ -18,19 +18,19 @@ def wrap_associate_transcribed_rna(cls, chr_list):
 def wrap_stitch_together_transcribed_rna(cls, chr_list): 
     wrap_errors(cls._stitch_together_transcribed_rna, chr_list)
 
+MAX_GAP_RNA = 10
 class GlassTranscribedRna(TranscriptBase):
     '''
     Transcribed RNA sequenced in RNA-Seq experiments.
     '''
-    ucsc_session_url = 'http%3A%2F%2Fbiowhat.ucsd.edu%2Fkallison%2Fucsc%2Fsessions%2Fglass_transcribed_rna_'
-    
     glass_transcript = models.ForeignKey(GlassTranscript, null=True)
     
     class Meta:
         db_table    = 'glass_atlas_%s"."glass_transcribed_rna' % current_settings.TRANSCRIPT_GENOME
-        app_label   = 'Transcribed_RNA'
+        app_label   = 'Transcription'
         verbose_name= 'Transcribed RNA'
-    
+        ordering = ['chromosome__id','start_end']
+        
     ################################################
     # RNA-Seq to transcripts
     ################################################            
@@ -46,7 +46,7 @@ class GlassTranscribedRna(TranscriptBase):
                 SELECT glass_atlas_%s.save_transcribed_rna_from_sequencing_run(%d, %d,'%s', %d);
                 """ % (current_settings.TRANSCRIPT_GENOME,
                        sequencing_run.id, chr_id, 
-                       sequencing_run.source_table.strip(), MAX_GAP)
+                       sequencing_run.source_table.strip(), MAX_GAP_RNA)
             execute_query(query)
             
     ################################################
@@ -63,7 +63,8 @@ class GlassTranscribedRna(TranscriptBase):
             query = """
                 SELECT glass_atlas_%s.associate_transcribed_rna(%d);
                 SELECT glass_atlas_%s.mark_transcripts_as_spliced(%d);
-                """ % (current_settings.TRANSCRIPT_GENOME, chr_id)
+                """ % (current_settings.TRANSCRIPT_GENOME, chr_id,
+                       current_settings.TRANSCRIPT_GENOME, chr_id)
             execute_query(query) 
             
     @classmethod
@@ -79,3 +80,11 @@ class GlassTranscribedRna(TranscriptBase):
                 """ % (current_settings.TRANSCRIPT_GENOME, 
                        chr_id)
             execute_query(query)
+
+class GlassTranscribedRnaSource(TranscriptSourceBase):
+    glass_transcribed_rna = models.ForeignKey(GlassTranscribedRna)
+    
+    class Meta:
+        db_table    = 'glass_atlas_%s"."glass_transcribed_rna_source' % current_settings.TRANSCRIPT_GENOME
+        app_label   = 'Transcription'
+        
