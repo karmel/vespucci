@@ -5,7 +5,7 @@ Created on Nov 12, 2010
 
 Convenience script for generated create table statements for transcript functions.
 '''
-genome = 'test'
+genome = 'mm11'
 sql = """
 -- Not run from within the codebase, but kept here in case functions need to be recreated.
 DROP FUNCTION IF EXISTS glass_atlas_%s.stitch_transcripts_together(integer, integer);
@@ -103,12 +103,12 @@ BEGIN
 		|| table_type || '_transcription_region_id, relationship)'
 		|| '(SELECT ' || rec.id || ', id, '
 		|| '(CASE WHEN start_end OPERATOR(public.=) ' || cube || ' THEN '
-		|| ' glass_atlas_%s.glass_transcript_transcription_region_relationship(\\'is equal to\\') '
+		|| ' glass_atlas_%s.glass_transcript_transcription_region_relationship(''is equal to'') '
 		|| ' WHEN start_end OPERATOR(public.<@) ' || cube || ' THEN '
-		|| ' glass_atlas_%s.glass_transcript_transcription_region_relationship(\\'contains\\') '
+		|| ' glass_atlas_%s.glass_transcript_transcription_region_relationship(''contains'') '
 		|| ' WHEN start_end OPERATOR(public.@>) ' || cube || ' THEN '
-		|| ' glass_atlas_%s.glass_transcript_transcription_region_relationship(\\'is contained by\\') '
-		|| 'ELSE glass_atlas_%s.glass_transcript_transcription_region_relationship(\\'overlaps with\\') END)'
+		|| ' glass_atlas_%s.glass_transcript_transcription_region_relationship(''is contained by'') '
+		|| 'ELSE glass_atlas_%s.glass_transcript_transcription_region_relationship(''overlaps with'') END)'
 		|| ' FROM genome_reference_mm9.'
 		|| table_type || '_transcription_region '
 		|| ' WHERE chromosome_id = ' || rec.chromosome_id 
@@ -388,18 +388,6 @@ RETURNS VOID AS $$
 	consumed2 integer[];
 BEGIN
 	-- Loop until all pairs are consumed
-	WHILE (consumed1 IS NULL OR consumed1 > array[]::integer[])
-	LOOP
-		consumed1 := array[]::integer[];
-		FOR transcript_pair IN
-			SELECT * FROM glass_atlas_%s.get_subtranscripts_by_sequencing_run(chr_id)
-		LOOP
-			-- Transcript 1 contains Transcript 2. Unite and update references
-			-- where Transcript 1 has tags from the same sequencing runs as Transcript 2.
-			-- Keep track of consumed transcripts to ensure we do not try to process an already deleted transcript
-			consumed1 = (SELECT glass_atlas_%s.process_transcript_pair(transcript_pair, consumed1));
-		END LOOP;
-	END LOOP;
 
 	WHILE (consumed2 IS NULL OR consumed2 > array[]::integer[])
 	LOOP
@@ -451,7 +439,7 @@ BEGIN
 		|| ' ON  transcript1.start_end OPERATOR(public.&&) transcript2.start_end'
 		|| ' AND transcript1.strand = transcript2.strand'
 		|| ' AND transcript1.id != transcript2.id'
-		|| ' LEFT OUTER JOIN ('
+		|| ' JOIN ('
 			|| ' SELECT glass_transcript_id, public.sort(array_agg(sequencing_run_id)::int[]) as runs'
 			|| ' FROM glass_atlas_%s.glass_transcript_source' 
 			|| ' GROUP BY glass_transcript_id'
@@ -463,11 +451,7 @@ BEGIN
 			|| ' GROUP BY glass_transcript_id'
 			|| ' ) source2'
 		|| ' ON transcript2.id = source2.glass_transcript_id'
-		|| ' WHERE transcript1.chromosome_id = ' || chr_id
-			|| ' AND transcript2.chromosome_id = ' || chr_id
-			|| ' AND source1.runs @> source2.runs'
-			-- Prevent equivalent run arrays from appearing as two separate rows
-			|| ' AND (source1.runs != source2.runs OR transcript1.id > transcript2.id)'
+		|| ' WHERE source1.runs @> source2.runs'
 		|| ' ORDER BY transcript1.start_end ASC)';
 END;
 $$ LANGUAGE 'plpgsql';
@@ -483,7 +467,7 @@ BEGIN
 		|| ' ON  transcript1.start_end OPERATOR(public.&&) transcript2.start_end'
 		|| ' AND transcript1.strand = transcript2.strand'
 		|| ' AND transcript1.id != transcript2.id'
-		|| ' LEFT OUTER JOIN (SELECT '
+		|| ' JOIN (SELECT '
 		        || ' glass_transcript_id,' 
 		        || ' public.sort(array_agg(sequence_transcription_region_id)::int[]) as regions'
 		    || ' FROM "glass_atlas_%s"."glass_transcript_sequence"'
@@ -495,11 +479,7 @@ BEGIN
 		    || ' FROM "glass_atlas_%s"."glass_transcript_sequence"'
 		    || ' GROUP BY glass_transcript_id) grouped_seq2'
 		|| ' ON transcript2.id = grouped_seq2.glass_transcript_id'
-		|| ' WHERE transcript1.chromosome_id = ' || chr_id
-			|| ' AND transcript2.chromosome_id = ' || chr_id
-			|| ' AND ((grouped_seq1.regions @> grouped_seq2.regions'
-				-- Prevent equivalent region arrays from appearing as two separate rows
-				|| ' AND (grouped_seq1.regions != grouped_seq2.regions OR transcript1.id > transcript2.id)) '
+		|| ' WHERE (grouped_seq1.regions @> grouped_seq2.regions'
 				|| ' OR grouped_seq2.regions IS NULL)'
 		|| ' ORDER by transcript1.start_end ASC)';
 END;
@@ -526,6 +506,6 @@ BEGIN
 END;
 $$ LANGUAGE 'plpgsql';
 
-""" % tuple([genome]*121)
+""" % tuple([genome]*119)
 
 print sql

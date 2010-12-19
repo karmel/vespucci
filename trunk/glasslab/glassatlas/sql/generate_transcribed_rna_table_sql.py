@@ -6,7 +6,7 @@ Created on Nov 12, 2010
 Convenience script for generated create table statements for transcript tables.
 '''
 
-genome = 'test'
+genome = 'mm11'
 sql = """
 CREATE TABLE "glass_atlas_%s"."glass_transcribed_rna" (
     "id" int4 NOT NULL,

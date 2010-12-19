@@ -5,7 +5,7 @@ Created on Nov 12, 2010
 
 Convenience script for generated create table statements for transcribed RNA functions.
 '''
-genome = 'test'
+genome = 'mm11'
 sql = """
 -- Not run from within the codebase, but kept here in case functions need to be recreated.
 DROP FUNCTION IF EXISTS glass_atlas_%s.update_transcribed_rna_source_records(glass_atlas_%s.glass_transcribed_rna, glass_atlas_%s.glass_transcribed_rna);
