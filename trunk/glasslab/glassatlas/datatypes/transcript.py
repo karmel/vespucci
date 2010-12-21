@@ -23,21 +23,24 @@ MAX_GAP = 200 # Max gap between transcripts from the same run
 MAX_STITCHING_GAP = 10 # Max gap between transcripts being stitched together
 MIN_SCORE = 1.4 # Delete transcripts with scores below this threshold.
 
+CHR_LISTS = None # Store chromosome list for process
+
 def multiprocess_all_chromosomes(func, cls, *args):
     ''' 
     Convenience method for splitting up queries based on glass tag id.
     '''
-    connection.close()
-    all_chr = Chromosome.objects.order_by('?').values_list('id', flat=True)
-    total_count = len(all_chr)
-    processes = current_settings.ALLOWED_PROCESSES
-    p = Pool(processes)
-    # Chromosomes are sorted by count descending, so we want to interleave them
-    # in order to create even-ish groups.
-    chr_lists = [[all_chr[x] for x in xrange(i,total_count,processes)] 
-                                for i in xrange(0,processes)]
-    
-    for chr_list in chr_lists:
+    if not CHR_LISTS:
+        connection.close()
+        all_chr = Chromosome.objects.order_by('?').values_list('id', flat=True)
+        total_count = len(all_chr)
+        processes = current_settings.ALLOWED_PROCESSES
+        p = Pool(processes)
+        # Chromosomes are sorted by count descending, so we want to interleave them
+        # in order to create even-ish groups.
+        CHR_LISTS = [[all_chr[x] for x in xrange(i,total_count,processes)] 
+                                    for i in xrange(0,processes)]
+        
+    for chr_list in CHR_LISTS:
         p.apply_async(func, args=[cls, chr_list,] + list(args))
     p.close()
     p.join()
@@ -195,7 +198,7 @@ class GlassTranscript(TranscriptBase):
                 SELECT glass_atlas_%s.stitch_transcripts_together(%d, %d);
                 SELECT glass_atlas_%s.join_subtranscripts(%d);
                 """ % (current_settings.TRANSCRIPT_GENOME, 
-                       chr_id, MAX_GAP,
+                       chr_id, MAX_STITCHING_GAP,
                        current_settings.TRANSCRIPT_GENOME, 
                        chr_id)
             execute_query(query)
