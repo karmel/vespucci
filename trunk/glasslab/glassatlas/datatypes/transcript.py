@@ -27,12 +27,13 @@ def multiprocess_all_chromosomes(func, cls, *args):
     ''' 
     Convenience method for splitting up queries based on glass tag id.
     '''
+    processes = current_settings.ALLOWED_PROCESSES
+    p = Pool(processes)
+        
     if not current_settings.CHR_LISTS:
         connection.close()
         all_chr = Chromosome.objects.order_by('?').values_list('id', flat=True)
         total_count = len(all_chr)
-        processes = current_settings.ALLOWED_PROCESSES
-        p = Pool(processes)
         # Chromosomes are sorted by count descending, so we want to interleave them
         # in order to create even-ish groups.
         current_settings.CHR_LISTS = [[all_chr[x] for x in xrange(i,total_count,processes)] 
