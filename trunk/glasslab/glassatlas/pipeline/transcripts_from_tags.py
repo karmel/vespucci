@@ -35,15 +35,15 @@ if __name__ == '__main__':
         GlassTag._meta.db_table = options.schema_name and '%s"."%s' % (options.schema_name, options.tag_table) \
                                     or options.tag_table
         GlassTranscript.add_from_tags(GlassTag._meta.db_table)
-        #GlassTranscript.force_vacuum()
+        GlassTranscript.force_vacuum()
     
     if not options.skip_stitching:
         GlassTranscript.stitch_together_transcripts()
+        GlassTranscript.force_vacuum()
     #if not options.skip_nucleotides:
         #GlassTranscript.associate_nucleotides()
     if not options.skip_scoring:
         GlassTranscript.set_scores()
 
-    #GlassTranscript.force_vacuum()
     GlassTranscript.turn_on_autovacuum()
     

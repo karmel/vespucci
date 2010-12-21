@@ -16,6 +16,7 @@ import re
 from django.utils.safestring import mark_safe
 from glasslab.glassatlas.datatypes.transcribed_rna import GlassTranscribedRna,\
     GlassTranscribedRnaSource
+from django.db.models.aggregates import Sum
 
 class NucleotideSequenceInput(ReadOnlyInput):
     '''
@@ -104,7 +105,13 @@ class GlassTranscriptSourceInline(ReadOnlyInline):
 class GlassTranscribedRnaInline(ReadOnlyInline):
     model = GlassTranscribedRna
     readonly_fields = make_all_fields_readonly(model)
+    ordering = ['chromosome__id','start_end']
     
+    def queryset(self, request):
+        qs = super(GlassTranscribedRnaInline, self).queryset(request)
+        qs = qs.annotate(tags=Sum('glasstranscribedrnasource__tag_count')).filter(tags__gt=1)
+        return qs
+
 class GlassTranscriptSequenceInline(ReadOnlyInline):
     model = GlassTranscriptSequence
     readonly_fields = make_all_fields_readonly(model)
@@ -119,7 +126,6 @@ class GlassTranscriptPatternedInline(ReadOnlyInline):
     readonly_fields = make_all_fields_readonly(model)
     
 class TranscriptBase(ReadOnlyAdmin):
-    list_filter     = ('chromosome','strand',)
     ordering        = ('chromosome','transcription_start')
     search_fields   = ['transcription_start','transcription_end',]
     
@@ -154,7 +160,7 @@ class GlassTranscriptAdmin(TranscriptBase):
     
     list_display    = ('chromosome','transcription_start','transcription_end','strand',
                        'transcript_length', 'score', 'spliced', 'ucsc_browser_link', 'modified')
-    
+    list_filter     = ('chromosome','strand','spliced')
     inlines         = [GlassTranscriptSequenceInline,
                        GlassTranscriptNonCodingInline,
                        GlassTranscriptSourceInline, 
@@ -169,7 +175,7 @@ class GlassTranscribedRnaSourceInline(ReadOnlyInline):
 class GlassTranscribedRnaAdmin(TranscriptBase):
     list_display    = ('chromosome','transcription_start','transcription_end','strand',
                        'transcript_length', 'glass_transcript_link','ucsc_browser_link', 'modified')
-    
+    list_filter     = ('chromosome','strand',)
     inlines         = [GlassTranscribedRnaSourceInline]
     
     def glass_transcript_link(self, obj):

@@ -14,11 +14,13 @@ from glasslab.sequencing.datatypes.tag import multiprocess_glass_tags,\
     wrap_errors
 from glasslab.utils.datatypes.basic_model import CubeField
 from multiprocessing import Pool
-from glasslab.utils.database import execute_query
+from glasslab.utils.database import execute_query,\
+    execute_query_without_transaction
 import os
 from random import randint
 
-MAX_GAP = 200 # Max gap between transcripts that share no sequence associations
+MAX_GAP = 200 # Max gap between transcripts from the same run
+MAX_STITCHING_GAP = 10 # Max gap between transcripts being stitched together
 MIN_SCORE = 1.4 # Delete transcripts with scores below this threshold.
 
 def multiprocess_all_chromosomes(func, cls, *args):
@@ -54,7 +56,7 @@ class TranscriptBase(models.Model):
     ucsc_session_url = 'http%3A%2F%2Fbiowhat.ucsd.edu%2Fkallison%2Fucsc%2Fsessions%2F'
     ucsc_browser_link = '''<a href="#" onclick="window.open('http://genome.ucsc.edu/cgi-bin/hgTracks?'''\
                         + '''hgS_doLoadUrl=submit&amp;hgS_loadUrlName=%s' ''' % ucsc_session_url\
-                        + ''' + django.jQuery('form')[0].id.replace('_form','') + '_' '''\
+                        + ''' + django.jQuery('form')[0].id.replace('_form','').replace('filtered','') + '_' '''\
                         + ''' + (django.jQuery('#id_strand').val()=='0' && 'sense' || 'antisense') + '_strands.txt&db='''\
                         + current_settings.REFERENCE_GENOME + '''&amp;position=' + '''\
                         + ''' django.jQuery('#id_chromosome').attr('title') '''\
@@ -102,9 +104,9 @@ class TranscriptBase(models.Model):
         for model in (cls, GlassTranscriptSource,
                       GlassTranscriptNucleotides, GlassTranscriptSequence,
                       GlassTranscriptNonCoding, GlassTranscriptConserved, GlassTranscriptPatterned):
-            execute_query('VACUUM FULL ANALYZE "%s";' % (model._meta.db_table))
+            execute_query_without_transaction('VACUUM FULL ANALYZE "%s";' % (model._meta.db_table))
         for x in xrange(1,36):
-            execute_query('VACUUM FULL ANALYZE "%s_%d";' % (GlassTranscript._meta.db_table, x))
+            execute_query_without_transaction('VACUUM FULL ANALYZE "%s_%d";' % (GlassTranscript._meta.db_table, x))
 
     @classmethod
     def toggle_autovacuum(cls, on=True):

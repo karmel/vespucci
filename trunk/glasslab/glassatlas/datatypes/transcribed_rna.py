@@ -29,7 +29,6 @@ class GlassTranscribedRna(TranscriptBase):
         db_table    = 'glass_atlas_%s"."glass_transcribed_rna' % current_settings.TRANSCRIPT_GENOME
         app_label   = 'Transcription'
         verbose_name= 'Transcribed RNA'
-        ordering = ['chromosome__id','start_end']
         
     ################################################
     # RNA-Seq to transcripts
@@ -76,9 +75,9 @@ class GlassTranscribedRna(TranscriptBase):
         for chr_id in chr_list:
             print 'Stitching together transcribed RNA for chromosome %d' % chr_id
             query = """
-                SELECT glass_atlas_%s.join_overlapping_transcribed_rna(%d);
+                SELECT glass_atlas_%s.stitch_transcribed_rna_together(%d, %d);
                 """ % (current_settings.TRANSCRIPT_GENOME, 
-                       chr_id)
+                       chr_id, MAX_GAP_RNA)
             execute_query(query)
 
 class GlassTranscribedRnaSource(TranscriptSourceBase):

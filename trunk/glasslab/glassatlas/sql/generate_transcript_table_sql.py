@@ -417,11 +417,6 @@ ALTER TABLE "glass_atlas_%s"."glass_transcript_patterned" ALTER COLUMN id SET DE
 ALTER TABLE ONLY "glass_atlas_%s"."glass_transcript_patterned" ADD CONSTRAINT glass_transcript_patterned_pkey PRIMARY KEY (id);
 CREATE INDEX glass_transcript_patterned_transcript_idx ON "glass_atlas_%s"."glass_transcript_patterned" USING btree (glass_transcript_id);
 
-
-
-
-
-
 CREATE TYPE "glass_atlas_%s"."sequencing_run_type" AS ENUM('Gro-Seq','RNA-Seq','ChIP-Seq');
 CREATE TABLE "glass_atlas_%s"."sequencing_run" (
     "id" int4 NOT NULL,

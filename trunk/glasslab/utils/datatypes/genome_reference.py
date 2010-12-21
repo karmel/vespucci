@@ -148,7 +148,6 @@ class SequenceExon(models.Model):
     class Meta: 
         db_table    = 'genome_reference_%s"."sequence_exon' % current_settings.REFERENCE_GENOME
         app_label   = 'Genome_Reference'
-        ordering = ['start_end']
         
 class SequenceKeggPathway(models.Model):
     '''
