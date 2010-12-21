@@ -23,13 +23,11 @@ MAX_GAP = 200 # Max gap between transcripts from the same run
 MAX_STITCHING_GAP = 10 # Max gap between transcripts being stitched together
 MIN_SCORE = 1.4 # Delete transcripts with scores below this threshold.
 
-CHR_LISTS = None # Store chromosome list for process
-
 def multiprocess_all_chromosomes(func, cls, *args):
     ''' 
     Convenience method for splitting up queries based on glass tag id.
     '''
-    if not CHR_LISTS:
+    if not current_settings.CHR_LISTS:
         connection.close()
         all_chr = Chromosome.objects.order_by('?').values_list('id', flat=True)
         total_count = len(all_chr)
@@ -37,10 +35,10 @@ def multiprocess_all_chromosomes(func, cls, *args):
         p = Pool(processes)
         # Chromosomes are sorted by count descending, so we want to interleave them
         # in order to create even-ish groups.
-        CHR_LISTS = [[all_chr[x] for x in xrange(i,total_count,processes)] 
-                                    for i in xrange(0,processes)]
+        current_settings.CHR_LISTS = [[all_chr[x] for x in xrange(i,total_count,processes)] 
+                                                    for i in xrange(0,processes)]
         
-    for chr_list in CHR_LISTS:
+    for chr_list in current_settings.CHR_LISTS:
         p.apply_async(func, args=[cls, chr_list,] + list(args))
     p.close()
     p.join()
@@ -91,6 +89,7 @@ class TranscriptBase(models.Model):
     
     @classmethod 
     def add_from_tags(cls,  tag_table):
+        connection.close()
         sequencing_run = SequencingRun.objects.get(source_table=tag_table)
         if sequencing_run.type.strip() == 'Gro-Seq':
             cls.add_transcripts_from_groseq(tag_table, sequencing_run)

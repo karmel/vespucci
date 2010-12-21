@@ -161,7 +161,7 @@ class GlassTag(DynamicTable):
                 chr_sql = """
                     SELECT chromosome_id FROM "%s" tag
                     GROUP BY chromosome_id
-                    ORDER BY count(chromosome_id) ASC;
+                    ORDER BY count(chromosome_id) DESC;
                     """ % (cls._meta.db_table)
                 rows = fetch_rows(chr_sql)
                 if rows:
@@ -177,7 +177,7 @@ class GlassTag(DynamicTable):
                     GROUP BY chromosome
                 ) derived
                 ON chr.name = derived.chromosome
-                ORDER BY derived.count ASC;
+                ORDER BY derived.count DESC;
                 """ % (Chromosome._meta.db_table, cls.bowtie_table)
                 rows = fetch_rows(chr_sql)
                 cls._chromosomes = zip(*rows)[0]
