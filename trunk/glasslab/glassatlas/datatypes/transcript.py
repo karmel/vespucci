@@ -47,6 +47,8 @@ def wrap_add_transcripts_from_groseq(cls, chr_list, *args): wrap_errors(cls._add
 def wrap_stitch_together_transcripts(cls, chr_list): wrap_errors(cls._stitch_together_transcripts, chr_list)
 def wrap_set_scores(cls, chr_list): wrap_errors(cls._set_scores, chr_list)
 def wrap_associate_nucleotides(cls, chr_list): wrap_errors(cls._associate_nucleotides, chr_list)
+def wrap_force_vacuum(cls, chr_list): wrap_errors(cls._force_vacuum, chr_list)
+def wrap_toggle_autovacuum(cls, chr_list, *args): wrap_errors(cls._toggle_autovacuum, chr_list, *args)
 
 class TranscriptBase(models.Model):
     '''
@@ -105,8 +107,14 @@ class TranscriptBase(models.Model):
                       GlassTranscriptNucleotides, GlassTranscriptSequence,
                       GlassTranscriptNonCoding, GlassTranscriptConserved, GlassTranscriptPatterned):
             execute_query_without_transaction('VACUUM FULL ANALYZE "%s";' % (model._meta.db_table))
-        for x in xrange(1,36):
-            execute_query_without_transaction('VACUUM FULL ANALYZE "%s_%d";' % (GlassTranscript._meta.db_table, x))
+        multiprocess_all_chromosomes(wrap_force_vacuum, cls)
+    
+    @classmethod        
+    def _force_vacuum(cls, chr_list):
+        for chr_id in chr_list:
+            execute_query_without_transaction('VACUUM FULL ANALYZE "%s_%d";' % (
+                                                                    GlassTranscript._meta.db_table, 
+                                                                    chr_id))
 
     @classmethod
     def toggle_autovacuum(cls, on=True):
@@ -118,9 +126,13 @@ class TranscriptBase(models.Model):
                       GlassTranscriptNonCoding, GlassTranscriptConserved, GlassTranscriptPatterned):
             execute_query('ALTER TABLE "%s" SET (autovacuum_enabled=%s);' \
                     % (model._meta.db_table, on and 'true' or 'false'))
-        for x in xrange(1,36):
+        multiprocess_all_chromosomes(wrap_toggle_autovacuum, cls, on)
+            
+    @classmethod        
+    def _toggle_autovacuum(cls, chr_list, on):
+        for chr_id in chr_list:
             execute_query('ALTER TABLE "%s_%d" SET (autovacuum_enabled=%s);' \
-                    % (GlassTranscript._meta.db_table, x, on and 'true' or 'false'))
+                    % (GlassTranscript._meta.db_table, chr_id, on and 'true' or 'false'))
     
     @classmethod
     def turn_on_autovacuum(cls):
