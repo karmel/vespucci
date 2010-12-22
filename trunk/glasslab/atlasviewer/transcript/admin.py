@@ -137,8 +137,9 @@ class TranscriptBase(ReadOnlyAdmin):
         return '<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?db=%s&amp;position=%s%%3A+%d-%d' \
                 % (current_settings.REFERENCE_GENOME, obj.chromosome.name.strip(), 
                            obj.transcription_start, obj.transcription_end) \
-                + '&amp;hgS_doLoadUrl=submit&amp;hgS_loadUrlName=' + obj.ucsc_session_url\
-                + '%s_strands.txt"' % ((not obj.strand and 'sense') or (obj.strand and 'antisense')) \
+                + '&amp;hgS_doLoadUrl=submit&amp;hgS_loadUrlName=' \
+                + obj.ucsc_session_url + obj.__class__.__name__.lower().replace('filtered','') \
+                + '_%s_strands.txt"' % ((not obj.strand and 'sense') or (obj.strand and 'antisense')) \
                 + ' target="_blank">View</a>'
                         
     ucsc_browser_link.short_description = 'UCSC Browser' 

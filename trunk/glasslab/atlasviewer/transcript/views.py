@@ -53,15 +53,6 @@ def _custom_query(request, limit=10000):
            'limit': limit, }
 
 def transcripts_ucsc_track(request):
-    transcripts = FilteredGlassTranscript.objects.order_by('chromosome__id',
-                                                           'transcription_start',
-                                                           '-transcription_end').iterator()
-    max_score = FilteredGlassTranscript.objects.aggregate(max=Max('score'))['max']
-    output = render_to_string('transcripts_ucsc_track.bed',
-                              {'transcripts': transcripts,
-                               'max_score': max_score},
+    return render_to_response('transcripts_ucsc_track.bed',
+                              {},
                               context_instance=RequestContext(request))
-    f = file.open('/Users/karmel/Desktop/transcripts_ucsc_track.bed','w')
-    f.write(output)
-    f.close()
-    

@@ -41,7 +41,7 @@ if __name__ == '__main__':
     
     if not options.skip_stitching:
         GlassTranscribedRna.stitch_together_transcribed_rna()
-    
-    GlassTranscribedRna.force_vacuum()
+        GlassTranscribedRna.force_vacuum()
+        
     GlassTranscribedRna.turn_on_autovacuum()
     

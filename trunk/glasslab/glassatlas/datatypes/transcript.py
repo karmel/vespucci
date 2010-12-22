@@ -18,6 +18,7 @@ from glasslab.utils.database import execute_query,\
     execute_query_without_transaction
 import os
 from random import randint
+from django.db.models.aggregates import Count, Max, Sum
 
 MAX_GAP = 200 # Max gap between transcripts from the same run
 MAX_STITCHING_GAP = 10 # Max gap between transcripts being stitched together
@@ -32,13 +33,20 @@ def multiprocess_all_chromosomes(func, cls, *args):
         
     if not current_settings.CHR_LISTS:
         connection.close()
-        all_chr = Chromosome.objects.order_by('?').values_list('id', flat=True)
+        try:
+            all_chr = Chromosome.objects.values('id').annotate(row_count=Count(cls.__name__.lower())
+                                        ).order_by('-row_count').filter(row_count__gt=0)
+            all_chr = [chr['id'] for chr in all_chr]
+            if not all_chr: raise Exception
+        except Exception:
+            # cls in question does not have explicit relation to chromosomes; get all
+            all_chr = Chromosome.objects.order_by('?').values_list('id', flat=True)
         total_count = len(all_chr)
         # Chromosomes are sorted by count descending, so we want to interleave them
         # in order to create even-ish groups.
         current_settings.CHR_LISTS = [[all_chr[x] for x in xrange(i,total_count,processes)] 
                                                     for i in xrange(0,processes)]
-        
+  
     for chr_list in current_settings.CHR_LISTS:
         p.apply_async(func, args=[cls, chr_list,] + list(args))
     p.close()
@@ -254,7 +262,7 @@ class GlassTranscript(TranscriptBase):
                 sequence.sequence = seq
                 sequence.save()
             connection.close()
-
+            
 class FilteredGlassTranscriptManager(models.Manager):
     def get_query_set(self):
         return super(FilteredGlassTranscriptManager, self).get_query_set().filter(score__gte=MIN_SCORE)
@@ -269,7 +277,50 @@ class FilteredGlassTranscript(GlassTranscript):
         proxy = True
         app_label   = 'Transcription'
         verbose_name= 'Glass transcript'
+    
+    ################################################
+    # Visualization
+    ################################################
+    @classmethod
+    def generate_bed_file(cls, file_path):
+        '''
+        Generates a BED file (http://genome.ucsc.edu/FAQ/FAQformat.html#format1)
+        of all the transcripts and their exons for viewing in the UCSC Genome Browser.
+        '''
+        from glasslab.glassatlas.datatypes.transcribed_rna import GlassTranscribedRna
+        output = 'track name=glass_transcripts description="Glass Atlas Transcripts" useScore=1 itemRgb=On\n'
+        max_score = cls.objects.aggregate(max=Max('score'))['max']
+        transcripts = cls.objects.order_by('chromosome__id','transcription_start')
+        for trans in transcripts:
+            # chrom start end name score strand thick_start thick_end colors? exon_count csv_exon_sizes csv_exon_starts
+            row = [trans.chromosome.name, str(trans.transcription_start), str(trans.transcription_end), 
+                   'Transcript_' + str(trans.id), str((float(trans.score)/max_score)*1000),
+                   trans.strand and '-' or '+', str(trans.transcription_start), str(trans.transcription_end), 
+                   trans.strand and '0,255,0' or '0,255,255']
+            
+            # Add in exons
+            # Note: 1 bp start and end exons added because UCSC checks that start and end of 
+            # whole transcript match the start and end of the first and last blocks, respectively
+            exons = GlassTranscribedRna.objects.filter(glass_transcript=trans
+                                    ).annotate(tags=Sum('glasstranscribedrnasource__tag_count')
+                                    ).filter(tags__gt=1).order_by('transcription_start')
+            row += [str(exons.count() + 2),
+                    ','.join(['1'] +
+                             [str(min(trans.transcription_end - ex.transcription_start,
+                                ex.transcription_end - ex.transcription_start)) for ex in exons] + ['1']),
+                    ','.join(['0'] +
+                             [str(max(0, ex.transcription_start - trans.transcription_start)) for ex in exons] 
+                                + [str(trans.transcription_end - trans.transcription_start - 1)]),
+                    ]
         
+            output += '\t'.join(row) + '\n'
+        
+        f = open(file_path, 'w')
+        f.write(output)
+        f.close()
+        
+            
+          
 class GlassTranscriptNucleotides(models.Model):
     glass_transcript  = models.ForeignKey(GlassTranscript)
     sequence          = models.TextField()
