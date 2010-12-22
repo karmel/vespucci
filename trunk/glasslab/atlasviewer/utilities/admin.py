@@ -9,9 +9,11 @@ from glasslab.atlasviewer.utilities.models import SavedQuery
 
 
 class SavedQueryAdmin(admin.ModelAdmin):
-    list_display    = ('topic', 'name', 'query_link')
+    list_display    = ('id','topic', 'name', 'query_link')
     list_filter     = ('topic',)
     ordering        = ('-modified','topic','name')
+    
+    save_as = True
     
     def query_link(self, obj):
         return '<a href="/transcript/custom_query?query=%s" target="_blank">Results</a>' % urlencode(obj.query)

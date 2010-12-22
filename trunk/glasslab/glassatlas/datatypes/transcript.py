@@ -19,6 +19,7 @@ from glasslab.utils.database import execute_query,\
 import os
 from random import randint
 from django.db.models.aggregates import Count, Max, Sum
+from datetime import datetime
 
 MAX_GAP = 200 # Max gap between transcripts from the same run
 MAX_STITCHING_GAP = 10 # Max gap between transcripts being stitched together
@@ -58,9 +59,59 @@ def wrap_stitch_together_transcripts(cls, chr_list): wrap_errors(cls._stitch_tog
 def wrap_set_scores(cls, chr_list): wrap_errors(cls._set_scores, chr_list)
 def wrap_associate_nucleotides(cls, chr_list): wrap_errors(cls._associate_nucleotides, chr_list)
 def wrap_force_vacuum(cls, chr_list): wrap_errors(cls._force_vacuum, chr_list)
-def wrap_toggle_autovacuum(cls, chr_list, *args): wrap_errors(cls._toggle_autovacuum, chr_list, *args)
 
-class TranscriptBase(models.Model):
+class CellTypeBase(object):
+    cell_type = ''
+    
+    @classmethod
+    def get_correlations(cls):
+        from glasslab.glassatlas.datatypes.celltypes.thiomac import ThioMacBase
+        return {'thiomac': ThioMacBase,}
+          
+    @property
+    def glass_transcript(self): return GlassTranscript
+    @property
+    def filtered_glass_transcript(self): return FilteredGlassTranscript
+    @property
+    def glass_transcript_source(self): return GlassTranscriptSource
+    @property
+    def glass_transcript_nucleotides(self): return GlassTranscriptNucleotides
+    @property
+    def glass_transcript_sequence(self): return GlassTranscriptSequence
+    @property
+    def glass_transcript_non_coding(self): return GlassTranscriptNonCoding
+    @property
+    def glass_transcript_patterned(self): return GlassTranscriptPatterned
+    @property
+    def glass_transcript_conserved(self): return GlassTranscriptConserved
+    @property
+    def glass_transcribed_rna(self): 
+        from glasslab.glassatlas.datatypes.transcribed_rna import GlassTranscribedRna
+        return GlassTranscribedRna
+    @property
+    def glass_transcribed_rna_source(self): 
+        from glasslab.glassatlas.datatypes.transcribed_rna import GlassTranscribedRnaSource
+        return GlassTranscribedRnaSource
+
+    def get_transcript_models(self):
+        return [self.glass_transcript, self.filtered_glass_transcript,
+                self.glass_transcript_source, self.glass_transcript_nucleotides,
+                self.glass_transcript_sequence, self.glass_transcript_non_coding,
+                self.glass_transcript_patterned, self.glass_transcript_conserved,
+                self.glass_transcribed_rna, self.glass_transcribed_rna_source]
+
+    def get_cell_type_base(self, cell_type):
+        correlations = self.__class__.get_correlations()
+        try: return correlations[cell_type.lower()]
+        except KeyError:
+            raise Exception('Could not find models to match cell type %s.' % cell_type
+                            + '\nOptions are: %s' % ','.join(correlations.keys()))
+class TranscriptModelBase(models.Model):
+    cell_base = CellTypeBase()
+    class Meta:
+        abstract = True
+        
+class TranscriptBase(TranscriptModelBase):
     '''
     Unique transcribed regions in the genome, as determined via GRO-Seq.
     '''   
@@ -68,7 +119,8 @@ class TranscriptBase(models.Model):
     ucsc_session_url = 'http%3A%2F%2Fbiowhat.ucsd.edu%2Fkallison%2Fucsc%2Fsessions%2F'
     ucsc_browser_link = '''<a href="#" onclick="window.open('http://genome.ucsc.edu/cgi-bin/hgTracks?'''\
                         + '''hgS_doLoadUrl=submit&amp;hgS_loadUrlName=%s' ''' % ucsc_session_url\
-                        + ''' + django.jQuery('form')[0].id.replace('_form','').replace('filtered','') + '_' '''\
+                        + ''' + (django.jQuery('form')[0].id.match('glasstranscript') && 'glasstranscript' '''\
+                        + ''' || 'glasstranscribedrna') + '_' '''\
                         + ''' + (django.jQuery('#id_strand').val()=='0' && 'sense' || 'antisense') + '_strands.txt&db='''\
                         + current_settings.REFERENCE_GENOME + '''&amp;position=' + '''\
                         + ''' django.jQuery('#id_chromosome').attr('title') '''\
@@ -80,7 +132,7 @@ class TranscriptBase(models.Model):
     chromosome              = models.ForeignKey(Chromosome, help_text=ucsc_browser_link)
     strand                  = models.IntegerField(max_length=1, help_text='0 for +, 1 for -')
     transcription_start     = models.IntegerField(max_length=12)
-    transcription_end       = models.IntegerField(max_length=12)
+    transcription_end       = models.IntegerField(max_length=12, help_text='<span id="length-message"></span>')
     
     start_end               = CubeField(null=True, default=None, help_text='This is a placeholder for the PostgreSQL cube type.')
     
@@ -114,17 +166,18 @@ class TranscriptBase(models.Model):
         VACUUM ANALYZE all tables.
         '''
         print 'Vacuum analyzing all tables.'
-        for model in (cls, GlassTranscriptSource,
-                      GlassTranscriptNucleotides, GlassTranscriptSequence,
-                      GlassTranscriptNonCoding, GlassTranscriptConserved, GlassTranscriptPatterned):
+        for model in cls.cell_base.get_transcript_models():
             execute_query_without_transaction('VACUUM FULL ANALYZE "%s";' % (model._meta.db_table))
-        multiprocess_all_chromosomes(wrap_force_vacuum, cls)
+        
+        # Multiprocessing locks for some reason; do each separately.
+        #for chr_list in current_settings.CHR_LISTS:
+        #    wrap_force_vacuum(cls, chr_list)
     
     @classmethod        
     def _force_vacuum(cls, chr_list):
         for chr_id in chr_list:
             execute_query_without_transaction('VACUUM FULL ANALYZE "%s_%d";' % (
-                                                                    GlassTranscript._meta.db_table, 
+                                                                    cls.cell_base.glass_transcript._meta.db_table, 
                                                                     chr_id))
 
     @classmethod
@@ -132,19 +185,10 @@ class TranscriptBase(models.Model):
         '''
         Toggle per-table autovacuum enabled state.
         '''
-        for model in (cls, GlassTranscriptSource,
-                      GlassTranscriptNucleotides, GlassTranscriptSequence,
-                      GlassTranscriptNonCoding, GlassTranscriptConserved, GlassTranscriptPatterned):
+        for model in cls.cell_base.get_transcript_models():
             execute_query('ALTER TABLE "%s" SET (autovacuum_enabled=%s);' \
                     % (model._meta.db_table, on and 'true' or 'false'))
-        multiprocess_all_chromosomes(wrap_toggle_autovacuum, cls, on)
             
-    @classmethod        
-    def _toggle_autovacuum(cls, chr_list, on):
-        for chr_id in chr_list:
-            execute_query('ALTER TABLE "%s_%d" SET (autovacuum_enabled=%s);' \
-                    % (GlassTranscript._meta.db_table, chr_id, on and 'true' or 'false'))
-    
     @classmethod
     def turn_on_autovacuum(cls):
         '''
@@ -167,10 +211,8 @@ class GlassTranscript(TranscriptBase):
                                     help_text='Total mapped tags x sequencing runs transcribed in / total sequencing runs possible')
     
     class Meta:
-        db_table    = 'glass_atlas_%s"."glass_transcript' % current_settings.TRANSCRIPT_GENOME
-        app_label   = 'Transcription'
-        verbose_name= 'Unfiltered Glass transcript'
-            
+        abstract    = True
+          
     ################################################
     # GRO-Seq to transcripts
     ################################################
@@ -184,8 +226,9 @@ class GlassTranscript(TranscriptBase):
         for chr_id in chr_list:
             print 'Adding transcripts for chromosome %d' % chr_id
             query = """
-                SELECT glass_atlas_%s.save_transcripts_from_sequencing_run(%d, %d,'%s', %d);
+                SELECT glass_atlas_%s_%s.save_transcripts_from_sequencing_run(%d, %d,'%s', %d);
                 """ % (current_settings.TRANSCRIPT_GENOME,
+                       current_settings.CURRENT_CELL_TYPE,
                        sequencing_run.id, chr_id, 
                        sequencing_run.source_table.strip(), MAX_GAP)
             execute_query(query)
@@ -203,11 +246,13 @@ class GlassTranscript(TranscriptBase):
         for chr_id in chr_list:
             print 'Stitching together transcripts for chromosome %d' % chr_id
             query = """
-                SELECT glass_atlas_%s.stitch_transcripts_together(%d, %d);
-                SELECT glass_atlas_%s.join_subtranscripts(%d);
+                SELECT glass_atlas_%s_%s.stitch_transcripts_together(%d, %d);
+                SELECT glass_atlas_%s_%s.join_subtranscripts(%d);
                 """ % (current_settings.TRANSCRIPT_GENOME, 
+                       current_settings.CURRENT_CELL_TYPE,
                        chr_id, MAX_STITCHING_GAP,
                        current_settings.TRANSCRIPT_GENOME, 
+                       current_settings.CURRENT_CELL_TYPE,
                        chr_id)
             execute_query(query)
             
@@ -221,8 +266,9 @@ class GlassTranscript(TranscriptBase):
         for chr_id in chr_list:
             print 'Scoring transcripts for chromosome %d' % chr_id
             query = """
-                SELECT glass_atlas_%s.calculate_scores(%d);
-                """ % (current_settings.TRANSCRIPT_GENOME, chr_id)
+                SELECT glass_atlas_%s_%s.calculate_scores(%d);
+                """ % (current_settings.TRANSCRIPT_GENOME,
+                       current_settings.CURRENT_CELL_TYPE, chr_id)
             execute_query(query) 
     
     @classmethod
@@ -249,6 +295,7 @@ class GlassTranscript(TranscriptBase):
             fasta = fasta[1:] # Ditch the first line, which is the chromosome identifier
             length = len(fasta[0])
             
+            nucleotides_model = cls.cell_base.glass_transcript_nucleotides
             for transcript in cls.objects.filter(chromosome__id=chr_id, score__isnull=True):
                 start = transcript.transcription_start
                 stop = transcript.transcription_end
@@ -256,9 +303,9 @@ class GlassTranscript(TranscriptBase):
                 end = fasta[stop//length][:stop % length]
                 middle = fasta[(start//length + 1):(stop//length)]
                 seq = (beginning + ''.join(middle) + end).upper()
-                try: sequence = GlassTranscriptNucleotides.objects.get(glass_transcript=transcript)
-                except GlassTranscriptNucleotides.DoesNotExist:
-                    sequence = GlassTranscriptNucleotides(glass_transcript=transcript)
+                try: sequence = nucleotides_model.objects.get(glass_transcript=transcript)
+                except nucleotides_model.DoesNotExist:
+                    sequence = nucleotides_model(glass_transcript=transcript)
                 sequence.sequence = seq
                 sequence.save()
             connection.close()
@@ -267,41 +314,51 @@ class FilteredGlassTranscriptManager(models.Manager):
     def get_query_set(self):
         return super(FilteredGlassTranscriptManager, self).get_query_set().filter(score__gte=MIN_SCORE)
     
-class FilteredGlassTranscript(GlassTranscript):
+class FilteredGlassTranscript(object):
     '''
-    Glass Transcripts above a certain score threshhold, filtered for
-    easy viewing in the admin.
+    Acts as a grouping of shared methods for filtered glass transcripts.
+    Not a model because the proxy models that will inherit these methods
+    complain if they inherit from an abstract method.
     '''
     objects = FilteredGlassTranscriptManager()
-    class Meta:
-        proxy = True
-        app_label   = 'Transcription'
-        verbose_name= 'Glass transcript'
     
     ################################################
     # Visualization
     ################################################
     @classmethod
-    def generate_bed_file(cls, file_path):
+    def generate_bed_file(cls, output_dir):
         '''
         Generates a BED file (http://genome.ucsc.edu/FAQ/FAQformat.html#format1)
         of all the transcripts and their exons for viewing in the UCSC Genome Browser.
         '''
-        from glasslab.glassatlas.datatypes.transcribed_rna import GlassTranscribedRna
-        output = 'track name=glass_transcripts description="Glass Atlas Transcripts" useScore=1 itemRgb=On\n'
+        
         max_score = cls.objects.aggregate(max=Max('score'))['max']
         transcripts = cls.objects.order_by('chromosome__id','transcription_start')
+        cls._generate_bed_file(output_dir, transcripts, max_score, strand=0)
+        cls._generate_bed_file(output_dir,transcripts, max_score, strand=1)
+        
+    @classmethod
+    def _generate_bed_file(cls, output_dir, transcripts, max_score, strand=0):
+        file_name = 'Glass_Transcripts_%s_%d.bed' % (datetime.now().strftime('%Y_%m_%d'), strand)
+        file_path = os.path.join(output_dir, file_name)
+        
+        transcripts = transcripts.filter(strand=strand)
+        
+        strand_char = strand and '-' or '+'
+        output = 'track name=glass_transcripts_%d description="Glass Atlas Transcripts %s strand" useScore=1 itemRgb=On\n' \
+                        % (strand, strand_char)
+        
         for trans in transcripts:
             # chrom start end name score strand thick_start thick_end colors? exon_count csv_exon_sizes csv_exon_starts
             row = [trans.chromosome.name, str(trans.transcription_start), str(trans.transcription_end), 
                    'Transcript_' + str(trans.id), str((float(trans.score)/max_score)*1000),
                    trans.strand and '-' or '+', str(trans.transcription_start), str(trans.transcription_end), 
-                   trans.strand and '0,255,0' or '0,255,255']
+                   trans.strand and '0,255,0' or '0,0,255']
             
             # Add in exons
             # Note: 1 bp start and end exons added because UCSC checks that start and end of 
             # whole transcript match the start and end of the first and last blocks, respectively
-            exons = GlassTranscribedRna.objects.filter(glass_transcript=trans
+            exons = cls.cell_base.glass_transcribed_rna.objects.filter(glass_transcript=trans
                                     ).annotate(tags=Sum('glasstranscribedrnasource__tag_count')
                                     ).filter(tags__gt=1).order_by('transcription_start')
             row += [str(exons.count() + 2),
@@ -321,20 +378,17 @@ class FilteredGlassTranscript(GlassTranscript):
         
             
           
-class GlassTranscriptNucleotides(models.Model):
-    glass_transcript  = models.ForeignKey(GlassTranscript)
+class GlassTranscriptNucleotides(TranscriptModelBase):
     sequence          = models.TextField()
     
     class Meta:
-        db_table    = 'glass_atlas_%s"."glass_transcript_nucleotides' % current_settings.TRANSCRIPT_GENOME
-        app_label   = 'Transcription'
-        verbose_name = 'Glass transcript nucleotide sequence'
+        abstract = True
         
     def __unicode__(self):
         return 'GlassTranscriptNucleotides for transcript %d' % (self.glass_transcript.id)
        
 
-class TranscriptSourceBase(models.Model):
+class TranscriptSourceBase(TranscriptModelBase):
     sequencing_run          = models.ForeignKey(SequencingRun)
     tag_count               = models.IntegerField(max_length=12)
     gaps                    = models.IntegerField(max_length=12)
@@ -348,14 +402,10 @@ class TranscriptSourceBase(models.Model):
                                           self.sequencing_run.source_table.strip())
         
 class GlassTranscriptSource(TranscriptSourceBase):
-    glass_transcript        = models.ForeignKey(GlassTranscript)
-    
     class Meta:
-        db_table    = 'glass_atlas_%s"."glass_transcript_source' % current_settings.TRANSCRIPT_GENOME
-        app_label   = 'Transcription'
+        abstract = True
         
-class GlassTranscriptTranscriptionRegionTable(models.Model):
-    glass_transcript= models.ForeignKey(GlassTranscript)
+class GlassTranscriptTranscriptionRegionTable(TranscriptModelBase):
     relationship    = models.CharField(max_length=100, choices=[(x,x) 
                                                     for x in ('contains','is contained by','overlaps with','is equal to')])
     
@@ -372,11 +422,6 @@ class GlassTranscriptTranscriptionRegionTable(models.Model):
     
     def foreign_key_field(self): 
         return getattr(self, '%s_transcription_region' % self.table_type)
-    
-    @classmethod
-    def get_children(cls):
-        return (GlassTranscriptSequence, GlassTranscriptNonCoding,
-                GlassTranscriptConserved, GlassTranscriptPatterned)
         
 class GlassTranscriptSequence(GlassTranscriptTranscriptionRegionTable):
     '''
@@ -388,9 +433,7 @@ class GlassTranscriptSequence(GlassTranscriptTranscriptionRegionTable):
     related_class = SequenceTranscriptionRegion
     
     class Meta: 
-        db_table    = 'glass_atlas_%s"."glass_transcript_sequence' % current_settings.TRANSCRIPT_GENOME
-        app_label   = 'Transcription'
-        verbose_name = 'Glass transcript sequence region'
+        abstract = True
            
 class GlassTranscriptNonCoding(GlassTranscriptTranscriptionRegionTable):
     '''
@@ -402,9 +445,7 @@ class GlassTranscriptNonCoding(GlassTranscriptTranscriptionRegionTable):
     related_class = NonCodingTranscriptionRegion
 
     class Meta: 
-        db_table    = 'glass_atlas_%s"."glass_transcript_non_coding' % current_settings.TRANSCRIPT_GENOME
-        app_label   = 'Transcription'
-        verbose_name = 'Glass transcript non-coding region'
+        abstract = True
         
 class GlassTranscriptPatterned(GlassTranscriptTranscriptionRegionTable):
     '''
@@ -416,9 +457,7 @@ class GlassTranscriptPatterned(GlassTranscriptTranscriptionRegionTable):
     related_class   = PatternedTranscriptionRegion
     
     class Meta: 
-        db_table    = 'glass_atlas_%s"."glass_transcript_patterned' % current_settings.TRANSCRIPT_GENOME
-        app_label   = 'Transcription'
-        verbose_name = 'Glass transcript patterned region'
+        abstract = True
         
 class GlassTranscriptConserved(GlassTranscriptTranscriptionRegionTable):
     '''
@@ -430,7 +469,5 @@ class GlassTranscriptConserved(GlassTranscriptTranscriptionRegionTable):
     related_class   = ConservedTranscriptionRegion
 
     class Meta: 
-        db_table    = 'glass_atlas_%s"."glass_transcript_conserved' % current_settings.TRANSCRIPT_GENOME
-        app_label   = 'Transcription'
-        verbose_name = 'Glass transcript conserved region'
+        abstract = True
     

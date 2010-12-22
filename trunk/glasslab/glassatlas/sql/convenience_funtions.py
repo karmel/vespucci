@@ -8,14 +8,14 @@ sql = """
 CREATE OR REPLACE FUNCTION public.admin_link(id integer)
 RETURNS text AS $$
 BEGIN
-    RETURN '<a href="/admin/Transcription/glasstranscript/' || id || '" target="_blank">' || id || '</a>';
+    RETURN '<a href="/admin/Transcription_ThioMac/glasstranscriptthiomac/' || id || '" target="_blank">' || id || '</a>';
 END;
 $$ LANGUAGE 'plpgsql';
 
 CREATE OR REPLACE FUNCTION public.admin_link_rna(id integer)
 RETURNS text AS $$
 BEGIN
-    RETURN '<a href="/admin/Transcription/glasstranscribedrna/' || id || '" target="_blank">' || id || '</a>';
+    RETURN '<a href="/admin/Transcription_ThioMac/glasstranscribedrnathiomac/' || id || '" target="_blank">' || id || '</a>';
 END;
 $$ LANGUAGE 'plpgsql';
 
@@ -29,7 +29,7 @@ BEGIN
     ELSE file_name := 'antisense';
     END IF;
     
-    RETURN '<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?hgS_doLoadUrl=submit&amp;hgS_loadUrlName=http%3A%2F%2Fbiowhat.ucsd.edu%2Fkallison%2Fucsc%2Fsessions%2F' || file_name ||'_strands.txt&amp;db=mm9&amp;position=' || chr_name || '%3A+' || transcription_start || '-' || transcription_end || '" target="_blank">View</a>';
+    RETURN '<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?hgS_doLoadUrl=submit&amp;hgS_loadUrlName=http%3A%2F%2Fbiowhat.ucsd.edu%2Fkallison%2Fucsc%2Fsessions%2Fglasstranscript_' || file_name ||'_strands.txt&amp;db=mm9&amp;position=' || chr_name || '%3A+' || transcription_start || '-' || transcription_end || '" target="_blank">View</a>';
 END;
 $$ LANGUAGE 'plpgsql';
 """

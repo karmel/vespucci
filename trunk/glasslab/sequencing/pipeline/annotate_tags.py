@@ -93,8 +93,12 @@ def call_bowtie(options, file_name):
     # Note that the tag_id, quality score, valid alingments, and mismatches are omitted from the output
     bowtie_output = file_name + '_bowtie.map'
     bowtie_file_path = os.path.join(options.output_dir, bowtie_output)
+    
+    bowtie_stats = file_name + '_bowtie_stats_summary.txt'
+    bowtie_stats_file = open(os.path.join(options.output_dir, bowtie_stats),'w')
+    
     bowtie_command = 'bowtie %s %s %s --suppress 1,6,7,8' % (options.genome, options.file_path, bowtie_file_path)
-    try: subprocess.check_call(bowtie_command, shell=True)
+    try: subprocess.check_call(bowtie_command, shell=True, stdout=bowtie_stats_file)
     except Exception:
         raise Exception('Exception encountered while trying to process FASTQ file with bowtie. Traceback:\n%s'
                                 % traceback.format_exc())

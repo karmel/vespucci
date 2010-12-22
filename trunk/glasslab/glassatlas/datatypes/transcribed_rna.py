@@ -5,11 +5,10 @@ Created on Dec 16, 2010
 '''
 from glasslab.config import current_settings
 from glasslab.glassatlas.datatypes.transcript import TranscriptBase, \
-    multiprocess_all_chromosomes, GlassTranscript, TranscriptSourceBase
+    multiprocess_all_chromosomes, TranscriptSourceBase
 from glasslab.sequencing.datatypes.tag import multiprocess_glass_tags,\
     wrap_errors
 from glasslab.utils.database import execute_query
-from django.db import models
 
 def wrap_add_transcribed_rna_from_rnaseq(cls, chr_list, *args): 
     wrap_errors(cls._add_transcribed_rna_from_rnaseq, chr_list, *args)
@@ -23,12 +22,8 @@ class GlassTranscribedRna(TranscriptBase):
     '''
     Transcribed RNA sequenced in RNA-Seq experiments.
     '''
-    glass_transcript = models.ForeignKey(GlassTranscript, null=True)
-    
     class Meta:
-        db_table    = 'glass_atlas_%s"."glass_transcribed_rna' % current_settings.TRANSCRIPT_GENOME
-        app_label   = 'Transcription'
-        verbose_name= 'Transcribed RNA'
+        abstract = True
         
     ################################################
     # RNA-Seq to transcripts
@@ -42,8 +37,9 @@ class GlassTranscribedRna(TranscriptBase):
         for chr_id in chr_list:
             print 'Adding transcribed RNA for chromosome %d' % chr_id
             query = """
-                SELECT glass_atlas_%s.save_transcribed_rna_from_sequencing_run(%d, %d,'%s', %d);
+                SELECT glass_atlas_%s_%s.save_transcribed_rna_from_sequencing_run(%d, %d,'%s', %d);
                 """ % (current_settings.TRANSCRIPT_GENOME,
+                       current_settings.CURRENT_CELL_TYPE,
                        sequencing_run.id, chr_id, 
                        sequencing_run.source_table.strip(), MAX_GAP_RNA)
             execute_query(query)
@@ -60,10 +56,12 @@ class GlassTranscribedRna(TranscriptBase):
         for chr_id in chr_list:
             print 'Associating transcripts with transcribed RNA for chromosome %d' % chr_id
             query = """
-                SELECT glass_atlas_%s.associate_transcribed_rna(%d);
-                SELECT glass_atlas_%s.mark_transcripts_as_spliced(%d);
-                """ % (current_settings.TRANSCRIPT_GENOME, chr_id,
-                       current_settings.TRANSCRIPT_GENOME, chr_id)
+                SELECT glass_atlas_%s_%s.associate_transcribed_rna(%d);
+                SELECT glass_atlas_%s_%s.mark_transcripts_as_spliced(%d);
+                """ % (current_settings.TRANSCRIPT_GENOME, 
+                       current_settings.CURRENT_CELL_TYPE, chr_id,
+                       current_settings.TRANSCRIPT_GENOME,
+                       current_settings.CURRENT_CELL_TYPE, chr_id)
             execute_query(query) 
             
     @classmethod
@@ -75,15 +73,13 @@ class GlassTranscribedRna(TranscriptBase):
         for chr_id in chr_list:
             print 'Stitching together transcribed RNA for chromosome %d' % chr_id
             query = """
-                SELECT glass_atlas_%s.stitch_transcribed_rna_together(%d, %d);
-                """ % (current_settings.TRANSCRIPT_GENOME, 
+                SELECT glass_atlas_%s_%s.stitch_transcribed_rna_together(%d, %d);
+                """ % (current_settings.TRANSCRIPT_GENOME,
+                       current_settings.CURRENT_CELL_TYPE, 
                        chr_id, MAX_GAP_RNA)
             execute_query(query)
 
 class GlassTranscribedRnaSource(TranscriptSourceBase):
-    glass_transcribed_rna = models.ForeignKey(GlassTranscribedRna)
-    
     class Meta:
-        db_table    = 'glass_atlas_%s"."glass_transcribed_rna_source' % current_settings.TRANSCRIPT_GENOME
-        app_label   = 'Transcription'
+        abstract = True
         

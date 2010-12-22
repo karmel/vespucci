@@ -12,6 +12,7 @@ class SequencingRun(models.Model):
     '''
     type            = models.CharField(max_length=50, choices=[(x,x) for x in ('Gro-Seq','RNA-Seq','ChIP-Seq')], default='Gro-Seq')
     
+    cell_type       = models.CharField(max_length=50)
     name            = models.CharField(max_length=100)
     source_table    = models.CharField(max_length=100)
     description     = models.CharField(max_length=255, blank=True)
@@ -23,7 +24,7 @@ class SequencingRun(models.Model):
     created         = models.DateTimeField(auto_now_add=True)
     
     class Meta:
-        db_table    = 'glass_atlas_%s"."sequencing_run' % current_settings.TRANSCRIPT_GENOME
+        db_table    = 'glass_atlas_%s"."sequencing_run' % current_settings.REFERENCE_GENOME
         app_label   = 'Transcription'
         
     def __unicode__(self):

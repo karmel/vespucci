@@ -9,10 +9,17 @@ from django.contrib import messages
 from glasslab.utils.database import fetch_rows
 from django.template.context import RequestContext
 from django.template.loader import render_to_string
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
 from random import randint
 from glasslab.glassatlas.datatypes.transcript import FilteredGlassTranscript
 from django.db.models.aggregates import Max
+from glasslab.atlasviewer.utilities.models import SavedQuery
+from django.template.defaultfilters import urlencode
+
+@login_required
+def custom_query_redirect(request, id):
+    q = SavedQuery.objects.get(id=id)
+    return HttpResponseRedirect('/transcript/custom_query?query=%s' % urlencode(q.query))
 
 @login_required
 def custom_query(request):
@@ -52,7 +59,12 @@ def _custom_query(request, limit=10000):
            'query': query, 
            'limit': limit, }
 
-def transcripts_ucsc_track(request):
-    return render_to_response('transcripts_ucsc_track.bed',
+def transcripts_ucsc_track_0(request):
+    return _transcripts_ucsc_track(request, strand=0)
+def transcripts_ucsc_track_1(request):
+    return _transcripts_ucsc_track(request, strand=1)
+
+def _transcripts_ucsc_track(request, strand=0):
+    return render_to_response('transcripts_ucsc_track_%d.bed' % strand,
                               {},
                               context_instance=RequestContext(request))
