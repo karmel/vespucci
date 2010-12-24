@@ -166,17 +166,19 @@ END;
 $$ LANGUAGE 'plpgsql';
 
 CREATE FUNCTION glass_atlas_%s_%s.stitch_transcribed_rna_together(chr_id integer, allowed_gap integer)
-RETURNS VOID AS $$
+RETURNS integer AS $$
 DECLARE
 	consumed integer[];
+	loop_count integer := 0;
 BEGIN
 	WHILE (consumed IS NULL OR consumed > array[]::integer[])
 	LOOP
 		consumed := array[]::integer[];
 		consumed = (SELECT glass_atlas_%s_%s.looped_stitch_transcribed_rna_together(chr_id, allowed_gap, consumed));
+		loop_count = loop_count + 1;
 	END LOOP;
 
-	RETURN;
+	RETURN loop_count;
 END;
 $$ LANGUAGE 'plpgsql';
 
