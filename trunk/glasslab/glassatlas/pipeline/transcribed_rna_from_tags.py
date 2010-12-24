@@ -32,7 +32,7 @@ if __name__ == '__main__':
         options.tag_table = 'tag_wt_kla_1h'
     
     if options.cell_type: current_settings.CURRENT_CELL_TYPE = options.cell_type
-    cell_base = CellTypeBase().get_cell_type_base(current_settings.CURRENT_CELL_TYPE)
+    cell_base = CellTypeBase().get_cell_type_base(current_settings.CURRENT_CELL_TYPE)()
     
     cell_base.glass_transcribed_rna.turn_off_autovacuum()    
     if options.tag_table:
