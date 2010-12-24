@@ -228,7 +228,7 @@ class GlassTranscript(TranscriptBase):
             query = """
                 SELECT glass_atlas_%s_%s.save_transcripts_from_sequencing_run(%d, %d,'%s', %d);
                 """ % (current_settings.TRANSCRIPT_GENOME,
-                       current_settings.CURRENT_CELL_TYPE,
+                       current_settings.CURRENT_CELL_TYPE.lower(),
                        sequencing_run.id, chr_id, 
                        sequencing_run.source_table.strip(), MAX_GAP)
             execute_query(query)
@@ -249,10 +249,10 @@ class GlassTranscript(TranscriptBase):
                 SELECT glass_atlas_%s_%s.stitch_transcripts_together(%d, %d);
                 SELECT glass_atlas_%s_%s.join_subtranscripts(%d);
                 """ % (current_settings.TRANSCRIPT_GENOME, 
-                       current_settings.CURRENT_CELL_TYPE,
+                       current_settings.CURRENT_CELL_TYPE.lower(),
                        chr_id, MAX_STITCHING_GAP,
                        current_settings.TRANSCRIPT_GENOME, 
-                       current_settings.CURRENT_CELL_TYPE,
+                       current_settings.CURRENT_CELL_TYPE.lower(),
                        chr_id)
             execute_query(query)
             
@@ -268,7 +268,7 @@ class GlassTranscript(TranscriptBase):
             query = """
                 SELECT glass_atlas_%s_%s.calculate_scores(%d);
                 """ % (current_settings.TRANSCRIPT_GENOME,
-                       current_settings.CURRENT_CELL_TYPE, chr_id)
+                       current_settings.CURRENT_CELL_TYPE.lower(), chr_id)
             execute_query(query) 
     
     @classmethod

@@ -39,7 +39,7 @@ class GlassTranscribedRna(TranscriptBase):
             query = """
                 SELECT glass_atlas_%s_%s.save_transcribed_rna_from_sequencing_run(%d, %d,'%s', %d);
                 """ % (current_settings.TRANSCRIPT_GENOME,
-                       current_settings.CURRENT_CELL_TYPE,
+                       current_settings.CURRENT_CELL_TYPE.lower(),
                        sequencing_run.id, chr_id, 
                        sequencing_run.source_table.strip(), MAX_GAP_RNA)
             execute_query(query)
@@ -59,9 +59,9 @@ class GlassTranscribedRna(TranscriptBase):
                 SELECT glass_atlas_%s_%s.associate_transcribed_rna(%d);
                 SELECT glass_atlas_%s_%s.mark_transcripts_as_spliced(%d);
                 """ % (current_settings.TRANSCRIPT_GENOME, 
-                       current_settings.CURRENT_CELL_TYPE, chr_id,
+                       current_settings.CURRENT_CELL_TYPE.lower(), chr_id,
                        current_settings.TRANSCRIPT_GENOME,
-                       current_settings.CURRENT_CELL_TYPE, chr_id)
+                       current_settings.CURRENT_CELL_TYPE.lower(), chr_id)
             execute_query(query) 
             
     @classmethod
@@ -75,7 +75,7 @@ class GlassTranscribedRna(TranscriptBase):
             query = """
                 SELECT glass_atlas_%s_%s.stitch_transcribed_rna_together(%d, %d);
                 """ % (current_settings.TRANSCRIPT_GENOME,
-                       current_settings.CURRENT_CELL_TYPE, 
+                       current_settings.CURRENT_CELL_TYPE.lower(), 
                        chr_id, MAX_GAP_RNA)
             execute_query(query)
 
