@@ -495,13 +495,13 @@ BEGIN
 				|| ' transcript.id,' 
 				|| ' (SUM(source.tag_count)::numeric*1000)/'
 				|| ' (COUNT(source.sequencing_run_id)::numeric*'
-				|| ' (transcript.transcription_end - transcript.transcription_start)) as score'
-			|| ' FROM glass_atlas_%s_%s.glass_transcript_' || chr_id || ' transcript, '
+				|| ' GREATEST(1000,transcript.transcription_end - transcript.transcription_start)) as score'
+			|| ' FROM glass_atlas_mm11_thiomac.glass_transcript_' || chr_id || ' transcript, '
 				|| ' glass_atlas_%s_%s.glass_transcript_source source'
 			|| ' WHERE source.glass_transcript_id = transcript.id'
 				|| ' AND transcript.chromosome_id = ' || chr_id
 				|| ' AND transcript.score IS NULL'
-			|| ' GROUP BY transcript.id'
+			|| ' GROUP BY transcript.id, transcript.transcription_end, transcript.transcription_start'
 		|| ' ) derived'
 		|| ' WHERE transcript.id = derived.id';
 
