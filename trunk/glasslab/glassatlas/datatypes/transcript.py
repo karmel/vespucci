@@ -186,7 +186,6 @@ class TranscriptBase(TranscriptModelBase):
         Toggle per-table autovacuum enabled state.
         '''
         for model in cls.cell_base.get_transcript_models():
-            print 'Vacuuming %s' % model.__name__
             execute_query('ALTER TABLE "%s" SET (autovacuum_enabled=%s);' \
                     % (model._meta.db_table, on and 'true' or 'false'))
             
