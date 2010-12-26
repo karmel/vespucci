@@ -23,7 +23,7 @@ from datetime import datetime
 
 MAX_GAP = 200 # Max gap between transcripts from the same run
 MAX_STITCHING_GAP = 10 # Max gap between transcripts being stitched together
-MIN_SCORE = 1.4 # Delete transcripts with scores below this threshold.
+MIN_SCORE = 15 # Hide transcripts with scores below this threshold.
 
 def multiprocess_all_chromosomes(func, cls, *args):
     ''' 
