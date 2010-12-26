@@ -493,9 +493,8 @@ BEGIN
 		|| ' SET score = derived.score '
 		|| ' FROM (SELECT '
 				|| ' transcript.id,' 
-				|| ' (SUM(source.tag_count)::numeric*1000)/'
-				|| ' (COUNT(source.sequencing_run_id)::numeric*'
-				|| ' GREATEST(1000,transcript.transcription_end - transcript.transcription_start)) as score'
+				|| ' (MAX(source.tag_count)::numeric*3)/'
+				|| ' (GREATEST(3, LN(transcript.transcription_end - transcript.transcription_start))) as score'
 			|| ' FROM glass_atlas_mm11_thiomac.glass_transcript_' || chr_id || ' transcript, '
 				|| ' glass_atlas_%s_%s.glass_transcript_source source'
 			|| ' WHERE source.glass_transcript_id = transcript.id'
@@ -509,6 +508,6 @@ BEGIN
 END;
 $$ LANGUAGE 'plpgsql';
 
-""" % tuple([genome, cell_type]*119)
+""" % tuple([genome, cell_type]*118)
 
 print sql
