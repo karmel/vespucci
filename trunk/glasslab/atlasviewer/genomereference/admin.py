@@ -95,7 +95,7 @@ class SequenceTranscriptionRegionAdmin(GlassTranscriptionRegionAdmin):
     
 class NonCodingTranscriptionRegionAdmin(GlassTranscriptionRegionAdmin):
     list_display    = ['non_coding_rna'] + GlassTranscriptionRegionAdmin.list_display
-    search_fields   = ['non_coding_rna__name'] + GlassTranscriptionRegionAdmin.search_fields
+    search_fields   = ['non_coding_rna__description'] + GlassTranscriptionRegionAdmin.search_fields
     
 class ConservedTranscriptionRegionAdmin(GlassTranscriptionRegionAdmin):
     list_display    = ['chromosome', 'transcription_start', 'transcription_end', 'score']
