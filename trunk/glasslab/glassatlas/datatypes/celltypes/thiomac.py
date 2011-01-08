@@ -66,7 +66,7 @@ class GlassTranscriptNucleotidesThioMac(GlassTranscriptNucleotides):
         verbose_name_plural = 'Glass transcript nucleotide sequences (%s)' % CELL_TYPE
       
 class GlassTranscriptSourceThioMac(GlassTranscriptSource):
-    glass_transcript = models.ForeignKey(GlassTranscriptThioMac)
+    glass_transcript = models.ForeignKey(GlassTranscriptThioMac, related_name='glasstranscriptsource')
     cell_base = ThioMacBase()
     class Meta:
         db_table    = 'glass_atlas_%s_%s"."glass_transcript_source' % (current_settings.TRANSCRIPT_GENOME, CELL_TYPE.lower())

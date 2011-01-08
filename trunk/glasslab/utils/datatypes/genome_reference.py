@@ -215,7 +215,6 @@ class PatternedTranscriptionRegion(models.Model):
     type                = models.CharField(max_length=20)
     name                = models.CharField(max_length=100)
     chromosome          = models.ForeignKey(Chromosome)
-    bin                 = models.IntegerField(max_length=5, help_text='Base-2 determined bin.')
     strand              = models.IntegerField(max_length=1, help_text='0 for +, 1 for -. Default NULL')
     transcription_start = models.IntegerField(max_length=12)
     transcription_end   = models.IntegerField(max_length=12)
@@ -242,7 +241,6 @@ class ConservedTranscriptionRegion(models.Model):
     
     '''
     chromosome          = models.ForeignKey(Chromosome)
-    bin                 = models.IntegerField(max_length=5, help_text='Base-2 determined bin.')
     transcription_start = models.IntegerField(max_length=12)
     transcription_end   = models.IntegerField(max_length=12)
     score               = models.IntegerField(max_length=5)

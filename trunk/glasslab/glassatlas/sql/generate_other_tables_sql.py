@@ -6,13 +6,14 @@ Created on Nov 12, 2010
 Convenience script for generated create table statements for transcript tables.
 '''
 
-genome = 'mm11'
+genome = 'mm9'
 cell_type='thiomac'
-sql = """
-CREATE TYPE "glass_atlas_%s_%s"."sequencing_run_type" AS ENUM('Gro-Seq','RNA-Seq','ChIP-Seq');
-CREATE TABLE "glass_atlas_%s_%s"."sequencing_run" (
+def sql(genome, cell_type):
+    return """
+CREATE TYPE "glass_atlas_%s"."sequencing_run_type" AS ENUM('Gro-Seq','RNA-Seq','ChIP-Seq');
+CREATE TABLE "glass_atlas_%s"."sequencing_run" (
     "id" int4 NOT NULL,
-    "type" glass_atlas_%s_%s.sequencing_run_type DEFAULT NULL,
+    "type" glass_atlas_%s.sequencing_run_type DEFAULT NULL,
     "cell_type" character(50) DEFAULT NULL,
     "name" character(100) DEFAULT NULL,
     "source_table" character(100) DEFAULT NULL,
@@ -22,16 +23,35 @@ CREATE TABLE "glass_atlas_%s_%s"."sequencing_run" (
     "modified" timestamp(6) NULL DEFAULT NULL,
     "created" timestamp(6) NULL DEFAULT NULL
 );
-GRANT ALL ON TABLE "glass_atlas_%s_%s"."sequencing_run" TO  "glass";
-CREATE SEQUENCE "glass_atlas_%s_%s"."sequencing_run_id_seq"
+GRANT ALL ON TABLE "glass_atlas_%s"."sequencing_run" TO  "glass";
+CREATE SEQUENCE "glass_atlas_%s"."sequencing_run_id_seq"
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
     NO MAXVALUE
     CACHE 1;
-ALTER SEQUENCE "glass_atlas_%s_%s"."sequencing_run_id_seq" OWNED BY "glass_atlas_%s_%s"."sequencing_run".id;
-ALTER TABLE "glass_atlas_%s_%s"."sequencing_run" ALTER COLUMN id SET DEFAULT nextval('"glass_atlas_%s_%s"."sequencing_run_id_seq"'::regclass);
-ALTER TABLE ONLY "glass_atlas_%s_%s"."sequencing_run" ADD CONSTRAINT sequencing_run_pkey PRIMARY KEY (id);
-CREATE UNIQUE INDEX sequencing_run_source_table_idx ON "glass_atlas_%s_%s"."sequencing_run" USING btree (source_table);
-""" % tuple([genome, cell_type]*11)
-print sql
+ALTER SEQUENCE "glass_atlas_%s"."sequencing_run_id_seq" OWNED BY "glass_atlas_%s"."sequencing_run".id;
+ALTER TABLE "glass_atlas_%s"."sequencing_run" ALTER COLUMN id SET DEFAULT nextval('"glass_atlas_%s"."sequencing_run_id_seq"'::regclass);
+ALTER TABLE ONLY "glass_atlas_%s"."sequencing_run" ADD CONSTRAINT sequencing_run_pkey PRIMARY KEY (id);
+CREATE UNIQUE INDEX sequencing_run_source_table_idx ON "glass_atlas_%s"."sequencing_run" USING btree (source_table);
+
+CREATE TABLE "glass_atlas_%s"."sequencing_run_annotation" (
+    "id" int4 NOT NULL,
+    "sequencing_run_id" int4 DEFAULT NULL,
+    "note" character(100) DEFAULT NULL
+);
+GRANT ALL ON TABLE "glass_atlas_%s"."sequencing_run_annotation" TO  "glass";
+CREATE SEQUENCE "glass_atlas_%s"."sequencing_run_annotation_id_seq"
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+ALTER SEQUENCE "glass_atlas_%s"."sequencing_run_annotation_id_seq" OWNED BY "glass_atlas_%s"."sequencing_run_annotation".id;
+ALTER TABLE "glass_atlas_%s"."sequencing_run_annotation" ALTER COLUMN id SET DEFAULT nextval('"glass_atlas_%s"."sequencing_run_annotation_id_seq"'::regclass);
+ALTER TABLE ONLY "glass_atlas_%s"."sequencing_run_annotation" ADD CONSTRAINT sequencing_run_annotation_pkey PRIMARY KEY (id);
+CREATE INDEX sequencing_run_annotation_run_idx ON "glass_atlas_%s"."sequencing_run_annotation" USING btree (sequencing_run_id);
+""" % tuple([genome]*20)
+
+if __name__ == '__main__':
+    print sql(genome, cell_type)

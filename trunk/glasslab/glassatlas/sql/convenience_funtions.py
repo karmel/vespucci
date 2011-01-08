@@ -4,7 +4,8 @@ Created on Nov 24, 2010
 @author: karmel
 '''
 
-sql = """
+def sql():
+    return """
 CREATE OR REPLACE FUNCTION public.admin_link(id integer)
 RETURNS text AS $$
 BEGIN
@@ -34,4 +35,5 @@ END;
 $$ LANGUAGE 'plpgsql';
 """
 
-print sql
+if __name__ == '__main__':
+    print sql()

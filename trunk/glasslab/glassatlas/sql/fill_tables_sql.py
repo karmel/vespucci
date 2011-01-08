@@ -9,7 +9,8 @@ Convenience script for filling transcript tables from one schema to another.
 source_genome = 'mm11'
 dest_genome = 'mm9'
 cell_type = 'thiomac'
-sql = """
+def sql(source_genome, dest_genome, cell_type):
+    return """
 INSERT INTO "glass_atlas_%s_%s"."glass_transcript_1" SELECT * FROM "glass_atlas_%s_%s"."glass_transcript_1";
 
 INSERT INTO "glass_atlas_%s_%s"."glass_transcript_2" SELECT * FROM "glass_atlas_%s_%s"."glass_transcript_2";
@@ -92,4 +93,6 @@ SELECT setval('"glass_atlas_%s_%s"."glass_transcribed_rna_source_id_seq"', (SELE
 """ % tuple([dest_genome, cell_type, source_genome, cell_type]*39 
             + [dest_genome, cell_type, dest_genome, cell_type, source_genome, cell_type]*5 
             + [dest_genome, cell_type]*20)
-print sql
+
+if __name__ == '__main__':
+    print sql(source_genome, dest_genome, cell_type)

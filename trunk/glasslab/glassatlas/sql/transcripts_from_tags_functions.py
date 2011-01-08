@@ -5,33 +5,17 @@ Created on Nov 12, 2010
 
 Convenience script for generated create table statements for transcript functions.
 '''
-genome = 'mm11'
+genome = 'prep'
 cell_type='thiomac'
-sql = """
+def sql(genome, cell_type):
+    return """
 -- Not run from within the codebase, but kept here in case functions need to be recreated.
-DROP FUNCTION IF EXISTS glass_atlas_%s_%s.stitch_transcripts_together(integer, integer);
-DROP FUNCTION IF EXISTS glass_atlas_%s_%s.update_transcript_source_records(glass_atlas_%s_%s.glass_transcript, glass_atlas_%s_%s.glass_transcript);
-DROP FUNCTION IF EXISTS glass_atlas_%s_%s.update_transcribed_rna_records(glass_atlas_%s_%s.glass_transcript, glass_atlas_%s_%s.glass_transcript);
-DROP FUNCTION IF EXISTS glass_atlas_%s_%s.remove_transcript_region_records(glass_atlas_%s_%s.glass_transcript);
-DROP FUNCTION IF EXISTS glass_atlas_%s_%s.insert_associated_transcript_regions(glass_atlas_%s_%s.glass_transcript);
-DROP FUNCTION IF EXISTS glass_atlas_%s_%s.merge_transcripts(glass_atlas_%s_%s.glass_transcript, glass_atlas_%s_%s.glass_transcript);
-DROP FUNCTION IF EXISTS glass_atlas_%s_%s.save_transcript(glass_atlas_%s_%s.glass_transcript);
-DROP FUNCTION IF EXISTS glass_atlas_%s_%s.determine_transcripts_from_sequencing_run(integer, integer, text, integer);
-DROP FUNCTION IF EXISTS glass_atlas_%s_%s.save_transcripts_from_sequencing_run(integer, integer, text, integer);
-DROP FUNCTION IF EXISTS glass_atlas_%s_%s.save_transcribed_rna_from_sequencing_run(integer, integer, text, integer);
-DROP FUNCTION IF EXISTS glass_atlas_%s_%s.join_subtranscripts(integer);
-DROP FUNCTION IF EXISTS glass_atlas_%s_%s.process_transcript_pair(glass_atlas_%s_%s.glass_transcript_pair, integer[]);
-DROP FUNCTION IF EXISTS glass_atlas_%s_%s.get_subtranscripts_by_sequencing_run(integer);
-DROP FUNCTION IF EXISTS glass_atlas_%s_%s.get_subtranscripts_by_transcription_region(integer);
-DROP FUNCTION IF EXISTS glass_atlas_%s_%s.calculate_scores(integer);
-DROP TYPE IF EXISTS glass_atlas_%s_%s.glass_transcript_row;
-DROP TYPE IF EXISTS glass_atlas_%s_%s.glass_transcript_pair;
 
 CREATE TYPE glass_atlas_%s_%s.glass_transcript_row AS ("chromosome_id" integer, "strand" smallint, 
 	transcription_start bigint, transcription_end bigint, tag_count integer, gaps integer);
 CREATE TYPE glass_atlas_%s_%s.glass_transcript_pair AS ("t1" glass_atlas_%s_%s.glass_transcript, "t2" glass_atlas_%s_%s.glass_transcript);
 
-CREATE FUNCTION glass_atlas_%s_%s.update_transcript_source_records(merged_trans glass_atlas_%s_%s.glass_transcript, trans glass_atlas_%s_%s.glass_transcript)
+CREATE OR REPLACE FUNCTION glass_atlas_%s_%s.update_transcript_source_records(merged_trans glass_atlas_%s_%s.glass_transcript, trans glass_atlas_%s_%s.glass_transcript)
 RETURNS VOID AS $$
 BEGIN 
 	-- Update redundant records: those that already exist for the merge
@@ -57,7 +41,7 @@ BEGIN
 END;
 $$ LANGUAGE 'plpgsql';
 
-CREATE FUNCTION glass_atlas_%s_%s.update_transcribed_rna_records(merged_trans glass_atlas_%s_%s.glass_transcript, trans glass_atlas_%s_%s.glass_transcript)
+CREATE OR REPLACE FUNCTION glass_atlas_%s_%s.update_transcribed_rna_records(merged_trans glass_atlas_%s_%s.glass_transcript, trans glass_atlas_%s_%s.glass_transcript)
 RETURNS VOID AS $$
 BEGIN 
 	-- UPDATE redundant records: those that don't exist for the merge
@@ -68,7 +52,7 @@ BEGIN
 END;
 $$ LANGUAGE 'plpgsql';
 
-CREATE FUNCTION glass_atlas_%s_%s.remove_transcript_region_records(rec glass_atlas_%s_%s.glass_transcript)
+CREATE OR REPLACE FUNCTION glass_atlas_%s_%s.remove_transcript_region_records(rec glass_atlas_%s_%s.glass_transcript)
 RETURNS VOID AS $$
 DECLARE
 	region_types text[] := ARRAY['sequence','non_coding','conserved','patterned'];
@@ -86,7 +70,7 @@ BEGIN
 END;
 $$ LANGUAGE 'plpgsql';
 
-CREATE FUNCTION glass_atlas_%s_%s.insert_associated_transcript_regions(rec glass_atlas_%s_%s.glass_transcript)
+CREATE OR REPLACE FUNCTION glass_atlas_%s_%s.insert_associated_transcript_regions(rec glass_atlas_%s_%s.glass_transcript)
 RETURNS VOID AS $$
 DECLARE
 	region_types text[] := ARRAY['sequence','non_coding','conserved','patterned'];
@@ -120,7 +104,7 @@ BEGIN
 END;
 $$ LANGUAGE 'plpgsql';
 			
-CREATE FUNCTION glass_atlas_%s_%s.merge_transcripts(merged_trans glass_atlas_%s_%s.glass_transcript, trans glass_atlas_%s_%s.glass_transcript)
+CREATE OR REPLACE FUNCTION glass_atlas_%s_%s.merge_transcripts(merged_trans glass_atlas_%s_%s.glass_transcript, trans glass_atlas_%s_%s.glass_transcript)
 RETURNS glass_atlas_%s_%s.glass_transcript AS $$
 BEGIN
 	-- Update the merged transcript
@@ -135,7 +119,7 @@ BEGIN
 END;
 $$ LANGUAGE 'plpgsql';
 
-CREATE FUNCTION glass_atlas_%s_%s.save_transcript(rec glass_atlas_%s_%s.glass_transcript)
+CREATE OR REPLACE FUNCTION glass_atlas_%s_%s.save_transcript(rec glass_atlas_%s_%s.glass_transcript)
 RETURNS VOID AS $$
 DECLARE spliced_sql text;
 DECLARE score_sql text;
@@ -165,7 +149,7 @@ BEGIN
 END;
 $$ LANGUAGE 'plpgsql';
 
-CREATE FUNCTION glass_atlas_%s_%s.determine_transcripts_from_sequencing_run(chr_id integer, strand integer, source_t text, max_gap integer)
+CREATE OR REPLACE FUNCTION glass_atlas_%s_%s.determine_transcripts_from_sequencing_run(chr_id integer, strand integer, source_t text, max_gap integer)
 RETURNS SETOF glass_atlas_%s_%s.glass_transcript_row AS $$
  DECLARE
    rec record;
@@ -242,7 +226,7 @@ RETURNS SETOF glass_atlas_%s_%s.glass_transcript_row AS $$
 END;
 $$ LANGUAGE 'plpgsql';
 
-CREATE FUNCTION glass_atlas_%s_%s.save_transcripts_from_sequencing_run(seq_run_id integer, chr_id integer, source_t text, max_gap integer)
+CREATE OR REPLACE FUNCTION glass_atlas_%s_%s.save_transcripts_from_sequencing_run(seq_run_id integer, chr_id integer, source_t text, max_gap integer)
 RETURNS VOID AS $$
  DECLARE
 	rec glass_atlas_%s_%s.glass_transcript_row;
@@ -279,7 +263,7 @@ RETURNS VOID AS $$
 END;
 $$ LANGUAGE 'plpgsql';
 
-CREATE FUNCTION glass_atlas_%s_%s.stitch_transcripts_together(chr_id integer, allowed_gap integer)
+CREATE OR REPLACE FUNCTION glass_atlas_%s_%s.stitch_transcripts_together(chr_id integer, allowed_gap integer)
 RETURNS VOID AS $$
  DECLARE
 	transcript_group record;
@@ -381,24 +365,37 @@ BEGIN
 END;
 $$ LANGUAGE 'plpgsql';
 
-CREATE FUNCTION glass_atlas_%s_%s.join_subtranscripts(chr_id integer)
+CREATE OR REPLACE FUNCTION glass_atlas_%s_%s.join_subtranscripts(chr_id integer)
 RETURNS VOID AS $$
  DECLARE
 	transcript_pair glass_atlas_%s_%s.glass_transcript_pair;
-	consumed1 integer[];
-	consumed2 integer[];
+	consumed integer[];
 BEGIN
 	-- Loop until all pairs are consumed
 
-	WHILE (consumed2 IS NULL OR consumed2 > array[]::integer[])
+	WHILE (consumed IS NULL OR consumed > array[]::integer[])
 	LOOP
-		consumed2 := array[]::integer[];
+		consumed := array[]::integer[];
 		FOR transcript_pair IN
-			SELECT * FROM glass_atlas_%s_%s.get_subtranscripts_by_transcription_region(chr_id)
+			SELECT * FROM glass_atlas_%s_%s.get_subtranscripts_by_sequence_region(chr_id)
 		LOOP
 			-- Transcript 1 contains Transcript 2. Unite and update references
 			-- where Transcript 1 has tags from the same sequencing runs as Transcript 2.
-			consumed2 = (SELECT glass_atlas_%s_%s.process_transcript_pair(transcript_pair, consumed2));
+			consumed = (SELECT glass_atlas_%s_%s.process_transcript_pair(transcript_pair, consumed));
+		END LOOP;
+	END LOOP;
+    
+    -- Redo with ncRNA
+    consumed := NULL;
+	WHILE (consumed IS NULL OR consumed > array[]::integer[])
+	LOOP
+		consumed := array[]::integer[];
+		FOR transcript_pair IN
+			SELECT * FROM glass_atlas_%s_%s.get_subtranscripts_by_non_coding_region(chr_id)
+		LOOP
+			-- Transcript 1 contains Transcript 2. Unite and update references
+			-- where Transcript 1 has tags from the same sequencing runs as Transcript 2.
+			consumed = (SELECT glass_atlas_%s_%s.process_transcript_pair(transcript_pair, consumed));
 		END LOOP;
 	END LOOP;
 
@@ -406,7 +403,7 @@ BEGIN
 END;
 $$ LANGUAGE 'plpgsql';
 
-CREATE FUNCTION glass_atlas_%s_%s.process_transcript_pair(transcript_pair glass_atlas_%s_%s.glass_transcript_pair, consumed integer[])
+CREATE OR REPLACE FUNCTION glass_atlas_%s_%s.process_transcript_pair(transcript_pair glass_atlas_%s_%s.glass_transcript_pair, consumed integer[])
 RETURNS integer[] AS $$
  DECLARE
 	trans glass_atlas_%s_%s.glass_transcript;
@@ -429,35 +426,7 @@ BEGIN
 END;
 $$ LANGUAGE 'plpgsql';
 
-CREATE FUNCTION glass_atlas_%s_%s.get_subtranscripts_by_sequencing_run(chr_id integer)
-RETURNS SETOF glass_atlas_%s_%s.glass_transcript_pair AS $$
-BEGIN
-	RETURN QUERY
-		EXECUTE '(SELECT (transcript1.*)::glass_atlas_%s_%s.glass_transcript as t1,'
-			|| ' (transcript2.*)::glass_atlas_%s_%s.glass_transcript as t2'
-		|| ' FROM glass_atlas_%s_%s.glass_transcript_' || chr_id || '  transcript1'
-		|| ' JOIN glass_atlas_%s_%s.glass_transcript_' || chr_id || '  transcript2'
-		|| ' ON  transcript1.start_end OPERATOR(public.&&) transcript2.start_end'
-		|| ' AND transcript1.strand = transcript2.strand'
-		|| ' AND transcript1.id != transcript2.id'
-		|| ' JOIN ('
-			|| ' SELECT glass_transcript_id, public.sort(array_agg(sequencing_run_id)::int[]) as runs'
-			|| ' FROM glass_atlas_%s_%s.glass_transcript_source' 
-			|| ' GROUP BY glass_transcript_id'
-			|| ' ) source1'
-		|| ' ON transcript1.id = source1.glass_transcript_id'
-		|| ' LEFT OUTER JOIN ('
-			|| ' SELECT glass_transcript_id, public.sort(array_agg(sequencing_run_id)::int[]) as runs'
-			|| ' FROM glass_atlas_%s_%s.glass_transcript_source' 
-			|| ' GROUP BY glass_transcript_id'
-			|| ' ) source2'
-		|| ' ON transcript2.id = source2.glass_transcript_id'
-		|| ' WHERE source1.runs @> source2.runs'
-		|| ' ORDER BY transcript1.start_end ASC)';
-END;
-$$ LANGUAGE 'plpgsql';
-
-CREATE FUNCTION glass_atlas_%s_%s.get_subtranscripts_by_transcription_region(chr_id integer)
+CREATE OR REPLACE FUNCTION glass_atlas_%s_%s.get_subtranscripts_by_sequence_region(chr_id integer)
 RETURNS SETOF glass_atlas_%s_%s.glass_transcript_pair AS $$
 BEGIN
 	RETURN QUERY
@@ -486,7 +455,42 @@ BEGIN
 END;
 $$ LANGUAGE 'plpgsql';
 
-CREATE FUNCTION glass_atlas_%s_%s.calculate_scores(chr_id integer)
+CREATE OR REPLACE FUNCTION glass_atlas_%s_%s.get_subtranscripts_by_non_coding_region(chr_id integer)
+RETURNS SETOF glass_atlas_%s_%s.glass_transcript_pair AS $$
+BEGIN
+    -- If there are no sequences handy, use ncRNA instead
+	RETURN QUERY
+		EXECUTE '(SELECT (transcript1.*)::glass_atlas_%s_%s.glass_transcript as t1,'
+			|| ' (transcript2.*)::glass_atlas_%s_%s.glass_transcript as t2'
+		|| ' FROM glass_atlas_%s_%s.glass_transcript_' || chr_id || ' transcript1'
+		|| ' JOIN glass_atlas_%s_%s.glass_transcript_' || chr_id || ' transcript2'
+		|| ' ON  transcript1.start_end OPERATOR(public.&&) transcript2.start_end'
+		|| ' AND transcript1.strand = transcript2.strand'
+		|| ' AND transcript1.id != transcript2.id'
+		|| ' JOIN (SELECT '
+		        || ' glass_transcript_id,' 
+		        || ' public.sort(array_agg(non_coding_transcription_region_id)::int[]) as regions'
+		    || ' FROM "glass_atlas_%s_%s"."glass_transcript_non_coding"'
+		    || ' GROUP BY glass_transcript_id) grouped_nc1'
+		|| ' ON transcript1.id = grouped_nc1.glass_transcript_id'
+		|| ' LEFT OUTER JOIN (SELECT '
+		        || ' glass_transcript_id,' 
+		        || ' public.sort(array_agg(non_coding_transcription_region_id)::int[]) as regions'
+		    || ' FROM "glass_atlas_%s_%s"."glass_transcript_non_coding"'
+		    || ' GROUP BY glass_transcript_id) grouped_nc2'
+		|| ' ON transcript2.id = grouped_nc2.glass_transcript_id'
+		|| ' LEFT OUTER JOIN "glass_atlas_%s_%s"."glass_transcript_sequence" as seq1 '
+		|| ' on transcript1.id = seq1.glass_transcript_id' 
+		|| ' LEFT OUTER JOIN "glass_atlas_%s_%s"."glass_transcript_sequence" as seq2 '
+		|| ' on transcript2.id = seq2.glass_transcript_id' 
+		|| ' WHERE seq1.id IS NULL AND seq2.id IS NULL'
+		|| ' AND (grouped_nc1.regions @> grouped_nc2.regions'
+				|| ' OR grouped_nc2.regions IS NULL)'
+		|| ' ORDER by transcript1.start_end ASC)';
+END;
+$$ LANGUAGE 'plpgsql';
+
+CREATE OR REPLACE FUNCTION glass_atlas_%s_%s.calculate_scores(chr_id integer)
 RETURNS VOID AS $$
 BEGIN 
 	EXECUTE 'UPDATE glass_atlas_%s_%s.glass_transcript_' || chr_id || ' transcript'
@@ -495,7 +499,7 @@ BEGIN
 				|| ' transcript.id,' 
 				|| ' (MAX(source.tag_count)::numeric*1000)/'
 				|| ' (GREATEST(1000, (transcript.transcription_end - transcript.transcription_start)::numeric/1.5)) as score'
-			|| ' FROM glass_atlas_mm11_thiomac.glass_transcript_' || chr_id || ' transcript, '
+			|| ' FROM glass_atlas_%s_%s.glass_transcript_' || chr_id || ' transcript, '
 				|| ' glass_atlas_%s_%s.glass_transcript_source source'
 			|| ' WHERE source.glass_transcript_id = transcript.id'
 				|| ' AND transcript.chromosome_id = ' || chr_id
@@ -508,6 +512,7 @@ BEGIN
 END;
 $$ LANGUAGE 'plpgsql';
 
-""" % tuple([genome, cell_type]*118)
+""" % tuple([genome, cell_type]*96)
 
-print sql
+if __name__ == '__main__':
+    print sql(genome, cell_type)

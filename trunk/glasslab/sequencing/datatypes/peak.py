@@ -4,80 +4,84 @@ Created on Sep 27, 2010
 @author: karmel
 '''
 from django.db import models
-from glasslab.utils.datatypes.genome_reference import SequenceTranscriptionRegion,\
-    Chromosome
-from django.db import connection, transaction
-from glasslab.utils.datatypes.basic_model import DynamicTable
+from glasslab.utils.datatypes.genome_reference import Chromosome
+from glasslab.utils.datatypes.basic_model import DynamicTable, CubeField
+from glasslab.utils.database import execute_query
         
-class CurrentPeak(DynamicTable):
+class GlassPeak(DynamicTable):
     '''
     From MACS::
         
         chr     start   end     length  summit  tags    -10*log10(pvalue)       fold_enrichment
-        
-    .. warning::
-        
-        CURRENTLY DEPRACATED! Because we have moved to a primarily tag-based analysis system,
-        this peak model has fallen by the wayside. 
-        
-        It is maintained here for reference and future potential uses; 
-        if any such uses arise, please update before trying to make use of this model.
-
     '''
+    
     chromosome      = models.ForeignKey(Chromosome)
+    strand          = models.IntegerField(max_length=1)
     start           = models.IntegerField(max_length=12)
     end             = models.IntegerField(max_length=12)
+    
+    start_end       = CubeField(max_length=255, help_text='This is a placeholder for the PostgreSQL cube type.') 
+    
+    diffuse         = models.BooleanField(default=False, help_text='Is this a diffuse region, rather than focal peak?')
     length          = models.IntegerField(max_length=12)
     summit          = models.IntegerField(max_length=12)
     tag_count       = models.IntegerField(max_length=12)
     log_ten_p_value = models.DecimalField(max_digits=10, decimal_places=4)
     fold_enrichment = models.DecimalField(max_digits=10, decimal_places=4)
     
-    start_end       = models.CharField(max_length=255, help_text='This is a placeholder for the PostgreSQL cube type.') 
     
-    sequence_transcription_region   = models.ForeignKey(SequenceTranscriptionRegion, null=True, default=None)
-    start_site      = models.BooleanField(default=False)
-    
-    modified        = models.DateTimeField(auto_now=True)
-    created         = models.DateTimeField(auto_now_add=True)
-                
     @classmethod        
     def create_table(cls, name):
         '''
         Create table that will be used for these peaks,
         dynamically named.
         '''
-        if cls.table_created: print 'Warning: CurrentPeak table has already been created.'
-        cls.set_table_name('peaks_' + name)
-        cls.name = name
+        cls.set_table_name('peak_' + name)
+        
         table_sql = """
         CREATE TABLE "%s" (
             id serial4,
             chromosome_id int4,
             "start" int8,
             "end" int8,
+            start_end public.cube,
+            diffuse boolean default false,
             "length" int4,
             summit int8,
             tag_count int4,
             log_ten_p_value decimal(10,6),
-            fold_enrichment decimal(10,6),
-            start_end public.cube,
-            sequence_transcription_region_id int4 DEFAULT NULL,
-            modified timestamp,
-            created timestamp,
-            PRIMARY KEY (id));
-        CREATE INDEX "%s_chr_index" ON "%s" USING btree("chromosome_id");
-        CREATE INDEX "%s_start_end_index" ON "%s" USING gist("start_end");
-        CREATE INDEX "%s_sequence_region_idx" ON "%s" USING btree(sequence_transcription_region_id);
+            fold_enrichment decimal(10,6)
+            );
+        CREATE SEQUENCE "%s_id_seq"
+            START WITH 1
+            INCREMENT BY 1
+            NO MINVALUE
+            NO MAXVALUE
+            CACHE 1;
+        ALTER SEQUENCE "%s_id_seq" OWNED BY "%s".id;
+        ALTER TABLE "%s" ALTER COLUMN id SET DEFAULT nextval('"%s_id_seq"'::regclass);
+        ALTER TABLE ONLY "%s" ADD CONSTRAINT %s_pkey PRIMARY KEY (id);
         """ % (cls._meta.db_table, 
-               name, cls._meta.db_table,
-               name, cls._meta.db_table,)
-        cursor = connection.cursor()
-        cursor.execute(table_sql)
-        transaction.commit_unless_managed()
+               cls._meta.db_table,
+               cls._meta.db_table, cls._meta.db_table,
+               cls._meta.db_table, cls._meta.db_table,
+               cls._meta.db_table, cls.name)
+        execute_query(table_sql)
         
         cls.table_created = True
     
+    @classmethod
+    def add_indices(cls):
+        update_query = """
+        CREATE INDEX %s_chr_idx ON "%s" USING btree (chromosome_id);
+        CREATE INDEX %s_strand_idx ON "%s" USING btree (strand);
+        CREATE INDEX %s_start_end_idx ON "%s" USING gist (start_end);
+        """ % (cls.name, cls._meta.db_table,
+               cls.name, cls._meta.db_table,
+               cls.name, cls._meta.db_table,
+               cls._meta.db_table)
+        execute_query(update_query)
+            
     @classmethod
     def init_from_macs_row(cls, row):
         '''

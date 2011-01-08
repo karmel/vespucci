@@ -11,7 +11,7 @@ from glasslab.utils.datatypes.genome_reference import SequenceTranscriptionRegio
 from multiprocessing import Pool
 import traceback
 from glasslab.config import current_settings
-from glasslab.utils.datatypes.basic_model import DynamicTable
+from glasslab.utils.datatypes.basic_model import DynamicTable, CubeField
 from glasslab.glassatlas.datatypes.metadata import SequencingRun
 from glasslab.utils.database import execute_query, fetch_rows
 
@@ -74,13 +74,13 @@ class GlassTag(DynamicTable):
     
     '''
     bowtie_table = None
-    
-    strand                  = models.IntegerField(max_length=1)
+
     chromosome              = models.ForeignKey(Chromosome)
+    strand                  = models.IntegerField(max_length=1)
     start                   = models.IntegerField(max_length=12)
     end                     = models.IntegerField(max_length=12)
     
-    start_end               = models.CharField(max_length=255, help_text='This is a placeholder for the PostgreSQL cube type.')
+    start_end               = CubeField(max_length=255, help_text='This is a placeholder for the PostgreSQL cube type.')
      
     @classmethod        
     def create_bowtie_table(cls, name):
@@ -109,7 +109,6 @@ class GlassTag(DynamicTable):
         Create table that will be used for these tags,
         dynamically named.
         '''
-        if cls.table_created: print 'Warning: Glass Tag table has already been created.'
         name = 'tag_%s' % name
         cls.set_table_name(name)
         table_sql = """
@@ -134,7 +133,7 @@ class GlassTag(DynamicTable):
                cls._meta.db_table,
                cls._meta.db_table, cls._meta.db_table,
                cls._meta.db_table, cls._meta.db_table,
-               cls._meta.db_table, name)
+               cls._meta.db_table, cls.name)
         execute_query(table_sql)
         
         cls.table_created = True
@@ -152,7 +151,34 @@ class GlassTag(DynamicTable):
                                      chr_id, chr_id,
                                      cls._meta.db_table)
             execute_query(table_sql)
-        
+            
+        trigger_sql = '''
+            CREATE OR REPLACE FUNCTION %s.glass_tag_insert_trigger()
+            RETURNS TRIGGER AS $$
+            BEGIN
+                EXECUTE 'INSERT INTO "%s_' || NEW.chromosome_id || '" VALUES ('
+                || quote_literal(NEW.id) || ','
+                || quote_literal(NEW.chromosome_id) || ','
+                || quote_literal(NEW.strand) || ','
+                || quote_literal(NEW.start) || ','
+                || quote_literal(NEW."end") || ','
+                || 'public.cube(' || quote_literal(NEW.start) || '::float,' 
+                    || quote_literal(NEW."end") || '::float))';
+                RETURN NULL;
+            END;
+            $$
+            LANGUAGE 'plpgsql';
+            
+            -- Trigger function for inserts on main table
+            CREATE TRIGGER glass_tag_trigger
+                BEFORE INSERT ON "%s"
+                FOR EACH ROW EXECUTE PROCEDURE %s.glass_tag_insert_trigger();
+        ''' % (current_settings.CURRENT_SCHEMA,
+               cls._meta.db_table,
+               cls._meta.db_table,
+               current_settings.CURRENT_SCHEMA)
+        execute_query(trigger_sql)
+            
     _chromosomes = None
     @classmethod 
     def chromosomes(cls): 
@@ -167,7 +193,7 @@ class GlassTag(DynamicTable):
                 if rows:
                     cls._chromosomes = zip(*rows)[0]
             
-            if not cls._chromosomes:
+            if not cls._chromosomes and cls.bowtie_table:
                 # Tag table doesn't exist yet
                 chr_sql = """
                 SELECT chr.id FROM "%s" chr
@@ -179,6 +205,12 @@ class GlassTag(DynamicTable):
                 ON chr.name = derived.chromosome
                 ORDER BY derived.count DESC;
                 """ % (Chromosome._meta.db_table, cls.bowtie_table)
+                rows = fetch_rows(chr_sql)
+                cls._chromosomes = zip(*rows)[0]
+            elif not cls._chromosomes:
+                chr_sql = """
+                SELECT id FROM "%s";
+                """ % (Chromosome._meta.db_table)
                 rows = fetch_rows(chr_sql)
                 cls._chromosomes = zip(*rows)[0]
             
@@ -270,18 +302,21 @@ class GlassTag(DynamicTable):
             execute_query(update_query)
     
     @classmethod 
-    def add_record_of_tags(cls, description=''):
+    def add_record_of_tags(cls, description='', type='Gro-Seq'):
         '''
         Add SequencingRun record with the details of this run.
         
         Should be called only after all tags have been added.
         '''
         connection.close()
-        SequencingRun.objects.get_or_create(source_table=cls._meta.db_table,
-                                    defaults={'name': cls.name, 
-                                              'total_tags': cls.objects.count(),
-                                              'description': description }
-                                           )
+        s, created = SequencingRun.objects.get_or_create(source_table=cls._meta.db_table,
+                                        defaults={'name': cls.name, 
+                                                  'total_tags': cls.objects.count(),
+                                                  'description': description,
+                                                  'cell_type': current_settings.CURRENT_CELL_TYPE,
+                                                  'type': type }
+                                               )
+        return s
 
 class GlassTagTranscriptionRegionTable(DynamicTable):
     glass_tag       = models.ForeignKey(GlassTag)

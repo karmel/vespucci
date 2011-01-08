@@ -5,23 +5,15 @@ Created on Nov 12, 2010
 
 Convenience script for generated create table statements for transcribed RNA functions.
 '''
-genome = 'mm11'
+genome = 'prep'
 cell_type = 'thiomac'
-sql = """
+def sql(genome, cell_type):
+    return """
 -- Not run from within the codebase, but kept here in case functions need to be recreated.
-DROP FUNCTION IF EXISTS glass_atlas_%s_%s.update_transcribed_rna_source_records(glass_atlas_%s_%s.glass_transcribed_rna, glass_atlas_%s_%s.glass_transcribed_rna);
-DROP FUNCTION IF EXISTS glass_atlas_%s_%s.merge_transcribed_rna(glass_atlas_%s_%s.glass_transcribed_rna, glass_atlas_%s_%s.glass_transcribed_rna);
-DROP FUNCTION IF EXISTS glass_atlas_%s_%s.save_transcribed_rna(glass_atlas_%s_%s.glass_transcribed_rna);
-DROP FUNCTION IF EXISTS glass_atlas_%s_%s.save_transcribed_rna_from_sequencing_run(integer, integer, text, integer);
-DROP FUNCTION IF EXISTS glass_atlas_%s_%s.stitch_transcribed_rna_together(integer, integer);
-DROP FUNCTION IF EXISTS glass_atlas_%s_%s.looped_stitch_transcribed_rna_together(integer, integer, integer[]);
-DROP FUNCTION IF EXISTS glass_atlas_%s_%s.associate_transcribed_rna(integer);
-DROP FUNCTION IF EXISTS glass_atlas_%s_%s.mark_transcripts_as_spliced(integer);
-DROP TYPE IF EXISTS glass_atlas_%s_%s.glass_transcribed_rna_pair;
 
 CREATE TYPE glass_atlas_%s_%s.glass_transcribed_rna_pair AS ("t1" glass_atlas_%s_%s.glass_transcribed_rna, "t2" glass_atlas_%s_%s.glass_transcribed_rna);
 
-CREATE FUNCTION glass_atlas_%s_%s.update_transcribed_rna_source_records(merged_trans glass_atlas_%s_%s.glass_transcribed_rna, trans glass_atlas_%s_%s.glass_transcribed_rna)
+CREATE OR REPLACE FUNCTION glass_atlas_%s_%s.update_transcribed_rna_source_records(merged_trans glass_atlas_%s_%s.glass_transcribed_rna, trans glass_atlas_%s_%s.glass_transcribed_rna)
 RETURNS VOID AS $$
 BEGIN 
 	-- Update redundant records: those that already exist for the merge
@@ -47,7 +39,7 @@ BEGIN
 END;
 $$ LANGUAGE 'plpgsql';
 	
-CREATE FUNCTION glass_atlas_%s_%s.merge_transcribed_rna(merged_trans glass_atlas_%s_%s.glass_transcribed_rna, trans glass_atlas_%s_%s.glass_transcribed_rna)
+CREATE OR REPLACE FUNCTION glass_atlas_%s_%s.merge_transcribed_rna(merged_trans glass_atlas_%s_%s.glass_transcribed_rna, trans glass_atlas_%s_%s.glass_transcribed_rna)
 RETURNS glass_atlas_%s_%s.glass_transcribed_rna AS $$
 BEGIN
 	-- Update the merged transcript
@@ -60,7 +52,7 @@ BEGIN
 END;
 $$ LANGUAGE 'plpgsql';
 
-CREATE FUNCTION glass_atlas_%s_%s.save_transcribed_rna(rec glass_atlas_%s_%s.glass_transcribed_rna)
+CREATE OR REPLACE FUNCTION glass_atlas_%s_%s.save_transcribed_rna(rec glass_atlas_%s_%s.glass_transcribed_rna)
 RETURNS VOID AS $$
 DECLARE
 	glass_transcript_sql text;
@@ -84,7 +76,7 @@ BEGIN
 END;
 $$ LANGUAGE 'plpgsql';
 
-CREATE FUNCTION glass_atlas_%s_%s.save_transcribed_rna_from_sequencing_run(seq_run_id integer, chr_id integer, source_t text, max_gap integer)
+CREATE OR REPLACE FUNCTION glass_atlas_%s_%s.save_transcribed_rna_from_sequencing_run(seq_run_id integer, chr_id integer, source_t text, max_gap integer)
 RETURNS VOID AS $$
  DECLARE
 	rec glass_atlas_%s_%s.glass_transcript_row;
@@ -94,20 +86,21 @@ RETURNS VOID AS $$
  	LOOP
 		FOR rec IN 
 			SELECT * FROM glass_atlas_%s_%s.determine_transcripts_from_sequencing_run(chr_id, strand, source_t, max_gap)
-		LOOP		
-			-- Saved the Transcribed RNA
-			INSERT INTO glass_atlas_%s_%s.glass_transcribed_rna 
-				("chromosome_id", "strand", "transcription_start", "transcription_end", "start_end",
-				modified, created)
-				VALUES (chr_id, strand, rec.transcription_start, rec.transcription_end, 
-				public.cube(rec.transcription_start, rec.transcription_end), NOW(), NOW())
-				RETURNING * INTO transcribed_rna;
-				
-			-- Save the record of the sequencing run source
-			INSERT INTO glass_atlas_%s_%s.glass_transcribed_rna_source 
-				("glass_transcribed_rna_id", "sequencing_run_id", "tag_count", "gaps") 
-				VALUES (transcribed_rna.id, seq_run_id, rec.tag_count, rec.gaps);
-							
+		LOOP
+		    IF rec IS NOT NULL THEN
+    			-- Saved the Transcribed RNA
+    			INSERT INTO glass_atlas_%s_%s.glass_transcribed_rna 
+    				("chromosome_id", "strand", "transcription_start", "transcription_end", "start_end",
+    				modified, created)
+    				VALUES (chr_id, strand, rec.transcription_start, rec.transcription_end, 
+    				public.cube(rec.transcription_start, rec.transcription_end), NOW(), NOW())
+    				RETURNING * INTO transcribed_rna;
+    				
+    			-- Save the record of the sequencing run source
+    			INSERT INTO glass_atlas_%s_%s.glass_transcribed_rna_source 
+    				("glass_transcribed_rna_id", "sequencing_run_id", "tag_count", "gaps") 
+    				VALUES (transcribed_rna.id, seq_run_id, rec.tag_count, rec.gaps);
+			END IF;		
 		END LOOP;
 	END LOOP;
 	
@@ -116,7 +109,7 @@ END;
 $$ LANGUAGE 'plpgsql';
 
 
-CREATE FUNCTION glass_atlas_%s_%s.associate_transcribed_rna(chr_id integer)
+CREATE OR REPLACE FUNCTION glass_atlas_%s_%s.associate_transcribed_rna(chr_id integer)
 RETURNS VOID AS $$
 BEGIN
 	-- Match transcribed RNA to transcripts, preferring transcripts according to:
@@ -139,6 +132,7 @@ BEGIN
 			AND t.strand = rna.strand
 			AND t.start_end OPERATOR(public.@>) rna.start_end
 			WHERE rna.chromosome_id = chr_id
+			AND rna.glass_transcript_id IS NULL
 		) transcript
 		WHERE transcript.rna_id = rna.id
 		AND transcript.row_num = 1;
@@ -157,6 +151,7 @@ BEGIN
 			AND t.strand = rna.strand
 			AND t.start_end OPERATOR(public.&&) rna.start_end
 			WHERE rna.chromosome_id = chr_id
+			AND rna.glass_transcript_id IS NULL
 		) transcript
 		WHERE transcript.rna_id = rna.id
 		AND transcript.row_num = 1;
@@ -165,7 +160,23 @@ BEGIN
 END;
 $$ LANGUAGE 'plpgsql';
 
-CREATE FUNCTION glass_atlas_%s_%s.stitch_transcribed_rna_together(chr_id integer, allowed_gap integer)
+
+CREATE OR REPLACE FUNCTION glass_atlas_%s_%s.mark_transcripts_as_spliced(chr_id integer)
+RETURNS VOID AS $$
+BEGIN
+    UPDATE glass_atlas_%s_%s.glass_transcript 
+        SET spliced = NULL, modified = NOW()
+        WHERE chromosome_id = chr_id;
+    UPDATE glass_atlas_%s_%s.glass_transcript t
+        SET spliced = true, modified = NOW()
+        FROM glass_atlas_%s_%s.glass_transcribed_rna trans_rna
+        WHERE t.chromosome_id = chr_id
+            AND t.id = trans_rna.glass_transcript_id;
+    RETURN;
+END;
+$$ LANGUAGE 'plpgsql';
+
+CREATE OR REPLACE FUNCTION glass_atlas_%s_%s.stitch_transcribed_rna_together(chr_id integer, allowed_gap integer)
 RETURNS integer AS $$
 DECLARE
 	consumed integer[];
@@ -182,7 +193,7 @@ BEGIN
 END;
 $$ LANGUAGE 'plpgsql';
 
-CREATE FUNCTION glass_atlas_%s_%s.looped_stitch_transcribed_rna_together(chr_id integer, allowed_gap integer, consumed integer[])
+CREATE OR REPLACE FUNCTION glass_atlas_%s_%s.looped_stitch_transcribed_rna_together(chr_id integer, allowed_gap integer, consumed integer[])
 RETURNS integer[] AS $$
  DECLARE
 	transcribed_rna_group record;
@@ -301,20 +312,8 @@ BEGIN
 END;
 $$ LANGUAGE 'plpgsql';
 
-CREATE FUNCTION glass_atlas_%s_%s.mark_transcripts_as_spliced(chr_id integer)
-RETURNS VOID AS $$
-BEGIN
-	UPDATE glass_atlas_%s_%s.glass_transcript 
-		SET spliced = NULL, modified = NOW()
-		WHERE chromosome_id = chr_id;
-	UPDATE glass_atlas_%s_%s.glass_transcript 
-		SET spliced = true, modified = NOW()
-		WHERE chromosome_id = chr_id
-			AND id IN (SELECT DISTINCT glass_transcript_id FROM glass_atlas_%s_%s.glass_transcribed_rna);
-	RETURN;
-END;
-$$ LANGUAGE 'plpgsql';
 
-""" % tuple([genome, cell_type]*63)
+""" % tuple([genome, cell_type]*49)
 
-print sql
+if __name__ == '__main__':
+    print sql(genome, cell_type)

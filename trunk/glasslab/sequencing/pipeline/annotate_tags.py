@@ -24,17 +24,14 @@ from glasslab.sequencing.datatypes.tag import GlassTag, GlassTagSequence,\
 from multiprocessing import Pool
 from glasslab.config import current_settings
 import shutil
-from glasslab.config.django_settings import DATABASES
-from django.db import utils
-from datetime import datetime
+from glasslab.sequencing.pipeline.annotate_base import check_input, _print,\
+    call_bowtie, create_schema
 
 class FastqOptionParser(GlassOptionParser):
     options = [
                make_option('-f', '--file_path',action='store', type='string', dest='file_path', 
                            help='Path to FASTQ file for processing.'),
                make_option('-o', '--output_dir',action='store', type='string', dest='output_dir'),
-               make_option('-c', '--control',action='store', type='string', dest='control',
-                           help='BOWTIE file path to be used for MACS peak finding controls.'),
                make_option('-g', '--genome',action='store', type='string', dest='genome', default='mm9', 
                            help='Currently supported: mm8, mm8r, mm9, hg18, hg18r'),
                make_option('--project_name',action='store', type='string', dest='project_name',  
@@ -47,76 +44,8 @@ class FastqOptionParser(GlassOptionParser):
                            help='Skip bowtie; presume MACS uses input file directly.'),
                make_option('--bowtie_table',action='store', dest='bowtie_table',
                            help='Skip transferring bowtie tags to table; bowtie tag table will be used directly.'),
-               make_option('--tag_table',action='store', dest='tag_table',
-                           help='Skip translating bowtie tags to Glass tags; tag table will be used directly.'),
-               make_option('--do_sequences',action='store_true', dest='do_sequences', default=False, 
-                           help='Associate tags with sequence transcriptions regions.'),
-               make_option('--do_non_coding',action='store_true', dest='do_non_coding', default=False, 
-                           help='Associate tags with non coding transcriptions regions.'),
-               make_option('--do_patterned',action='store_true', dest='do_patterned', default=False, 
-                           help='Associate tags with patterned transcriptions regions (i.e., repeats).'),
-               make_option('--do_conserved',action='store_true', dest='do_conserved', default=False, 
-                           help='Associate tags with conserved transcriptions regions (according to phastCons score).'),
                
-               make_option('--go',action='store_true', dest='go', default=True,
-                           help='Run and output gene ontological analysis.'),
-               make_option('--goseq',action='store_true', dest='goseq', default=False,
-                           help='Run and output ontological analysis using the GOSeq R library.'),
                ]
-
-def _print(string):
-    print '%s: %s' % (datetime.now().strftime('%Y-%m-%d %H:%M:%S'), string)
-    
-def check_input(options):
-    '''
-    Check that required arguments and directories are in place.
-    '''
-    if not options.file_path and not options.tag_table and not options.bowtie_table:
-        raise Exception('Please make sure you have supplied an input file.')
-    if options.file_path and not os.path.exists(options.file_path):
-        raise Exception('Sorry, but the specified input file cannot be found: %s' % os.path.realpath(options.file_path))
-    
-    if options.output_dir and not os.path.exists(options.output_dir):
-        os.mkdir(options.output_dir)
-        _print('Creating output directory %s' % options.output_dir)
-    
-    if not options.schema_name: 
-        options.schema_name = options.project_name or current_settings.CURRENT_SCHEMA
-    current_settings.CURRENT_SCHEMA = options.schema_name
-    
-    # Get a file name prefix for use with generated files, using FASTQ as base
-    file_name = options.project_name or '.'.join(os.path.basename(options.file_path).split('.')[:-1])
-    
-    return file_name
-
-def call_bowtie(options, file_name):
-    # Note that the tag_id, quality score, valid alingments, and mismatches are omitted from the output
-    bowtie_output = file_name + '_bowtie.map'
-    bowtie_file_path = os.path.join(options.output_dir, bowtie_output)
-    
-    bowtie_stats = file_name + '_bowtie_stats_summary.txt'
-    bowtie_stats_file = open(os.path.join(options.output_dir, bowtie_stats),'w')
-    
-    bowtie_command = 'bowtie %s %s %s --suppress 1,6,7,8' % (options.genome, options.file_path, bowtie_file_path)
-    try: subprocess.check_call(bowtie_command, shell=True, stdout=bowtie_stats_file)
-    except Exception:
-        raise Exception('Exception encountered while trying to process FASTQ file with bowtie. Traceback:\n%s'
-                                % traceback.format_exc())
-    return bowtie_file_path
-
-def create_schema():
-    try:
-        connection.close()
-        cursor = connection.cursor()
-        cursor.execute("""
-                        CREATE SCHEMA "%s"; 
-                        GRANT Create,Usage ON SCHEMA "%s" TO  "%s";
-                        """ % (current_settings.CURRENT_SCHEMA,
-                                current_settings.CURRENT_SCHEMA,
-                                DATABASES['default']['USER']))
-        transaction.commit_unless_managed()
-    except utils.DatabaseError:
-        _print('Schema already created.')
     
 def split_bowtie_file(options, file_name, bowtie_file_path):
     '''
@@ -135,7 +64,6 @@ def split_bowtie_file(options, file_name, bowtie_file_path):
                                 % traceback.format_exc())
     
     return output_dir
-
 
 def copy_into_table_from_range(bowtie_split_dir, file_names):
     for f_name in file_names:
@@ -221,7 +149,7 @@ if __name__ == '__main__':
     
     if not options.skip_bowtie and not options.tag_table and not options.bowtie_table:
         _print('Processing FASTQ file using bowtie.')
-        bowtie_file_path = call_bowtie(options, file_name)
+        bowtie_file_path = call_bowtie(options, file_name, suppress_columns=True)
     else:
         _print('Skipping bowtie.')
         bowtie_file_path = options.file_path
@@ -245,16 +173,3 @@ if __name__ == '__main__':
         _print('Skipping translation of bowtie columns to integers')
         GlassTag.set_table_name(options.tag_table)
     
-    
-    if options.do_sequences:
-        _print('Associating tags with sequences.')
-        associate_sequences(options, file_name)
-    if options.do_non_coding:
-        _print('Associating tags with non coding regions.')
-        associate_region_table(options, file_name, GlassTagNonCoding)    
-    if options.do_patterned:
-        _print('Associating tags with patterned regions.')
-        associate_region_table(options, file_name, GlassTagPatterned)
-    if options.do_conserved:
-        _print('Associating tags with conserved regions.')
-        associate_region_table(options, file_name, GlassTagConserved)

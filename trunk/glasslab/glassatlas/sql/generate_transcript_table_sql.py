@@ -8,7 +8,8 @@ Convenience script for generated create table statements for transcript tables.
 
 genome = 'mm9'
 cell_type = 'thiomac'
-sql = """
+def sql(genome, cell_type):
+    return """
 CREATE TABLE "glass_atlas_%s_%s"."glass_transcript" (
     "id" int4 NOT NULL,
     "chromosome_id" int4 DEFAULT NULL,
@@ -420,4 +421,6 @@ ALTER TABLE ONLY "glass_atlas_%s_%s"."glass_transcript_patterned" ADD CONSTRAINT
 CREATE INDEX glass_transcript_patterned_transcript_idx ON "glass_atlas_%s_%s"."glass_transcript_patterned" USING btree (glass_transcript_id);
 
 """ % tuple([genome, cell_type]*246)
-print sql
+
+if __name__ == '__main__':
+    print sql(genome, cell_type)

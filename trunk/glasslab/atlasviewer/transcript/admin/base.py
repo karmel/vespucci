@@ -3,12 +3,10 @@ Created on Nov 8, 2010
 
 @author: karmel
 '''
-from django.contrib import admin
-from glasslab.glassatlas.datatypes.transcript import FilteredGlassTranscript, GlassTranscript,\
-    GlassTranscriptSource, GlassTranscriptSequence, GlassTranscriptNonCoding,\
+from glasslab.glassatlas.datatypes.transcript import GlassTranscriptSource,\
+    GlassTranscriptSequence, GlassTranscriptNonCoding,\
     GlassTranscriptConserved, GlassTranscriptPatterned,\
     GlassTranscriptNucleotides
-from glasslab.glassatlas.datatypes.metadata import SequencingRun
 from glasslab.config import current_settings
 from glasslab.atlasviewer.shared.admin import make_all_fields_readonly,\
     ReadOnlyInline, ReadOnlyAdmin, ReadOnlyInput
@@ -193,9 +191,3 @@ class GlassTranscribedRnaAdmin(TranscriptBase):
     glass_transcript_link.short_description = 'Glass Transcript' 
     glass_transcript_link.allow_tags = True 
     
-class SequencingRunAdmin(admin.ModelAdmin):
-    list_display    = ('type', 'cell_type','description', 'source_table', 'total_tags')
-    list_filter     = ('type','cell_type')
-    ordering        = ('-modified',)
-
-admin.site.register(SequencingRun, SequencingRunAdmin)

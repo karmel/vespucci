@@ -29,3 +29,17 @@ class SequencingRun(models.Model):
         
     def __unicode__(self):
         return '%s (%s, "%s")' % (self.name, self.type, self.source_table.strip())
+    
+class SequencingRunAnnotation(models.Model):
+    '''
+    Various freeform notes that can be attached to sequencing runs.
+    '''
+    sequencing_run  = models.ForeignKey(SequencingRun)
+    note            = models.CharField(max_length=100)
+     
+    class Meta:
+        db_table    = 'glass_atlas_%s"."sequencing_run_annotation' % current_settings.REFERENCE_GENOME
+        app_label   = 'Transcription'
+        
+    def __unicode__(self):
+        return '"%s" note: %s' % (self.sequencing_run.source_table.strip(), self.note)
