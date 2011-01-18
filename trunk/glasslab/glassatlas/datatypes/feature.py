@@ -7,7 +7,7 @@ Features and annotations relevant to transcripts.
 '''
 from django.db import models
 from glasslab.sequencing.datatypes.peak import GlassPeak
-from glasslab.glassatlas.datatypes.metadata import SequencingRun, ChipSeqType
+from glasslab.glassatlas.datatypes.metadata import SequencingRun, PeakType
         
 class PeakFeature(models.Model):
     # Transcript is cell specific.
@@ -15,7 +15,7 @@ class PeakFeature(models.Model):
     relationship    = models.CharField(max_length=100, choices=[(x,x) 
                                                     for x in ('contains','is contained by','overlaps with','is equal to',
                                                               'is upstream of', 'is downstream of')])
-    chip_seq_type   = models.ForeignKey(ChipSeqType)
+    chip_seq_type   = models.ForeignKey(PeakType)
     
     class Meta:
         abstract    = True
@@ -30,7 +30,6 @@ class PeakFeatureInstance(models.Model):
     Record of an individual peak and source to a feature assigned to a glass transcript.
     '''
     # PeakFeature is cell specific.
-    peak_feature    = models.ForeignKey(PeakFeature)
     glass_peak      = models.ForeignKey(GlassPeak)
     sequencing_run  = models.ForeignKey(SequencingRun)
     

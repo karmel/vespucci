@@ -7,7 +7,7 @@ from django.db import models, connection
 from glasslab.utils.datatypes.genome_reference import Chromosome
 from glasslab.utils.datatypes.basic_model import DynamicTable, CubeField
 from glasslab.utils.database import execute_query
-from glasslab.glassatlas.datatypes.metadata import SequencingRun
+from glasslab.glassatlas.datatypes.metadata import SequencingRun, PeakType
 from glasslab.config import current_settings
         
 class GlassPeak(DynamicTable):
@@ -28,7 +28,6 @@ class GlassPeak(DynamicTable):
     
     start_end       = CubeField(max_length=255, help_text='This is a placeholder for the PostgreSQL cube type.') 
     
-    diffuse         = models.BooleanField(default=False, help_text='Is this a diffuse region, rather than focal peak?')
     length          = models.IntegerField(max_length=12)
     summit          = models.IntegerField(max_length=12)
     tag_count       = models.IntegerField(max_length=12)
@@ -56,7 +55,6 @@ class GlassPeak(DynamicTable):
             "start" int8,
             "end" int8,
             start_end public.cube,
-            diffuse boolean default false,
             "length" int4,
             summit int8,
             tag_count int4,
@@ -107,8 +105,7 @@ class GlassPeak(DynamicTable):
                      summit=int(row[4]),
                      tag_count=int(row[5]),
                      log_ten_p_value=str(row[6]),
-                     fold_enrichment=str(row[7]),
-                     diffuse = False
+                     fold_enrichment=str(row[7])
                      )
     @classmethod
     def init_from_sicer_row(cls, row):
@@ -127,23 +124,38 @@ class GlassPeak(DynamicTable):
                      p_value_exp=len(p_val) > 1 and p_val[1] or 0,
                      fold_enrichment=str(row[6]),
                      fdr_threshold=fdr[0],
-                     fdr_threshold_exp=len(fdr) > 1 and fdr[1] or 0,
-                     diffuse = True
+                     fdr_threshold_exp=len(fdr) > 1 and fdr[1] or 0
                      )
     
+    _peak_type = None
     @classmethod 
-    def add_record_of_tags(cls, description='', type='ChIP-Seq'):
+    def peak_type(cls, name=None):
+        '''
+        Try to determine peak type from table name.
+        '''
+        if cls._peak_type: return cls._peak_type
+        name = (name or cls.name).lower()
+        peak_types = PeakType.objects.iterator()
+        for type in peak_types: 
+            if name.find(type.type.strip().lower()) >= 0:
+                cls._peak_type = type
+                break
+        return cls._peak_type
+    
+    @classmethod 
+    def add_record_of_tags(cls, description='', type='ChIP-Seq', peak_type=None):
         '''
         Add SequencingRun record with the details of this run.
         
         Should be called only after all tags have been added.
-        '''
+        ''' 
         connection.close()
         s, created = SequencingRun.objects.get_or_create(source_table=cls._meta.db_table,
                                         defaults={'name': cls.name, 
                                                   'total_tags': cls.objects.count(),
                                                   'description': description,
                                                   'cell_type': current_settings.CURRENT_CELL_TYPE,
-                                                  'type': type }
+                                                  'type': type,
+                                                  'peak_type': peak_type or cls.peak_type() }
                                                )
         return s

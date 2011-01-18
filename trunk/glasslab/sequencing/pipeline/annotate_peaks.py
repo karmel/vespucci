@@ -36,9 +36,9 @@ class FastqOptionParser(GlassOptionParser):
                make_option('--schema_name',action='store', type='string', dest='schema_name',  
                            help='Optional name to be used as schema for created DB tables.'),
                
-               make_option('--diffuse',action='store_true', dest='diffuse', default=False, 
-                           help='Are the peaks expected to be diffuse regions (i.e., histone marks) rather than focal peaks?' +
-                           ' If so, SICER will be used instead of MACS.'),
+               make_option('--peak_type',action='store', dest='peak_type',  
+                           help='What type of peak are we looking for? H4K3me1, PU_1, etc.? Should match a type in PeakType table.'),
+                           
                make_option('--skip_bowtie',action='store_true', dest='skip_bowtie', default=False, 
                            help='Skip bowtie; presume MACS or SICER uses input file directly.'),
                make_option('--skip_bed',action='store_true', dest='skip_bed', default=False, 
@@ -91,23 +91,24 @@ def call_sicer(options, file_name, bed_file_path):
                                 % traceback.format_exc())
     return sicer_output
 
-def import_peaks(options, file_name, peaks_file_path):
+def import_peaks(options, file_name, peaks_file_path, peak_type):
     '''
     Given a MACS peak file, save a temp table and store peak data.
     '''
     GlassPeak.create_table(file_name)
+    
     data = DelimitedFileParser(peaks_file_path).get_array()
     if data[0][0] == 'chr':
         data = data[1:] # Header row
     for row in data:
-        if not options.diffuse:
+        if not peak_type.diffuse:
             peak = GlassPeak.init_from_macs_row(row)
         else:
             peak = GlassPeak.init_from_sicer_row(row)
         peak.save()
     
     GlassPeak.add_indices()
-    GlassPeak.add_record_of_tags()
+    GlassPeak.add_record_of_tags(peak_type=peak_type)
     
 def annotate_peaks(options):
     '''
@@ -178,7 +179,11 @@ if __name__ == '__main__':
         bowtie_file_path = options.file_path
     
     if not options.skip_peak_finding: 
-        if not options.diffuse:
+        peak_type = GlassPeak.peak_type(options.peak_type or options.project_name)
+        if not peak_type: 
+            raise Exception('Could not find appropriate PeakType record for peak type %s' % 
+                                          (options.peak_type or options.project_name))
+        if not peak_type.diffuse:
             _print('Processing bowtie file using MACS')
             peaks_file_path = call_macs(options, file_name, bowtie_file_path)
         else:

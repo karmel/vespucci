@@ -20,6 +20,7 @@ CREATE TABLE "glass_atlas_%s"."sequencing_run" (
     "description" character(255) DEFAULT NULL,
     "total_tags" int8 DEFAULT NULL,
     "percent_mapped" numeric(5,2) DEFAULT NULL,
+    "peak_type_id" int4 DEFAULT NULL,
     "modified" timestamp(6) NULL DEFAULT NULL,
     "created" timestamp(6) NULL DEFAULT NULL
 );
@@ -51,7 +52,23 @@ ALTER SEQUENCE "glass_atlas_%s"."sequencing_run_annotation_id_seq" OWNED BY "gla
 ALTER TABLE "glass_atlas_%s"."sequencing_run_annotation" ALTER COLUMN id SET DEFAULT nextval('"glass_atlas_%s"."sequencing_run_annotation_id_seq"'::regclass);
 ALTER TABLE ONLY "glass_atlas_%s"."sequencing_run_annotation" ADD CONSTRAINT sequencing_run_annotation_pkey PRIMARY KEY (id);
 CREATE INDEX sequencing_run_annotation_run_idx ON "glass_atlas_%s"."sequencing_run_annotation" USING btree (sequencing_run_id);
-""" % tuple([genome]*20)
+
+CREATE TABLE "glass_atlas_%s"."peak_type" (
+    "id" int4 NOT NULL,
+    "type" character(50) DEFAULT NULL,
+    "diffuse" boolean DEFAULT NULL
+);
+GRANT ALL ON TABLE "glass_atlas_%s"."peak_type" TO  "glass";
+CREATE SEQUENCE "glass_atlas_%s"."peak_type_id_seq"
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+ALTER SEQUENCE "glass_atlas_%s"."peak_type_id_seq" OWNED BY "glass_atlas_%s"."peak_type".id;
+ALTER TABLE "glass_atlas_%s"."peak_type" ALTER COLUMN id SET DEFAULT nextval('"glass_atlas_%s"."peak_type_id_seq"'::regclass);
+ALTER TABLE ONLY "glass_atlas_%s"."peak_type" ADD CONSTRAINT peak_type_pkey PRIMARY KEY (id);
+""" % tuple([genome]*28)
 
 if __name__ == '__main__':
     print sql(genome, cell_type)

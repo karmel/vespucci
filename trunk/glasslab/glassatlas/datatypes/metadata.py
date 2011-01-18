@@ -6,6 +6,17 @@ Created on Nov 8, 2010
 from django.db import models
 from glasslab.config import current_settings
 
+class PeakType(models.Model):
+    type    = models.CharField(max_length=50)
+    diffuse = models.BooleanField(default=False)
+    
+    class Meta:
+        db_table    = 'glass_atlas_%s"."peak_type' % current_settings.REFERENCE_GENOME
+        app_label   = 'Transcription' 
+          
+    def __unicode__(self):
+        return self.type.strip()
+    
 class SequencingRun(models.Model):
     '''
     Record of details of a given sequencing run and its total tags.
@@ -19,6 +30,8 @@ class SequencingRun(models.Model):
     total_tags      = models.IntegerField(max_length=12)
     percent_mapped  = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True, default=None,
                                           help_text='What percent of tags were successfully mapped by Bowtie?')
+    
+    peak_type       = models.ForeignKey(PeakType, null=True, default=None, help_text='Does this run produce ChIP peaks?')
     
     modified        = models.DateTimeField(auto_now=True)
     created         = models.DateTimeField(auto_now_add=True)
@@ -44,14 +57,5 @@ class SequencingRunAnnotation(models.Model):
     def __unicode__(self):
         return '"%s" note: %s' % (self.sequencing_run.source_table.strip(), self.note)
     
-class PeakType(models.Model):
-    type    = models.CharField(max_length=50)
-    diffuse = models.BooleanField(default=False)
-    
-    class Meta:
-        db_table    = 'glass_atlas_%s"."chip_seq_type' % current_settings.REFERENCE_GENOME
-        app_label   = 'Transcription' 
-          
-    def __unicode__(self):
-        return self.type.strip()
+
     
