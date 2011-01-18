@@ -58,15 +58,16 @@ class ReadOnlySelect(Select, ReadOnlyInput):
         return mark_safe(u'<input%s />%s' % (flatatt(final_attrs), label))
     
     def value_for_display(self, value, choices):
-        for option_value, option_label in itertools.chain(self.choices, choices):
-            if option_value == value: return option_label
-        return value
+        try:
+            obj = self.choices.queryset.model.objects.get(id=value)
+            return str(obj)
+        except Exception: return value
         
 class ReadOnlyInline(admin.TabularInline):
     extra = 0
     max_num = 0
     can_delete = False
-    
+
 class ReadOnlyAdmin(admin.ModelAdmin):
     formfield_overrides = {
         models.BooleanField: {'widget': BooleanReadOnlyInput },

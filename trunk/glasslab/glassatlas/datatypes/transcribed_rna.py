@@ -57,10 +57,7 @@ class GlassTranscribedRna(TranscriptBase):
             print 'Associating transcripts with transcribed RNA for chromosome %d' % chr_id
             query = """
                 SELECT glass_atlas_%s_%s.associate_transcribed_rna(%d);
-                SELECT glass_atlas_%s_%s.mark_transcripts_as_spliced(%d);
                 """ % (current_settings.TRANSCRIPT_GENOME, 
-                       current_settings.CURRENT_CELL_TYPE.lower(), chr_id,
-                       current_settings.TRANSCRIPT_GENOME,
                        current_settings.CURRENT_CELL_TYPE.lower(), chr_id)
             execute_query(query) 
             
@@ -74,9 +71,12 @@ class GlassTranscribedRna(TranscriptBase):
             print 'Stitching together transcribed RNA for chromosome %d' % chr_id
             query = """
                 SELECT glass_atlas_%s_%s.stitch_transcribed_rna_together(%d, %d);
+                SELECT glass_atlas_%s_%s.mark_transcripts_as_spliced(%d);
                 """ % (current_settings.TRANSCRIPT_GENOME,
                        current_settings.CURRENT_CELL_TYPE.lower(), 
-                       chr_id, MAX_GAP_RNA)
+                       chr_id, MAX_GAP_RNA,
+                       current_settings.TRANSCRIPT_GENOME,
+                       current_settings.CURRENT_CELL_TYPE.lower(), chr_id)
             execute_query(query)
 
 class GlassTranscribedRnaSource(TranscriptSourceBase):

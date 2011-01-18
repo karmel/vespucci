@@ -15,7 +15,7 @@ from glasslab.glassatlas.datatypes.transcribed_rna import MAX_GAP_RNA
 class TranscribedRnaTestCase(GlassTestCase):
     def _create_transcript(self, chr, strand, start, end):
         # Create corresponding transcript for exon/ncRNA stitching, association
-        source_table = 'sample_transcript_run_%d' % randint(0,100)
+        source_table = 'sample_transcript_run_%d' % randint(0,10000)
         self.create_tag_table(sequencing_run_name=source_table, sequencing_run_type='Gro-Seq')
         GlassTag.objects.create(strand=strand,
                                 chromosome_id=chr,
@@ -28,7 +28,7 @@ class TranscribedRnaTestCase(GlassTestCase):
     ##################################################
     # Adding transcribed RNA
     ##################################################
-    """  
+     
     def test_add_transcribed_rna_one_source(self):
         # Do all tags make it into the transcript table?
         self._add_transcribed_rna_one_source(sequencing_run_name='sample_run_1')
@@ -61,7 +61,7 @@ class TranscribedRnaTestCase(GlassTestCase):
     def _assert_results_add_transcribed_rna(self):
         total_tags = 0
         for run in self.sequencing_runs:
-            GlassTag._meta.db_table = run.source_table
+            GlassTag._meta.db_table = run.source_table.strip()
             
             # Get transcribed_rna from this source
             transcribed_rna = self.cell_base.glass_transcribed_rna.objects.filter(
@@ -293,7 +293,70 @@ class TranscribedRnaTestCase(GlassTestCase):
         self.assertEquals(trans.strand, strand)
         self.assertEquals(trans.chromosome_id, chr)
         self.assertEquals(trans.start_end, '(%d),(%d)' % (start, end_2))
+
+    def test_different_ncrna_overlapping(self):
+        # Two transcribed RNAs that do not share ncRNA should join if they overlap
+        chr, strand = 14, 0
+        #self._create_transcript(chr, strand, 64503150, 64506335)
+        self._create_transcript(chr, strand, 64503150, 64507000)
+        self.create_tag_table(sequencing_run_name='sample_run_1', sequencing_run_type='RNA-Seq')
+        start, end = 64503155, 64506335
+        GlassTag.objects.create(strand=strand,
+                                chromosome_id=chr,
+                                start=start, end=end,
+                                start_end=(start, end)
+                                )
+        self.cell_base.glass_transcribed_rna.add_from_tags(GlassTag._meta.db_table)
         
+        self.create_tag_table(sequencing_run_name='sample_run_2', sequencing_run_type='RNA-Seq')
+        start_2, end_2 = 64506335, 64507000
+        GlassTag.objects.create(strand=strand,
+                                chromosome_id=chr,
+                                start=start_2, end=end_2,
+                                start_end=(start_2, end_2)
+                                )
+        self.cell_base.glass_transcribed_rna.add_from_tags(GlassTag._meta.db_table)
+        
+        self.cell_base.glass_transcribed_rna.associate_transcribed_rna()
+        self.cell_base.glass_transcribed_rna.stitch_together_transcribed_rna()
+        connection.close()
+        self.assertEquals(self.cell_base.glass_transcribed_rna.objects.count(), 1)
+        
+        trans = self.cell_base.glass_transcribed_rna.objects.all()[:1][0]
+        self.assertEquals(trans.transcription_start, start)
+        self.assertEquals(trans.transcription_end, end_2)
+        self.assertEquals(trans.strand, strand)
+        self.assertEquals(trans.chromosome_id, chr)
+        self.assertEquals(trans.start_end, '(%d),(%d)' % (start, end_2))
+    
+    def test_different_ncrna_not_overlapping(self):
+        # Two transcribed RNAs that do not share ncRNA should not join if they do not overlap
+        chr, strand = 14, 0
+        #self._create_transcript(chr, strand, 64503150, 64506335)
+        self._create_transcript(chr, strand, 64503150, 64507000)
+        self.create_tag_table(sequencing_run_name='sample_run_1', sequencing_run_type='RNA-Seq')
+        start, end = 64503155, 64506335
+        GlassTag.objects.create(strand=strand,
+                                chromosome_id=chr,
+                                start=start, end=end,
+                                start_end=(start, end)
+                                )
+        self.cell_base.glass_transcribed_rna.add_from_tags(GlassTag._meta.db_table)
+        
+        self.create_tag_table(sequencing_run_name='sample_run_2', sequencing_run_type='RNA-Seq')
+        start_2, end_2 = 64506336, 64507000
+        GlassTag.objects.create(strand=strand,
+                                chromosome_id=chr,
+                                start=start_2, end=end_2,
+                                start_end=(start_2, end_2)
+                                )
+        self.cell_base.glass_transcribed_rna.add_from_tags(GlassTag._meta.db_table)
+        
+        self.cell_base.glass_transcribed_rna.associate_transcribed_rna()
+        self.cell_base.glass_transcribed_rna.stitch_together_transcribed_rna()
+        connection.close()
+        self.assertEquals(self.cell_base.glass_transcribed_rna.objects.count(), 2)
+    
     def test_within_exon(self):
         # Two transcribed RNAs that are contained within Slc25a10 exon stitch.
         chr, strand = 11, 0
@@ -464,7 +527,6 @@ class TranscribedRnaTestCase(GlassTestCase):
         self.assertEquals(trans.strand, strand)
         self.assertEquals(trans.chromosome_id, chr)
         self.assertEquals(trans.start_end, '(%d),(%d)' % (start, end))
-        self.assertTrue(trans.glass_transcript.spliced)
         self.assertEquals(trans.glass_transcript.glasstranscriptsource.all(
                             )[0].sequencing_run.name.strip().replace('tag_',''), 
                             source_1)
@@ -492,11 +554,10 @@ class TranscribedRnaTestCase(GlassTestCase):
         self.assertEquals(trans.strand, strand)
         self.assertEquals(trans.chromosome_id, chr)
         self.assertEquals(trans.start_end, '(%d),(%d)' % (start, end))
-        self.assertTrue(trans.glass_transcript.spliced)
         self.assertEquals(trans.glass_transcript.glasstranscriptsource.all(
                             )[0].sequencing_run.name.strip().replace('tag_',''), 
                             source_1)
-    """   
+
     def test_associate_largest(self):
         # Two transcripts contain RNA; larger one is assigned
         chr, strand = 3, 1
@@ -511,7 +572,7 @@ class TranscribedRnaTestCase(GlassTestCase):
                                 start_end=(start, end)
                                 )
         self.cell_base.glass_transcribed_rna.add_from_tags(GlassTag._meta.db_table)
-        
+            
         self.cell_base.glass_transcribed_rna.associate_transcribed_rna()
         connection.close()
         
@@ -521,7 +582,6 @@ class TranscribedRnaTestCase(GlassTestCase):
         self.assertEquals(trans.strand, strand)
         self.assertEquals(trans.chromosome_id, chr)
         self.assertEquals(trans.start_end, '(%d),(%d)' % (start, end))
-        self.assertTrue(trans.glass_transcript.spliced)
         self.assertEquals(trans.glass_transcript.glasstranscriptsource.all(
                             )[0].sequencing_run.name.strip().replace('tag_',''), 
                             source_1)
@@ -550,7 +610,73 @@ class TranscribedRnaTestCase(GlassTestCase):
         self.assertEquals(trans.strand, strand)
         self.assertEquals(trans.chromosome_id, chr)
         self.assertEquals(trans.start_end, '(%d),(%d)' % (start, end))
+        self.assertEquals(trans.glass_transcript.glasstranscriptsource.all(
+                            )[0].sequencing_run.name.strip().replace('tag_',''), 
+                            source_1)
+    
+    ##################################################
+    # Marking as spliced transcripts
+    ##################################################
+    def test_associate_one(self):
+        # One transcribed RNA is insufficient
+        chr, strand = 3, 1
+        source_2 = self._create_transcript(chr, strand, 500, 1000)
+        source_1 = self._create_transcript(chr, strand, 1000, 5000)
+        
+        self.create_tag_table(sequencing_run_name='sample_run_1', sequencing_run_type='RNA-Seq')
+        start, end = 900, 1500
+        GlassTag.objects.create(strand=strand,
+                                chromosome_id=chr,
+                                start=start, end=end,
+                                start_end=(start, end)
+                                )
+        self.cell_base.glass_transcribed_rna.add_from_tags(GlassTag._meta.db_table)
+        
+        self.cell_base.glass_transcribed_rna.associate_transcribed_rna()
+        self.cell_base.glass_transcribed_rna.stitch_together_transcribed_rna()
+        connection.close()
+        
+        trans = self.cell_base.glass_transcribed_rna.objects.all()[:1][0]
+        
+        self.assertFalse(trans.glass_transcript.spliced)
+        self.assertEquals(trans.transcription_start, start)
+        self.assertEquals(trans.transcription_end, end)
+        self.assertEquals(trans.strand, strand)
+        self.assertEquals(trans.chromosome_id, chr)
+        self.assertEquals(trans.start_end, '(%d),(%d)' % (start, end))
+        self.assertEquals(trans.glass_transcript.glasstranscriptsource.all(
+                            )[0].sequencing_run.name.strip().replace('tag_',''), 
+                            source_1)
+        
+    def test_associate_two(self):
+        # Two transcribed RNAs are sufficient
+        chr, strand = 3, 1
+        source_2 = self._create_transcript(chr, strand, 500, 1000)
+        source_1 = self._create_transcript(chr, strand, 1000, 5000)
+        
+        self.create_tag_table(sequencing_run_name='sample_run_1', sequencing_run_type='RNA-Seq')
+        start, end = 900, 1500
+        for _ in xrange(0,2):
+            GlassTag.objects.create(strand=strand,
+                                    chromosome_id=chr,
+                                    start=start, end=end,
+                                    start_end=(start, end)
+                                    )
+            self.cell_base.glass_transcribed_rna.add_from_tags(GlassTag._meta.db_table)
+            connection.close()
+            
+        self.cell_base.glass_transcribed_rna.associate_transcribed_rna()
+        self.cell_base.glass_transcribed_rna.stitch_together_transcribed_rna()
+        connection.close()
+        
+        trans = self.cell_base.glass_transcribed_rna.objects.all()[:1][0]
+        
         self.assertTrue(trans.glass_transcript.spliced)
+        self.assertEquals(trans.transcription_start, start)
+        self.assertEquals(trans.transcription_end, end)
+        self.assertEquals(trans.strand, strand)
+        self.assertEquals(trans.chromosome_id, chr)
+        self.assertEquals(trans.start_end, '(%d),(%d)' % (start, end))
         self.assertEquals(trans.glass_transcript.glasstranscriptsource.all(
                             )[0].sequencing_run.name.strip().replace('tag_',''), 
                             source_1)

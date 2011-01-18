@@ -3,7 +3,7 @@ Created on Nov 12, 2010
 
 @author: karmel
 
-Convenience script for generated create table statements for transcribed RNA functions.
+Convenience script for transcribed RNA functions.
 '''
 genome = 'prep'
 cell_type = 'thiomac'
@@ -12,6 +12,9 @@ def sql(genome, cell_type):
 -- Not run from within the codebase, but kept here in case functions need to be recreated.
 
 CREATE TYPE glass_atlas_%s_%s.glass_transcribed_rna_pair AS ("t1" glass_atlas_%s_%s.glass_transcribed_rna, "t2" glass_atlas_%s_%s.glass_transcribed_rna);
+CREATE TYPE glass_atlas_%s_%s.glass_transcribed_rna_group AS ("transcribed" glass_atlas_%s_%s.glass_transcribed_rna[], 
+        "transcribed_ids" integer[], "glass_transcript_id" integer,
+        "exon_id" integer, "exon_length" bigint, "ncrna_id" integer, "ncrna_length" bigint);
 
 CREATE OR REPLACE FUNCTION glass_atlas_%s_%s.update_transcribed_rna_source_records(merged_trans glass_atlas_%s_%s.glass_transcribed_rna, trans glass_atlas_%s_%s.glass_transcribed_rna)
 RETURNS VOID AS $$
@@ -169,9 +172,15 @@ BEGIN
         WHERE chromosome_id = chr_id;
     UPDATE glass_atlas_%s_%s.glass_transcript t
         SET spliced = true, modified = NOW()
-        FROM glass_atlas_%s_%s.glass_transcribed_rna trans_rna
+        FROM glass_atlas_%s_%s.glass_transcribed_rna trans_rna,
+            (SELECT glass_transcribed_rna_id, sum(tag_count) as sum
+            FROM glass_atlas_%s_%s.glass_transcribed_rna_source 
+            GROUP BY glass_transcribed_rna_id
+        ) trans_rna_source
         WHERE t.chromosome_id = chr_id
-            AND t.id = trans_rna.glass_transcript_id;
+            AND t.id = trans_rna.glass_transcript_id
+            AND trans_rna.id = trans_rna_source.glass_transcribed_rna_id
+            AND trans_rna_source.sum > 1;
     RETURN;
 END;
 $$ LANGUAGE 'plpgsql';
@@ -185,7 +194,17 @@ BEGIN
 	WHILE (consumed IS NULL OR consumed > array[]::integer[])
 	LOOP
 		consumed := array[]::integer[];
-		consumed = (SELECT glass_atlas_%s_%s.looped_stitch_transcribed_rna_together(chr_id, allowed_gap, consumed));
+		consumed = (SELECT glass_atlas_%s_%s.looped_stitch_transcribed_rna_together('glass_atlas_%s_%s.get_rna_groups_by_transcript_id_split', 
+		                                                                                chr_id, allowed_gap, consumed));
+		loop_count = loop_count + 1;
+	END LOOP;
+	
+	consumed := NULL;
+	WHILE (consumed IS NULL OR consumed > array[]::integer[])
+	LOOP
+		consumed := array[]::integer[];
+		consumed = (SELECT glass_atlas_%s_%s.looped_stitch_transcribed_rna_together('glass_atlas_%s_%s.get_rna_groups_by_transcript_id',
+		                                                                            chr_id, 0, consumed));
 		loop_count = loop_count + 1;
 	END LOOP;
 
@@ -193,7 +212,7 @@ BEGIN
 END;
 $$ LANGUAGE 'plpgsql';
 
-CREATE OR REPLACE FUNCTION glass_atlas_%s_%s.looped_stitch_transcribed_rna_together(chr_id integer, allowed_gap integer, consumed integer[])
+CREATE OR REPLACE FUNCTION glass_atlas_%s_%s.looped_stitch_transcribed_rna_together(method text, chr_id integer, allowed_gap integer, consumed integer[])
 RETURNS integer[] AS $$
  DECLARE
 	transcribed_rna_group record;
@@ -205,48 +224,7 @@ RETURNS integer[] AS $$
 BEGIN
 	<<group_loop>>
 	FOR transcribed_rna_group IN 
-		SELECT
-			array_agg(rna.*) as transcribed,
-			array_agg(rna.id) as transcribed_ids,
-			rna.glass_transcript_id,
-			exon.id as exon_id,
-			exon.length as exon_length,
-			ncrna.id as ncrna_id,
-			ncrna.length as ncrna_length
-		FROM "glass_atlas_%s_%s"."glass_transcribed_rna" rna
-		LEFT OUTER JOIN (SELECT 
-				glass_transcript_id, 
-				exon.sequence_transcription_region_id,
-				exon.start_end,
-				(exon.exon_end - exon.exon_start) as length,
-				(reg.transcription_end - reg.transcription_start) as sequence_length,
-				exon.id
-			FROM "glass_atlas_%s_%s"."glass_transcript_sequence" seq
-			JOIN genome_reference_mm9.sequence_exon exon
-			ON seq.sequence_transcription_region_id = exon.sequence_transcription_region_id
-			JOIN genome_reference_mm9.sequence_transcription_region reg
-			ON exon.sequence_transcription_region_id = reg.id
-		) exon
-		ON rna.glass_transcript_id = exon.glass_transcript_id
-		AND rna.start_end operator(public.&&) exon.start_end
-		
-		LEFT OUTER JOIN (SELECT 
-				glass_transcript_id, 
-				reg.id,
-				reg.start_end,
-				(reg.transcription_end - reg.transcription_start) as length
-			FROM "glass_atlas_%s_%s"."glass_transcript_non_coding" nc
-			JOIN genome_reference_mm9.non_coding_transcription_region reg
-			ON nc.non_coding_transcription_region_id  = reg.id
-		) ncrna
-		ON rna.glass_transcript_id = ncrna.glass_transcript_id
-		AND rna.start_end operator(public.&&) ncrna.start_end
-		
-		WHERE rna.chromosome_id = chr_id
-		GROUP BY rna.glass_transcript_id, exon.id, exon.length, exon.sequence_transcription_region_id, rna.strand, 
-			exon.sequence_length, ncrna.id, ncrna.length
-		HAVING count(rna.id) > 1
-		ORDER BY exon.sequence_length, ncrna.length DESC NULLS LAST
+		EXECUTE 'SELECT * FROM ' || method || '(' || chr_id || ')'
 	LOOP
 		-- Transcribed_rna_group is an array of transcribed RNA and ids of associated glass transcripts and exons
 		-- such that the group of transcribed RNA all share the same associated exon id,
@@ -262,9 +240,9 @@ BEGIN
 			SELECT * FROM unnest(transcribed_rna_group.transcribed)
 			ORDER BY start_end ASC
 		LOOP
-			max_gap := (SELECT COALESCE(.5*transcribed_rna_group.exon_length::numeric,
+			max_gap := (SELECT GREATEST(COALESCE(.5*transcribed_rna_group.exon_length::numeric,
 										.5*transcribed_rna_group.ncrna_length::numeric,
-										allowed_gap))::integer;
+										allowed_gap), allowed_gap))::integer;
 			
 			IF merged_trans IS NULL THEN merged_trans := trans;
 			ELSE
@@ -312,8 +290,78 @@ BEGIN
 END;
 $$ LANGUAGE 'plpgsql';
 
+CREATE OR REPLACE FUNCTION glass_atlas_%s_%s.get_rna_groups_by_transcript_id_split(chr_id integer)
+RETURNS SETOF glass_atlas_%s_%s.glass_transcribed_rna_group AS $$
+BEGIN
+    RETURN QUERY
+    SELECT
+        array_agg(rna.*) as transcribed,
+        array_agg(rna.id) as transcribed_ids,
+        rna.glass_transcript_id,
+        exon.id as exon_id,
+        exon.length as exon_length,
+        ncrna.id as ncrna_id,
+        ncrna.length as ncrna_length
+    FROM "glass_atlas_%s_%s"."glass_transcribed_rna" rna
+    LEFT OUTER JOIN (SELECT 
+            glass_transcript_id, 
+            exon.sequence_transcription_region_id,
+            exon.start_end,
+            (exon.exon_end - exon.exon_start) as length,
+            (reg.transcription_end - reg.transcription_start) as sequence_length,
+            exon.id
+        FROM "glass_atlas_%s_%s"."glass_transcript_sequence" seq
+        JOIN genome_reference_mm9.sequence_exon exon
+        ON seq.sequence_transcription_region_id = exon.sequence_transcription_region_id
+        JOIN genome_reference_mm9.sequence_transcription_region reg
+        ON exon.sequence_transcription_region_id = reg.id
+    ) exon
+    ON rna.glass_transcript_id = exon.glass_transcript_id
+    AND rna.start_end operator(public.&&) exon.start_end
+    
+    LEFT OUTER JOIN (SELECT 
+            glass_transcript_id, 
+            reg.id,
+            reg.start_end,
+            (reg.transcription_end - reg.transcription_start) as length
+        FROM "glass_atlas_%s_%s"."glass_transcript_non_coding" nc
+        JOIN genome_reference_mm9.non_coding_transcription_region reg
+        ON nc.non_coding_transcription_region_id  = reg.id
+    ) ncrna
+    ON rna.glass_transcript_id = ncrna.glass_transcript_id
+    AND rna.start_end operator(public.&&) ncrna.start_end
+    
+    WHERE rna.chromosome_id = chr_id
+    GROUP BY rna.glass_transcript_id, exon.id, exon.length, exon.sequence_transcription_region_id, rna.strand, 
+        exon.sequence_length, ncrna.id, ncrna.length
+    HAVING count(rna.id) > 1
+    ORDER BY exon.sequence_length, ncrna.length DESC NULLS LAST;
+END;
+$$ LANGUAGE 'plpgsql';
 
-""" % tuple([genome, cell_type]*49)
+CREATE OR REPLACE FUNCTION glass_atlas_%s_%s.get_rna_groups_by_transcript_id(chr_id integer)
+RETURNS SETOF glass_atlas_%s_%s.glass_transcribed_rna_group AS $$
+BEGIN
+    -- Return groups of transcribed RNA that overlap, share a glass_transcript_id, and share sequencing runs,
+    -- irrespective of ncRNA or exon boundaries
+    RETURN QUERY
+    SELECT
+        array_agg(rna.*) as transcribed,
+        array_agg(rna.id) as transcribed_ids,
+        rna.glass_transcript_id,
+        0 as exon_id,
+        0::bigint as exon_length,
+        0 as ncrna_id,
+        0::bigint as ncrna_length
+    FROM "glass_atlas_%s_%s"."glass_transcribed_rna" rna    
+    WHERE rna.chromosome_id = chr_id
+    GROUP BY rna.glass_transcript_id, rna.strand
+    HAVING count(rna.id) > 1;
+END;
+$$ LANGUAGE 'plpgsql';
+
+
+""" % tuple([genome, cell_type]*60)
 
 if __name__ == '__main__':
     print sql(genome, cell_type)

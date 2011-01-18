@@ -44,6 +44,8 @@ class FastqOptionParser(GlassOptionParser):
                            help='Skip bowtie; presume MACS uses input file directly.'),
                make_option('--bowtie_table',action='store', dest='bowtie_table',
                            help='Skip transferring bowtie tags to table; bowtie tag table will be used directly.'),
+               make_option('--skip_tag_table',action='store_true', dest='skip_tag_table', default=False, 
+                           help='Skip translation of bowtie columns into tag table.'),
                
                ]
     
@@ -147,14 +149,14 @@ if __name__ == '__main__':
     file_name = check_input(options)
     
     
-    if not options.skip_bowtie and not options.tag_table and not options.bowtie_table:
+    if not options.skip_bowtie and not options.bowtie_table:
         _print('Processing FASTQ file using bowtie.')
         bowtie_file_path = call_bowtie(options, file_name, suppress_columns=True)
     else:
         _print('Skipping bowtie.')
         bowtie_file_path = options.file_path
     
-    if not options.bowtie_table and not options.tag_table:
+    if not options.bowtie_table:
         _print('Creating schema if necessary.')
         create_schema()
         _print('Uploading bowtie file into table.')
@@ -164,7 +166,7 @@ if __name__ == '__main__':
         _print('Skipping upload of bowtie rows into table.')
         GlassTag.set_bowtie_table(options.bowtie_table)
     
-    if not options.tag_table:
+    if not options.skip_tag_table:
         _print('Translating bowtie columns to integers.')
         translate_bowtie_columns(file_name)
         _print('Adding indices.')

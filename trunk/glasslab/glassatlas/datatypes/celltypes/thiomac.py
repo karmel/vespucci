@@ -11,6 +11,8 @@ from glasslab.config import current_settings
 from glasslab.glassatlas.datatypes.transcribed_rna import GlassTranscribedRna,\
     GlassTranscribedRnaSource
 from django.db import models
+from glasslab.glassatlas.datatypes.feature import PeakFeature,\
+    PeakFeatureInstance
 
 CELL_TYPE = 'ThioMac'
 
@@ -110,6 +112,9 @@ class GlassTranscriptConservedThioMac(GlassTranscriptConserved):
         verbose_name = 'Glass transcript conserved region (%s)' % CELL_TYPE
         verbose_name_plural = 'Glass transcript conserved regions (%s)' % CELL_TYPE
 
+##################################################
+# Transcribed RNA
+##################################################
 class GlassTranscribedRnaThioMac(GlassTranscribedRna):
     glass_transcript = models.ForeignKey(GlassTranscriptThioMac, blank=True, null=True)
     cell_base = ThioMacBase()
@@ -127,3 +132,24 @@ class GlassTranscribedRnaSourceThioMac(GlassTranscribedRnaSource):
         app_label   = 'Transcription_%s' % CELL_TYPE
         verbose_name = 'Glass transcribed RNA Source (%s)' % CELL_TYPE
         verbose_name_plural = 'Glass transcribed RNA Sources (%s)' % CELL_TYPE
+
+##################################################
+# Features
+##################################################       
+class PeakFeatureThioMac(PeakFeature):
+    glass_transcript = models.ForeignKey(GlassTranscriptThioMac)
+    cell_base = ThioMacBase()
+    class Meta: 
+        db_table    = 'glass_atlas_%s_%s"."peak_feature' % (current_settings.TRANSCRIPT_GENOME, CELL_TYPE.lower())
+        app_label   = 'Transcription_%s' % CELL_TYPE
+        verbose_name = 'Peak feature (%s)' % CELL_TYPE
+        verbose_name_plural = 'Peak feature (%s)' % CELL_TYPE
+
+class PeakFeatureInstanceThioMac(PeakFeatureInstance):
+    peak_feature = models.ForeignKey(PeakFeatureThioMac)
+    cell_base = ThioMacBase()
+    class Meta: 
+        db_table    = 'glass_atlas_%s_%s"."peak_feature_instance' % (current_settings.TRANSCRIPT_GENOME, CELL_TYPE.lower())
+        app_label   = 'Transcription_%s' % CELL_TYPE
+        verbose_name = 'Peak feature instance (%s)' % CELL_TYPE
+        verbose_name_plural = 'Peak feature instance (%s)' % CELL_TYPE

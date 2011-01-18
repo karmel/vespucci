@@ -10,7 +10,7 @@ class SequencingRun(models.Model):
     '''
     Record of details of a given sequencing run and its total tags.
     '''
-    type            = models.CharField(max_length=50, choices=[(x,x) for x in ('Gro-Seq','RNA-Seq','ChIP-Seq')], default='Gro-Seq')
+    type            = models.CharField(max_length=50, choices=[(x,x) for x in ('Gro-Seq','RNA-Seq','ChIP-Seq','Ribo-Seq')], default='Gro-Seq')
     
     cell_type       = models.CharField(max_length=50)
     name            = models.CharField(max_length=100)
@@ -43,3 +43,15 @@ class SequencingRunAnnotation(models.Model):
         
     def __unicode__(self):
         return '"%s" note: %s' % (self.sequencing_run.source_table.strip(), self.note)
+    
+class PeakType(models.Model):
+    type    = models.CharField(max_length=50)
+    diffuse = models.BooleanField(default=False)
+    
+    class Meta:
+        db_table    = 'glass_atlas_%s"."chip_seq_type' % current_settings.REFERENCE_GENOME
+        app_label   = 'Transcription' 
+          
+    def __unicode__(self):
+        return self.type.strip()
+    

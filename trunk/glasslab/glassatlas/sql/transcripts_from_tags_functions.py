@@ -3,7 +3,7 @@ Created on Nov 12, 2010
 
 @author: karmel
 
-Convenience script for generated create table statements for transcript functions.
+Convenience script for transcript functions.
 '''
 genome = 'prep'
 cell_type='thiomac'

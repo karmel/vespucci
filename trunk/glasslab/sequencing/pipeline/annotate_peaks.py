@@ -15,10 +15,10 @@ from glasslab.utils.scripting import GlassOptionParser
 from optparse import make_option
 import subprocess
 import traceback
-from datetime import datetime
 from glasslab.sequencing.datatypes.peak import GlassPeak
 from glasslab.utils.parsing.delimited import DelimitedFileParser
-from glasslab.sequencing.pipeline.annotate_base import check_input, call_bowtie
+from glasslab.sequencing.pipeline.annotate_base import check_input, call_bowtie,\
+    create_schema, _print
 from glasslab.sequencing.analysis.peakfinding.sicer_handler import SicerHandler
 
 class FastqOptionParser(GlassOptionParser):
@@ -41,6 +41,8 @@ class FastqOptionParser(GlassOptionParser):
                            ' If so, SICER will be used instead of MACS.'),
                make_option('--skip_bowtie',action='store_true', dest='skip_bowtie', default=False, 
                            help='Skip bowtie; presume MACS or SICER uses input file directly.'),
+               make_option('--skip_bed',action='store_true', dest='skip_bed', default=False, 
+                           help='Skip conversion to BED; presume SICER uses input file directly.'),
                make_option('--skip_peak_finding',action='store_true', dest='skip_peak_finding', default=False, 
                            help='Skip peak finding with MACS or SICER; presume peak annotation uses input file directly.'),
                make_option('--skip_table_upload',action='store_true', dest='skip_table_upload', default=False, 
@@ -52,7 +54,7 @@ def bowtie_to_bed(options, file_name, bowtie_file_path):
     bed_output = file_name + '_bowtie.bed'
     bed_file_path = os.path.join(options.output_dir, bed_output)
     
-    bed_command = '''awk 'BEGIN {FS= "\t"; OFS="\t"} {print $3, $4, $4+length($5)-1, $1, "0", $2}' %s > %s ''' \
+    bed_command = '''awk 'BEGIN {FS= "\t"; OFS="\t"} { print $3, $4, $4+length($5)-1, $1, "0", $2}' %s > %s ''' \
                         % (bowtie_file_path, bed_file_path)
 
     try: subprocess.check_call(bed_command, shell=True)
@@ -100,9 +102,12 @@ def import_peaks(options, file_name, peaks_file_path):
     for row in data:
         if not options.diffuse:
             peak = GlassPeak.init_from_macs_row(row)
+        else:
+            peak = GlassPeak.init_from_sicer_row(row)
         peak.save()
     
     GlassPeak.add_indices()
+    GlassPeak.add_record_of_tags()
     
 def annotate_peaks(options):
     '''
@@ -166,26 +171,29 @@ if __name__ == '__main__':
     
     
     if not options.skip_bowtie:
-        print 'Processing FASTQ file using bowtie.'
+        _print('Processing FASTQ file using bowtie.')
         bowtie_file_path = call_bowtie(options, file_name, suppress_columns=False)
     else:
-        print 'Skipping bowtie.'
+        _print('Skipping bowtie.')
         bowtie_file_path = options.file_path
     
     if not options.skip_peak_finding: 
         if not options.diffuse:
-            print 'Processing bowtie file using MACS'
+            _print('Processing bowtie file using MACS')
             peaks_file_path = call_macs(options, file_name, bowtie_file_path)
         else:
-            print 'Converting bowtie file to BED'
-            #bed_file_path = bowtie_to_bed(options, file_name, bowtie_file_path)
-            bed_file_path = bowtie_file_path
-            print 'Processing BED file using SICER'
+            if not options.skip_bed:
+                _print('Converting bowtie file to BED')
+                bed_file_path = bowtie_to_bed(options, file_name, bowtie_file_path)
+            else: bed_file_path = bowtie_file_path
+            _print('Processing BED file using SICER')
             peaks_file_path = call_sicer(options, file_name, bed_file_path)
     else:
-        print 'Skipping peak finding.'
+        _print('Skipping peak finding.')
         peaks_file_path = bowtie_file_path
     
     if not options.skip_table_upload:
-        print 'Saving peaks to table.'
+        _print('Creating schema if necessary.')
+        create_schema()
+        _print('Saving peaks to table.')
         import_peaks(options, file_name, peaks_file_path)

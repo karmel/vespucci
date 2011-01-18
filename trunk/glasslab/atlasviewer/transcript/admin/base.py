@@ -181,12 +181,12 @@ class GlassTranscribedRnaAdmin(TranscriptBase):
     list_display    = ('chromosome','transcription_start','transcription_end','strand',
                        'transcript_length', 'glass_transcript_link','ucsc_browser_link', 'modified')
     list_filter     = ('chromosome','strand',)
-    inlines         = [GlassTranscribedRnaSourceInline]
     
     def glass_transcript_link(self, obj):
         if not obj.glass_transcript: return ''
-        return '<a href="/admin/Transcription/glasstranscript/%d" target="_blank">%s</a>'\
-                            % (obj.glass_transcript.id, str(obj.glass_transcript))
+        return '<a href="/admin/Transcription_%s/glasstranscript%s/%d" target="_blank">%s</a>'\
+                            % (obj.cell_base.cell_type, obj.cell_base.cell_type.lower(),
+                               obj.glass_transcript.id, str(obj.glass_transcript))
                         
     glass_transcript_link.short_description = 'Glass Transcript' 
     glass_transcript_link.allow_tags = True 
