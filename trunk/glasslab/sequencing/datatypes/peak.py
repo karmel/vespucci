@@ -9,8 +9,27 @@ from glasslab.utils.datatypes.basic_model import DynamicTable, CubeField
 from glasslab.utils.database import execute_query
 from glasslab.glassatlas.datatypes.metadata import SequencingRun, PeakType
 from glasslab.config import current_settings
-        
-class GlassPeak(DynamicTable):
+from multiprocessing import Pool
+from glasslab.sequencing.datatypes.tag import GlassSequencingOutput
+
+def multiprocess_glass_peaks(func, cls, *args):
+    ''' 
+    Convenience method for splitting up queries based on glass peak id.
+    '''
+    total_count = len(GlassPeak.chromosomes())
+    processes = current_settings.ALLOWED_PROCESSES
+    p = Pool(processes)
+    # Chromosomes are sorted by count descending, so we want to interleave them
+    # in order to create even-ish groups.
+    chr_lists = [[GlassPeak.chromosomes()[x] for x in xrange(i,total_count,processes)] 
+                                for i in xrange(0,processes)]
+    
+    for chr_list in chr_lists:
+        p.apply_async(func, args=[cls, chr_list,] + list(args))
+    p.close()
+    p.join()    
+       
+class GlassPeak(GlassSequencingOutput):
     '''
     From MACS::
         

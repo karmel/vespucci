@@ -8,12 +8,15 @@ from glasslab.config import current_settings
 from glasslab.utils.database import execute_query
 from glasslab.glassatlas.sql.generate_transcript_table_sql import sql as transcript_table_sql
 from glasslab.glassatlas.sql.generate_transcribed_rna_table_sql import sql as transcribed_rna_table_sql
+from glasslab.glassatlas.sql.generate_feature_table_sql import sql as features_table_sql
 from glasslab.glassatlas.sql.transcripts_from_tags_functions import sql as transcript_function_sql
 from glasslab.glassatlas.sql.transcribed_rna_from_tags_functions import sql as transcribed_rna_function_sql
+from glasslab.glassatlas.sql.features_functions import sql as features_function_sql
 from glasslab.sequencing.datatypes.tag import GlassTag
 from glasslab.glassatlas.datatypes.transcript import CellTypeBase
 from glasslab.glassatlas.datatypes.metadata import SequencingRun
 from django.db import connection
+from random import randint
 
 class GlassTestCase(unittest.TestCase):
     '''
@@ -41,7 +44,9 @@ class GlassTestCase(unittest.TestCase):
             execute_query('CREATE SCHEMA %s' % current_settings.CURRENT_SCHEMA)
     
             for func in (transcript_table_sql, transcribed_rna_table_sql,
-                         transcript_function_sql, transcribed_rna_function_sql):
+                         features_table_sql,
+                         transcript_function_sql, transcribed_rna_function_sql,
+                         features_function_sql):
                 execute_query(func(current_settings.TRANSCRIPT_GENOME, 
                                    current_settings.CURRENT_CELL_TYPE))
         
@@ -75,3 +80,15 @@ class GlassTestCase(unittest.TestCase):
         self.sequencing_runs.append(GlassTag.add_record_of_tags(description='Created during a unit test.', 
                                                                 type=sequencing_run_type))
         connection.close()
+        
+    def _create_transcript(self, chr, strand, start, end):
+        # Create corresponding transcript for exon/ncRNA stitching, association
+        source_table = 'sample_transcript_run_%d' % randint(0,10000)
+        self.create_tag_table(sequencing_run_name=source_table, sequencing_run_type='Gro-Seq')
+        GlassTag.objects.create(strand=strand,
+                                chromosome_id=chr,
+                                start=start, end=end,
+                                start_end=(start, end)
+                                )
+        self.cell_base.glass_transcript.add_from_tags(GlassTag._meta.db_table)
+        return source_table

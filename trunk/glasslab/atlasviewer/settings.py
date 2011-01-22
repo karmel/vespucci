@@ -28,7 +28,14 @@ TIME_ZONE = 'America/Los_Angeles'
 # http://www.i18nguy.com/unicode/language-identifiers.html
 LANGUAGE_CODE = 'en-us'
 
-SITE_ID = 1
+def get_current_site():
+    import sys
+    host = sys.argv[-1:][0]
+    # Check for publication host
+    if host.find('8000') > -1: return 2
+    return 1
+    
+SITE_ID = get_current_site()
 
 # If you set this to False, Django will make some optimizations so as not
 # to load the internationalization machinery.

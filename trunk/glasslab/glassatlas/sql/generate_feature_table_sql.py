@@ -52,7 +52,7 @@ ALTER TABLE "glass_atlas_%s_%s"."peak_feature_instance" ALTER COLUMN id SET DEFA
 ALTER TABLE ONLY "glass_atlas_%s_%s"."peak_feature_instance" ADD CONSTRAINT peak_feature_instance_pkey PRIMARY KEY (id);
 CREATE INDEX peak_feature_instance_peak_feature_idx ON "glass_atlas_%s_%s"."peak_feature_instance" USING btree (peak_feature_id);
 
-""" % tuple([genome, cell_type]*13)
+""" % tuple([genome, cell_type]*22)
 
 if __name__ == '__main__':
     print sql(genome, cell_type)

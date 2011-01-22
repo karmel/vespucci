@@ -5,8 +5,9 @@ Created on Nov 8, 2010
 '''
 from django.db import models
 from glasslab.config import current_settings
+from glasslab.utils.datatypes.basic_model import GlassModel
 
-class PeakType(models.Model):
+class PeakType(GlassModel):
     type    = models.CharField(max_length=50)
     diffuse = models.BooleanField(default=False)
     
@@ -17,7 +18,7 @@ class PeakType(models.Model):
     def __unicode__(self):
         return self.type.strip()
     
-class SequencingRun(models.Model):
+class SequencingRun(GlassModel):
     '''
     Record of details of a given sequencing run and its total tags.
     '''
@@ -43,7 +44,7 @@ class SequencingRun(models.Model):
     def __unicode__(self):
         return '%s (%s, "%s")' % (self.name, self.type, self.source_table.strip())
     
-class SequencingRunAnnotation(models.Model):
+class SequencingRunAnnotation(GlassModel):
     '''
     Various freeform notes that can be attached to sequencing runs.
     '''

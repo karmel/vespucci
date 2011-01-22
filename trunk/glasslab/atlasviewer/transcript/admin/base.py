@@ -15,6 +15,8 @@ from django.utils.safestring import mark_safe
 from glasslab.glassatlas.datatypes.transcribed_rna import GlassTranscribedRna,\
     GlassTranscribedRnaSource
 from django.db.models.aggregates import Sum
+from glasslab.glassatlas.datatypes.feature import PeakFeature,\
+    PeakFeatureInstance
 
 class NucleotideSequenceInput(ReadOnlyInput):
     '''
@@ -122,6 +124,14 @@ class GlassTranscriptConservedInline(ReadOnlyInline):
 class GlassTranscriptPatternedInline(ReadOnlyInline):
     model = GlassTranscriptPatterned
     readonly_fields = make_all_fields_readonly(model)
+
+class PeakFeatureInline(ReadOnlyInline):
+    model = PeakFeature
+    readonly_fields = make_all_fields_readonly(model)
+
+class PeakFeatureInstanceInline(ReadOnlyInline):
+    model = PeakFeatureInstance
+    readonly_fields = make_all_fields_readonly(model)
     
 class TranscriptBase(ReadOnlyAdmin):
     ordering        = ('chromosome','transcription_start')
@@ -191,3 +201,14 @@ class GlassTranscribedRnaAdmin(TranscriptBase):
     glass_transcript_link.short_description = 'Glass Transcript' 
     glass_transcript_link.allow_tags = True 
     
+class PeakFeatureAdmin(ReadOnlyAdmin):
+    list_display    = ('glass_transcript_link','relationship','peak_type')
+    list_filter     = ('peak_type',)
+    
+    def glass_transcript_link(self, obj):
+        if not obj.glass_transcript: return ''
+        return '<a href="/admin/Transcription_%s/glasstranscript%s/%d" target="_blank">%s</a>'\
+                            % (obj.cell_base.cell_type, obj.cell_base.cell_type.lower(),
+                               obj.glass_transcript.id, str(obj.glass_transcript))
+    glass_transcript_link.short_description = 'Glass Transcript' 
+    glass_transcript_link.allow_tags = True 

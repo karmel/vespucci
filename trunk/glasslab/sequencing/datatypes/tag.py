@@ -59,7 +59,50 @@ def set_all_tag_table_names(base_table_name):
     GlassTagConserved.set_table_name('tag_conserved_%s' % base_table_name)
     GlassTagPatterned.set_table_name('tag_patterned_%s' % base_table_name)
 
-class GlassTag(DynamicTable):
+class GlassSequencingOutput(DynamicTable):
+    '''
+    Parent class for tags and peaks.
+    '''
+    _chromosomes = None
+    @classmethod 
+    def chromosomes(cls): 
+        if not cls._chromosomes:
+            if cls._meta.db_table:
+                chr_sql = """
+                    SELECT chromosome_id FROM "%s" tag
+                    GROUP BY chromosome_id
+                    ORDER BY count(chromosome_id) DESC;
+                    """ % (cls._meta.db_table)
+                rows = fetch_rows(chr_sql)
+                if rows:
+                    cls._chromosomes = zip(*rows)[0]
+            
+            if not cls._chromosomes and cls.bowtie_table:
+                # Tag table doesn't exist yet
+                chr_sql = """
+                SELECT chr.id FROM "%s" chr
+                JOIN (
+                    SELECT chromosome, count(chromosome) 
+                    FROM "%s" 
+                    GROUP BY chromosome
+                ) derived
+                ON chr.name = derived.chromosome
+                ORDER BY derived.count DESC;
+                """ % (Chromosome._meta.db_table, cls.bowtie_table)
+                rows = fetch_rows(chr_sql)
+                cls._chromosomes = zip(*rows)[0]
+            elif not cls._chromosomes:
+                chr_sql = """
+                SELECT id FROM "%s";
+                """ % (Chromosome._meta.db_table)
+                rows = fetch_rows(chr_sql)
+                cls._chromosomes = zip(*rows)[0]
+            
+        return cls._chromosomes
+    
+    class Meta: abstract = True
+    
+class GlassTag(GlassSequencingOutput):
     '''
     From bowtie::
     
@@ -178,43 +221,6 @@ class GlassTag(DynamicTable):
                cls._meta.db_table,
                current_settings.CURRENT_SCHEMA)
         execute_query(trigger_sql)
-            
-    _chromosomes = None
-    @classmethod 
-    def chromosomes(cls): 
-        if not cls._chromosomes:
-            if cls._meta.db_table:
-                chr_sql = """
-                    SELECT chromosome_id FROM "%s" tag
-                    GROUP BY chromosome_id
-                    ORDER BY count(chromosome_id) DESC;
-                    """ % (cls._meta.db_table)
-                rows = fetch_rows(chr_sql)
-                if rows:
-                    cls._chromosomes = zip(*rows)[0]
-            
-            if not cls._chromosomes and cls.bowtie_table:
-                # Tag table doesn't exist yet
-                chr_sql = """
-                SELECT chr.id FROM "%s" chr
-                JOIN (
-                    SELECT chromosome, count(chromosome) 
-                    FROM "%s" 
-                    GROUP BY chromosome
-                ) derived
-                ON chr.name = derived.chromosome
-                ORDER BY derived.count DESC;
-                """ % (Chromosome._meta.db_table, cls.bowtie_table)
-                rows = fetch_rows(chr_sql)
-                cls._chromosomes = zip(*rows)[0]
-            elif not cls._chromosomes:
-                chr_sql = """
-                SELECT id FROM "%s";
-                """ % (Chromosome._meta.db_table)
-                rows = fetch_rows(chr_sql)
-                cls._chromosomes = zip(*rows)[0]
-            
-        return cls._chromosomes
            
     @classmethod
     def associate_chromosome(cls):

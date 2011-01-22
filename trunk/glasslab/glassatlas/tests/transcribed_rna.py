@@ -13,18 +13,7 @@ from glasslab.glassatlas.datatypes.transcribed_rna import MAX_GAP_RNA
 
 
 class TranscribedRnaTestCase(GlassTestCase):
-    def _create_transcript(self, chr, strand, start, end):
-        # Create corresponding transcript for exon/ncRNA stitching, association
-        source_table = 'sample_transcript_run_%d' % randint(0,10000)
-        self.create_tag_table(sequencing_run_name=source_table, sequencing_run_type='Gro-Seq')
-        GlassTag.objects.create(strand=strand,
-                                chromosome_id=chr,
-                                start=start, end=end,
-                                start_end=(start, end)
-                                )
-        self.cell_base.glass_transcript.add_from_tags(GlassTag._meta.db_table)
-        return source_table
-    
+  
     ##################################################
     # Adding transcribed RNA
     ##################################################

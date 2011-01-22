@@ -39,7 +39,10 @@ class ThioMacBase(CellTypeBase):
     def glass_transcribed_rna(self): return GlassTranscribedRnaThioMac
     @property
     def glass_transcribed_rna_source(self): return GlassTranscribedRnaSourceThioMac
-
+    @property
+    def peak_feature(self): return PeakFeatureThioMac
+    @property
+    def peak_feature_instance(self): return PeakFeatureInstanceThioMac
     
 class GlassTranscriptThioMac(GlassTranscript):
     cell_base = ThioMacBase()
@@ -144,9 +147,9 @@ class PeakFeatureThioMac(PeakFeature):
         app_label   = 'Transcription_%s' % CELL_TYPE
         verbose_name = 'Peak feature (%s)' % CELL_TYPE
         verbose_name_plural = 'Peak feature (%s)' % CELL_TYPE
-
+    
 class PeakFeatureInstanceThioMac(PeakFeatureInstance):
-    peak_feature = models.ForeignKey(PeakFeatureThioMac)
+    peak_feature = models.ForeignKey(PeakFeatureThioMac, related_name='peak_feature_instance_set')
     cell_base = ThioMacBase()
     class Meta: 
         db_table    = 'glass_atlas_%s_%s"."peak_feature_instance' % (current_settings.TRANSCRIPT_GENOME, CELL_TYPE.lower())

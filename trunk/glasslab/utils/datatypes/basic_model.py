@@ -6,8 +6,16 @@ Created on Nov 5, 2010
 from django.db import models
 from glasslab.config import current_settings
 from psycopg2.extensions import AsIs
-  
-class DynamicTable(models.Model):
+
+class GlassModel(models.Model):
+    class Meta: abstract = True
+     
+    def get_absolute_url(self):
+        return '/admin/%s/%s/%d/' % (self._meta.app_label, 
+                                     self.__class__.__name__.lower(),
+                                     self.id)
+    
+class DynamicTable(GlassModel):
     '''
     Dynamically named table.
     '''

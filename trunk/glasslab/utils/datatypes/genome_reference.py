@@ -10,13 +10,13 @@ Created on Sep 24, 2010
 '''
 from django.db import models
 from glasslab.config import current_settings
-from glasslab.utils.datatypes.basic_model import CubeField
+from glasslab.utils.datatypes.basic_model import CubeField, GlassModel
     
 #######################################################
 # Genome identifiers
 #######################################################
 
-class GenomeType(models.Model):
+class GenomeType(GlassModel):
     '''
     Genome types with unique gene records.
     '''
@@ -26,7 +26,7 @@ class GenomeType(models.Model):
         db_table    = 'genome_reference"."genome_type'
         app_label   = 'Genome_Reference'
 
-class Genome(models.Model):
+class Genome(GlassModel):
     '''
     Genomes for which we store data.
     '''
@@ -38,7 +38,7 @@ class Genome(models.Model):
         db_table    = 'genome_reference"."genome'
         app_label   = 'Genome_Reference'
 
-class KeggPathway(models.Model):
+class KeggPathway(GlassModel):
     '''
     Kegg Pathway descriptions
     '''
@@ -54,7 +54,7 @@ class KeggPathway(models.Model):
 #######################################################
 # Per-genome Gene identifiers
 #######################################################
-class Chromosome(models.Model):
+class Chromosome(GlassModel):
     '''
     Unique record of chromosome, i.e. 'chr1', 'chrUn_random', etc
     '''
@@ -66,7 +66,7 @@ class Chromosome(models.Model):
     
     def __unicode__(self): return self.name
 
-class SequenceIdentifier(models.Model):
+class SequenceIdentifier(GlassModel):
     '''
     Gene and sequence (i.e., noncoding RNA) identifiers from RefSeq, unique per genome.
     '''
@@ -94,7 +94,7 @@ class SequenceIdentifier(models.Model):
             if reg: self._sequence_transcription_region =  reg[0]
         return self._sequence_transcription_region
 
-class SequenceDetail(models.Model):
+class SequenceDetail(GlassModel):
     '''
     Gene details, keyed to unique sequences.
     '''
@@ -114,7 +114,7 @@ class SequenceDetail(models.Model):
 #######################################################
 # Chromosome region details 
 #######################################################
-class SequenceTranscriptionRegion(models.Model):
+class SequenceTranscriptionRegion(GlassModel):
     '''
     Mappings of transcription regions and coding sites.
     '''
@@ -136,7 +136,7 @@ class SequenceTranscriptionRegion(models.Model):
     def __unicode__(self):
         return 'Sequence Transcription Region for %s' % self.sequence_identifier.sequence_identifier.strip()
     
-class SequenceExon(models.Model):
+class SequenceExon(GlassModel):
     '''
     Mappings of transcription regions and coding sites.
     '''
@@ -149,7 +149,7 @@ class SequenceExon(models.Model):
         db_table    = 'genome_reference_%s"."sequence_exon' % current_settings.REFERENCE_GENOME
         app_label   = 'Genome_Reference'
         
-class SequenceKeggPathway(models.Model):
+class SequenceKeggPathway(GlassModel):
     '''
     Mappings of transcription regions and coding sites.
     '''
@@ -161,7 +161,7 @@ class SequenceKeggPathway(models.Model):
         db_table    = 'genome_reference_%s"."sequence_kegg_pathway' % current_settings.REFERENCE_GENOME
         app_label   = 'Genome_Reference'
 
-class NonCodingRna(models.Model):
+class NonCodingRna(GlassModel):
     '''
     Unique name and type for ncRNA
     
@@ -185,7 +185,7 @@ class NonCodingRna(models.Model):
             if reg: self._non_coding_transcription_region =  reg[0]
         return self._non_coding_transcription_region
     
-class NonCodingTranscriptionRegion(models.Model):
+class NonCodingTranscriptionRegion(GlassModel):
     '''
     Mappings of transcription regions that are not tied to RefSeq genes.
     
@@ -208,7 +208,7 @@ class NonCodingTranscriptionRegion(models.Model):
     def __unicode__(self):
         return '%s Transcription Region for %s' % (self.non_coding_rna.type.strip(), self.non_coding_rna.description.strip())
     
-class PatternedTranscriptionRegion(models.Model):
+class PatternedTranscriptionRegion(GlassModel):
     '''
     Mappings of patterns-- i.e., repeats-- onto transcription regions.
     '''
@@ -228,7 +228,7 @@ class PatternedTranscriptionRegion(models.Model):
     def __unicode__(self):
         return 'Patterned Transcription Region for %s %s' % (self.type, self.name.strip())
     
-class ConservedTranscriptionRegion(models.Model):
+class ConservedTranscriptionRegion(GlassModel):
     '''
     Coservation records for transcription regions determined by the phastCons HMM algorithm.
     

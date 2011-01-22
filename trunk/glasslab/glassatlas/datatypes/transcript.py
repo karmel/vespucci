@@ -12,7 +12,7 @@ from glasslab.utils.datatypes.genome_reference import Chromosome,\
 from glasslab.glassatlas.datatypes.metadata import SequencingRun
 from glasslab.sequencing.datatypes.tag import multiprocess_glass_tags,\
     wrap_errors
-from glasslab.utils.datatypes.basic_model import CubeField
+from glasslab.utils.datatypes.basic_model import CubeField, GlassModel
 from multiprocessing import Pool
 from glasslab.utils.database import execute_query,\
     execute_query_without_transaction
@@ -106,7 +106,7 @@ class CellTypeBase(object):
         except KeyError:
             raise Exception('Could not find models to match cell type %s.' % cell_type
                             + '\nOptions are: %s' % ','.join(correlations.keys()))
-class TranscriptModelBase(models.Model):
+class TranscriptModelBase(GlassModel):
     cell_base = CellTypeBase()
     class Meta:
         abstract = True
