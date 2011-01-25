@@ -8,6 +8,7 @@ Are features added and removed correctly?
 from glasslab.glassatlas.tests.base import GlassTestCase
 from glasslab.sequencing.datatypes.peak import GlassPeak
 from django.db import connection
+from glasslab.glassatlas.datatypes.metadata import SequencingRun
 
 class FeatureTestCase(GlassTestCase):
     def create_peak_table(self, sequencing_run_name='', sequencing_run_type='ChIP-Seq'):
@@ -22,15 +23,15 @@ class FeatureTestCase(GlassTestCase):
         self.sequencing_runs.append(GlassPeak.add_record_of_tags(description='Created during a unit test.', 
                                                                 type=sequencing_run_type))
         connection.close()
-        
+      
     def test_peak_type_determination_0(self):
         GlassPeak._peak_type = None
-        peak_type = GlassPeak.peak_type('1234_H4k3ME1_hrgsf')
-        self.assertEquals(peak_type.type.strip(), 'H4K3me1')
+        peak_type = GlassPeak.peak_type('1234_H3k4ME1_hrgsf')
+        self.assertEquals(peak_type.type.strip(), 'H3K4me1')
 
     def test_peak_type_determination_1(self):
         GlassPeak._peak_type = None
-        peak_type = GlassPeak.peak_type('1234_H4k3Mq1_hrgsf')
+        peak_type = GlassPeak.peak_type('1234_H3k4Mq1_hrgsf')
         self.assertEquals(peak_type, None)
         
     def test_peak_type_determination_2(self):
@@ -39,7 +40,7 @@ class FeatureTestCase(GlassTestCase):
         self.assertEquals(peak_type.type.strip(), 'H4K12ac')
     
     def test_transcript_equals(self):
-        self.create_peak_table(sequencing_run_name='sample_run_1_h4k3me1', sequencing_run_type='ChIP-Seq')
+        self.create_peak_table(sequencing_run_name='sample_run_1_h3k4me1', sequencing_run_type='ChIP-Seq')
         chr_1, start_1, end_1 = 1, 1000, 1500
         GlassPeak.objects.create(chromosome_id=chr_1,
                                 start=start_1, end=end_1,
@@ -59,7 +60,7 @@ class FeatureTestCase(GlassTestCase):
         self.assertEquals(instance.distance_to_tss, 250)
         
     def test_transcript_contains(self):
-        self.create_peak_table(sequencing_run_name='sample_run_1_h4k3me1', sequencing_run_type='ChIP-Seq')
+        self.create_peak_table(sequencing_run_name='sample_run_1_h3k4me1', sequencing_run_type='ChIP-Seq')
         chr_1, start_1, end_1 = 3, 58345, 58945
         GlassPeak.objects.create(chromosome_id=chr_1,
                                 start=start_1, end=end_1,
@@ -79,7 +80,7 @@ class FeatureTestCase(GlassTestCase):
         self.assertEquals(instance.distance_to_tss, 300)
 
     def test_transcript_is_contained_by(self):
-        self.create_peak_table(sequencing_run_name='sample_run_1_h4k3me1', sequencing_run_type='ChIP-Seq')
+        self.create_peak_table(sequencing_run_name='sample_run_1_h3k4me1', sequencing_run_type='ChIP-Seq')
         chr_1, start_1, end_1 = 14, 100000900, 100010900
         GlassPeak.objects.create(chromosome_id=chr_1,
                                 start=start_1, end=end_1,
@@ -99,7 +100,7 @@ class FeatureTestCase(GlassTestCase):
         self.assertEquals(instance.distance_to_tss, 4999)
     
     def test_transcript_overlaps_with(self):
-        self.create_peak_table(sequencing_run_name='sample_run_1_h4k3me1', sequencing_run_type='ChIP-Seq')
+        self.create_peak_table(sequencing_run_name='sample_run_1_h3k4me1', sequencing_run_type='ChIP-Seq')
         chr_1, start_1, end_1 = 21, 9999, 10200
         GlassPeak.objects.create(chromosome_id=chr_1,
                                 start=start_1, end=end_1,
@@ -119,7 +120,7 @@ class FeatureTestCase(GlassTestCase):
         self.assertEquals(instance.distance_to_tss, 0)
     
     def test_transcript_is_upstream_of_0(self):
-        self.create_peak_table(sequencing_run_name='sample_run_1_h4k3me1', sequencing_run_type='ChIP-Seq')
+        self.create_peak_table(sequencing_run_name='sample_run_1_h3k4me1', sequencing_run_type='ChIP-Seq')
         chr_1, start_1, end_1 = 12, 10000, 10200
         GlassPeak.objects.create(chromosome_id=chr_1,
                                 start=start_1, end=end_1,
@@ -139,7 +140,7 @@ class FeatureTestCase(GlassTestCase):
         self.assertEquals(instance.distance_to_tss, 2600)
     
     def test_transcript_is_upstream_of_1(self):
-        self.create_peak_table(sequencing_run_name='sample_run_1_h4k3me1', sequencing_run_type='ChIP-Seq')
+        self.create_peak_table(sequencing_run_name='sample_run_1_h3k4me1', sequencing_run_type='ChIP-Seq')
         chr_1, start_1, end_1 = 12, 10000, 10200
         GlassPeak.objects.create(chromosome_id=chr_1,
                                 start=start_1, end=end_1,
@@ -159,7 +160,7 @@ class FeatureTestCase(GlassTestCase):
         self.assertEquals(instance.distance_to_tss, 1400)
     
     def test_transcript_is_downstream_of_0(self):
-        self.create_peak_table(sequencing_run_name='sample_run_1_h4k3me1', sequencing_run_type='ChIP-Seq')
+        self.create_peak_table(sequencing_run_name='sample_run_1_h3k4me1', sequencing_run_type='ChIP-Seq')
         chr_1, start_1, end_1 = 15, 10000, 10200
         GlassPeak.objects.create(chromosome_id=chr_1,
                                 start=start_1, end=end_1,
@@ -179,7 +180,7 @@ class FeatureTestCase(GlassTestCase):
         self.assertEquals(instance.distance_to_tss, 400)
     
     def test_transcript_is_downstream_of_1(self):
-        self.create_peak_table(sequencing_run_name='sample_run_1_h4k3me1', sequencing_run_type='ChIP-Seq')
+        self.create_peak_table(sequencing_run_name='sample_run_1_h3k4me1', sequencing_run_type='ChIP-Seq')
         chr_1, start_1, end_1 = 15, 10000, 10200
         GlassPeak.objects.create(chromosome_id=chr_1,
                                 start=start_1, end=end_1,
@@ -199,7 +200,7 @@ class FeatureTestCase(GlassTestCase):
         self.assertEquals(instance.distance_to_tss, 600)
         
     def test_transcript_two_peaks(self):
-        self.create_peak_table(sequencing_run_name='sample_run_1_h4k3me1', sequencing_run_type='ChIP-Seq')
+        self.create_peak_table(sequencing_run_name='sample_run_1_h3k4me1', sequencing_run_type='ChIP-Seq')
         chr_1, start_1, end_1 = 15, 10000, 10200
         GlassPeak.objects.create(chromosome_id=chr_1,
                                 start=start_1, end=end_1,
@@ -226,7 +227,7 @@ class FeatureTestCase(GlassTestCase):
         self.assertEquals(instance_2.distance_to_tss, 500)
         
     def test_transcript_no_peaks_0(self):
-        self.create_peak_table(sequencing_run_name='sample_run_1_h4k3me1', sequencing_run_type='ChIP-Seq')
+        self.create_peak_table(sequencing_run_name='sample_run_1_h3k4me1', sequencing_run_type='ChIP-Seq')
         chr_1, start_1, end_1 = 15, 10000, 10200
         GlassPeak.objects.create(chromosome_id=chr_1,
                                 start=start_1, end=end_1,
@@ -246,7 +247,7 @@ class FeatureTestCase(GlassTestCase):
         self.assertFalse(count)
     
     def test_transcript_no_peaks_1(self):
-        self.create_peak_table(sequencing_run_name='sample_run_1_h4k3me1', sequencing_run_type='ChIP-Seq')
+        self.create_peak_table(sequencing_run_name='sample_run_1_h3k4me1', sequencing_run_type='ChIP-Seq')
         chr_1, start_1, end_1 = 15, 10000, 10200
         GlassPeak.objects.create(chromosome_id=chr_1,
                                 start=start_1, end=end_1,
@@ -266,7 +267,7 @@ class FeatureTestCase(GlassTestCase):
         self.assertFalse(count)
         
     def test_transcript_one_peak(self):
-        self.create_peak_table(sequencing_run_name='sample_run_1_h4k3me1', sequencing_run_type='ChIP-Seq')
+        self.create_peak_table(sequencing_run_name='sample_run_1_h3k4me1', sequencing_run_type='ChIP-Seq')
         chr_1, start_1, end_1 = 15, 10000, 10200
         GlassPeak.objects.create(chromosome_id=chr_1,
                                 start=start_1, end=end_1,
@@ -286,7 +287,7 @@ class FeatureTestCase(GlassTestCase):
         self.assertTrue(count)
         
     def test_two_transcripts(self):
-        self.create_peak_table(sequencing_run_name='sample_run_1_h4k3me1', sequencing_run_type='ChIP-Seq')
+        self.create_peak_table(sequencing_run_name='sample_run_1_h3k4me1', sequencing_run_type='ChIP-Seq')
         chr_1, start_1, end_1 = 5, 10000, 10200
         GlassPeak.objects.create(chromosome_id=chr_1,
                                 start=start_1, end=end_1,
@@ -307,7 +308,7 @@ class FeatureTestCase(GlassTestCase):
         self.assertEquals(instance_2.distance_to_tss, 101)
     
     def test_change_transcript(self):
-        self.create_peak_table(sequencing_run_name='sample_run_1_h4k3me1', sequencing_run_type='ChIP-Seq')
+        self.create_peak_table(sequencing_run_name='sample_run_1_h3k4me1', sequencing_run_type='ChIP-Seq')
         chr_1, start_1, end_1 = 25, 10000, 10200
         GlassPeak.objects.create(chromosome_id=chr_1,
                                 start=start_1, end=end_1,
@@ -327,10 +328,11 @@ class FeatureTestCase(GlassTestCase):
         trans.transcription_start = start_1 - 500
         trans.transcription_end = end_1 + 100
         trans.start_end = (trans.transcription_start, trans.transcription_end)
+        trans.requires_reload = True
         trans.save()
         
         connection.close()
-        self.cell_base.peak_feature.update_all_peak_features(null_only=False)
+        self.cell_base.peak_feature.update_peak_features_by_transcript()
         connection.close()
         
         count = self.cell_base.peak_feature.objects.count()
@@ -341,3 +343,36 @@ class FeatureTestCase(GlassTestCase):
         self.assertEquals(feature.glass_transcript, trans)
         self.assertEquals(feature.relationship, 'contains')
         self.assertEquals(instance.distance_to_tss, 600)
+        
+    def test_no_reload(self):
+        self.create_peak_table(sequencing_run_name='sample_run_1_h3k4me1', sequencing_run_type='ChIP-Seq')
+        chr_1, start_1, end_1 = 5, 10000, 10200
+        GlassPeak.objects.create(chromosome_id=chr_1,
+                                start=start_1, end=end_1,
+                                start_end=(start_1, end_1)
+                                )
+        source_1 = self._create_transcript(chr_1, 0, start_1-300, start_1)
+        connection.close()
+        self.cell_base.peak_feature.update_peak_features_by_run()
+        connection.close()
+        self.assertFalse(self.cell_base.peak_feature.objects.count())
+        self.assertFalse(self.cell_base.peak_feature_instance.objects.count())
+    
+    def test_requires_reload(self):
+        self.create_peak_table(sequencing_run_name='sample_run_1_h3k4me1', sequencing_run_type='ChIP-Seq')
+        chr_1, start_1, end_1 = 5, 10000, 10200
+        GlassPeak.objects.create(chromosome_id=chr_1,
+                                start=start_1, end=end_1,
+                                start_end=(start_1, end_1)
+                                )
+        source_1 = self._create_transcript(chr_1, 0, start_1-300, start_1)
+        connection.close()
+        run = SequencingRun.objects.get(source_table=GlassPeak._meta.db_table)
+        run.requires_reload = True
+        run.save()
+        connection.close()
+        self.cell_base.peak_feature.update_peak_features_by_run()
+        connection.close()
+        self.assertTrue(self.cell_base.peak_feature.objects.count())
+        self.assertTrue(self.cell_base.peak_feature_instance.objects.count())
+        

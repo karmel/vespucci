@@ -19,6 +19,7 @@ CREATE TABLE "glass_atlas_%s_%s"."glass_transcript" (
     "start_end" "public"."cube" DEFAULT NULL,
     "spliced" boolean DEFAULT NULL,
     "score" numeric DEFAULT NULL,
+    "requires_reload" boolean DEFAULT false,
     "modified" timestamp(6) NULL DEFAULT NULL,
     "created" timestamp(6) NULL DEFAULT NULL
 );

@@ -106,14 +106,19 @@ $$ LANGUAGE 'plpgsql';
 			
 CREATE OR REPLACE FUNCTION glass_atlas_%s_%s.merge_transcripts(merged_trans glass_atlas_%s_%s.glass_transcript, trans glass_atlas_%s_%s.glass_transcript)
 RETURNS glass_atlas_%s_%s.glass_transcript AS $$
-BEGIN
+BEGIN 
 	-- Update the merged transcript
 	merged_trans.transcription_start := (SELECT LEAST(merged_trans.transcription_start, trans.transcription_start));
 	merged_trans.transcription_end := (SELECT GREATEST(merged_trans.transcription_end, trans.transcription_end));
 	merged_trans.strand := trans.strand;
 	IF trans.spliced = true THEN merged_trans.spliced := true;
 	END IF;
-	merged_trans.start_end := public.cube(merged_trans.transcription_start, merged_trans.transcription_end);
+	
+	-- We only need to reassociate if the region covered has changed
+    IF merged_trans.start_end != public.cube(merged_trans.transcription_start, merged_trans.transcription_end) THEN
+        merged_trans.requires_reload = true;
+	    merged_trans.start_end := public.cube(merged_trans.transcription_start, merged_trans.transcription_end);
+	END IF;
 	merged_trans.score := NULL;
 	RETURN merged_trans;
 END;
@@ -139,12 +144,15 @@ BEGIN
 		|| ' start_end = public.cube(' || rec.transcription_start || '::float,' || rec.transcription_end || '::float),'
 		|| spliced_sql || ','
 		|| score_sql || ','
+		|| ' requires_reload = ' || rec.requires_reload || ','
 		|| ' modified = NOW()'
 	|| ' WHERE id = ' || rec.id;
 	
-	-- Remove old and find new sequence associations
-	PERFORM glass_atlas_%s_%s.remove_transcript_region_records(rec);
-	PERFORM glass_atlas_%s_%s.insert_associated_transcript_regions(rec);
+	-- Remove old and find new sequence associations, if necessary
+	IF rec.requires_reload THEN
+	    PERFORM glass_atlas_%s_%s.remove_transcript_region_records(rec);
+	    PERFORM glass_atlas_%s_%s.insert_associated_transcript_regions(rec);
+	END IF;
 	RETURN;
 END;
 $$ LANGUAGE 'plpgsql';
@@ -242,11 +250,11 @@ RETURNS VOID AS $$
 				EXECUTE 'INSERT INTO glass_atlas_%s_%s.glass_transcript_' || rec.chromosome_id
 					|| ' ("chromosome_id", "strand", '
 					|| ' "transcription_start", "transcription_end",' 
-					|| ' "start_end", "modified", "created")'
+					|| ' "start_end", "requires_reload", "modified", "created")'
 					|| ' VALUES (' || rec.chromosome_id || ' , ' || rec.strand || ' , '
 					|| rec.transcription_start || ' , ' || rec.transcription_end || ' , '
 					|| ' public.cube(' || rec.transcription_start || ' , ' || rec.transcription_end || ' ),' 
-					|| ' NOW(), NOW()) RETURNING *' INTO transcript;
+					|| ' true, NOW(), NOW()) RETURNING *' INTO transcript;
 	
 				-- Save the record of the sequencing run source
 				INSERT INTO glass_atlas_%s_%s.glass_transcript_source 

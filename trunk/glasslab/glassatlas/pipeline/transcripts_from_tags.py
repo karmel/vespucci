@@ -27,6 +27,8 @@ class TranscriptsFromTagsParser(GlassOptionParser):
                            help='Should the scoring of transcripts be skipped?'),
                make_option('--skip_nucleotides',action='store_true', dest='skip_nucleotides',  
                            help='Should obtaining nucleotide sequences to transcripts be skipped?'),
+               make_option('--skip_reassociation',action='store_true', dest='skip_reassociation',  
+                           help='Should reassociation of peak features to transcripts be skipped?'),
                 ]
 if __name__ == '__main__':
     parser = TranscriptsFromTagsParser()
@@ -54,6 +56,10 @@ if __name__ == '__main__':
         #cell_base.glass_transcript.associate_nucleotides()
     if not options.skip_scoring:
         cell_base.glass_transcript.set_scores()
+        
+    if not options.skip_reassociation:
+        cell_base.peak_feature.update_peak_features_by_transcript()
+        cell_base.glass_transcript.mark_all_reloaded()
         
     if options.output_dir:
         cell_base.filtered_glass_transcript.generate_bed_file(options.output_dir)

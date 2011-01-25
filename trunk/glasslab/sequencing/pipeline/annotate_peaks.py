@@ -198,7 +198,8 @@ if __name__ == '__main__':
         peaks_file_path = bowtie_file_path
     
     if not options.skip_table_upload:
+        peak_type = GlassPeak.peak_type(options.peak_type or options.project_name)
         _print('Creating schema if necessary.')
         create_schema()
         _print('Saving peaks to table.')
-        import_peaks(options, file_name, peaks_file_path)
+        import_peaks(options, file_name, peaks_file_path, peak_type)

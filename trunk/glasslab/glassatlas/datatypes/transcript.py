@@ -117,17 +117,22 @@ class TranscriptBase(TranscriptModelBase):
     '''   
     # Use JS for browser link to auto-include in Django Admin form 
     ucsc_session_url = 'http%3A%2F%2Fbiowhat.ucsd.edu%2Fkallison%2Fucsc%2Fsessions%2F'
-    ucsc_browser_link = '''<a href="#" onclick="window.open('http://genome.ucsc.edu/cgi-bin/hgTracks?'''\
-                        + '''hgS_doLoadUrl=submit&amp;hgS_loadUrlName=%s' ''' % ucsc_session_url\
-                        + ''' + (django.jQuery('form')[0].id.match('glasstranscript') && 'glasstranscript' '''\
+    ucsc_browser_link_1 = '''<a href="#" onclick="window.open('http://genome.ucsc.edu/cgi-bin/hgTracks?'''\
+                        + '''hgS_doLoadUrl=submit&amp;hgS_loadUrlName=%s''' % ucsc_session_url
+    ucsc_browser_sess_1 = '''' + (django.jQuery('form')[0].id.match('glasstranscript') && 'glasstranscript' '''\
                         + ''' || 'glasstranscribedrna') + '_' '''\
-                        + ''' + (django.jQuery('#id_strand').val()=='0' && 'sense' || 'antisense') + '_strands.txt&db='''\
-                        + current_settings.REFERENCE_GENOME + '''&amp;position=' + '''\
+                        + ''' + (django.jQuery('#id_strand').val()=='0' && 'sense' || 'antisense') + '_strands.txt'''
+    ucsc_browser_sess_2 = '''all_tracks.txt'''
+    ucsc_browser_link_3 = '''&db=''' + current_settings.REFERENCE_GENOME + '''&amp;position=' + '''\
                         + ''' django.jQuery('#id_chromosome').attr('title') '''\
                         + ''' + '%3A+' + django.jQuery('#id_transcription_start').val() '''\
                         + ''' + '-' + django.jQuery('#id_transcription_end').val(),'Glass Atlas UCSC View ' + '''\
-                        + str(randint(100,99999)) + '''); return false;"'''\
-                        + ''' >View in UCSC Browser</a> '''
+                        + str(randint(100,99999)) + '''); return false;">'''
+                        
+    ucsc_browser_link = ucsc_browser_link_1 + ucsc_browser_sess_1 + ucsc_browser_link_3\
+                        + '''View in UCSC Browser</a> | '''\
+                        + ucsc_browser_link_1 + ucsc_browser_sess_2 + ucsc_browser_link_3\
+                        + '''All tracks</a> '''
                         
     chromosome              = models.ForeignKey(Chromosome, help_text=ucsc_browser_link)
     strand                  = models.IntegerField(max_length=1, help_text='0 for +, 1 for -')
@@ -209,6 +214,7 @@ class GlassTranscript(TranscriptBase):
     spliced                 = models.NullBooleanField(default=None, help_text='Do we have RNA-Seq confirmation?')
     score                   = models.FloatField(null=True, default=None, 
                                     help_text='Total mapped tags x sequencing runs transcribed in / total sequencing runs possible')
+    requires_reload         = models.BooleanField(default=None, help_text='Does this transcript need to be re-associated?')
     
     class Meta:
         abstract    = True
@@ -310,6 +316,14 @@ class GlassTranscript(TranscriptBase):
                 sequence.save()
             connection.close()
             
+    @classmethod
+    def mark_all_reloaded(cls):
+        '''
+        Mark all transcripts as reloaded. Called by external processes that have reloaded runs appropriately.
+        '''
+        connection.close()
+        cls.objects.all().update(requires_reload=False)
+    
 class FilteredGlassTranscriptManager(models.Manager):
     def get_query_set(self):
         return super(FilteredGlassTranscriptManager, self).get_query_set().filter(score__gte=MIN_SCORE)

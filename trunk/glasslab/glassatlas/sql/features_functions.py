@@ -11,19 +11,19 @@ def sql(genome, cell_type):
     return """
 -- Not run from within the codebase, but kept here in case functions need to be recreated.
 
-CREATE OR REPLACE FUNCTION glass_atlas_%s_%s.insert_associated_peak_features_from_run(run_id integer, chr_id integer)
+CREATE OR REPLACE FUNCTION glass_atlas_%s_%s.insert_associated_peak_features_from_run(run_id integer, chr_id integer, requires_reload_only boolean)
 RETURNS VOID AS $$
 DECLARE
     run glass_atlas_mm9.sequencing_run;
 BEGIN
     run := (SELECT (seq_run.*)::glass_atlas_mm9.sequencing_run 
             FROM glass_atlas_mm9.sequencing_run seq_run WHERE id = run_id);
-    PERFORM glass_atlas_%s_%s.insert_associated_peak_features(run, chr_id);
+    PERFORM glass_atlas_%s_%s.insert_associated_peak_features(run, chr_id, requires_reload_only);
     RETURN;
 END;
 $$ LANGUAGE 'plpgsql';
 
-CREATE OR REPLACE FUNCTION glass_atlas_%s_%s.insert_associated_peak_features(run glass_atlas_mm9.sequencing_run, chr_id integer)
+CREATE OR REPLACE FUNCTION glass_atlas_%s_%s.insert_associated_peak_features(run glass_atlas_mm9.sequencing_run, chr_id integer, requires_reload_only boolean)
 RETURNS VOID AS $$
 DECLARE
     glass_peak record;
@@ -32,7 +32,7 @@ DECLARE
 	existing_feature glass_atlas_%s_%s.peak_feature;
 	instance glass_atlas_%s_%s.peak_feature_instance;
 	distance integer;
-BEGIN
+BEGIN    
     FOR glass_peak IN
         EXECUTE 'SELECT * FROM "' || run.source_table
         || '" WHERE chromosome_id = ' || chr_id
@@ -62,6 +62,7 @@ BEGIN
                 END) as relationship
             FROM glass_atlas_%s_%s.glass_transcript transcript
             WHERE chromosome_id = chr_id
+            AND (requires_reload_only = false OR requires_reload = true)
             AND public.cube(transcription_start - padding, transcription_end + padding)
                 OPERATOR(public.&&) glass_peak.start_end
         LOOP
@@ -102,32 +103,27 @@ BEGIN
 END;
 $$ LANGUAGE 'plpgsql';
 	
-CREATE OR REPLACE FUNCTION glass_atlas_%s_%s.update_peak_features(chr_id integer, null_only boolean)
+CREATE OR REPLACE FUNCTION glass_atlas_%s_%s.update_peak_features(chr_id integer, run_requires_reload_only boolean, transcript_requires_reload_only boolean)
 RETURNS VOID AS $$
 DECLARE
     run glass_atlas_mm9.sequencing_run;
 BEGIN
-    IF null_only THEN
-        DELETE FROM glass_atlas_%s_%s.peak_feature
-            WHERE glass_transcript_id IN 
-            (SELECT id FROM glass_atlas_%s_%s.glass_transcript
-                WHERE chromosome_id = chr_id
-                AND score IS NULL);
-    ELSE
-        DELETE FROM glass_atlas_%s_%s.peak_feature
-            WHERE glass_transcript_id IN 
-            (SELECT id FROM glass_atlas_%s_%s.glass_transcript
-                WHERE chromosome_id = chr_id);
-    END IF;
+    DELETE FROM glass_atlas_%s_%s.peak_feature
+        WHERE glass_transcript_id IN 
+        (SELECT id FROM glass_atlas_%s_%s.glass_transcript
+            WHERE chromosome_id = chr_id
+            AND (transcript_requires_reload_only = false OR requires_reload = true));
+    
     DELETE FROM glass_atlas_%s_%s.peak_feature_instance
         WHERE peak_feature_id NOT IN 
         (SELECT id FROM glass_atlas_%s_%s.peak_feature);
 
     FOR run IN
         SELECT * FROM glass_atlas_mm9.sequencing_run
-        WHERE peak_type_id IS NOT NULL
+        WHERE (run_requires_reload_only = false OR requires_reload = true)
+            AND peak_type_id IS NOT NULL
     LOOP
-        PERFORM glass_atlas_%s_%s.insert_associated_peak_features(run, chr_id);
+        PERFORM glass_atlas_%s_%s.insert_associated_peak_features(run, chr_id, transcript_requires_reload_only);
     END LOOP;
         
 	RETURN;
@@ -135,7 +131,7 @@ END;
 $$ LANGUAGE 'plpgsql';
 	
 
-""" % tuple([genome, cell_type]*28)
+""" % tuple([genome, cell_type]*26)
 
 if __name__ == '__main__':
     print sql(genome, cell_type)

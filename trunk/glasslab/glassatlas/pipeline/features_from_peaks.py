@@ -11,6 +11,7 @@ from glasslab.config import current_settings
 from datetime import datetime
 import os
 from glasslab.sequencing.datatypes.peak import GlassPeak
+from glasslab.glassatlas.datatypes.metadata import SequencingRun
 
 class TranscriptsFromTagsParser(GlassOptionParser):
     options = [
@@ -38,7 +39,8 @@ if __name__ == '__main__':
     
     cell_base.glass_transcript.turn_off_autovacuum()    
     if options.update_all:
-        cell_base.peak_feature.update_all_peak_features(null_only=False)
+        cell_base.peak_feature.update_peak_features_by_run()
+        SequencingRun.mark_all_reloaded()
     elif options.peak_table:
         GlassPeak._meta.db_table = options.schema_name and '%s"."%s' % (options.schema_name, options.peak_table) \
                                     or options.peak_table

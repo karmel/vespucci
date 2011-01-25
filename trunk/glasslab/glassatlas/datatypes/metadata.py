@@ -3,7 +3,7 @@ Created on Nov 8, 2010
 
 @author: karmel
 '''
-from django.db import models
+from django.db import models, connection
 from glasslab.config import current_settings
 from glasslab.utils.datatypes.basic_model import GlassModel
 
@@ -34,6 +34,8 @@ class SequencingRun(GlassModel):
     
     peak_type       = models.ForeignKey(PeakType, null=True, default=None, help_text='Does this run produce ChIP peaks?')
     
+    requires_reload = models.BooleanField(default=False, help_text='Should this run be reloaded with the next processing cycle?')
+    
     modified        = models.DateTimeField(auto_now=True)
     created         = models.DateTimeField(auto_now_add=True)
     
@@ -44,6 +46,14 @@ class SequencingRun(GlassModel):
     def __unicode__(self):
         return '%s (%s, "%s")' % (self.name, self.type, self.source_table.strip())
     
+    @classmethod
+    def mark_all_reloaded(cls):
+        '''
+        Mark all runs as reloaded. Called by external processes that have reloaded runs appropriately.
+        '''
+        connection.close()
+        cls.objects.all().update(requires_reload=False)
+        
 class SequencingRunAnnotation(GlassModel):
     '''
     Various freeform notes that can be attached to sequencing runs.

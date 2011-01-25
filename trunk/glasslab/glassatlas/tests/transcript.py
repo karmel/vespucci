@@ -47,7 +47,7 @@ class TranscriptTestCase(GlassTestCase):
     def _assert_results_add_transcripts(self):
         total_tags = 0
         for run in self.sequencing_runs:
-            GlassTag._meta.db_table = run.source_table
+            GlassTag._meta.db_table = run.source_table.strip()
             
             # Get transcripts from this source
             transcripts = self.cell_base.glass_transcript.objects.filter(
@@ -794,4 +794,78 @@ class TranscriptTestCase(GlassTestCase):
         
         trans = self.cell_base.glass_transcript.objects.all()[:1][0]
         self.assertEquals(trans.score, 15)
+    
+    ##################################################
+    # Requiring rerun
+    ##################################################
+    def test_stitched_no_reload(self): 
+        # If the transcript is stitched without change, no reload should occur
+        self.create_tag_table(sequencing_run_name='sample_run_1', sequencing_run_type='Gro-Seq')
+        chr_id, start, end = 6, 67218000, 67225957
+        GlassTag.objects.create(strand=0,
+                                chromosome_id=chr_id,
+                                start=start, end=end,
+                                start_end=(start, end)
+                                )
+        self.cell_base.glass_transcript.add_from_tags(GlassTag._meta.db_table)
+        self.cell_base.glass_transcript.stitch_together_transcripts()
         
+        connection.close()
+        self.cell_base.glass_transcript.mark_all_reloaded()
+        # Get seq assoc
+        curr_seq = self.cell_base.glass_transcript_sequence.objects.order_by('id')[:1][0]
+        connection.close()
+        self.create_tag_table(sequencing_run_name='sample_run_2', sequencing_run_type='Gro-Seq')
+        GlassTag.objects.create(strand=0,
+                                chromosome_id=chr_id,
+                                start=start + 100, end=end,
+                                start_end=(start + 100, end)
+                                )
+        self.cell_base.glass_transcript.add_from_tags(GlassTag._meta.db_table)
+        
+        self.cell_base.glass_transcript.stitch_together_transcripts()
+        connection.close()
+        
+        trans = self.cell_base.glass_transcript.objects.all()
+        
+        new_seq = self.cell_base.glass_transcript_sequence.objects.order_by('id')[:1][0]
+
+        self.assertEquals(trans.count(), 1)
+        self.assertFalse(trans[0].requires_reload)
+        self.assertEquals(curr_seq.id, new_seq.id)
+    
+    def test_stitched_requires_reload(self): 
+        # If the transcript is stitched without change, no reload should occur
+        self.create_tag_table(sequencing_run_name='sample_run_1', sequencing_run_type='Gro-Seq')
+        chr_id, start, end = 6, 67218000, 67225957
+        GlassTag.objects.create(strand=0,
+                                chromosome_id=chr_id,
+                                start=start, end=end,
+                                start_end=(start, end)
+                                )
+        self.cell_base.glass_transcript.add_from_tags(GlassTag._meta.db_table)
+        self.cell_base.glass_transcript.stitch_together_transcripts()
+        connection.close()
+        self.cell_base.glass_transcript.mark_all_reloaded()
+        
+        # Get seq assoc
+        curr_seq = self.cell_base.glass_transcript_sequence.objects.order_by('id')[:1][0]
+        connection.close()
+        self.create_tag_table(sequencing_run_name='sample_run_2', sequencing_run_type='Gro-Seq')
+        GlassTag.objects.create(strand=0,
+                                chromosome_id=chr_id,
+                                start=start - 100, end=end,
+                                start_end=(start + 100, end)
+                                )
+        self.cell_base.glass_transcript.add_from_tags(GlassTag._meta.db_table)
+        
+        self.cell_base.glass_transcript.stitch_together_transcripts()
+        connection.close()
+        
+        trans = self.cell_base.glass_transcript.objects.all()
+        
+        new_seq = self.cell_base.glass_transcript_sequence.objects.order_by('id')[:1][0]
+
+        self.assertEquals(trans.count(), 1)
+        self.assertTrue(trans[0].requires_reload)
+        self.assertNotEqual(curr_seq.id, new_seq.id)
