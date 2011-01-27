@@ -32,6 +32,7 @@ ALTER TABLE ONLY "glass_atlas_%s_%s"."peak_feature" ADD CONSTRAINT peak_feature_
 CREATE INDEX peak_feature_glass_transcript_idx ON "glass_atlas_%s_%s"."peak_feature" USING btree (glass_transcript_id);
 CREATE INDEX peak_feature_peak_type_idx ON "glass_atlas_%s_%s"."peak_feature" USING btree (peak_type_id);
 CREATE INDEX peak_feature_relationship_idx ON "glass_atlas_%s_%s"."peak_feature" USING btree (relationship);
+CREATE UNIQUE INDEX peak_feature_unique_idx ON "glass_atlas_%s_%s"."peak_feature" USING btree (glass_transcript_id, peak_type_id, relationship);
 
 CREATE TABLE "glass_atlas_%s_%s"."peak_feature_instance" (
     "id" int4 NOT NULL,
@@ -51,8 +52,9 @@ ALTER SEQUENCE "glass_atlas_%s_%s"."peak_feature_instance_id_seq" OWNED BY "glas
 ALTER TABLE "glass_atlas_%s_%s"."peak_feature_instance" ALTER COLUMN id SET DEFAULT nextval('"glass_atlas_%s_%s"."peak_feature_instance_id_seq"'::regclass);
 ALTER TABLE ONLY "glass_atlas_%s_%s"."peak_feature_instance" ADD CONSTRAINT peak_feature_instance_pkey PRIMARY KEY (id);
 CREATE INDEX peak_feature_instance_peak_feature_idx ON "glass_atlas_%s_%s"."peak_feature_instance" USING btree (peak_feature_id);
+CREATE UNIQUE INDEX peak_feature_instance_unique_idx ON "glass_atlas_%s_%s"."peak_feature_instance" USING btree (peak_feature_id, glass_peak_id, sequencing_run_id);
 
-""" % tuple([genome, cell_type]*22)
+""" % tuple([genome, cell_type]*24)
 
 if __name__ == '__main__':
     print sql(genome, cell_type)

@@ -67,6 +67,15 @@ BEGIN
                 OPERATOR(public.&&) glass_peak.start_end
         LOOP
             IF (rec.id IS NOT NULL) THEN
+                -- Find or create peak_feature_instance record
+                instance := (SELECT (inst.*)::glass_atlas_%s_%s.peak_feature_instance inst
+                                FROM glass_atlas_%s_%s.peak_feature_instance inst
+                                JOIN glass_atlas_%s_%s.peak_feature feat
+                                ON inst.peak_feature_id = feat.id
+                                WHERE inst.glass_peak_id = glass_peak.id
+                                AND inst.sequencing_run_id = run.id
+                                AND feat.glass_transcript_id = rec.id);
+            	
             	-- Find or create peak_feature record
             	existing_feature := (SELECT (feature.*)::glass_atlas_%s_%s.peak_feature FROM glass_atlas_%s_%s.peak_feature feature 
             	                        WHERE glass_transcript_id = rec.id
@@ -78,13 +87,6 @@ BEGIN
                         (rec.id, run.peak_type_id, rec.relationship) RETURNING * INTO existing_feature;
                 END IF;
                 
-                -- Find or create peak_feature_instance record
-                instance := (SELECT (inst.*)::glass_atlas_%s_%s.peak_feature_instance
-                                FROM glass_atlas_%s_%s.peak_feature_instance inst
-                                WHERE peak_feature_id = existing_feature.id
-                                AND sequencing_run_id = run.id
-                                AND glass_peak_id = glass_peak.id);
-                
                 -- Find the absolute val of the distance from the midpoint of the peak to the tss 
                 distance := (SELECT abs((glass_peak."end" + glass_peak.start)/2::integer
                                         - (CASE WHEN rec.strand = 0 THEN rec.transcription_start ELSE rec.transcription_end END)));
@@ -94,11 +96,17 @@ BEGIN
                         (existing_feature.id, run.id, glass_peak.id, distance) RETURNING * INTO instance;
                 ELSE
                     UPDATE glass_atlas_%s_%s.peak_feature_instance 
-                        SET distance_to_tss = distance WHERE id = instance.id;
+                        SET peak_feature_id = existing_feature.id,
+                            distance_to_tss = distance WHERE id = instance.id;
                 END IF;
         	END IF;
         END LOOP;
     END LOOP;
+    
+    -- Finally, remove any peak features that have been de-associated
+    DELETE FROM glass_atlas_%s_%s.peak_feature WHERE id NOT IN (
+        SELECT DISTINCT peak_feature_id FROM glass_atlas_%s_%s.peak_feature_instance);
+        
 	RETURN;
 END;
 $$ LANGUAGE 'plpgsql';
@@ -108,16 +116,6 @@ RETURNS VOID AS $$
 DECLARE
     run glass_atlas_mm9.sequencing_run;
 BEGIN
-    DELETE FROM glass_atlas_%s_%s.peak_feature
-        WHERE glass_transcript_id IN 
-        (SELECT id FROM glass_atlas_%s_%s.glass_transcript
-            WHERE chromosome_id = chr_id
-            AND (transcript_requires_reload_only = false OR requires_reload = true));
-    
-    DELETE FROM glass_atlas_%s_%s.peak_feature_instance
-        WHERE peak_feature_id NOT IN 
-        (SELECT id FROM glass_atlas_%s_%s.peak_feature);
-
     FOR run IN
         SELECT * FROM glass_atlas_mm9.sequencing_run
         WHERE (run_requires_reload_only = false OR requires_reload = true)
@@ -131,7 +129,7 @@ END;
 $$ LANGUAGE 'plpgsql';
 	
 
-""" % tuple([genome, cell_type]*26)
+""" % tuple([genome, cell_type]*25)
 
 if __name__ == '__main__':
     print sql(genome, cell_type)

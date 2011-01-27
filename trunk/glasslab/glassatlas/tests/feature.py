@@ -375,4 +375,36 @@ class FeatureTestCase(GlassTestCase):
         connection.close()
         self.assertTrue(self.cell_base.peak_feature.objects.count())
         self.assertTrue(self.cell_base.peak_feature_instance.objects.count())
+    
+    def test_reload_twice(self):
+        # Should update but not duplicate the peak feature
+        self.create_peak_table(sequencing_run_name='sample_run_1_h3k4me1', sequencing_run_type='ChIP-Seq')
+        chr_1, start_1, end_1 = 5, 10000, 10200
+        GlassPeak.objects.create(chromosome_id=chr_1,
+                                start=start_1, end=end_1,
+                                start_end=(start_1, end_1)
+                                )
+        source_1 = self._create_transcript(chr_1, 0, start_1-300, start_1)
+        connection.close()
+        run = SequencingRun.objects.get(source_table=GlassPeak._meta.db_table)
+        run.requires_reload = True
+        run.save()
+        connection.close()
+        self.cell_base.peak_feature.update_peak_features_by_run()
+        connection.close()
+        instance = self.cell_base.peak_feature_instance.objects.all()[:1][0]
+        self.assertEquals(self.cell_base.peak_feature.objects.count(),1)
+        self.assertEquals(self.cell_base.peak_feature_instance.objects.count(),1)
+        self.assertEquals(instance.distance_to_tss, 400)
         
+        peak = GlassPeak.objects.get(id=1)
+        peak.start = start_1 - 200
+        peak.save()
+        connection.close()
+        self.cell_base.peak_feature.update_peak_features_by_run()
+        connection.close()
+        
+        instance = self.cell_base.peak_feature_instance.objects.all()[:1][0]
+        self.assertEquals(self.cell_base.peak_feature.objects.count(),1)
+        self.assertEquals(self.cell_base.peak_feature_instance.objects.count(),1)
+        self.assertEquals(instance.distance_to_tss, 300)
