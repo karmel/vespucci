@@ -32,7 +32,7 @@ class SequencingRun(GlassModel):
     percent_mapped  = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True, default=None,
                                           help_text='What percent of tags were successfully mapped by Bowtie?')
     
-    peak_type       = models.ForeignKey(PeakType, null=True, default=None, help_text='Does this run produce ChIP peaks?')
+    peak_type       = models.ForeignKey(PeakType, null=True, default=None, blank=True, help_text='Does this run produce ChIP peaks?')
     
     requires_reload = models.BooleanField(default=False, help_text='Should this run be reloaded with the next processing cycle?')
     

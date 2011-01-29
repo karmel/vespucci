@@ -5,7 +5,7 @@ Created on Nov 12, 2010
 
 Convenience script for transcribed RNA functions.
 '''
-genome = 'prep'
+genome = 'gap_0'
 cell_type = 'thiomac'
 def sql(genome, cell_type):
     return """

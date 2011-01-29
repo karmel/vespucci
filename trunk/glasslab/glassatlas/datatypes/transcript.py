@@ -22,7 +22,7 @@ from django.db.models.aggregates import Count, Max, Sum
 from datetime import datetime
 
 MAX_GAP = 200 # Max gap between transcripts from the same run
-MAX_STITCHING_GAP = 10 # Max gap between transcripts being stitched together
+MAX_STITCHING_GAP = 0 # Max gap between transcripts being stitched together
 MIN_SCORE = 15 # Hide transcripts with scores below this threshold.
 
 def multiprocess_all_chromosomes(func, cls, *args):
@@ -55,7 +55,7 @@ def multiprocess_all_chromosomes(func, cls, *args):
     
 def wrap_add_transcripts_from_groseq(cls, chr_list, *args): wrap_errors(cls._add_transcripts_from_groseq, chr_list, *args)
 
-def wrap_stitch_together_transcripts(cls, chr_list): wrap_errors(cls._stitch_together_transcripts, chr_list)
+def wrap_stitch_together_transcripts(cls, chr_list, *args): wrap_errors(cls._stitch_together_transcripts, chr_list, *args)
 def wrap_set_scores(cls, chr_list): wrap_errors(cls._set_scores, chr_list)
 def wrap_associate_nucleotides(cls, chr_list): wrap_errors(cls._associate_nucleotides, chr_list)
 def wrap_force_vacuum(cls, chr_list): wrap_errors(cls._force_vacuum, chr_list)
@@ -243,20 +243,21 @@ class GlassTranscript(TranscriptBase):
     # Transcript cleanup and refinement
     ################################################
     @classmethod
-    def stitch_together_transcripts(cls):
-        multiprocess_all_chromosomes(wrap_stitch_together_transcripts, cls)
+    def stitch_together_transcripts(cls, allow_extended_gaps=True):
+        multiprocess_all_chromosomes(wrap_stitch_together_transcripts, cls, allow_extended_gaps)
         #wrap_stitch_together_transcripts(cls,[21, 22])
     
     @classmethod
-    def _stitch_together_transcripts(cls, chr_list):
+    def _stitch_together_transcripts(cls, chr_list, allow_extended_gaps=True):
         for chr_id in chr_list:
             print 'Stitching together transcripts for chromosome %d' % chr_id
             query = """
-                SELECT glass_atlas_%s_%s.stitch_transcripts_together(%d, %d);
+                SELECT glass_atlas_%s_%s.stitch_transcripts_together(%d, %d, %s);
                 SELECT glass_atlas_%s_%s.join_subtranscripts(%d);
                 """ % (current_settings.TRANSCRIPT_GENOME, 
                        current_settings.CURRENT_CELL_TYPE.lower(),
                        chr_id, MAX_STITCHING_GAP,
+                       allow_extended_gaps and 'true' or 'false',
                        current_settings.TRANSCRIPT_GENOME, 
                        current_settings.CURRENT_CELL_TYPE.lower(),
                        chr_id)

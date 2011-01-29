@@ -5,7 +5,7 @@ Created on Nov 12, 2010
 
 Convenience script for transcript functions.
 '''
-genome = 'prep'
+genome = 'gap_0'
 cell_type='thiomac'
 def sql(genome, cell_type):
     return """
@@ -271,7 +271,7 @@ RETURNS VOID AS $$
 END;
 $$ LANGUAGE 'plpgsql';
 
-CREATE OR REPLACE FUNCTION glass_atlas_%s_%s.stitch_transcripts_together(chr_id integer, allowed_gap integer)
+CREATE OR REPLACE FUNCTION glass_atlas_%s_%s.stitch_transcripts_together(chr_id integer, allowed_gap integer, allow_extended_gaps boolean)
 RETURNS VOID AS $$
  DECLARE
 	transcript_group record;
@@ -320,7 +320,7 @@ BEGIN
 				-- Does this transcript connect?
 				IF (merged_trans.transcription_end >= trans.transcription_start) THEN should_merge := true;
 				ELSE
-					IF (transcript_group.regions IS NOT NULL) THEN
+					IF (transcript_group.regions IS NOT NULL AND allow_extended_gaps = true) THEN
 						-- Should this gap be considered in light of an overlapping sequence?
 						overlapping_length := (SELECT (transcription_end - transcription_start) 
 											FROM genome_reference_mm9.sequence_transcription_region
