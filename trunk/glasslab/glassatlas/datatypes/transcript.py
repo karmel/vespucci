@@ -21,8 +21,8 @@ from random import randint
 from django.db.models.aggregates import Count, Max, Sum
 from datetime import datetime
 
-MAX_GAP = 200 # Max gap between transcripts from the same run
-MAX_STITCHING_GAP = 0 # Max gap between transcripts being stitched together
+MAX_GAP = 25 # Max gap between transcripts from the same run
+MAX_STITCHING_GAP = 25 # Max gap between transcripts being stitched together
 MIN_SCORE = 15 # Hide transcripts with scores below this threshold.
 
 def multiprocess_all_chromosomes(func, cls, *args):
@@ -252,8 +252,8 @@ class GlassTranscript(TranscriptBase):
         for chr_id in chr_list:
             print 'Stitching together transcripts for chromosome %d' % chr_id
             query = """
-                SELECT glass_atlas_%s_%s.stitch_transcripts_together(%d, %d, %s);
-                SELECT glass_atlas_%s_%s.join_subtranscripts(%d);
+                SELECT glass_atlas_%s_%s.stitch_transcripts_together_unbiased(%d, %d, %s);
+                --SELECT glass_atlas_%s_%s.join_subtranscripts(%d);
                 """ % (current_settings.TRANSCRIPT_GENOME, 
                        current_settings.CURRENT_CELL_TYPE.lower(),
                        chr_id, MAX_STITCHING_GAP,

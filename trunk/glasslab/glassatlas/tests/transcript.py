@@ -3,6 +3,7 @@ Created on Jan 4, 2011
 
 @author: karmel
 '''
+import unittest
 from glasslab.glassatlas.tests.base import GlassTestCase
 from django.db import connection
 from random import randint
@@ -869,3 +870,6 @@ class TranscriptTestCase(GlassTestCase):
         self.assertEquals(trans.count(), 1)
         self.assertTrue(trans[0].requires_reload)
         self.assertNotEqual(curr_seq.id, new_seq.id)
+
+if __name__=='__main__':
+	unittest.main()

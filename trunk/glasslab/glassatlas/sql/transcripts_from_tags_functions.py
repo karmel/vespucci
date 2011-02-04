@@ -5,7 +5,7 @@ Created on Nov 12, 2010
 
 Convenience script for transcript functions.
 '''
-genome = 'gap_0'
+genome = 'gap_10'
 cell_type='thiomac'
 def sql(genome, cell_type):
     return """
@@ -373,6 +373,72 @@ BEGIN
 END;
 $$ LANGUAGE 'plpgsql';
 
+CREATE OR REPLACE FUNCTION glass_atlas_%s_%s.stitch_transcripts_together_unbiased(chr_id integer, allowed_gap integer, allow_extended_gaps boolean)
+RETURNS VOID AS $$
+ DECLARE
+    trans glass_atlas_%s_%s.glass_transcript;
+    merged_trans glass_atlas_%s_%s.glass_transcript;
+    overlapping_length integer;
+    should_merge boolean := false;
+    merged boolean := false;
+    max_gap integer;
+    length_gap integer;
+BEGIN
+    -- Ignore any RefSeq boundaries
+	FOR strand IN 0..1 
+ 	LOOP
+
+	    FOR trans IN 
+	        EXECUTE 'SELECT' 
+	            || ' transcript.* '
+	        || ' FROM "glass_atlas_%s_%s"."glass_transcript_' || chr_id ||'" transcript'
+			|| ' WHERE strand = ' || strand
+	        || ' ORDER BY start_end ASC '
+	    LOOP
+	        max_gap := allowed_gap;
+	        IF merged_trans IS NULL THEN merged_trans := trans;
+	        ELSE
+	            should_merge := false;
+	            -- Does this transcript connect?
+	            IF (merged_trans.transcription_end >= trans.transcription_start) THEN should_merge := true;
+	            ELSE
+	                IF (trans.transcription_start - merged_trans.transcription_end) <= max_gap THEN should_merge := true;
+	                END IF;
+	            END IF;
+            
+	            IF should_merge = true
+	                THEN 
+	                    merged_trans := (SELECT glass_atlas_%s_%s.merge_transcripts(merged_trans, trans));
+	                    -- Delete/update old associations
+	                    PERFORM glass_atlas_%s_%s.update_transcript_source_records(merged_trans, trans);
+	                    PERFORM glass_atlas_%s_%s.update_transcribed_rna_records(merged_trans, trans);
+	                    PERFORM glass_atlas_%s_%s.remove_transcript_region_records(trans);
+	                    EXECUTE 'DELETE FROM glass_atlas_%s_%s.glass_transcript_' || trans.chromosome_id || ' WHERE id = ' || trans.id;
+	                    merged := true;
+	            ELSE
+	                -- We have reached a gap; close off any open merged_transcripts
+	                IF merged THEN
+	                    PERFORM glass_atlas_%s_%s.save_transcript(merged_trans);
+	                END IF;
+	                -- And reset the merged transcript
+	                merged_trans := trans;
+	                merged := false;
+	            END IF;
+	        END IF;
+	    END LOOP;
+    
+	    -- We may have one final merged transcript awaiting a save:
+	    IF merged THEN
+	        PERFORM glass_atlas_%s_%s.save_transcript(merged_trans);
+	    END IF;
+	    -- And reset the merged transcript
+	    merged_trans := NULL;
+	    merged := false;
+	END LOOP;
+    RETURN;
+END;
+$$ LANGUAGE 'plpgsql';
+
 CREATE OR REPLACE FUNCTION glass_atlas_%s_%s.join_subtranscripts(chr_id integer)
 RETURNS VOID AS $$
  DECLARE
@@ -459,7 +525,7 @@ BEGIN
 		|| ' ON transcript2.id = grouped_seq2.glass_transcript_id'
 		|| ' WHERE (grouped_seq1.regions @> grouped_seq2.regions'
 				|| ' OR grouped_seq2.regions IS NULL)'
-		|| ' ORDER by transcript1.start_end ASC)';
+		|| ' )';
 END;
 $$ LANGUAGE 'plpgsql';
 
@@ -494,7 +560,7 @@ BEGIN
 		|| ' WHERE seq1.id IS NULL AND seq2.id IS NULL'
 		|| ' AND (grouped_nc1.regions @> grouped_nc2.regions'
 				|| ' OR grouped_nc2.regions IS NULL)'
-		|| ' ORDER by transcript1.start_end ASC)';
+		|| ' )';
 END;
 $$ LANGUAGE 'plpgsql';
 
@@ -520,7 +586,7 @@ BEGIN
 END;
 $$ LANGUAGE 'plpgsql';
 
-""" % tuple([genome, cell_type]*96)
+""" % tuple([genome, cell_type]*107)
 
 if __name__ == '__main__':
     print sql(genome, cell_type)

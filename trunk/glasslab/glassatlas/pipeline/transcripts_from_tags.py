@@ -29,6 +29,8 @@ class TranscriptsFromTagsParser(GlassOptionParser):
                            help='Should obtaining nucleotide sequences to transcripts be skipped?'),
                make_option('--skip_reassociation',action='store_true', dest='skip_reassociation',  
                            help='Should reassociation of peak features to transcripts be skipped?'),
+               make_option('--disable_extended_gaps',action='store_true', dest='disable_extended_gaps',  
+                           help='Should extended gaps (i.e., under RefSeq regions) be disallowed?'),
                 ]
 if __name__ == '__main__':
     parser = TranscriptsFromTagsParser()
@@ -50,7 +52,9 @@ if __name__ == '__main__':
         cell_base.glass_transcript.force_vacuum()
     
     if not options.skip_stitching:
-        cell_base.glass_transcript.stitch_together_transcripts()
+        allow_extended_gaps = True
+        if options.disable_extended_gaps: allow_extended_gaps = False
+        cell_base.glass_transcript.stitch_together_transcripts(allow_extended_gaps=allow_extended_gaps)
         cell_base.glass_transcript.force_vacuum()
     #if not options.skip_nucleotides:
         #cell_base.glass_transcript.associate_nucleotides()
