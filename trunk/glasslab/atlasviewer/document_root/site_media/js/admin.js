@@ -12,7 +12,7 @@ var fill_length = function() {
 	django.jQuery('#length-message').text(
 		'Length: ' +
 		(django.jQuery('#id_transcription_end')[0].value -
-			django.jQuery('#id_transcription_start')[0].value) 
+			django.jQuery('#id_transcription_start')[0].value + 1) 
 	);
 
 };

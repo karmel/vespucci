@@ -5,7 +5,7 @@ Created on Nov 12, 2010
 
 Convenience script for feature association functions.
 '''
-genome = 'ref'
+genome = 'gap_0'
 cell_type='thiomac'
 def sql(genome, cell_type):
     return """

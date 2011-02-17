@@ -105,6 +105,3 @@ class PeakFeatureInstance(GlassModel):
                                            str(self.sequencing_run), 
                                            self.distance_to_tss)
 
-    ################################################
-    # Association with transcripts
-    ################################################

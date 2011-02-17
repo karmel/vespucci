@@ -9,20 +9,26 @@ from django.db import models, connection
 from glasslab.utils.datatypes.genome_reference import Chromosome,\
     SequenceTranscriptionRegion, PatternedTranscriptionRegion,\
     ConservedTranscriptionRegion, NonCodingTranscriptionRegion
-from glasslab.glassatlas.datatypes.metadata import SequencingRun
+from glasslab.glassatlas.datatypes.metadata import SequencingRun,\
+    ExpectedTagCount
 from glasslab.sequencing.datatypes.tag import multiprocess_glass_tags,\
     wrap_errors
 from glasslab.utils.datatypes.basic_model import CubeField, GlassModel
 from multiprocessing import Pool
 from glasslab.utils.database import execute_query,\
-    execute_query_without_transaction
+    execute_query_without_transaction, fetch_rows
 import os
-from random import randint
+from random import randint, sample
 from django.db.models.aggregates import Count, Max, Sum
 from datetime import datetime
+from math import ceil
 
-MAX_GAP = 25 # Max gap between transcripts from the same run
-MAX_STITCHING_GAP = 25 # Max gap between transcripts being stitched together
+# The tags returned from the sequencing run are shorter than we know them to be biologically
+# We can therefore extend the mapped tag region by a set number of bp if an extension is passed in
+TAG_EXTENSION = 50
+
+MAX_GAP = 200 # Max gap between transcripts from the same run
+MAX_STITCHING_GAP = MAX_GAP # Max gap between transcripts being stitched together
 MIN_SCORE = 15 # Hide transcripts with scores below this threshold.
 
 def multiprocess_all_chromosomes(func, cls, *args):
@@ -56,6 +62,7 @@ def multiprocess_all_chromosomes(func, cls, *args):
 def wrap_add_transcripts_from_groseq(cls, chr_list, *args): wrap_errors(cls._add_transcripts_from_groseq, chr_list, *args)
 
 def wrap_stitch_together_transcripts(cls, chr_list, *args): wrap_errors(cls._stitch_together_transcripts, chr_list, *args)
+def wrap_set_score_thresholds(cls, chr_list, *args): wrap_errors(cls._set_score_thresholds, chr_list, *args)
 def wrap_set_scores(cls, chr_list): wrap_errors(cls._set_scores, chr_list)
 def wrap_associate_nucleotides(cls, chr_list): wrap_errors(cls._associate_nucleotides, chr_list)
 def wrap_force_vacuum(cls, chr_list): wrap_errors(cls._force_vacuum, chr_list)
@@ -92,13 +99,22 @@ class CellTypeBase(object):
     def glass_transcribed_rna_source(self): 
         from glasslab.glassatlas.datatypes.transcribed_rna import GlassTranscribedRnaSource
         return GlassTranscribedRnaSource
-
+    @property
+    def peak_feature(self): 
+        from glasslab.glassatlas.datatypes.feature import PeakFeature
+        return PeakFeature
+    @property
+    def peak_feature_instance(self):
+        from glasslab.glassatlas.datatypes.feature import PeakFeatureInstance 
+        return PeakFeatureInstance
+    
     def get_transcript_models(self):
         return [self.glass_transcript, self.filtered_glass_transcript,
                 self.glass_transcript_source, self.glass_transcript_nucleotides,
                 self.glass_transcript_sequence, self.glass_transcript_non_coding,
                 self.glass_transcript_patterned, self.glass_transcript_conserved,
-                self.glass_transcribed_rna, self.glass_transcribed_rna_source]
+                self.glass_transcribed_rna, self.glass_transcribed_rna_source,
+                self.peak_feature, self.peak_feature_instance]
 
     def get_cell_type_base(self, cell_type):
         correlations = self.__class__.get_correlations()
@@ -152,11 +168,22 @@ class TranscriptBase(TranscriptModelBase):
                                   self.chromosome.name.strip(), 
                                   self.transcription_start, 
                                   self.transcription_end)
-    
+    @classmethod
+    def reset_table_name(cls, genome=''):
+        '''
+        Dynamically reset the current db_table name. Useful for 
+        switching between test DBs.
+        '''
+        cls._meta.db_table = 'glass_atlas_%s_%s"."glass_transcript' % (
+                                genome or current_settings.TRANSCRIPT_GENOME, 
+                                cls.cell_base.cell_type.lower())
+        
     @classmethod 
     def add_from_tags(cls,  tag_table):
         connection.close()
         sequencing_run = SequencingRun.objects.get(source_table=tag_table)
+        if not sequencing_run.standard: 
+            raise Exception('This is not a table marked as "standard," and will not be added to the transcript set.')
         if sequencing_run.type.strip() == 'Gro-Seq':
             cls.add_transcripts_from_groseq(tag_table, sequencing_run)
         elif sequencing_run.type.strip() == 'RNA-Seq':
@@ -232,11 +259,11 @@ class GlassTranscript(TranscriptBase):
         for chr_id in chr_list:
             print 'Adding transcripts for chromosome %d' % chr_id
             query = """
-                SELECT glass_atlas_%s_%s.save_transcripts_from_sequencing_run(%d, %d,'%s', %d);
+                SELECT glass_atlas_%s_%s.save_transcripts_from_sequencing_run(%d, %d,'%s', %d, %d);
                 """ % (current_settings.TRANSCRIPT_GENOME,
                        current_settings.CURRENT_CELL_TYPE.lower(),
                        sequencing_run.id, chr_id, 
-                       sequencing_run.source_table.strip(), MAX_GAP)
+                       sequencing_run.source_table.strip(), MAX_GAP, TAG_EXTENSION)
             execute_query(query)
     
     ################################################
@@ -252,16 +279,72 @@ class GlassTranscript(TranscriptBase):
         for chr_id in chr_list:
             print 'Stitching together transcripts for chromosome %d' % chr_id
             query = """
-                SELECT glass_atlas_%s_%s.stitch_transcripts_together_unbiased(%d, %d, %s);
-                --SELECT glass_atlas_%s_%s.join_subtranscripts(%d);
+                SELECT glass_atlas_%s_%s.stitch_transcripts_together(%d, %d, %s);
                 """ % (current_settings.TRANSCRIPT_GENOME, 
                        current_settings.CURRENT_CELL_TYPE.lower(),
                        chr_id, MAX_STITCHING_GAP,
-                       allow_extended_gaps and 'true' or 'false',
-                       current_settings.TRANSCRIPT_GENOME, 
-                       current_settings.CURRENT_CELL_TYPE.lower(),
-                       chr_id)
+                       allow_extended_gaps and 'true' or 'false')
             execute_query(query)
+            
+    @classmethod
+    def set_score_thresholds(cls, sample_count=500, sample_size=100, allow_zero=False):
+        multiprocess_all_chromosomes(wrap_set_score_thresholds, cls, sample_count, sample_size, allow_zero)
+    
+    @classmethod
+    def _set_score_thresholds(cls, chr_list, sample_count=500, sample_size=100, allow_zero=False):
+        '''
+        Randomly sample, for all standard tables, expected tag counts by chromosome and
+        strand. Store expected tag counts.
+        
+        If allow_zero = True, regions of zero tags are included in the sample average.
+        (By default, regions with zero tags are omitted.)
+        
+        sample_count # Number of samples to take from each run
+        sample_size # Sample size in bp
+        
+        Note that transcription start and end are inclusive, so length = end - start + 1.
+        
+        Note that sample_count + 2% samples are kept, with the bottom and top 1% thrown out. 
+        '''
+        for chr_id in chr_list:
+            connection.close()
+            
+            print 'Setting score threshold for chromosome %d' % chr_id
+            # First, set up regions in each chr to sample.
+            chr = Chromosome.objects.get(id=chr_id)
+            position_range = chr.length - 1
+            
+            runs_to_sample = 3
+            runs = list(SequencingRun.objects.filter(type='Gro-Seq', standard=True))
+            # Get all samples
+            for strand in (0,1):
+                tag_counts = []
+                for i, run in enumerate(sample(runs, runs_to_sample)):
+                    connection.close()
+                    acquired = 0
+                    while acquired < (sample_count + .02*sample_count):
+                        start = randint(0,position_range - sample_size + 1)
+                        query = """
+                            SELECT count(id) FROM "%s_%d" 
+                            WHERE strand = %d
+                            AND start_end OPERATOR(public.<@) public.cube(%d, %d);
+                            """ % (run.source_table.strip(), chr_id, strand, start, (start + sample_size - 1))
+                        count = fetch_rows(query)[0][0]
+                        if count > 0 or allow_zero:
+                            tag_counts.append(count)
+                            acquired += 1
+                            
+                # Cut out top and bottom 1%
+                total_counts = len(tag_counts)
+                tag_counts.sort()
+                tag_counts = tag_counts[int(.01*total_counts):(int(.01*total_counts) + total_counts)]
+                    
+                average = sum(tag_counts)/len(tag_counts)
+                record, created = ExpectedTagCount.objects.get_or_create(chromosome=chr, strand=strand)
+                record.sample_count = sample_count
+                record.sample_size = sample_size
+                record.tag_count = average
+                record.save()
             
     @classmethod
     def set_scores(cls):

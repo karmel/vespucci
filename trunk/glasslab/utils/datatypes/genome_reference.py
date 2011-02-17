@@ -59,6 +59,7 @@ class Chromosome(GlassModel):
     Unique record of chromosome, i.e. 'chr1', 'chrUn_random', etc
     '''
     name = models.CharField(max_length=25, blank=False)
+    length = models.IntegerField(max_length=25, blank=False)
     
     class Meta: 
         db_table    = 'genome_reference_%s"."chromosome' % current_settings.REFERENCE_GENOME

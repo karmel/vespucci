@@ -308,7 +308,7 @@ class GlassTag(GlassSequencingOutput):
             execute_query(update_query)
     
     @classmethod 
-    def add_record_of_tags(cls, description='', type='Gro-Seq'):
+    def add_record_of_tags(cls, description='', type='Gro-Seq', standard=False):
         '''
         Add SequencingRun record with the details of this run.
         
@@ -320,7 +320,8 @@ class GlassTag(GlassSequencingOutput):
                                                   'total_tags': cls.objects.count(),
                                                   'description': description,
                                                   'cell_type': current_settings.CURRENT_CELL_TYPE,
-                                                  'type': type }
+                                                  'type': type,
+                                                  'standard': standard }
                                                )
         return s
 

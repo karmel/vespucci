@@ -6,7 +6,7 @@ Created on Nov 12, 2010
 Convenience script for generated create table statements for transcript tables.
 '''
 
-genome = 'ref'
+genome = 'gap2_200'
 cell_type = 'thiomac'
 def sql(genome, cell_type):
     return """

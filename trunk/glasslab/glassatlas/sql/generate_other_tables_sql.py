@@ -21,6 +21,8 @@ CREATE TABLE "glass_atlas_%s"."sequencing_run" (
     "total_tags" int8 DEFAULT NULL,
     "percent_mapped" numeric(5,2) DEFAULT NULL,
     "peak_type_id" int4 DEFAULT NULL,
+    "standard" boolean DEFAULT false,
+    "requires_reload" boolean DEFAULT false,
     "modified" timestamp(6) NULL DEFAULT NULL,
     "created" timestamp(6) NULL DEFAULT NULL
 );
@@ -68,7 +70,30 @@ CREATE SEQUENCE "glass_atlas_%s"."peak_type_id_seq"
 ALTER SEQUENCE "glass_atlas_%s"."peak_type_id_seq" OWNED BY "glass_atlas_%s"."peak_type".id;
 ALTER TABLE "glass_atlas_%s"."peak_type" ALTER COLUMN id SET DEFAULT nextval('"glass_atlas_%s"."peak_type_id_seq"'::regclass);
 ALTER TABLE ONLY "glass_atlas_%s"."peak_type" ADD CONSTRAINT peak_type_pkey PRIMARY KEY (id);
-""" % tuple([genome]*28)
+
+CREATE TABLE "glass_atlas_%s"."expected_tag_count" (
+    "id" int4 NOT NULL,
+    "chromosome_id" int4 DEFAULT NULL,
+    "strand" int2 DEFAULT NULL,
+    "sample_count" int4 DEFAULT NULL,
+    "sample_size" int2 DEFAULT NULL,
+    "tag_count" float4 DEFAULT NULL,
+    "modified" timestamp(6) NULL DEFAULT NULL,
+    "created" timestamp(6) NULL DEFAULT NULL
+);
+GRANT ALL ON TABLE "glass_atlas_%s"."expected_tag_count" TO  "glass";
+CREATE SEQUENCE "glass_atlas_%s"."expected_tag_count_id_seq"
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+ALTER SEQUENCE "glass_atlas_%s"."expected_tag_count_id_seq" OWNED BY "glass_atlas_%s"."expected_tag_count".id;
+ALTER TABLE "glass_atlas_%s"."expected_tag_count" ALTER COLUMN id SET DEFAULT nextval('"glass_atlas_%s"."expected_tag_count_id_seq"'::regclass);
+ALTER TABLE ONLY "glass_atlas_%s"."expected_tag_count" ADD CONSTRAINT expected_tag_count_pkey PRIMARY KEY (id);
+CREATE UNIQUE INDEX expected_tag_count_chr_strand_idx ON "glass_atlas_%s"."expected_tag_count" USING btree (chromosome_id, strand);
+
+""" % tuple([genome]*37)
 
 if __name__ == '__main__':
     print sql(genome, cell_type)

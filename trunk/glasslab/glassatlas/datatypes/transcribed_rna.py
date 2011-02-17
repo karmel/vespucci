@@ -5,7 +5,7 @@ Created on Dec 16, 2010
 '''
 from glasslab.config import current_settings
 from glasslab.glassatlas.datatypes.transcript import TranscriptBase, \
-    multiprocess_all_chromosomes, TranscriptSourceBase
+    multiprocess_all_chromosomes, TranscriptSourceBase, MAX_GAP
 from glasslab.sequencing.datatypes.tag import multiprocess_glass_tags,\
     wrap_errors
 from glasslab.utils.database import execute_query
@@ -17,7 +17,7 @@ def wrap_associate_transcribed_rna(cls, chr_list):
 def wrap_stitch_together_transcribed_rna(cls, chr_list): 
     wrap_errors(cls._stitch_together_transcribed_rna, chr_list)
 
-MAX_GAP_RNA = 10
+MAX_GAP_RNA = MAX_GAP
 class GlassTranscribedRna(TranscriptBase):
     '''
     Transcribed RNA sequenced in RNA-Seq experiments.

@@ -23,10 +23,12 @@ class TranscriptsFromTagsParser(GlassOptionParser):
                            help='Output directory for bed file.'),
                make_option('--skip_stitching',action='store_true', dest='skip_stitching',  
                            help='Should the stitching together of transcripts be skipped?'),
+               make_option('--reset_score_thresholds',action='store_true', dest='reset_score_thresholds',  
+                           help='Should the expected score thresholds for each chromosome and strand be reset?'),
                make_option('--skip_scoring',action='store_true', dest='skip_scoring',  
                            help='Should the scoring of transcripts be skipped?'),
-               make_option('--skip_nucleotides',action='store_true', dest='skip_nucleotides',  
-                           help='Should obtaining nucleotide sequences to transcripts be skipped?'),
+               make_option('--associate_nucleotides',action='store_true', dest='associate_nucleotides',  
+                           help='Should obtaining nucleotide sequences to transcripts be attempted?'),
                make_option('--skip_reassociation',action='store_true', dest='skip_reassociation',  
                            help='Should reassociation of peak features to transcripts be skipped?'),
                make_option('--disable_extended_gaps',action='store_true', dest='disable_extended_gaps',  
@@ -56,8 +58,13 @@ if __name__ == '__main__':
         if options.disable_extended_gaps: allow_extended_gaps = False
         cell_base.glass_transcript.stitch_together_transcripts(allow_extended_gaps=allow_extended_gaps)
         cell_base.glass_transcript.force_vacuum()
-    #if not options.skip_nucleotides:
-        #cell_base.glass_transcript.associate_nucleotides()
+    
+    if options.associate_nucleotides:
+        cell_base.glass_transcript.associate_nucleotides()
+    
+    if options.reset_score_thresholds:
+        cell_base.glass_transcript.set_score_thresholds()
+        
     if not options.skip_scoring:
         cell_base.glass_transcript.set_scores()
         

@@ -78,7 +78,7 @@ class GlassTestCase(unittest.TestCase):
         GlassTag.create_partition_tables()
         GlassTag.add_indices()
         self.sequencing_runs.append(GlassTag.add_record_of_tags(description='Created during a unit test.', 
-                                                                type=sequencing_run_type))
+                                                                type=sequencing_run_type, standard=True))
         connection.close()
         
     def _create_transcript(self, chr, strand, start, end):

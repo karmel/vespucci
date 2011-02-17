@@ -138,7 +138,7 @@ class TranscriptBase(ReadOnlyAdmin):
     search_fields   = ['transcription_start','transcription_end',]
     
     def transcript_length(self, obj):
-        return obj.transcription_end - obj.transcription_start
+        return obj.transcription_end - obj.transcription_start + 1
     transcript_length.short_description = 'Length'
     
     def ucsc_browser_link(self, obj):
