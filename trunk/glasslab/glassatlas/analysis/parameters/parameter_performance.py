@@ -138,8 +138,7 @@ class ParameterPerformance(models.Model):
         Modeled after Algorithm 1 in https://cours.etsmtl.ca/sys828/REFS/A1/Fawcett_PRL2006.pdf
         '''
         # Set up pyplot
-        pyplot.figure(figsize=(12,12))
-        pyplot.subplot(121)
+        pyplot.figure(figsize=(8,8))
         pyplot.title('ROC: Gap Threshold Comparisons')
         pyplot.xlabel('False positive rate')
         pyplot.ylabel('True positive rate')
@@ -182,7 +181,7 @@ class ParameterPerformance(models.Model):
             label = '%s (AUC: %.3f)' % (db_version, area)
             pyplot.plot(fp_rate, tp_rate, choice(['-','--','-.',':']), label=label)
         
-        pyplot.legend(loc=2)
+        pyplot.legend(loc='bottom left')
         pyplot.savefig('/Users/karmel/Desktop/Projects/GlassLab/Notes and Reports/Glass Atlas/parameter_determination_2011_01_28/pyplot/roc_comparison.png')
 
     @classmethod
