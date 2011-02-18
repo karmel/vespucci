@@ -12,7 +12,7 @@ evaluating parameters, as the "classification" and even truth value
 being compared against are not set in stone. 
 '''
 from __future__ import division
-from django.db import models
+from django.db import models, connection
 from glasslab.config import current_settings
 from glasslab.glassatlas.datatypes.transcript import CellTypeBase
 from matplotlib import pyplot
@@ -67,26 +67,23 @@ class ParameterPerformance(models.Model):
         glass_transcript = cls.cell_base.glass_transcript
         # First, get all PolII Serine5 peaks
         glass_transcript.reset_table_name(genome='ref') 
-        ref_transcripts = list(glass_transcript.objects.filter(score__gte=15).order_by('?')[:1500])
-        ref_transcripts += list(glass_transcript.objects.filter(score__isnull=True).order_by('?')[:500])
+        ref_transcripts = list(glass_transcript.objects.filter(score__gte=15).order_by('?')[:5000])
         
         # For each parameter tested, evaluate whether the ref transcript was 
         # appropriately called.   
         for db_version in cls.db_choices:
             glass_transcript.reset_table_name(genome=db_version)
             for ref in ref_transcripts:
-                # Check 1000bp of trans including start site, 
-                # and 1000bp past end point
+                # Check whole trans
                 length = ref.transcription_end - ref.transcription_start
                 start_1 = ref.strand and (ref.transcription_end - length) or ref.transcription_start
                 end_1 = ref.strand and ref.transcription_end or (ref.transcription_start + length)
                 # First check refseq trans
                 cls.call_transcript(glass_transcript, db_version, start_1, end_1, ref, True)
                 
-                # Then check end segment
-                tail_length = 1000
-                start_2 = ref.strand and (ref.transcription_start - (tail_length+500)) or (ref.transcription_end + 500)
-                end_2 = ref.strand and (ref.transcription_start - 500) or (ref.transcription_end + (tail_length+500))
+                # Then check end segment after transcript as a true negative
+                start_2 = ref.strand and (ref.transcription_start - (length+500)) or (ref.transcription_end + 500)
+                end_2 = ref.strand and (ref.transcription_start - 500) or (ref.transcription_end + (length+500))
                 cls.call_transcript(glass_transcript, db_version, start_2, end_2, ref, False)
                     
     @classmethod 
@@ -129,6 +126,7 @@ class ParameterPerformance(models.Model):
             if verdict: record.false_positive, record.true_negative = 1, 0
             else:       record.false_positive, record.true_negative = 0, 1
         record.save()
+        connection.close()
         
     @classmethod
     def draw_roc(cls):
@@ -148,6 +146,7 @@ class ParameterPerformance(models.Model):
         # Get truth values
         for db_version in cls.db_choices:
             # Initialize x and y vals
+            #print db_version
             fp_rate, tp_rate = [], []
             
             area = 0
@@ -157,6 +156,7 @@ class ParameterPerformance(models.Model):
             guesses = cls.objects.filter(db_version=db_version).order_by('-score')
             for guess in guesses:
                 if guess.score != last_val: 
+                    #print guess.score, fp_count, tp_count
                     fp_rate.append(fp_count/negative_count)
                     tp_rate.append(tp_count/positive_count)
                     
@@ -180,8 +180,7 @@ class ParameterPerformance(models.Model):
             # Add labeled line to pyplot
             label = '%s (AUC: %.3f)' % (db_version, area)
             pyplot.plot(fp_rate, tp_rate, choice(['-','--','-.',':']), label=label)
-        
-        pyplot.legend(loc='bottom left')
+        pyplot.legend(loc='lower right')
         pyplot.savefig('/Users/karmel/Desktop/Projects/GlassLab/Notes and Reports/Glass Atlas/parameter_determination_2011_01_28/pyplot/roc_comparison.png')
 
     @classmethod
