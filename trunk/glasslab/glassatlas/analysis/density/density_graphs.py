@@ -58,7 +58,7 @@ class DensityAnalyzer(object):
             pyplot.savefig('/Users/karmel/Desktop/Projects/GlassLab/Notes and Reports/Glass Atlas/density_analysis/pyplot/density_graph_%d.png' % chr_id)
 
     def density_csv(self):
-	    for chr_id in (22,):
+        for chr_id in (22,):
             
             for strand in (0,1):
                 transcripts = self.get_transcripts_for_chromosome(chr_id, strand)
@@ -70,9 +70,9 @@ class DensityAnalyzer(object):
                     y = [density]*2
                     ','.join(x) + ',' + ','.join(y) + '\n'
                 connection.close()
-		        f = open('/Users/karmel/Desktop/transcript_data_chr_%d_strand_%d' % (chr_id, strand), 'w')
-		        f.write(output)
-		
+                f = open('/Users/karmel/Desktop/transcript_data_chr_%d_strand_%d' % (chr_id, strand), 'w')
+                f.write(output)
+
 if __name__ == '__main__':
     da = DensityAnalyzer()
-    da.graph_density()
+    da.density_csv()
