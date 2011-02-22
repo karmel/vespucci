@@ -67,7 +67,7 @@ class ParameterPerformance(models.Model):
         glass_transcript = cls.cell_base.glass_transcript
         # First, get all PolII Serine5 peaks
         glass_transcript.reset_table_name(genome='ref') 
-        ref_transcripts = list(glass_transcript.objects.filter(score__gte=15).order_by('?')[:5000])
+        ref_transcripts = list(glass_transcript.objects.filter(score__gte=15).order_by('?')[:1000])
         
         # For each parameter tested, evaluate whether the ref transcript was 
         # appropriately called.   

@@ -5,7 +5,7 @@ Created on Nov 12, 2010
 
 Convenience script for transcript functions.
 '''
-genome = 'gap2_200'
+genome = 'gap3_100_'
 cell_type='thiomac'
 def sql(genome, cell_type):
     return """

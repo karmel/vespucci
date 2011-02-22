@@ -17,7 +17,7 @@ CREATE TABLE "glass_atlas_%s_%s"."glass_transcribed_rna" (
     "strand" int2 DEFAULT NULL,
     "transcription_start" int8 DEFAULT NULL,
     "transcription_end" int8 DEFAULT NULL,
-    "start_end" "public"."cube" DEFAULT NULL,
+    "start_end" box DEFAULT NULL,
     "modified" timestamp(6) NULL DEFAULT NULL,
     "created" timestamp(6) NULL DEFAULT NULL
 );

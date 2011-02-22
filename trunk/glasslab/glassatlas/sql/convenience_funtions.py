@@ -34,6 +34,17 @@ BEGIN
         || ' | <a href="http://genome.ucsc.edu/cgi-bin/hgTracks?hgS_doLoadUrl=submit&amp;hgS_loadUrlName=http%3A%2F%2Fbiowhat.ucsd.edu%2Fkallison%2Fucsc%2Fsessions%2Fall_tracks.txt&amp;db=mm9&amp;position=' || chr_name || '%3A+' || transcription_start || '-' || transcription_end || '" target="_blank">All</a>';
 END;
 $$ LANGUAGE 'plpgsql';
+
+CREATE OR REPLACE FUNCTION public.make_box(x1 numeric, y1 numeric, x2 numeric, y2 numeric)
+RETURNS box AS $$
+DECLARE
+    s text;
+BEGIN
+    s := '((' || x1 || ',' || y1 || '),(' || x2 || ',' || y2 || '))';
+    RETURN s::box;
+END;
+$$ LANGUAGE 'plpgsql';
+
 """
 
 if __name__ == '__main__':

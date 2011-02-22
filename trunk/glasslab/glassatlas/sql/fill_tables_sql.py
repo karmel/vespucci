@@ -6,8 +6,8 @@ Created on Nov 12, 2010
 Convenience script for filling transcript tables from one schema to another.
 '''
 
-source_genome = 'prep'
-dest_genome = 'mm9'
+source_genome = 'gap2_0'
+dest_genome = 'no_overlap'
 cell_type = 'thiomac'
 def sql(source_genome, dest_genome, cell_type):
     return """
@@ -73,11 +73,6 @@ INSERT INTO "glass_atlas_%s_%s"."glass_transcript_patterned"
         relationship::text::"glass_atlas_%s_%s"."glass_transcript_transcription_region_relationship"
     FROM "glass_atlas_%s_%s"."glass_transcript_patterned";
 
---INSERT INTO "glass_atlas_%s_%s"."sequencing_run" 
-  --  SELECT "id","type"::text::"glass_atlas_%s_%s"."sequencing_run_type",
-  --      "name","source_table","description","total_tags","percent_mapped","modified","created"
-  --  FROM "glass_atlas_%s_%s"."sequencing_run";
-
 
 SELECT setval('"glass_atlas_%s_%s"."glass_transcript_id_seq"', (SELECT max(id) FROM "glass_atlas_%s_%s"."glass_transcript"), true);
 SELECT setval('"glass_atlas_%s_%s"."glass_transcript_nucleotides_id_seq"', (SELECT max(id) FROM "glass_atlas_%s_%s"."glass_transcript_nucleotides"), true);
@@ -86,13 +81,12 @@ SELECT setval('"glass_atlas_%s_%s"."glass_transcript_sequence_id_seq"', (SELECT 
 SELECT setval('"glass_atlas_%s_%s"."glass_transcript_non_coding_id_seq"', (SELECT max(id) FROM "glass_atlas_%s_%s"."glass_transcript_non_coding"), true);
 SELECT setval('"glass_atlas_%s_%s"."glass_transcript_conserved_id_seq"', (SELECT max(id) FROM "glass_atlas_%s_%s"."glass_transcript_conserved"), true);
 SELECT setval('"glass_atlas_%s_%s"."glass_transcript_patterned_id_seq"', (SELECT max(id) FROM "glass_atlas_%s_%s"."glass_transcript_patterned"), true);
---SELECT setval('"glass_atlas_%s_%s"."sequencing_run_id_seq"', (SELECT max(id) FROM "glass_atlas_%s_%s"."sequencing_run"), true);
 SELECT setval('"glass_atlas_%s_%s"."glass_transcribed_rna_id_seq"', (SELECT max(id) FROM "glass_atlas_%s_%s"."glass_transcribed_rna"), true);
 SELECT setval('"glass_atlas_%s_%s"."glass_transcribed_rna_source_id_seq"', (SELECT max(id) FROM "glass_atlas_%s_%s"."glass_transcribed_rna_source"), true);
 
 """ % tuple([dest_genome, cell_type, source_genome, cell_type]*39 
-            + [dest_genome, cell_type, dest_genome, cell_type, source_genome, cell_type]*5 
-            + [dest_genome, cell_type]*20)
+            + [dest_genome, cell_type, dest_genome, cell_type, source_genome, cell_type]*4
+            + [dest_genome, cell_type]*18)
 
 if __name__ == '__main__':
     print sql(source_genome, dest_genome, cell_type)

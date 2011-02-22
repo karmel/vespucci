@@ -35,7 +35,7 @@ class DensityAnalyzer(object):
         and per-run density over that area.
         '''
         # Set up pyplot
-        for chr_id in (1,22):
+        for chr_id in (21,22):
             pyplot.figure(figsize=(24,24))
             for strand in (0,1):
                 # Set up subplot
@@ -52,10 +52,10 @@ class DensityAnalyzer(object):
                     density = trans.tag_count/trans.run_count/trans.length
                     y = [density]*2
                     pyplot.plot(x,y, color='black')
-                    print x,y
+
                 connection.close()
                 
-            pyplot.savefig('/Users/karmel/Desktop/Projects/GlassLab/Notes and Reports/Glass Atlas/density_analysis/pyplot/density_graph_%d.png' % chr_id)
+            pyplot.savefig('/Users/karmel/Desktop/Projects/GlassLab/Notes and Reports/Glass Atlas/density_analysis/pyplot2/density_graph_%d.png' % chr_id)
 
     def density_csv(self):
         for chr_id in (22,):
@@ -65,14 +65,14 @@ class DensityAnalyzer(object):
                 output = ''
                 for trans in transcripts:
                     # Add line from start to end pos, with avg density as y val
-                    x = [trans.transcription_start, trans.transcription_end]
+                    x = [str(trans.transcription_start), str(trans.transcription_end)]
                     density = trans.tag_count/trans.run_count/trans.length
-                    y = [density]*2
-                    ','.join(x) + ',' + ','.join(y) + '\n'
+                    y = [str(density)]*2
+                    output += ','.join(x) + ',' + ','.join(y) + '\n'
                 connection.close()
-                f = open('/Users/karmel/Desktop/transcript_data_chr_%d_strand_%d' % (chr_id, strand), 'w')
+                f = open('/Users/karmel/Desktop/Projects/GlassLab/Notes and Reports/Glass Atlas/density_analysis/transcript_data/transcript_data_chr_%d_strand_%d.csv' % (chr_id, strand), 'w')
                 f.write(output)
 
 if __name__ == '__main__':
     da = DensityAnalyzer()
-    da.density_csv()
+    da.graph_density()
