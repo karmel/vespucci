@@ -13,7 +13,7 @@ from glasslab.glassatlas.datatypes.metadata import SequencingRun,\
     ExpectedTagCount
 from glasslab.sequencing.datatypes.tag import multiprocess_glass_tags,\
     wrap_errors
-from glasslab.utils.datatypes.basic_model import CubeField, GlassModel
+from glasslab.utils.datatypes.basic_model import BoxField, GlassModel
 from multiprocessing import Pool
 from glasslab.utils.database import execute_query,\
     execute_query_without_transaction, fetch_rows
@@ -27,7 +27,7 @@ from math import ceil
 # We can therefore extend the mapped tag region by a set number of bp if an extension is passed in
 TAG_EXTENSION = 50
 
-MAX_GAP = 200 # Max gap between transcripts from the same run
+MAX_GAP = 0 # Max gap between transcripts from the same run
 MAX_STITCHING_GAP = MAX_GAP # Max gap between transcripts being stitched together
 MIN_SCORE = 15 # Hide transcripts with scores below this threshold.
 
@@ -155,7 +155,10 @@ class TranscriptBase(TranscriptModelBase):
     transcription_start     = models.IntegerField(max_length=12)
     transcription_end       = models.IntegerField(max_length=12, help_text='<span id="length-message"></span>')
     
-    start_end               = CubeField(null=True, default=None, help_text='This is a placeholder for the PostgreSQL cube type.')
+    start_end               = BoxField(null=True, default=None, help_text='This is a placeholder for the PostgreSQL box type.')
+    start_end_density       = BoxField(null=True, default=None, help_text='This is a placeholder for the PostgreSQL box type.')
+
+    average_tags            = models.FloatField(null=True)
     
     modified        = models.DateTimeField(auto_now=True)
     created         = models.DateTimeField(auto_now_add=True)
@@ -327,7 +330,7 @@ class GlassTranscript(TranscriptBase):
                         query = """
                             SELECT count(id) FROM "%s_%d" 
                             WHERE strand = %d
-                            AND start_end OPERATOR(public.<@) public.cube(%d, %d);
+                            AND start_end <@ public.make_box(%d, 0, %d, 0);
                             """ % (run.source_table.strip(), chr_id, strand, start, (start + sample_size - 1))
                         count = fetch_rows(query)[0][0]
                         if count > 0 or allow_zero:

@@ -41,7 +41,7 @@ class TranscribedRnaTestCase(GlassTestCase):
             GlassTag.objects.create(strand=randint(0,1),
                                     chromosome_id=randint(1,22),
                                     start=start, end=end,
-                                    start_end=(start, end)
+                                    start_end=(start,0, end, 0)
                                     )
         # Add transcribed_rna for tags
         self.cell_base.glass_transcribed_rna.add_from_tags(GlassTag._meta.db_table)
@@ -78,7 +78,7 @@ class TranscribedRnaTestCase(GlassTestCase):
                                 LEFT OUTER JOIN "%s" trans_rna
                                 ON tag.chromosome_id = trans_rna.chromosome_id
                                     AND tag.strand = trans_rna.strand
-                                    AND tag.start_end OPERATOR(public.<@) trans_rna.start_end
+                                    AND tag.start_end <@ trans_rna.start_end
                                 WHERE trans_rna.chromosome_id IS NULL''' %
                                 (GlassTag._meta.db_table, 
                                  self.cell_base.glass_transcribed_rna._meta.db_table))
@@ -99,7 +99,7 @@ class TranscribedRnaTestCase(GlassTestCase):
         GlassTag.objects.create(strand=0,
                                 chromosome_id=1,
                                 start=1000, end=1500,
-                                start_end=(1000, 1500)
+                                start_end=(1000, 0, 1500, 0)
                                 )
         self.cell_base.glass_transcribed_rna.add_from_tags(GlassTag._meta.db_table)
         
@@ -107,7 +107,7 @@ class TranscribedRnaTestCase(GlassTestCase):
         GlassTag.objects.create(strand=0,
                                 chromosome_id=1,
                                 start=10001000, end=10001500,
-                                start_end=(10001000, 10001500)
+                                start_end=(10001000,0, 10001500, 0)
                                 )
         self.cell_base.glass_transcribed_rna.add_from_tags(GlassTag._meta.db_table)
         
@@ -122,7 +122,7 @@ class TranscribedRnaTestCase(GlassTestCase):
         GlassTag.objects.create(strand=0,
                                 chromosome_id=1,
                                 start=1000, end=1500,
-                                start_end=(1000, 1500)
+                                start_end=(1000, 0, 1500, 0)
                                 )
         self.cell_base.glass_transcribed_rna.add_from_tags(GlassTag._meta.db_table)
         
@@ -130,7 +130,7 @@ class TranscribedRnaTestCase(GlassTestCase):
         GlassTag.objects.create(strand=0,
                                 chromosome_id=12,
                                 start=1000, end=1500,
-                                start_end=(1000, 1500)
+                                start_end=(1000, 0, 1500, 0)
                                 )
         self.cell_base.glass_transcribed_rna.add_from_tags(GlassTag._meta.db_table)
         
@@ -145,7 +145,7 @@ class TranscribedRnaTestCase(GlassTestCase):
         GlassTag.objects.create(strand=0,
                                 chromosome_id=1,
                                 start=1000, end=1500,
-                                start_end=(1000, 1500)
+                                start_end=(1000, 0, 1500, 0)
                                 )
         self.cell_base.glass_transcribed_rna.add_from_tags(GlassTag._meta.db_table)
         
@@ -153,7 +153,7 @@ class TranscribedRnaTestCase(GlassTestCase):
         GlassTag.objects.create(strand=1,
                                 chromosome_id=1,
                                 start=1000, end=1500,
-                                start_end=(1000, 1500)
+                                start_end=(1000, 0, 1500, 0)
                                 )
         self.cell_base.glass_transcribed_rna.add_from_tags(GlassTag._meta.db_table)
         
@@ -168,7 +168,7 @@ class TranscribedRnaTestCase(GlassTestCase):
         GlassTag.objects.create(strand=0,
                                 chromosome_id=1,
                                 start=1000, end=1500,
-                                start_end=(1000, 1500)
+                                start_end=(1000, 0, 1500, 0)
                                 )
         self.cell_base.glass_transcribed_rna.add_from_tags(GlassTag._meta.db_table)
         
@@ -176,7 +176,7 @@ class TranscribedRnaTestCase(GlassTestCase):
         GlassTag.objects.create(strand=0,
                                 chromosome_id=1,
                                 start=1200, end=1750,
-                                start_end=(1200, 1750)
+                                start_end=(1200, 0, 1750, 0)
                                 )
         self.cell_base.glass_transcribed_rna.add_from_tags(GlassTag._meta.db_table)
         
@@ -190,7 +190,7 @@ class TranscribedRnaTestCase(GlassTestCase):
         self.assertEquals(trans.transcription_end, 1750)
         self.assertEquals(trans.strand, 0)
         self.assertEquals(trans.chromosome_id, 1)
-        self.assertEquals(trans.start_end, '(1000),(1750)')
+        self.assertEquals(trans.start_end, '((1000, 0), (1750, 0))')
     
     def test_within_max_gap(self):
         # Two transcribed RNAs that are separated by less than max_gap stitch.
@@ -199,7 +199,7 @@ class TranscribedRnaTestCase(GlassTestCase):
         GlassTag.objects.create(strand=1,
                                 chromosome_id=20,
                                 start=start, end=end,
-                                start_end=(start, end)
+                                start_end=(start, 0, end, 0)
                                 )
         self.cell_base.glass_transcribed_rna.add_from_tags(GlassTag._meta.db_table)
         
@@ -208,7 +208,7 @@ class TranscribedRnaTestCase(GlassTestCase):
         GlassTag.objects.create(strand=1,
                                 chromosome_id=20,
                                 start=start_2, end=end_2,
-                                start_end=(start_2, end_2)
+                                start_end=(start_2, 0, end_2, 0)
                                 )
         self.cell_base.glass_transcribed_rna.add_from_tags(GlassTag._meta.db_table)
         
@@ -222,7 +222,7 @@ class TranscribedRnaTestCase(GlassTestCase):
         self.assertEquals(trans.transcription_end, end_2)
         self.assertEquals(trans.strand, 1)
         self.assertEquals(trans.chromosome_id, 20)
-        self.assertEquals(trans.start_end, '(%d),(%d)' % (start, end_2))
+        self.assertEquals(trans.start_end, '((%d, 0), (%d, 0))' % (start, end_2))
     
     def test_beyond_max_gap(self):
         # Two transcribed RNAs that are separated by more than max_gap don't stitch.
@@ -231,7 +231,7 @@ class TranscribedRnaTestCase(GlassTestCase):
         GlassTag.objects.create(strand=1,
                                 chromosome_id=2,
                                 start=start, end=end,
-                                start_end=(start, end)
+                                start_end=(start, 0, end, 0)
                                 )
         self.cell_base.glass_transcribed_rna.add_from_tags(GlassTag._meta.db_table)
         
@@ -240,7 +240,7 @@ class TranscribedRnaTestCase(GlassTestCase):
         GlassTag.objects.create(strand=1,
                                 chromosome_id=2,
                                 start=start_2, end=end_2,
-                                start_end=(start_2, end_2)
+                                start_end=(start_2, 0, end_2, 0)
                                 )
         self.cell_base.glass_transcribed_rna.add_from_tags(GlassTag._meta.db_table)
         
@@ -258,7 +258,7 @@ class TranscribedRnaTestCase(GlassTestCase):
         GlassTag.objects.create(strand=strand,
                                 chromosome_id=chr,
                                 start=start, end=end,
-                                start_end=(start, end)
+                                start_end=(start, 0, end, 0)
                                 )
         self.cell_base.glass_transcribed_rna.add_from_tags(GlassTag._meta.db_table)
         
@@ -267,7 +267,7 @@ class TranscribedRnaTestCase(GlassTestCase):
         GlassTag.objects.create(strand=strand,
                                 chromosome_id=chr,
                                 start=start_2, end=end_2,
-                                start_end=(start_2, end_2)
+                                start_end=(start_2, 0, end_2, 0)
                                 )
         self.cell_base.glass_transcribed_rna.add_from_tags(GlassTag._meta.db_table)
         
@@ -281,7 +281,7 @@ class TranscribedRnaTestCase(GlassTestCase):
         self.assertEquals(trans.transcription_end, end_2)
         self.assertEquals(trans.strand, strand)
         self.assertEquals(trans.chromosome_id, chr)
-        self.assertEquals(trans.start_end, '(%d),(%d)' % (start, end_2))
+        self.assertEquals(trans.start_end, '((%d, 0), (%d, 0))' % (start, end_2))
 
     def test_different_ncrna_overlapping(self):
         # Two transcribed RNAs that do not share ncRNA should join if they overlap
@@ -293,7 +293,7 @@ class TranscribedRnaTestCase(GlassTestCase):
         GlassTag.objects.create(strand=strand,
                                 chromosome_id=chr,
                                 start=start, end=end,
-                                start_end=(start, end)
+                                start_end=(start, 0, end, 0)
                                 )
         self.cell_base.glass_transcribed_rna.add_from_tags(GlassTag._meta.db_table)
         
@@ -302,7 +302,7 @@ class TranscribedRnaTestCase(GlassTestCase):
         GlassTag.objects.create(strand=strand,
                                 chromosome_id=chr,
                                 start=start_2, end=end_2,
-                                start_end=(start_2, end_2)
+                                start_end=(start_2, 0, end_2, 0)
                                 )
         self.cell_base.glass_transcribed_rna.add_from_tags(GlassTag._meta.db_table)
         
@@ -316,7 +316,7 @@ class TranscribedRnaTestCase(GlassTestCase):
         self.assertEquals(trans.transcription_end, end_2)
         self.assertEquals(trans.strand, strand)
         self.assertEquals(trans.chromosome_id, chr)
-        self.assertEquals(trans.start_end, '(%d),(%d)' % (start, end_2))
+        self.assertEquals(trans.start_end, '((%d, 0), (%d, 0))' % (start, end_2))
     
     def test_different_ncrna_not_overlapping(self):
         # Two transcribed RNAs that do not share ncRNA should not join if they do not overlap
@@ -328,7 +328,7 @@ class TranscribedRnaTestCase(GlassTestCase):
         GlassTag.objects.create(strand=strand,
                                 chromosome_id=chr,
                                 start=start, end=end,
-                                start_end=(start, end)
+                                start_end=(start, 0, end, 0)
                                 )
         self.cell_base.glass_transcribed_rna.add_from_tags(GlassTag._meta.db_table)
         
@@ -337,7 +337,7 @@ class TranscribedRnaTestCase(GlassTestCase):
         GlassTag.objects.create(strand=strand,
                                 chromosome_id=chr,
                                 start=start_2, end=end_2,
-                                start_end=(start_2, end_2)
+                                start_end=(start_2, 0, end_2, 0)
                                 )
         self.cell_base.glass_transcribed_rna.add_from_tags(GlassTag._meta.db_table)
         
@@ -355,7 +355,7 @@ class TranscribedRnaTestCase(GlassTestCase):
         GlassTag.objects.create(strand=strand,
                                 chromosome_id=chr,
                                 start=start, end=end,
-                                start_end=(start, end)
+                                start_end=(start, 0, end, 0)
                                 )
         self.cell_base.glass_transcribed_rna.add_from_tags(GlassTag._meta.db_table)
         
@@ -364,7 +364,7 @@ class TranscribedRnaTestCase(GlassTestCase):
         GlassTag.objects.create(strand=strand,
                                 chromosome_id=chr,
                                 start=start_2, end=end_2,
-                                start_end=(start_2, end_2)
+                                start_end=(start_2, 0, end_2, 0)
                                 )
         self.cell_base.glass_transcribed_rna.add_from_tags(GlassTag._meta.db_table)
         
@@ -378,7 +378,7 @@ class TranscribedRnaTestCase(GlassTestCase):
         self.assertEquals(trans.transcription_end, end_2)
         self.assertEquals(trans.strand, strand)
         self.assertEquals(trans.chromosome_id, chr)
-        self.assertEquals(trans.start_end, '(%d),(%d)' % (start, end_2))
+        self.assertEquals(trans.start_end, '((%d, 0), (%d, 0))' % (start, end_2))
     
     def test_within_exon_different_transcripts(self):
         # Two transcribed RNAs that are contained within Slc25a10 exon stitch.
@@ -391,7 +391,7 @@ class TranscribedRnaTestCase(GlassTestCase):
         GlassTag.objects.create(strand=strand,
                                 chromosome_id=chr,
                                 start=start, end=end,
-                                start_end=(start, end)
+                                start_end=(start, 0, end, 0)
                                 )
         self.cell_base.glass_transcribed_rna.add_from_tags(GlassTag._meta.db_table)
         
@@ -400,7 +400,7 @@ class TranscribedRnaTestCase(GlassTestCase):
         GlassTag.objects.create(strand=strand,
                                 chromosome_id=chr,
                                 start=start_2, end=end_2,
-                                start_end=(start_2, end_2)
+                                start_end=(start_2, 0, end_2, 0)
                                 )
         self.cell_base.glass_transcribed_rna.add_from_tags(GlassTag._meta.db_table)
         
@@ -419,7 +419,7 @@ class TranscribedRnaTestCase(GlassTestCase):
         GlassTag.objects.create(strand=strand,
                                 chromosome_id=chr,
                                 start=start, end=end,
-                                start_end=(start, end)
+                                start_end=(start, 0, end, 0)
                                 )
         self.cell_base.glass_transcribed_rna.add_from_tags(GlassTag._meta.db_table)
         
@@ -428,7 +428,7 @@ class TranscribedRnaTestCase(GlassTestCase):
         GlassTag.objects.create(strand=strand,
                                 chromosome_id=chr,
                                 start=start_2, end=end_2,
-                                start_end=(start_2, end_2)
+                                start_end=(start_2, 0, end_2, 0)
                                 )
         self.cell_base.glass_transcribed_rna.add_from_tags(GlassTag._meta.db_table)
         
@@ -447,7 +447,7 @@ class TranscribedRnaTestCase(GlassTestCase):
         GlassTag.objects.create(strand=strand,
                                 chromosome_id=chr,
                                 start=start, end=end,
-                                start_end=(start, end)
+                                start_end=(start, 0, end, 0)
                                 )
         self.cell_base.glass_transcribed_rna.add_from_tags(GlassTag._meta.db_table)
         
@@ -456,7 +456,7 @@ class TranscribedRnaTestCase(GlassTestCase):
         GlassTag.objects.create(strand=strand,
                                 chromosome_id=chr,
                                 start=start_2, end=end_2,
-                                start_end=(start_2, end_2)
+                                start_end=(start_2, 0, end_2, 0)
                                 )
         self.cell_base.glass_transcribed_rna.add_from_tags(GlassTag._meta.db_table)
         
@@ -478,7 +478,7 @@ class TranscribedRnaTestCase(GlassTestCase):
         GlassTag.objects.create(strand=strand,
                                 chromosome_id=chr,
                                 start=start, end=end,
-                                start_end=(start, end)
+                                start_end=(start, 0, end, 0)
                                 )
         self.cell_base.glass_transcribed_rna.add_from_tags(GlassTag._meta.db_table)
         
@@ -490,7 +490,7 @@ class TranscribedRnaTestCase(GlassTestCase):
         self.assertEquals(trans.transcription_end, end)
         self.assertEquals(trans.strand, strand)
         self.assertEquals(trans.chromosome_id, chr)
-        self.assertEquals(trans.start_end, '(%d),(%d)' % (start, end))
+        self.assertEquals(trans.start_end, '((%d, 0), (%d, 0))' % (start, 0, end, 0))
         self.assertEquals(trans.glass_transcript, None)
         
     def test_associate_transcript_contains(self):
@@ -503,7 +503,7 @@ class TranscribedRnaTestCase(GlassTestCase):
         GlassTag.objects.create(strand=strand,
                                 chromosome_id=chr,
                                 start=start, end=end,
-                                start_end=(start, end)
+                                start_end=(start, 0, end, 0)
                                 )
         self.cell_base.glass_transcribed_rna.add_from_tags(GlassTag._meta.db_table)
         
@@ -515,7 +515,7 @@ class TranscribedRnaTestCase(GlassTestCase):
         self.assertEquals(trans.transcription_end, end)
         self.assertEquals(trans.strand, strand)
         self.assertEquals(trans.chromosome_id, chr)
-        self.assertEquals(trans.start_end, '(%d),(%d)' % (start, end))
+        self.assertEquals(trans.start_end, '((%d, 0), (%d, 0))' % (start, 0, end, 0))
         self.assertEquals(trans.glass_transcript.glasstranscriptsource.all(
                             )[0].sequencing_run.name.strip().replace('tag_',''), 
                             source_1)
@@ -530,7 +530,7 @@ class TranscribedRnaTestCase(GlassTestCase):
         GlassTag.objects.create(strand=strand,
                                 chromosome_id=chr,
                                 start=start, end=end,
-                                start_end=(start, end)
+                                start_end=(start, 0, end, 0)
                                 )
         self.cell_base.glass_transcribed_rna.add_from_tags(GlassTag._meta.db_table)
         
@@ -542,7 +542,7 @@ class TranscribedRnaTestCase(GlassTestCase):
         self.assertEquals(trans.transcription_end, end)
         self.assertEquals(trans.strand, strand)
         self.assertEquals(trans.chromosome_id, chr)
-        self.assertEquals(trans.start_end, '(%d),(%d)' % (start, end))
+        self.assertEquals(trans.start_end, '((%d, 0), (%d, 0))' % (start, 0, end, 0))
         self.assertEquals(trans.glass_transcript.glasstranscriptsource.all(
                             )[0].sequencing_run.name.strip().replace('tag_',''), 
                             source_1)
@@ -558,7 +558,7 @@ class TranscribedRnaTestCase(GlassTestCase):
         GlassTag.objects.create(strand=strand,
                                 chromosome_id=chr,
                                 start=start, end=end,
-                                start_end=(start, end)
+                                start_end=(start, 0, end, 0)
                                 )
         self.cell_base.glass_transcribed_rna.add_from_tags(GlassTag._meta.db_table)
             
@@ -570,7 +570,7 @@ class TranscribedRnaTestCase(GlassTestCase):
         self.assertEquals(trans.transcription_end, end)
         self.assertEquals(trans.strand, strand)
         self.assertEquals(trans.chromosome_id, chr)
-        self.assertEquals(trans.start_end, '(%d),(%d)' % (start, end))
+        self.assertEquals(trans.start_end, '((%d, 0), (%d, 0))' % (start, 0, end, 0))
         self.assertEquals(trans.glass_transcript.glasstranscriptsource.all(
                             )[0].sequencing_run.name.strip().replace('tag_',''), 
                             source_1)
@@ -586,7 +586,7 @@ class TranscribedRnaTestCase(GlassTestCase):
         GlassTag.objects.create(strand=strand,
                                 chromosome_id=chr,
                                 start=start, end=end,
-                                start_end=(start, end)
+                                start_end=(start, 0, end, 0)
                                 )
         self.cell_base.glass_transcribed_rna.add_from_tags(GlassTag._meta.db_table)
         
@@ -598,7 +598,7 @@ class TranscribedRnaTestCase(GlassTestCase):
         self.assertEquals(trans.transcription_end, end)
         self.assertEquals(trans.strand, strand)
         self.assertEquals(trans.chromosome_id, chr)
-        self.assertEquals(trans.start_end, '(%d),(%d)' % (start, end))
+        self.assertEquals(trans.start_end, '((%d, 0), (%d, 0))' % (start, 0, end, 0))
         self.assertEquals(trans.glass_transcript.glasstranscriptsource.all(
                             )[0].sequencing_run.name.strip().replace('tag_',''), 
                             source_1)
@@ -617,7 +617,7 @@ class TranscribedRnaTestCase(GlassTestCase):
         GlassTag.objects.create(strand=strand,
                                 chromosome_id=chr,
                                 start=start, end=end,
-                                start_end=(start, end)
+                                start_end=(start, 0, end, 0)
                                 )
         self.cell_base.glass_transcribed_rna.add_from_tags(GlassTag._meta.db_table)
         
@@ -632,7 +632,7 @@ class TranscribedRnaTestCase(GlassTestCase):
         self.assertEquals(trans.transcription_end, end)
         self.assertEquals(trans.strand, strand)
         self.assertEquals(trans.chromosome_id, chr)
-        self.assertEquals(trans.start_end, '(%d),(%d)' % (start, end))
+        self.assertEquals(trans.start_end, '((%d, 0), (%d, 0))' % (start, 0, end, 0))
         self.assertEquals(trans.glass_transcript.glasstranscriptsource.all(
                             )[0].sequencing_run.name.strip().replace('tag_',''), 
                             source_1)
@@ -649,7 +649,7 @@ class TranscribedRnaTestCase(GlassTestCase):
             GlassTag.objects.create(strand=strand,
                                     chromosome_id=chr,
                                     start=start, end=end,
-                                    start_end=(start, end)
+                                    start_end=(start, 0, end, 0)
                                     )
             self.cell_base.glass_transcribed_rna.add_from_tags(GlassTag._meta.db_table)
             connection.close()
@@ -665,7 +665,7 @@ class TranscribedRnaTestCase(GlassTestCase):
         self.assertEquals(trans.transcription_end, end)
         self.assertEquals(trans.strand, strand)
         self.assertEquals(trans.chromosome_id, chr)
-        self.assertEquals(trans.start_end, '(%d),(%d)' % (start, end))
+        self.assertEquals(trans.start_end, '((%d, 0), (%d, 0))' % (start, 0, end, 0))
         self.assertEquals(trans.glass_transcript.glasstranscriptsource.all(
                             )[0].sequencing_run.name.strip().replace('tag_',''), 
                             source_1)

@@ -32,6 +32,27 @@ class DynamicTable(GlassModel):
         cls._meta.db_table = '%s"."%s' % (current_settings.CURRENT_SCHEMA, table_name)
         cls.name = table_name 
 
+class BoxField(models.Field):
+    '''
+    Field for the PostgreSQL type box.
+    '''
+    def from_db_val_to_ints(self, value):
+        # Comes in as '((1234,0),(40596,0))' from DB
+        try: 
+            values = value.strip('(').strip(')').split(',')
+            l = []
+            for value in values:
+                l = l + map(lambda x: int(x.strip('(').strip(')')), value.split(','))
+        except Exception: return value
+        
+    def get_prep_value(self, value):
+        if value is None:
+            return None
+        try: return AsIs('public.make_box(%d,%d,%d,%d)' % tuple(value))
+        except TypeError:
+            # The value is a string from the DB
+            return AsIs('public.make_box(%d,%d,%d,%d)' % tuple(self.from_db_val_to_ints(value)))
+        
 class CubeField(models.Field):
     '''
     Field for the PostgreSQL type cube (public.cube in the current DB).

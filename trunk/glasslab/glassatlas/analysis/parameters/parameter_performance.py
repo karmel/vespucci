@@ -91,7 +91,7 @@ class ParameterPerformance(models.Model):
         verdict = 1
         # Set up where clause
         #ref_fragment = max(1000, int((ref.transcription_end - ref.transcription_start)/2))
-        where = ['start_end OPERATOR(public.&&) public.cube(%d, %d)' % (start, end)]
+        where = ['start_end && public.make_box(%d, 0, %d, 0)' % (start, end)]
         matching = list(glass_transcript.objects.filter(chromosome=ref.chromosome, 
                                     strand=ref.strand, score__gte=15).extra(where=where).order_by('transcription_start'))
 

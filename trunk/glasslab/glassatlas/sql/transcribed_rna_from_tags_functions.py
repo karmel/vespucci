@@ -50,7 +50,7 @@ BEGIN
 	merged_trans.transcription_start := (SELECT LEAST(merged_trans.transcription_start, trans.transcription_start));
 	merged_trans.transcription_end := (SELECT GREATEST(merged_trans.transcription_end, trans.transcription_end));
 	merged_trans.strand := trans.strand;
-	merged_trans.start_end := public.cube(merged_trans.transcription_start, merged_trans.transcription_end);
+	merged_trans.start_end := public.make_box(merged_trans.transcription_start, 0, merged_trans.transcription_end, 0);
 	RETURN merged_trans;
 END;
 $$ LANGUAGE 'plpgsql';
@@ -71,7 +71,7 @@ BEGIN
 		|| ' strand = ' || rec.strand || ','
 		|| ' transcription_start = ' || rec.transcription_start || ','
 		|| ' transcription_end = ' || rec.transcription_end || ','
-		|| ' start_end = public.cube(' || rec.transcription_start || '::float,' || rec.transcription_end || '::float),'
+		|| ' start_end = ' || rec.start_end || ','
 		|| ' modified = NOW()'
 	|| ' WHERE id = ' || rec.id;
 	
@@ -88,7 +88,7 @@ RETURNS VOID AS $$
  	FOR strand IN 0..1 
  	LOOP
 		FOR rec IN 
-			SELECT * FROM glass_atlas_%s_%s.determine_transcripts_from_sequencing_run(chr_id, strand, source_t, max_gap)
+			SELECT * FROM glass_atlas_%s_%s_prep.determine_transcripts_from_sequencing_run(chr_id, strand, source_t, max_gap)
 		LOOP
 		    IF rec IS NOT NULL THEN
     			-- Saved the Transcribed RNA
@@ -96,7 +96,7 @@ RETURNS VOID AS $$
     				("chromosome_id", "strand", "transcription_start", "transcription_end", "start_end",
     				modified, created)
     				VALUES (chr_id, strand, rec.transcription_start, rec.transcription_end, 
-    				public.cube(rec.transcription_start, rec.transcription_end), NOW(), NOW())
+    				public.make_box(rec.transcription_start, 0, rec.transcription_end, 0), NOW(), NOW())
     				RETURNING * INTO transcribed_rna;
     				
     			-- Save the record of the sequencing run source
@@ -111,76 +111,20 @@ RETURNS VOID AS $$
 END;
 $$ LANGUAGE 'plpgsql';
 
-
-CREATE OR REPLACE FUNCTION glass_atlas_%s_%s.associate_transcribed_rna(chr_id integer)
+CREATE OR REPLACE FUNCTION glass_atlas_%s_%s.update_transcribed_rna_records(chr_id integer)
 RETURNS VOID AS $$
-BEGIN
-	-- Match transcribed RNA to transcripts, preferring transcripts according to:
-	-- 1. Largest transcript containing transcribed RNA
-	-- 2. Transcript overlapping with transcribed RNA with minimal distance of extension
-	UPDATE glass_atlas_%s_%s.glass_transcribed_rna 
-		SET glass_transcript_id = NULL, modified = NOW()
-		WHERE chromosome_id = chr_id;
-	
-	UPDATE glass_atlas_%s_%s.glass_transcribed_rna rna
-		SET glass_transcript_id = transcript.id, modified = NOW()
-		FROM (SELECT row_number() OVER (
-					PARTITION BY rna.id
-					ORDER BY (t.transcription_end - t.transcription_start) DESC
-				) as row_num,
-				rna.id as rna_id, t.id as id
-			FROM glass_atlas_%s_%s.glass_transcript t
-			JOIN glass_atlas_%s_%s.glass_transcribed_rna rna
-			ON t.chromosome_id = rna.chromosome_id
-			AND t.strand = rna.strand
-			AND t.start_end OPERATOR(public.@>) rna.start_end
-			WHERE rna.chromosome_id = chr_id
-			AND rna.glass_transcript_id IS NULL
-		) transcript
-		WHERE transcript.rna_id = rna.id
-		AND transcript.row_num = 1;
-	
-	UPDATE glass_atlas_%s_%s.glass_transcribed_rna rna
-		SET glass_transcript_id = transcript.id, modified = NOW()
-		FROM (SELECT row_number() OVER (
-					PARTITION BY rna.id
-					ORDER BY (GREATEST((t.transcription_start - rna.transcription_start),0)
-					+ GREATEST((rna.transcription_end - t.transcription_end),0)) ASC
-				) as row_num,
-				rna.id as rna_id, t.id as id
-			FROM glass_atlas_%s_%s.glass_transcript t
-			JOIN glass_atlas_%s_%s.glass_transcribed_rna rna
-			ON t.chromosome_id = rna.chromosome_id
-			AND t.strand = rna.strand
-			AND t.start_end OPERATOR(public.&&) rna.start_end
-			WHERE rna.chromosome_id = chr_id
-			AND rna.glass_transcript_id IS NULL
-		) transcript
-		WHERE transcript.rna_id = rna.id
-		AND transcript.row_num = 1;
-
-	RETURN;
-END;
-$$ LANGUAGE 'plpgsql';
-
-
-CREATE OR REPLACE FUNCTION glass_atlas_%s_%s.mark_transcripts_as_spliced(chr_id integer)
-RETURNS VOID AS $$
-BEGIN
-    UPDATE glass_atlas_%s_%s.glass_transcript 
-        SET spliced = NULL, modified = NOW()
-        WHERE chromosome_id = chr_id;
-    UPDATE glass_atlas_%s_%s.glass_transcript t
-        SET spliced = true, modified = NOW()
-        FROM glass_atlas_%s_%s.glass_transcribed_rna trans_rna,
-            (SELECT glass_transcribed_rna_id, sum(tag_count) as sum
-            FROM glass_atlas_%s_%s.glass_transcribed_rna_source 
-            GROUP BY glass_transcribed_rna_id
-        ) trans_rna_source
-        WHERE t.chromosome_id = chr_id
-            AND t.id = trans_rna.glass_transcript_id
-            AND trans_rna.id = trans_rna_source.glass_transcribed_rna_id
-            AND trans_rna_source.sum > 1;
+BEGIN 
+    -- UPDATE redundant records: those that don't exist for the merge
+    UPDATE glass_atlas_%s_%s.glass_transcribed_rna SET glass_transcript_id = NULL;
+    UPDATE glass_atlas_%s_%s.glass_transcribed_rna rna
+        SET glass_transcript_id = trans.id
+        FROM glass_atlas_%s_%s.glass_transcribed trans
+        WHERE rna.chromosome_id = chr_id
+            AND trans.chromosome_id = chr_id
+            AND rna.strand = trans.strand
+            AND rna.start_end <@ trans.start_end;
+    UPDATE glass_atlas_%s_%s.glass_transcribed SET spliced = true
+        WHERE id IN (SELECT glass_transcript_id FROM glass_atlas_%s_%s.glass_transcribed_rna);
     RETURN;
 END;
 $$ LANGUAGE 'plpgsql';
@@ -317,7 +261,7 @@ BEGIN
         ON exon.sequence_transcription_region_id = reg.id
     ) exon
     ON rna.glass_transcript_id = exon.glass_transcript_id
-    AND rna.start_end operator(public.&&) exon.start_end
+    AND rna.start_end && exon.start_end
     
     LEFT OUTER JOIN (SELECT 
             glass_transcript_id, 
@@ -329,7 +273,7 @@ BEGIN
         ON nc.non_coding_transcription_region_id  = reg.id
     ) ncrna
     ON rna.glass_transcript_id = ncrna.glass_transcript_id
-    AND rna.start_end operator(public.&&) ncrna.start_end
+    AND rna.start_end && ncrna.start_end
     
     WHERE rna.chromosome_id = chr_id
     GROUP BY rna.glass_transcript_id, exon.id, exon.length, exon.sequence_transcription_region_id, rna.strand, 
@@ -361,7 +305,7 @@ END;
 $$ LANGUAGE 'plpgsql';
 
 
-""" % tuple([genome, cell_type]*60)
+""" % tuple([genome, cell_type]*53)
 
 if __name__ == '__main__':
     print sql(genome, cell_type)

@@ -44,7 +44,7 @@ class FeatureTestCase(GlassTestCase):
         chr_1, start_1, end_1 = 1, 1000, 1500
         GlassPeak.objects.create(chromosome_id=chr_1,
                                 start=start_1, end=end_1,
-                                start_end=(start_1, end_1)
+                                start_end=(start_1, 0, end_1, 0)
                                 )
         
         source_1 = self._create_transcript(chr_1, 0, start_1, end_1)
@@ -64,7 +64,7 @@ class FeatureTestCase(GlassTestCase):
         chr_1, start_1, end_1 = 3, 58345, 58945
         GlassPeak.objects.create(chromosome_id=chr_1,
                                 start=start_1, end=end_1,
-                                start_end=(start_1, end_1)
+                                start_end=(start_1, 0, end_1, 0)
                                 )
         
         source_1 = self._create_transcript(chr_1, 1, start_1-1, end_1)
@@ -84,7 +84,7 @@ class FeatureTestCase(GlassTestCase):
         chr_1, start_1, end_1 = 14, 100000900, 100010900
         GlassPeak.objects.create(chromosome_id=chr_1,
                                 start=start_1, end=end_1,
-                                start_end=(start_1, end_1)
+                                start_end=(start_1, 0, end_1, 0)
                                 )
         
         source_1 = self._create_transcript(chr_1, 0, start_1+1, end_1)
@@ -104,7 +104,7 @@ class FeatureTestCase(GlassTestCase):
         chr_1, start_1, end_1 = 21, 9999, 10200
         GlassPeak.objects.create(chromosome_id=chr_1,
                                 start=start_1, end=end_1,
-                                start_end=(start_1, end_1)
+                                start_end=(start_1, 0, end_1, 0)
                                 )
         
         source_1 = self._create_transcript(chr_1, 1, start_1-100, end_1-101)
@@ -124,7 +124,7 @@ class FeatureTestCase(GlassTestCase):
         chr_1, start_1, end_1 = 12, 10000, 10200
         GlassPeak.objects.create(chromosome_id=chr_1,
                                 start=start_1, end=end_1,
-                                start_end=(start_1, end_1)
+                                start_end=(start_1, 0, end_1, 0)
                                 )
         
         source_1 = self._create_transcript(chr_1, 0, 7500, 9500)
@@ -144,7 +144,7 @@ class FeatureTestCase(GlassTestCase):
         chr_1, start_1, end_1 = 12, 10000, 10200
         GlassPeak.objects.create(chromosome_id=chr_1,
                                 start=start_1, end=end_1,
-                                start_end=(start_1, end_1)
+                                start_end=(start_1, 0, end_1, 0)
                                 )
         
         source_1 = self._create_transcript(chr_1, 1, 10500, 11500)
@@ -164,7 +164,7 @@ class FeatureTestCase(GlassTestCase):
         chr_1, start_1, end_1 = 15, 10000, 10200
         GlassPeak.objects.create(chromosome_id=chr_1,
                                 start=start_1, end=end_1,
-                                start_end=(start_1, end_1)
+                                start_end=(start_1, 0, end_1, 0)
                                 )
         
         source_1 = self._create_transcript(chr_1, 0, 10500, 11500)
@@ -184,7 +184,7 @@ class FeatureTestCase(GlassTestCase):
         chr_1, start_1, end_1 = 15, 10000, 10200
         GlassPeak.objects.create(chromosome_id=chr_1,
                                 start=start_1, end=end_1,
-                                start_end=(start_1, end_1)
+                                start_end=(start_1, 0, end_1, 0)
                                 )
         
         source_1 = self._create_transcript(chr_1, 1, 7500, 9500)
@@ -204,12 +204,12 @@ class FeatureTestCase(GlassTestCase):
         chr_1, start_1, end_1 = 15, 10000, 10200
         GlassPeak.objects.create(chromosome_id=chr_1,
                                 start=start_1, end=end_1,
-                                start_end=(start_1, end_1)
+                                start_end=(start_1, 0, end_1, 0)
                                 )
         
         GlassPeak.objects.create(chromosome_id=chr_1,
                                 start=start_1+100, end=end_1+100,
-                                start_end=(start_1+100, end_1+100)
+                                start_end=(start_1+100, 0, end_1+100, 0)
                                 )
         
         source_1 = self._create_transcript(chr_1, 0, start_1-300, start_1)
@@ -231,12 +231,12 @@ class FeatureTestCase(GlassTestCase):
         chr_1, start_1, end_1 = 15, 10000, 10200
         GlassPeak.objects.create(chromosome_id=chr_1,
                                 start=start_1, end=end_1,
-                                start_end=(start_1, end_1)
+                                start_end=(start_1, 0, end_1, 0)
                                 )
         
         GlassPeak.objects.create(chromosome_id=chr_1,
                                 start=start_1+100, end=end_1+100,
-                                start_end=(start_1+100, end_1+100)
+                                start_end=(start_1+100, 0, end_1+100, 0)
                                 )
         
         source_1 = self._create_transcript(1, 0, start_1-300, start_1)
@@ -251,12 +251,12 @@ class FeatureTestCase(GlassTestCase):
         chr_1, start_1, end_1 = 15, 10000, 10200
         GlassPeak.objects.create(chromosome_id=chr_1,
                                 start=start_1, end=end_1,
-                                start_end=(start_1, end_1)
+                                start_end=(start_1, 0, end_1, 0)
                                 )
         
         GlassPeak.objects.create(chromosome_id=chr_1,
                                 start=start_1+100, end=end_1+100,
-                                start_end=(start_1+100, end_1+100)
+                                start_end=(start_1+100, 0, end_1+100, 0)
                                 )
         
         source_1 = self._create_transcript(chr_1, 0, 300, 4999)
@@ -271,12 +271,12 @@ class FeatureTestCase(GlassTestCase):
         chr_1, start_1, end_1 = 15, 10000, 10200
         GlassPeak.objects.create(chromosome_id=chr_1,
                                 start=start_1, end=end_1,
-                                start_end=(start_1, end_1)
+                                start_end=(start_1, 0, end_1, 0)
                                 )
         
         GlassPeak.objects.create(chromosome_id=chr_1,
                                 start=start_1+100, end=end_1+100,
-                                start_end=(start_1+100, end_1+100)
+                                start_end=(start_1+100, 0, end_1+100, 0)
                                 )
         
         source_1 = self._create_transcript(chr_1, 0, 300, 8000)
@@ -291,7 +291,7 @@ class FeatureTestCase(GlassTestCase):
         chr_1, start_1, end_1 = 5, 10000, 10200
         GlassPeak.objects.create(chromosome_id=chr_1,
                                 start=start_1, end=end_1,
-                                start_end=(start_1, end_1)
+                                start_end=(start_1, 0, end_1, 0)
                                 )
         source_1 = self._create_transcript(chr_1, 0, start_1-300, start_1)
         source_2 = self._create_transcript(chr_1, 0, end_1+1, end_1+500)
@@ -312,7 +312,7 @@ class FeatureTestCase(GlassTestCase):
         chr_1, start_1, end_1 = 25, 10000, 10200
         GlassPeak.objects.create(chromosome_id=chr_1,
                                 start=start_1, end=end_1,
-                                start_end=(start_1, end_1)
+                                start_end=(start_1, 0, end_1, 0)
                                 )
         source_1 = self._create_transcript(chr_1, 0, start_1-300, start_1)
         connection.close()
@@ -327,7 +327,7 @@ class FeatureTestCase(GlassTestCase):
         
         trans.transcription_start = start_1 - 500
         trans.transcription_end = end_1 + 100
-        trans.start_end = (trans.transcription_start, trans.transcription_end)
+        trans.start_end = (trans.transcription_start, 0, trans.transcription_end, 0)
         trans.requires_reload = True
         trans.save()
         
@@ -349,7 +349,7 @@ class FeatureTestCase(GlassTestCase):
         chr_1, start_1, end_1 = 5, 10000, 10200
         GlassPeak.objects.create(chromosome_id=chr_1,
                                 start=start_1, end=end_1,
-                                start_end=(start_1, end_1)
+                                start_end=(start_1, 0, end_1, 0)
                                 )
         source_1 = self._create_transcript(chr_1, 0, start_1-300, start_1)
         connection.close()
@@ -363,7 +363,7 @@ class FeatureTestCase(GlassTestCase):
         chr_1, start_1, end_1 = 5, 10000, 10200
         GlassPeak.objects.create(chromosome_id=chr_1,
                                 start=start_1, end=end_1,
-                                start_end=(start_1, end_1)
+                                start_end=(start_1, 0, end_1, 0)
                                 )
         source_1 = self._create_transcript(chr_1, 0, start_1-300, start_1)
         connection.close()
@@ -382,7 +382,7 @@ class FeatureTestCase(GlassTestCase):
         chr_1, start_1, end_1 = 5, 10000, 10200
         GlassPeak.objects.create(chromosome_id=chr_1,
                                 start=start_1, end=end_1,
-                                start_end=(start_1, end_1)
+                                start_end=(start_1, 0, end_1, 0)
                                 )
         source_1 = self._create_transcript(chr_1, 0, start_1-300, start_1)
         connection.close()

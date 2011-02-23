@@ -5,7 +5,7 @@ Created on Sep 27, 2010
 '''
 from django.db import models, connection
 from glasslab.utils.datatypes.genome_reference import Chromosome
-from glasslab.utils.datatypes.basic_model import DynamicTable, CubeField
+from glasslab.utils.datatypes.basic_model import DynamicTable, BoxField
 from glasslab.utils.database import execute_query
 from glasslab.glassatlas.datatypes.metadata import SequencingRun, PeakType
 from glasslab.config import current_settings
@@ -45,7 +45,7 @@ class GlassPeak(GlassSequencingOutput):
     start           = models.IntegerField(max_length=12)
     end             = models.IntegerField(max_length=12)
     
-    start_end       = CubeField(max_length=255, help_text='This is a placeholder for the PostgreSQL cube type.') 
+    start_end       = BoxField(max_length=255, help_text='This is a placeholder for the PostgreSQL box type.') 
     
     length          = models.IntegerField(max_length=12)
     summit          = models.IntegerField(max_length=12)
@@ -73,7 +73,7 @@ class GlassPeak(GlassSequencingOutput):
             chromosome_id int4,
             "start" int8,
             "end" int8,
-            start_end public.cube,
+            start_end box,
             "length" int4,
             summit int8,
             tag_count int4,
@@ -119,7 +119,7 @@ class GlassPeak(GlassSequencingOutput):
         return cls(chromosome=Chromosome.objects.get(name=str(row[0]).strip()),
                      start=int(row[1]),
                      end=int(row[2]),
-                     start_end=(int(row[1]),int(row[2]),),
+                     start_end=(int(row[1]), 0, int(row[2]), 0),
                      length=int(row[3]),
                      summit=int(row[4]),
                      tag_count=int(row[5]),
@@ -136,7 +136,7 @@ class GlassPeak(GlassSequencingOutput):
         return cls(chromosome=Chromosome.objects.get(name=str(row[0]).strip()),
                      start=int(row[1]),
                      end=int(row[2]),
-                     start_end=(int(row[1]),int(row[2]),),
+                     start_end=(int(row[1]), 0, int(row[2]), 0),
                      length=int(row[2]) - int(row[1]),
                      tag_count=int(row[3]),
                      p_value=p_val[0],

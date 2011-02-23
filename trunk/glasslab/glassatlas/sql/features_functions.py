@@ -39,30 +39,30 @@ BEGIN
 	       glass_peak.id as glass_peak_id,
 	       glass_peak."end" as glass_peak_end,
 	       glass_peak.start as glass_peak_start,
-           (CASE WHEN transcript.start_end OPERATOR(public.=) glass_peak.start_end THEN
+           (CASE WHEN transcript.start_end ~= glass_peak.start_end THEN
                 glass_atlas_%s_%s.glass_transcript_feature_relationship(''is equal to'')
-            WHEN transcript.start_end OPERATOR(public.@>) glass_peak.start_end THEN
+            WHEN transcript.start_end @> glass_peak.start_end THEN
                 glass_atlas_%s_%s.glass_transcript_feature_relationship(''contains'')
-            WHEN transcript.start_end OPERATOR(public.<@) glass_peak.start_end THEN
+            WHEN transcript.start_end <@ glass_peak.start_end THEN
                 glass_atlas_%s_%s.glass_transcript_feature_relationship(''is contained by'')
-            WHEN transcript.start_end OPERATOR(public.&&) glass_peak.start_end THEN
+            WHEN transcript.start_end && glass_peak.start_end THEN
                 glass_atlas_%s_%s.glass_transcript_feature_relationship(''overlaps with'')
             
             -- Only reach upstream/downstream if not matched with one of the above
             WHEN (transcript.strand = 0 
-                AND public.cube(transcription_start - ' || padding || ', transcription_start)
-                    OPERATOR(public.&&) glass_peak.start_end) THEN
+                AND public.make_box(transcription_start - ' || padding || ', 0, transcription_start, 0)
+                    && glass_peak.start_end) THEN
                 glass_atlas_%s_%s.glass_transcript_feature_relationship(''is downstream of'')
             WHEN (transcript.strand = 1 
-                AND public.cube(transcription_end, transcription_end + ' || padding || ')
-                    OPERATOR(public.&&) glass_peak.start_end) THEN
+                AND public.make_box(transcription_end, 0, transcription_end + ' || padding || ', 0)
+                    && glass_peak.start_end) THEN
                 glass_atlas_%s_%s.glass_transcript_feature_relationship(''is downstream of'')
             ELSE glass_atlas_%s_%s.glass_transcript_feature_relationship(''is upstream of'')
             END) as relationship
         FROM glass_atlas_%s_%s.glass_transcript transcript
         JOIN "' || run.source_table || '" glass_peak
-        ON public.cube(transcription_start - ' || padding || ', transcription_end + ' || padding || ')
-            OPERATOR(public.&&) glass_peak.start_end
+        ON public.make_box(transcription_start - ' || padding || ', 0, transcription_end + ' || padding || ', 0)
+            && glass_peak.start_end
         WHERE transcript.chromosome_id = ' || chr_id || '
         AND glass_peak.chromosome_id = ' || chr_id || '
         AND (' || requires_reload_only || ' = false OR transcript.requires_reload = true)'

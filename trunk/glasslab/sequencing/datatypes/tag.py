@@ -11,7 +11,7 @@ from glasslab.utils.datatypes.genome_reference import SequenceTranscriptionRegio
 from multiprocessing import Pool
 import traceback
 from glasslab.config import current_settings
-from glasslab.utils.datatypes.basic_model import DynamicTable, CubeField
+from glasslab.utils.datatypes.basic_model import DynamicTable, BoxField
 from glasslab.glassatlas.datatypes.metadata import SequencingRun
 from glasslab.utils.database import execute_query, fetch_rows
 
@@ -43,7 +43,7 @@ def wrap_errors(func, *args):
     
 def wrap_partition_tables(cls, chr_list): wrap_errors(cls._create_partition_tables, chr_list)
 def wrap_translate_from_bowtie(cls, chr_list): wrap_errors(cls._translate_from_bowtie, chr_list)
-def wrap_set_start_end_cube(cls, chr_list): wrap_errors(cls._set_start_end_cube, chr_list)
+def wrap_set_start_end_box(cls, chr_list): wrap_errors(cls._set_start_end_box, chr_list)
 def wrap_insert_matching_tags(cls, chr_list): wrap_errors(cls._insert_matching_tags, chr_list)
 def wrap_update_start_site_tags(cls, chr_list): wrap_errors(cls._update_start_site_tags, chr_list)
 def wrap_update_exon_tags(cls, chr_list): wrap_errors(cls._update_exon_tags, chr_list)
@@ -123,7 +123,7 @@ class GlassTag(GlassSequencingOutput):
     start                   = models.IntegerField(max_length=12)
     end                     = models.IntegerField(max_length=12)
     
-    start_end               = CubeField(max_length=255, help_text='This is a placeholder for the PostgreSQL cube type.')
+    start_end               = BoxField(max_length=255, help_text='This is a placeholder for the PostgreSQL box type.')
      
     @classmethod        
     def create_bowtie_table(cls, name):
@@ -161,7 +161,7 @@ class GlassTag(GlassSequencingOutput):
             strand smallint default NULL,
             "start" bigint,
             "end" bigint,
-            start_end public.cube
+            start_end box
         );
         CREATE SEQUENCE "%s_id_seq"
             START WITH 1
@@ -205,8 +205,8 @@ class GlassTag(GlassSequencingOutput):
                 || quote_literal(NEW.strand) || ','
                 || quote_literal(NEW.start) || ','
                 || quote_literal(NEW."end") || ','
-                || 'public.cube(' || quote_literal(NEW.start) || '::float,' 
-                    || quote_literal(NEW."end") || '::float))';
+                || 'public.make_box(' || quote_literal(NEW.start) || ', 0, ' 
+                    || quote_literal(NEW."end") || ', 0))';
                 RETURN NULL;
             END;
             $$
@@ -248,7 +248,7 @@ class GlassTag(GlassSequencingOutput):
             SELECT * FROM (
                 SELECT %d, (CASE WHEN bowtie.strand_char = '-' THEN 1 ELSE 0 END), 
                 bowtie."start", (bowtie."start" + char_length(bowtie.sequence_matched)),
-                public.cube(bowtie."start"::float, (bowtie."start" + char_length(bowtie.sequence_matched))::float)
+                public.make_box(bowtie."start", 0, (bowtie."start" + char_length(bowtie.sequence_matched)), 0)
             FROM "%s" bowtie
             JOIN "%s" chr ON chr.name = bowtie.chromosome
             WHERE chr.id = %d) derived;
@@ -260,17 +260,17 @@ class GlassTag(GlassSequencingOutput):
             execute_query(update_query)
                     
     @classmethod
-    def set_start_end_cube(cls):
-        multiprocess_glass_tags(wrap_set_start_end_cube, cls)
+    def set_start_end_box(cls):
+        multiprocess_glass_tags(wrap_set_start_end_box, cls)
         
     @classmethod
-    def _set_start_end_cube(cls, chr_list):
+    def _set_start_end_box(cls, chr_list):
         '''
-        Create type cube field for faster interval searching with the PostgreSQL cube package.
+        Create type box field for faster interval searching with the PostgreSQL box.
         '''
         for chr_id in chr_list:
             update_query = """
-            UPDATE "%s" set start_end = public.cube("start"::float,"end"::float) WHERE chromosome_id = %d;
+            UPDATE "%s" set start_end = public.make_box("start", 0, "end", 0) WHERE chromosome_id = %d;
             """ % (cls._meta.db_table, chr_id)
             execute_query(update_query)
             
@@ -390,7 +390,7 @@ class GlassTagTranscriptionRegionTable(DynamicTable):
             SELECT tag.id, reg.id
             FROM "%s_%d" tag, "%s" reg
             WHERE reg.chromosome_id = %d
-                AND tag.start_end OPERATOR(public.&&) reg.start_end;
+                AND tag.start_end && reg.start_end;
             """ % (cls._meta.db_table, cls.table_type,
                    GlassTag._meta.db_table, chr_id,
                    cls.related_class._meta.db_table,
@@ -410,7 +410,7 @@ class GlassTagTranscriptionRegionTable(DynamicTable):
                 SELECT tag.id, reg.id
                 FROM "%s_%d" tag, "%s_%d" reg
                 WHERE reg.chromosome_id = %d
-                    AND tag.start_end OPERATOR(public.&&) reg.start_end;
+                    AND tag.start_end && reg.start_end;
                 """ % (cls._meta.db_table, cls.table_type,
                        GlassTag._meta.db_table, chr_id,
                        cls.related_class._meta.db_table, chr_id,
@@ -510,7 +510,7 @@ class GlassTagSequence(GlassTagTranscriptionRegionTable):
                 WHERE 
                 tag_seq.glass_tag_id = tag.id
                 AND tag_seq.sequence_transcription_region_id = reg.id 
-                AND tag.start_end OPERATOR(public.&&) reg.start_site_%d;
+                AND tag.start_end && reg.start_site_%d;
                 """ % (cls._meta.db_table, 
                        distance,
                        GlassTag._meta.db_table, chr_id,
@@ -537,7 +537,7 @@ class GlassTagSequence(GlassTagTranscriptionRegionTable):
             WHERE
                 tag_seq.glass_tag_id = tag.id
                 AND tag_seq.sequence_transcription_region_id = ex.sequence_transcription_region_id
-                AND tag.start_end OPERATOR(public.&&) ex.start_end;
+                AND tag.start_end && ex.start_end;
             """ % (cls._meta.db_table, 
                    GlassTag._meta.db_table, chr_id,
                    SequenceExon._meta.db_table)
@@ -566,7 +566,7 @@ class GlassTagNonCoding(GlassTagTranscriptionRegionTable):
             FROM "%s_%d" tag, "%s" reg
             WHERE reg.chromosome_id = %d
                 AND reg.strand = tag.strand
-                AND tag.start_end OPERATOR(public.&&) reg.start_end;
+                AND tag.start_end && reg.start_end;
             """ % (cls._meta.db_table, cls.table_type,
                    GlassTag._meta.db_table, chr_id,
                    cls.related_class._meta.db_table,

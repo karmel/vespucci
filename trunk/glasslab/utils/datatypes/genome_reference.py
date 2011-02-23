@@ -10,7 +10,7 @@ Created on Sep 24, 2010
 '''
 from django.db import models
 from glasslab.config import current_settings
-from glasslab.utils.datatypes.basic_model import CubeField, GlassModel
+from glasslab.utils.datatypes.basic_model import BoxField, GlassModel
     
 #######################################################
 # Genome identifiers
@@ -128,7 +128,7 @@ class SequenceTranscriptionRegion(GlassModel):
     coding_start        = models.IntegerField(max_length=12)
     coding_end          = models.IntegerField(max_length=12)
     
-    start_end           = CubeField(null=True, default=None, help_text='This is a placeholder for the PostgreSQL cube type.')
+    start_end           = BoxField(null=True, default=None, help_text='This is a placeholder for the PostgreSQL box type.')
     
     class Meta: 
         db_table    = 'genome_reference_%s"."sequence_transcription_region' % current_settings.REFERENCE_GENOME
@@ -145,7 +145,7 @@ class SequenceExon(GlassModel):
     exon_start = models.IntegerField(max_length=12)
     exon_end   = models.IntegerField(max_length=12)    
     frame      = models.IntegerField(max_length=5, help_text='Number o nucleotides needed from prior exon to make a complete amino acid at the start of this exon.')
-    start_end  = CubeField(null=True, default=None, help_text='This is a placeholder for the PostgreSQL cube type.')
+    start_end  = BoxField(null=True, default=None, help_text='This is a placeholder for the PostgreSQL box type.')
     class Meta: 
         db_table    = 'genome_reference_%s"."sequence_exon' % current_settings.REFERENCE_GENOME
         app_label   = 'Genome_Reference'
@@ -200,7 +200,7 @@ class NonCodingTranscriptionRegion(GlassModel):
     transcription_end   = models.IntegerField(max_length=12)    
     score               = models.IntegerField(max_length=5)
     
-    start_end           = CubeField(null=True, default=None, help_text='This is a placeholder for the PostgreSQL cube type.')
+    start_end           = BoxField(null=True, default=None, help_text='This is a placeholder for the PostgreSQL box type.')
     
     class Meta: 
         db_table    = 'genome_reference_%s"."non_coding_transcription_region' % current_settings.REFERENCE_GENOME
@@ -220,7 +220,7 @@ class PatternedTranscriptionRegion(GlassModel):
     transcription_start = models.IntegerField(max_length=12)
     transcription_end   = models.IntegerField(max_length=12)
     
-    start_end           = CubeField(null=True, default=None, help_text='This is a placeholder for the PostgreSQL cube type.')
+    start_end           = BoxField(null=True, default=None, help_text='This is a placeholder for the PostgreSQL box type.')
     
     class Meta: 
         db_table    = 'genome_reference_%s"."patterned_transcription_region' % current_settings.REFERENCE_GENOME
@@ -246,7 +246,7 @@ class ConservedTranscriptionRegion(GlassModel):
     transcription_end   = models.IntegerField(max_length=12)
     score               = models.IntegerField(max_length=5)
     
-    start_end           = CubeField(null=True, default=None, help_text='This is a placeholder for the PostgreSQL cube type.')
+    start_end           = BoxField(null=True, default=None, help_text='This is a placeholder for the PostgreSQL box type.')
     
     class Meta: 
         db_table    = 'genome_reference_%s"."conserved_transcription_region' % current_settings.REFERENCE_GENOME

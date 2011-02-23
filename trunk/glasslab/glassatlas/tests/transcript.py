@@ -39,7 +39,7 @@ class TranscriptTestCase(GlassTestCase):
             GlassTag.objects.create(strand=randint(0,1),
                                     chromosome_id=randint(1,22),
                                     start=start, end=end,
-                                    start_end=(start, end)
+                                    start_end=(start, 0, end, 0)
                                     )
         # Add transcripts for tags
         self.cell_base.glass_transcript.add_from_tags(GlassTag._meta.db_table)
@@ -76,7 +76,7 @@ class TranscriptTestCase(GlassTestCase):
                                 LEFT OUTER JOIN "%s" transcript
                                 ON tag.chromosome_id = transcript.chromosome_id
                                     AND tag.strand = transcript.strand
-                                    AND tag.start_end OPERATOR(public.<@) transcript.start_end
+                                    AND tag.start_end <@ transcript.start_end
                                 WHERE transcript.chromosome_id IS NULL''' %
                                 (GlassTag._meta.db_table, 
                                  self.cell_base.glass_transcript._meta.db_table))
@@ -96,7 +96,7 @@ class TranscriptTestCase(GlassTestCase):
         GlassTag.objects.create(strand=0,
                                 chromosome_id=1,
                                 start=1000, end=1500,
-                                start_end=(1000, 1500)
+                                start_end=(1000, 0, 1500, 0)
                                 )
         self.cell_base.glass_transcript.add_from_tags(GlassTag._meta.db_table)
         
@@ -118,7 +118,7 @@ class TranscriptTestCase(GlassTestCase):
         GlassTag.objects.create(strand=0,
                                 chromosome_id=1,
                                 start=1000, end=1500,
-                                start_end=(1000, 1500)
+                                start_end=(1000, 0, 1500, 0)
                                 )
         self.cell_base.glass_transcript.add_from_tags(GlassTag._meta.db_table)
         
@@ -126,7 +126,7 @@ class TranscriptTestCase(GlassTestCase):
         GlassTag.objects.create(strand=0,
                                 chromosome_id=12,
                                 start=1000, end=1500,
-                                start_end=(1000, 1500)
+                                start_end=(1000, 0, 1500, 0)
                                 )
         self.cell_base.glass_transcript.add_from_tags(GlassTag._meta.db_table)
         
@@ -140,7 +140,7 @@ class TranscriptTestCase(GlassTestCase):
         GlassTag.objects.create(strand=0,
                                 chromosome_id=1,
                                 start=1000, end=1500,
-                                start_end=(1000, 1500)
+                                start_end=(1000, 0, 1500, 0)
                                 )
         self.cell_base.glass_transcript.add_from_tags(GlassTag._meta.db_table)
         
@@ -148,7 +148,7 @@ class TranscriptTestCase(GlassTestCase):
         GlassTag.objects.create(strand=1,
                                 chromosome_id=1,
                                 start=1000, end=1500,
-                                start_end=(1000, 1500)
+                                start_end=(1000, 0, 1500, 0)
                                 )
         self.cell_base.glass_transcript.add_from_tags(GlassTag._meta.db_table)
         
@@ -162,7 +162,7 @@ class TranscriptTestCase(GlassTestCase):
         GlassTag.objects.create(strand=0,
                                 chromosome_id=1,
                                 start=1000, end=1500,
-                                start_end=(1000, 1500)
+                                start_end=(1000, 0, 1500, 0)
                                 )
         self.cell_base.glass_transcript.add_from_tags(GlassTag._meta.db_table)
         
@@ -170,7 +170,7 @@ class TranscriptTestCase(GlassTestCase):
         GlassTag.objects.create(strand=0,
                                 chromosome_id=1,
                                 start=1200, end=1750,
-                                start_end=(1200, 1750)
+                                start_end=(1200, 0, 1750, 0)
                                 )
         self.cell_base.glass_transcript.add_from_tags(GlassTag._meta.db_table)
         
@@ -183,7 +183,7 @@ class TranscriptTestCase(GlassTestCase):
         self.assertEquals(trans.transcription_end, 1750)
         self.assertEquals(trans.strand, 0)
         self.assertEquals(trans.chromosome_id, 1)
-        self.assertEquals(trans.start_end, '(1000),(1750)')
+        self.assertEquals(trans.start_end, '((1000,0), (1750,0))')
     
     def test_within_max_gap(self):
         # Two transcripts that are separated by less than max_gap stitch.
@@ -192,7 +192,7 @@ class TranscriptTestCase(GlassTestCase):
         GlassTag.objects.create(strand=1,
                                 chromosome_id=20,
                                 start=start, end=end,
-                                start_end=(start, end)
+                                start_end=(start, 0, end, 0)
                                 )
         self.cell_base.glass_transcript.add_from_tags(GlassTag._meta.db_table)
         
@@ -201,7 +201,7 @@ class TranscriptTestCase(GlassTestCase):
         GlassTag.objects.create(strand=1,
                                 chromosome_id=20,
                                 start=start_2, end=end_2,
-                                start_end=(start_2, end_2)
+                                start_end=(start_2, 0, end_2, 0)
                                 )
         self.cell_base.glass_transcript.add_from_tags(GlassTag._meta.db_table)
         
@@ -214,7 +214,7 @@ class TranscriptTestCase(GlassTestCase):
         self.assertEquals(trans.transcription_end, end_2)
         self.assertEquals(trans.strand, 1)
         self.assertEquals(trans.chromosome_id, 20)
-        self.assertEquals(trans.start_end, '(%d),(%d)' % (start, end_2))
+        self.assertEquals(trans.start_end, '((%d, 0), (%d, 0))' % (start, end_2))
     
     def test_beyond_max_gap(self):
         # Two transcripts that are separated by more than max_gap don't stitch.
@@ -223,7 +223,7 @@ class TranscriptTestCase(GlassTestCase):
         GlassTag.objects.create(strand=1,
                                 chromosome_id=2,
                                 start=start, end=end,
-                                start_end=(start, end)
+                                start_end=(start, 0, end, 0)
                                 )
         self.cell_base.glass_transcript.add_from_tags(GlassTag._meta.db_table)
         
@@ -232,7 +232,7 @@ class TranscriptTestCase(GlassTestCase):
         GlassTag.objects.create(strand=1,
                                 chromosome_id=2,
                                 start=start_2, end=end_2,
-                                start_end=(start_2, end_2)
+                                start_end=(start_2, 0, end_2, 0)
                                 )
         self.cell_base.glass_transcript.add_from_tags(GlassTag._meta.db_table)
         
@@ -247,7 +247,7 @@ class TranscriptTestCase(GlassTestCase):
         GlassTag.objects.create(strand=1,
                                 chromosome_id=17,
                                 start=start, end=end,
-                                start_end=(start, end)
+                                start_end=(start, 0, end, 0)
                                 )
         self.cell_base.glass_transcript.add_from_tags(GlassTag._meta.db_table)
         
@@ -256,7 +256,7 @@ class TranscriptTestCase(GlassTestCase):
         GlassTag.objects.create(strand=1,
                                 chromosome_id=17,
                                 start=start_2, end=end_2,
-                                start_end=(start_2, end_2)
+                                start_end=(start_2, 0, end_2, 0)
                                 )
         self.cell_base.glass_transcript.add_from_tags(GlassTag._meta.db_table)
         
@@ -269,7 +269,7 @@ class TranscriptTestCase(GlassTestCase):
         self.assertEquals(trans.transcription_end, end_2)
         self.assertEquals(trans.strand, 1)
         self.assertEquals(trans.chromosome_id, 17)
-        self.assertEquals(trans.start_end, '(%d),(%d)' % (start, end_2))
+        self.assertEquals(trans.start_end, '((%d, 0), (%d, 0))' % (start, end_2))
     
     def test_large_gap_within_sequence(self):
         # Two transcripts that are contained within TNF but very far apart don't stitch.
@@ -278,7 +278,7 @@ class TranscriptTestCase(GlassTestCase):
         GlassTag.objects.create(strand=1,
                                 chromosome_id=17,
                                 start=start, end=end,
-                                start_end=(start, end)
+                                start_end=(start, 0, end, 0)
                                 )
         self.cell_base.glass_transcript.add_from_tags(GlassTag._meta.db_table)
         
@@ -287,7 +287,7 @@ class TranscriptTestCase(GlassTestCase):
         GlassTag.objects.create(strand=1,
                                 chromosome_id=17,
                                 start=start_2, end=end_2,
-                                start_end=(start_2, end_2)
+                                start_end=(start_2, 0, end_2, 0)
                                 )
         self.cell_base.glass_transcript.add_from_tags(GlassTag._meta.db_table)
         
@@ -302,7 +302,7 @@ class TranscriptTestCase(GlassTestCase):
         GlassTag.objects.create(strand=1,
                                 chromosome_id=17,
                                 start=start, end=end,
-                                start_end=(start, end)
+                                start_end=(start, 0, end, 0)
                                 )
         self.cell_base.glass_transcript.add_from_tags(GlassTag._meta.db_table)
         
@@ -311,7 +311,7 @@ class TranscriptTestCase(GlassTestCase):
         GlassTag.objects.create(strand=1,
                                 chromosome_id=17,
                                 start=start_2, end=end_2,
-                                start_end=(start_2, end_2)
+                                start_end=(start_2, 0, end_2, 0)
                                 )
         self.cell_base.glass_transcript.add_from_tags(GlassTag._meta.db_table)
         
@@ -329,7 +329,7 @@ class TranscriptTestCase(GlassTestCase):
         GlassTag.objects.create(strand=0,
                                 chromosome_id=6,
                                 start=start, end=end,
-                                start_end=(start, end)
+                                start_end=(start, 0, end, 0)
                                 )
         self.cell_base.glass_transcript.add_from_tags(GlassTag._meta.db_table)
         
@@ -338,7 +338,7 @@ class TranscriptTestCase(GlassTestCase):
         GlassTag.objects.create(strand=0,
                                 chromosome_id=6,
                                 start=start_2, end=end_2,
-                                start_end=(start_2, end_2)
+                                start_end=(start_2, 0, end_2, 0)
                                 )
         self.cell_base.glass_transcript.add_from_tags(GlassTag._meta.db_table)
         
@@ -361,7 +361,7 @@ class TranscriptTestCase(GlassTestCase):
         GlassTag.objects.create(strand=0,
                                 chromosome_id=6,
                                 start=start, end=end,
-                                start_end=(start, end)
+                                start_end=(start, 0, end, 0)
                                 )
         self.cell_base.glass_transcript.add_from_tags(GlassTag._meta.db_table)
         
@@ -370,7 +370,7 @@ class TranscriptTestCase(GlassTestCase):
         GlassTag.objects.create(strand=0,
                                 chromosome_id=6,
                                 start=start_2, end=end_2,
-                                start_end=(start_2, end_2)
+                                start_end=(start_2, 0, end_2, 0)
                                 )
         self.cell_base.glass_transcript.add_from_tags(GlassTag._meta.db_table)
         
@@ -393,7 +393,7 @@ class TranscriptTestCase(GlassTestCase):
         GlassTag.objects.create(strand=0,
                                 chromosome_id=6,
                                 start=start, end=end,
-                                start_end=(start, end)
+                                start_end=(start, 0, end, 0)
                                 )
         self.cell_base.glass_transcript.add_from_tags(GlassTag._meta.db_table)
         
@@ -402,7 +402,7 @@ class TranscriptTestCase(GlassTestCase):
         GlassTag.objects.create(strand=0,
                                 chromosome_id=6,
                                 start=start_2, end=end_2,
-                                start_end=(start_2, end_2)
+                                start_end=(start_2, 0, end_2, 0)
                                 )
         self.cell_base.glass_transcript.add_from_tags(GlassTag._meta.db_table)
         
@@ -425,7 +425,7 @@ class TranscriptTestCase(GlassTestCase):
         GlassTag.objects.create(strand=0,
                                 chromosome_id=6,
                                 start=start, end=end,
-                                start_end=(start, end)
+                                start_end=(start, 0, end, 0)
                                 )
         self.cell_base.glass_transcript.add_from_tags(GlassTag._meta.db_table)
         
@@ -434,7 +434,7 @@ class TranscriptTestCase(GlassTestCase):
         GlassTag.objects.create(strand=0,
                                 chromosome_id=6,
                                 start=start_2, end=end_2,
-                                start_end=(start_2, end_2)
+                                start_end=(start_2, 0, end_2, 0)
                                 )
         self.cell_base.glass_transcript.add_from_tags(GlassTag._meta.db_table)
         
@@ -457,7 +457,7 @@ class TranscriptTestCase(GlassTestCase):
         GlassTag.objects.create(strand=1,
                                 chromosome_id=15,
                                 start=start, end=end,
-                                start_end=(start, end)
+                                start_end=(start, 0, end, 0)
                                 )
         self.cell_base.glass_transcript.add_from_tags(GlassTag._meta.db_table)
         
@@ -466,7 +466,7 @@ class TranscriptTestCase(GlassTestCase):
         GlassTag.objects.create(strand=1,
                                 chromosome_id=15,
                                 start=start_2, end=end_2,
-                                start_end=(start_2, end_2)
+                                start_end=(start_2, 0, end_2, 0)
                                 )
         self.cell_base.glass_transcript.add_from_tags(GlassTag._meta.db_table)
         
@@ -489,7 +489,7 @@ class TranscriptTestCase(GlassTestCase):
         GlassTag.objects.create(strand=1,
                                 chromosome_id=16,
                                 start=start, end=end,
-                                start_end=(start, end)
+                                start_end=(start, 0, end, 0)
                                 )
         self.cell_base.glass_transcript.add_from_tags(GlassTag._meta.db_table)
         
@@ -498,7 +498,7 @@ class TranscriptTestCase(GlassTestCase):
         GlassTag.objects.create(strand=1,
                                 chromosome_id=16,
                                 start=start_2, end=end_2,
-                                start_end=(start_2, end_2)
+                                start_end=(start_2, 0, end_2, 0)
                                 )
         self.cell_base.glass_transcript.add_from_tags(GlassTag._meta.db_table)
         
@@ -517,7 +517,7 @@ class TranscriptTestCase(GlassTestCase):
         GlassTag.objects.create(strand=0,
                                 chromosome_id=1,
                                 start=start, end=end,
-                                start_end=(start, end)
+                                start_end=(start, 0, end, 0)
                                 )
         self.cell_base.glass_transcript.add_from_tags(GlassTag._meta.db_table)
         
@@ -526,7 +526,7 @@ class TranscriptTestCase(GlassTestCase):
         GlassTag.objects.create(strand=0,
                                 chromosome_id=1,
                                 start=start_2, end=end_2,
-                                start_end=(start_2, end_2)
+                                start_end=(start_2, 0, end_2, 0)
                                 )
         self.cell_base.glass_transcript.add_from_tags(GlassTag._meta.db_table)
         
@@ -548,7 +548,7 @@ class TranscriptTestCase(GlassTestCase):
         GlassTag.objects.create(strand=0,
                                 chromosome_id=9,
                                 start=start, end=end,
-                                start_end=(start, end)
+                                start_end=(start, 0, end, 0)
                                 )
         self.cell_base.glass_transcript.add_from_tags(GlassTag._meta.db_table)
         
@@ -557,7 +557,7 @@ class TranscriptTestCase(GlassTestCase):
         GlassTag.objects.create(strand=0,
                                 chromosome_id=9,
                                 start=start_2, end=end_2,
-                                start_end=(start_2, end_2)
+                                start_end=(start_2, 0, end_2, 0)
                                 )
         self.cell_base.glass_transcript.add_from_tags(GlassTag._meta.db_table)
         
@@ -585,7 +585,7 @@ class TranscriptTestCase(GlassTestCase):
             GlassTag.objects.create(strand=1,
                                     chromosome_id=22,
                                     start=start + randint(-5,5), end=end + randint(-5,5),
-                                    start_end=(start, end)
+                                    start_end=(start, 0, end, 0)
                                     )
         self.cell_base.glass_transcript.add_from_tags(GlassTag._meta.db_table)
         
@@ -595,7 +595,7 @@ class TranscriptTestCase(GlassTestCase):
             GlassTag.objects.create(strand=1,
                                     chromosome_id=22,
                                     start=start_2 + randint(-5,5), end=end_2 + randint(-5,5),
-                                    start_end=(start_2, end_2)
+                                    start_end=(start_2, 0, end_2, 0)
                                     )
         self.cell_base.glass_transcript.add_from_tags(GlassTag._meta.db_table)
         
@@ -615,7 +615,7 @@ class TranscriptTestCase(GlassTestCase):
             GlassTag.objects.create(strand=1,
                                     chromosome_id=22,
                                     start=start, end=end,
-                                    start_end=(start, end)
+                                    start_end=(start, 0, end, 0)
                                     )
         self.cell_base.glass_transcript.add_from_tags(GlassTag._meta.db_table)
         
@@ -625,7 +625,7 @@ class TranscriptTestCase(GlassTestCase):
             GlassTag.objects.create(strand=1,
                                     chromosome_id=22,
                                     start=start_2, end=end_2,
-                                    start_end=(start_2, end_2)
+                                    start_end=(start_2, 0, end_2, 0)
                                     )
         self.cell_base.glass_transcript.add_from_tags(GlassTag._meta.db_table)
         
@@ -645,7 +645,7 @@ class TranscriptTestCase(GlassTestCase):
             GlassTag.objects.create(strand=1,
                                     chromosome_id=22,
                                     start=start, end=end,
-                                    start_end=(start, end)
+                                    start_end=(start, 0, end, 0)
                                     )
         self.cell_base.glass_transcript.add_from_tags(GlassTag._meta.db_table)
         
@@ -655,7 +655,7 @@ class TranscriptTestCase(GlassTestCase):
             GlassTag.objects.create(strand=1,
                                     chromosome_id=22,
                                     start=start_2, end=end_2,
-                                    start_end=(start_2, end_2)
+                                    start_end=(start_2, 0, end_2, 0)
                                     )
         self.cell_base.glass_transcript.add_from_tags(GlassTag._meta.db_table)
         
@@ -677,7 +677,7 @@ class TranscriptTestCase(GlassTestCase):
         GlassTag.objects.create(strand=0,
                                 chromosome_id=chr_id,
                                 start=start, end=end,
-                                start_end=(start, end)
+                                start_end=(start, 0, end, 0)
                                 )
         self.cell_base.glass_transcript.add_from_tags(GlassTag._meta.db_table)
         self.cell_base.glass_transcript.stitch_together_transcripts()
@@ -691,7 +691,7 @@ class TranscriptTestCase(GlassTestCase):
         GlassTag.objects.create(strand=0,
                                 chromosome_id=chr_id,
                                 start=start + 100, end=end,
-                                start_end=(start + 100, end)
+                                start_end=(start + 100, 0, end, 0)
                                 )
         self.cell_base.glass_transcript.add_from_tags(GlassTag._meta.db_table)
         
@@ -713,7 +713,7 @@ class TranscriptTestCase(GlassTestCase):
         GlassTag.objects.create(strand=0,
                                 chromosome_id=chr_id,
                                 start=start, end=end,
-                                start_end=(start, end)
+                                start_end=(start, 0, end, 0)
                                 )
         self.cell_base.glass_transcript.add_from_tags(GlassTag._meta.db_table)
         self.cell_base.glass_transcript.stitch_together_transcripts()
@@ -727,7 +727,7 @@ class TranscriptTestCase(GlassTestCase):
         GlassTag.objects.create(strand=0,
                                 chromosome_id=chr_id,
                                 start=start - 100, end=end,
-                                start_end=(start + 100, end)
+                                start_end=(start + 100, 0, end, 0)
                                 )
         self.cell_base.glass_transcript.add_from_tags(GlassTag._meta.db_table)
         

@@ -33,19 +33,19 @@ BEGIN
 END;
 $$ LANGUAGE 'plpgsql';
 
-CREATE OR REPLACE FUNCTION glass_atlas_%s_%s.create_transcript_cycles(chr_id integer, allowed_gap integer, scaling_factor float, allow_extended_gaps boolean)
+CREATE OR REPLACE FUNCTION glass_atlas_%s_%s.create_transcript_cycles(chr_id integer, allowed_gap integer, scaling_factor float)
 RETURNS VOID AS $$
 DECLARE
     processing boolean := true;
 BEGIN
     WHILE processing = true
     LOOP
-        processing := (SELECT glass_atlas_%s_%s.next_transcript_cycle(chr_id, allowed_gap, scaling_factor, allow_extended_gaps));
+        processing := (SELECT glass_atlas_%s_%s.next_transcript_cycle(chr_id, allowed_gap, scaling_factor));
     END LOOP;
 END;
 $$ LANGUAGE 'plpgsql';
 
-CREATE OR REPLACE FUNCTION glass_atlas_%s_%s.next_transcript_cycle(chr_id integer, allowed_gap integer, scaling_factor float, allow_extended_gaps boolean)
+CREATE OR REPLACE FUNCTION glass_atlas_%s_%s.next_transcript_cycle(chr_id integer, allowed_gap integer, scaling_factor float)
 RETURNS boolean AS $$
  DECLARE
     trans glass_atlas_%s_%s.glass_transcript;
@@ -75,26 +75,10 @@ BEGIN
 	orig_id = trans.id;
 	trans.id = NULL;
 	
-	-- Determine allowed gap
-	max_gap := allowed_gap;
-	IF allow_extended_gaps = true THEN
-        -- Should this gap be considered in light of an overlapping sequence?
-        overlapping_length := (SELECT (reg.transcription_end - reg.transcription_start) 
-                            FROM genome_reference_mm9.sequence_transcription_region reg
-                            WHERE reg.chromosome_id = chr_id
-                                AND reg.strand = merged_trans.strand
-                                AND reg.start_end OPERATOR(public.@>) 
-                                    public.cube(merged_trans.transcription_end, trans.transcription_start)
-                            ORDER BY (reg.transcription_end - reg.transcription_start) DESC
-                            LIMIT 1);
-        -- Allow up to a fifth of the sequence as a gap
-        length_gap := (overlapping_length::float*.2)::integer;
-        max_gap := (SELECT GREATEST(max_gap, length_gap));
-        max_gap := (SELECT LEAST(max_gap, limit_gap));
+	-- Scale gap according to current transcript average_tags
+    IF scaling_factor THEN max_gap := (allowed_gap * trans.average_tags * scaling_factor)::integer;
+    ELSE max_gap := allowed_gap;
     END IF;
-    
-    -- Scale gap according to current transcript average_tags
-    max_gap := (max_gap * trans.average_tags * scaling_factor)::integer;
     
     -- Pull any transcripts that fall into the left hand radius of this transcript
     trans := SELECT glass_atlas_%s_%s.merge_close_transcripts(trans, max_gap, 'left');
@@ -120,10 +104,10 @@ DECLARE
 BEGIN 
     IF side = 'left' THEN 
         side_op = '&<'; -- Does not extend to the right of
-        circ_center = trans.start_end[0];
+        circ_center = trans.start_end_density[0];
     ELSE 
         side_op = '&>'; -- Does not extend to the left of
-        circ_center = trans.start_end[1];
+        circ_center = trans.start_end_density[1];
     END IF
 	
 	circ = '(' || circ_center || ', ' || allowed_gap || ')'::circle;
@@ -132,8 +116,8 @@ BEGIN
             || ' transcript.*::glass_atlas_%s_%s.glass_transcript '
         || ' FROM "glass_atlas_%s_%s_prep"."glass_transcript_' || trans.chromosome_id ||'" transcript'
         || ' WHERE strand = ' || trans.strand
-            || ' AND start_end ' || side_op || trans.start_end 
-            || ' AND start_end && ' || circ
+            || ' AND start_end_density ' || side_op || trans.start_end_density 
+            || ' AND start_end_density && ' || circ
         || ' ORDER BY transcription_start ASC'
     LOOP
         trans := (SELECT glass_atlas_%s_%s.resize_transcripts(trans, close_trans); 
@@ -152,12 +136,15 @@ BEGIN
     -- Update record
     trans.average_tags = (SELECT glass_atlas_%s_%s.get_average_tags(trans));
     EXECUTE 'INSERT INTO glass_atlas_%s_%s.glass_transcript_' || rec.chromosome_id 
-    || ' (chromosome_id, strand, transcription_start, transcription_end, average_tags, start_end, modified, created) '
+    || ' (chromosome_id, strand, transcription_start, transcription_end, '
+        || ' start_end, start_end_density, average_tags, modified, created) '
     || 'VALUES (' || rec.chromosome_id || ',' || rec.strand || ','
-        || rec.transcription_start || ',' || rec.transcription_end || ',' || rec.average_tags || ','
+        || rec.transcription_start || ',' || rec.transcription_end || ','
+        || ' public.make_box(' || rec.transcription_start || ', 0' 
+            || ',' ||  rec.transcription_end || ', 0),'
         || ' public.make_box(' || rec.transcription_start || ',' || rec.average_tags 
             || ',' ||  rec.transcription_end || ',' || rec.average_tags || '),'
-        || ' modified = NOW(), created = NOW()) RETURNING *' INTO transcript;
+        || rec.average_tags || ', modified = NOW(), created = NOW()) RETURNING *' INTO transcript;
     RETURN transcript;
 END;
 $$ LANGUAGE 'plpgsql';
@@ -186,11 +173,9 @@ RETURNS VOID AS $$
 DECLARE
     region_types text[] := ARRAY['sequence','non_coding','conserved','patterned'];
     counter integer;
-    cube text;
     table_type text;
 BEGIN
     -- Associate any sequencing regions
-    box = SELECT public.make_box(rec.transcription_start, 0, rec.transcription_end, 0);
     FOR counter IN array_lower(region_types,1)..array_upper(region_types,1)
     LOOP
         table_type := region_types[counter];
@@ -198,37 +183,19 @@ BEGIN
         || table_type || ' (glass_transcript_id, '
         || table_type || '_transcription_region_id, relationship)'
         || '(SELECT ' || rec.id || ', id, '
-        || '(CASE WHEN start_end ~= ' || box || ' THEN '
+        || '(CASE WHEN start_end ~= ' || rec.start_end || ' THEN '
         || ' glass_atlas_%s_%s.glass_transcript_transcription_region_relationship(''is equal to'') '
-        || ' WHEN start_end <@ ' || box || ' THEN '
+        || ' WHEN start_end <@ ' || rec.start_end || ' THEN '
         || ' glass_atlas_%s_%s.glass_transcript_transcription_region_relationship(''contains'') '
-        || ' WHEN start_end @> ' || box || ' THEN '
+        || ' WHEN start_end @> ' || rec.start_end || ' THEN '
         || ' glass_atlas_%s_%s.glass_transcript_transcription_region_relationship(''is contained by'') '
         || 'ELSE glass_atlas_%s_%s.glass_transcript_transcription_region_relationship(''overlaps with'') END)'
         || ' FROM genome_reference_mm9.'
         || table_type || '_transcription_region '
         || ' WHERE chromosome_id = ' || rec.chromosome_id 
         || ' AND (strand IS NULL OR strand = ' || rec.strand || ')'
-        || ' AND start_end && ' || box || ' )';
+        || ' AND start_end && ' || rec.start_end || ' )';
     END LOOP;
-    RETURN;
-END;
-$$ LANGUAGE 'plpgsql';
-
-CREATE OR REPLACE FUNCTION glass_atlas_%s_%s.update_transcribed_rna_records(chr_id integer)
-RETURNS VOID AS $$
-BEGIN 
-    -- UPDATE redundant records: those that don't exist for the merge
-    UPDATE glass_atlas_%s_%s.glass_transcribed_rna SET glass_transcript_id = NULL;
-    UPDATE glass_atlas_%s_%s.glass_transcribed_rna rna
-        SET glass_transcript_id = trans.id
-        FROM glass_atlas_%s_%s.glass_transcribed trans
-        WHERE rna.chromosome_id = chr_id
-            AND trans.chromosome_id = chr_id
-            AND rna.strand = trans.strand
-            AND rna.start_end <@ public.make_box(trans.transcription_start, 0, trans.transcription_end, 0);
-    UPDATE glass_atlas_%s_%s.glass_transcribed SET spliced = true
-        WHERE id IN (SELECT glass_transcript_id FROM glass_atlas_%s_%s.glass_transcribed_rna);
     RETURN;
 END;
 $$ LANGUAGE 'plpgsql';
@@ -277,7 +244,7 @@ BEGIN
 END;
 $$ LANGUAGE 'plpgsql';
 
-""" % tuple([genome, cell_type]*61)
+""" % tuple([genome, cell_type]*55)
 
 if __name__ == '__main__':
     print sql(genome, cell_type)

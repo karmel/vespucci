@@ -88,7 +88,7 @@ class GlassTestCase(unittest.TestCase):
         GlassTag.objects.create(strand=strand,
                                 chromosome_id=chr,
                                 start=start, end=end,
-                                start_end=(start, end)
+                                start_end=(start, 0, end, 0)
                                 )
         self.cell_base.glass_transcript.add_from_tags(GlassTag._meta.db_table)
         return source_table
