@@ -5,7 +5,7 @@ Created on Nov 12, 2010
 
 Convenience script for transcript functions.
 '''
-genome = 'gap3_100_10'
+genome = 'gap3_100_10_1000'
 cell_type='thiomac'
 def sql(genome, cell_type):
     return """
@@ -52,7 +52,7 @@ BEGIN
 END;
 $$ LANGUAGE 'plpgsql';
 
-CREATE OR REPLACE FUNCTION glass_atlas_%s_%s_prep.get_average_tags(trans glass_atlas_%s_%s_prep.glass_transcript)
+CREATE OR REPLACE FUNCTION glass_atlas_%s_%s_prep.get_average_tags(trans glass_atlas_%s_%s_prep.glass_transcript, density_multiplier integer)
 RETURNS float AS $$
 DECLARE
     sum integer;
@@ -60,23 +60,17 @@ DECLARE
 BEGIN 
     sum := (SELECT SUM(tag_count) FROM glass_atlas_%s_%s_prep.glass_transcript_source WHERE glass_transcript_id = trans.id);
     count := (SELECT COUNT(sequencing_run_id) FROM glass_atlas_%s_%s_prep.glass_transcript_source WHERE glass_transcript_id = trans.id);
-    RETURN sum::numeric/(count*(trans.transcription_end - trans.transcription_start)::numeric); 
+    RETURN (density_multiplier*sum::numeric)/(count*(trans.transcription_end - trans.transcription_start)::numeric); 
 END;
 $$ LANGUAGE 'plpgsql';
 
-CREATE OR REPLACE FUNCTION glass_atlas_%s_%s_prep.save_transcript(rec glass_atlas_%s_%s_prep.glass_transcript)
+CREATE OR REPLACE FUNCTION glass_atlas_%s_%s_prep.save_transcript(rec glass_atlas_%s_%s_prep.glass_transcript, density_multiplier integer)
 RETURNS VOID AS $$
-DECLARE spliced_sql text;
-DECLARE score_sql text;
+DECLARE 
+    average_tags float;
 BEGIN 	
 	-- Update record
-	IF rec.spliced IS NOT NULL THEN spliced_sql = ' spliced = ' || rec.spliced;
-	ELSE spliced_sql = ' spliced = NULL ';
-	END IF; 
-	IF rec.score IS NOT NULL THEN score_sql = ' score = ' || rec.score;
-	ELSE score_sql = ' score = NULL ';
-	END IF; 
-	average_tags = (SELECT glass_atlas_%s_%s_prep.get_average_tags(rec)); 
+	average_tags := (SELECT glass_atlas_%s_%s_prep.get_average_tags(rec, density_multiplier)); 
 	EXECUTE 'UPDATE glass_atlas_%s_%s_prep.glass_transcript_' || rec.chromosome_id 
 	|| ' SET'
 		|| ' strand = ' || rec.strand || ','
@@ -108,7 +102,7 @@ RETURNS SETOF glass_atlas_%s_%s_prep.glass_transcript_row AS $$
 	FOR rec IN 
 		EXECUTE 'SELECT * FROM "'
 		|| source_t || '_' || chr_id
-		|| '" WHERE strand = ' || strand || ' ORDER BY start_end ASC;'
+		|| '" WHERE strand = ' || strand || ' ORDER BY start ASC;'
 		LOOP
 		    -- The tags returned from the sequencing run are shorter than we know them to be biologically
 		    -- We can therefore extend the mapped tag region by a set number of bp if an extension is passed in
@@ -176,11 +170,12 @@ RETURNS SETOF glass_atlas_%s_%s_prep.glass_transcript_row AS $$
 END;
 $$ LANGUAGE 'plpgsql';
 
-CREATE OR REPLACE FUNCTION glass_atlas_%s_%s_prep.save_transcripts_from_sequencing_run(seq_run_id integer, chr_id integer, source_t text, max_gap integer, tag_extension integer)
+CREATE OR REPLACE FUNCTION glass_atlas_%s_%s_prep.save_transcripts_from_sequencing_run(seq_run_id integer, chr_id integer, source_t text, max_gap integer, tag_extension integer, density_multiplier integer)
 RETURNS VOID AS $$
  DECLARE
 	rec glass_atlas_%s_%s_prep.glass_transcript_row;
 	transcript glass_atlas_%s_%s_prep.glass_transcript;
+	average_tags float;
  BEGIN
  	FOR strand IN 0..1 
  	LOOP
@@ -189,7 +184,7 @@ RETURNS VOID AS $$
 		LOOP
 			IF rec IS NOT NULL THEN
 				-- Save the transcript.
-				average_tags = (SELECT glass_atlas_%s_%s_prep.get_average_tags(rec));
+				average_tags := (density_multiplier*rec.tag_count::numeric)/(rec.transcription_end - rec.transcription_start)::numeric;
 				EXECUTE 'INSERT INTO glass_atlas_%s_%s_prep.glass_transcript_' || rec.chromosome_id
 					|| ' ("chromosome_id", "strand", '
 					|| ' "transcription_start", "transcription_end",' 
@@ -206,9 +201,7 @@ RETURNS VOID AS $$
 				INSERT INTO glass_atlas_%s_%s_prep.glass_transcript_source 
 					("glass_transcript_id", "sequencing_run_id", "tag_count", "gaps") 
 					VALUES (transcript.id, seq_run_id, rec.tag_count, rec.gaps);
-					
-				-- Associate any sequencing regions
-				PERFORM glass_atlas_%s_%s_prep.insert_associated_transcript_regions(transcript);
+
 			END IF;
 		END LOOP;
 	END LOOP;
@@ -217,7 +210,7 @@ RETURNS VOID AS $$
 END;
 $$ LANGUAGE 'plpgsql';
 
-CREATE OR REPLACE FUNCTION glass_atlas_%s_%s_prep.stitch_transcripts_together(chr_id integer, allowed_gap integer, allow_extended_gaps boolean)
+CREATE OR REPLACE FUNCTION glass_atlas_%s_%s_prep.stitch_transcripts_together(chr_id integer, allowed_gap integer, density_multiplier integer, allow_extended_gaps boolean)
 RETURNS VOID AS $$
  DECLARE
     trans glass_atlas_%s_%s_prep.glass_transcript;
@@ -239,7 +232,7 @@ BEGIN
 	            || ' transcript.* '
 	        || ' FROM "glass_atlas_%s_%s_prep"."glass_transcript_' || chr_id ||'" transcript'
 			|| ' WHERE strand = ' || strand
-	        || ' ORDER BY start_end ASC '
+	        || ' ORDER BY transcription_start ASC '
 	    LOOP
 	        max_gap := allowed_gap;
 	        IF merged_trans IS NULL THEN merged_trans := trans;
@@ -282,14 +275,12 @@ BEGIN
 	                    merged_trans := (SELECT glass_atlas_%s_%s_prep.merge_transcripts(merged_trans, trans));
 	                    -- Delete/update old associations
 	                    PERFORM glass_atlas_%s_%s_prep.update_transcript_source_records(merged_trans, trans);
-	                    PERFORM glass_atlas_%s_%s_prep.update_transcribed_rna_records(merged_trans, trans);
-	                    PERFORM glass_atlas_%s_%s_prep.remove_transcript_region_records(trans);
 	                    EXECUTE 'DELETE FROM glass_atlas_%s_%s_prep.glass_transcript_' || trans.chromosome_id || ' WHERE id = ' || trans.id;
 	                    merged := true;
 	            ELSE
 	                -- We have reached a gap; close off any open merged_transcripts
 	                IF merged THEN
-	                    PERFORM glass_atlas_%s_%s_prep.save_transcript(merged_trans);
+	                    PERFORM glass_atlas_%s_%s_prep.save_transcript(merged_trans, density_multiplier);
 	                END IF;
 	                -- And reset the merged transcript
 	                merged_trans := trans;
@@ -300,7 +291,7 @@ BEGIN
     
 	    -- We may have one final merged transcript awaiting a save:
 	    IF merged THEN
-	        PERFORM glass_atlas_%s_%s_prep.save_transcript(merged_trans);
+	        PERFORM glass_atlas_%s_%s_prep.save_transcript(merged_trans, density_multiplier);
 	    END IF;
 	    -- And reset the merged transcript
 	    merged_trans := NULL;
@@ -310,7 +301,7 @@ BEGIN
 END;
 $$ LANGUAGE 'plpgsql';
 
-""" % tuple([genome, cell_type]*46)
+""" % tuple([genome, cell_type]*42)
 
 if __name__ == '__main__':
     print sql(genome, cell_type)

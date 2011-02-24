@@ -5,7 +5,7 @@ Created on Nov 12, 2010
 
 Convenience script for transcript functions.
 '''
-genome = 'gap3_100_'
+genome = 'gap3_100_10'
 cell_type='thiomac'
 def sql(genome, cell_type):
     return """
@@ -21,7 +21,7 @@ BEGIN
 END;
 $$ LANGUAGE 'plpgsql';
 
-CREATE OR REPLACE FUNCTION glass_atlas_%s_%s.get_average_tags(trans glass_atlas_%s_%s.glass_transcript)
+CREATE OR REPLACE FUNCTION glass_atlas_%s_%s.get_average_tags(trans glass_atlas_%s_%s.glass_transcript, density_multiplier integer)
 RETURNS float AS $$
 DECLARE
     sum integer;
@@ -29,42 +29,36 @@ DECLARE
 BEGIN 
 	sum := (SELECT SUM(tag_count) FROM glass_atlas_%s_%s.glass_transcript_source WHERE glass_transcript_id = trans.id);
 	count := (SELECT COUNT(sequencing_run_id) FROM glass_atlas_%s_%s.glass_transcript_source WHERE glass_transcript_id = trans.id);
-	RETURN sum::numeric/(count*(trans.transcription_end - trans.transcription_start)::numeric); 
+	RETURN (density_multiplier*sum::numeric)/(count*(trans.transcription_end - trans.transcription_start)::numeric); 
 END;
 $$ LANGUAGE 'plpgsql';
 
-CREATE OR REPLACE FUNCTION glass_atlas_%s_%s.create_transcript_cycles(chr_id integer, allowed_gap integer, scaling_factor float)
+CREATE OR REPLACE FUNCTION glass_atlas_%s_%s.draw_transcript_edges(chr_id integer, allowed_edge integer, edge_scaling_factor integer, density_multiplier integer)
 RETURNS VOID AS $$
 DECLARE
     processing boolean := true;
 BEGIN
     WHILE processing = true
     LOOP
-        processing := (SELECT glass_atlas_%s_%s.next_transcript_cycle(chr_id, allowed_gap, scaling_factor));
+        processing := (SELECT glass_atlas_%s_%s.next_transcript_edge(chr_id, allowed_edge, edge_scaling_factor, density_multiplier));
     END LOOP;
 END;
 $$ LANGUAGE 'plpgsql';
 
-CREATE OR REPLACE FUNCTION glass_atlas_%s_%s.next_transcript_cycle(chr_id integer, allowed_gap integer, scaling_factor float)
+CREATE OR REPLACE FUNCTION glass_atlas_%s_%s.next_transcript_edge(chr_id integer, allowed_edge integer, edge_scaling_factor integer, density_multiplier integer)
 RETURNS boolean AS $$
  DECLARE
     trans glass_atlas_%s_%s.glass_transcript;
     orig_id integer;
     closest_trans glass_atlas_%s_%s.glass_transcript;
     overlapping_length integer;
-    max_gap integer;
-    length_gap integer;
-    limit_gap integer := 5000;
+    max_edge integer;
+    scaling_factor float;
 BEGIN
     trans := (EXECUTE 'SELECT' 
-	            || ' transcript.*, source.sum::numeric/(source.count*(transcript.transcription_end ' 
-	            || ' - transcript.transription_start)::numeric) as average_tags '
+	            || ' transcript.* '
 	        || ' FROM "glass_atlas_%s_%s_prep"."glass_transcript_' || chr_id ||'" transcript'
-	        || ' JOIN (SELECT glass_transcript_id, SUM(tag_count) as sum, COUNT(sequencing_run_id) as count '
-	            || ' FROM "glass_atlas_%s_%s_prep"."glass_transcript_source" '
-	            || ' GROUP BY glass_transcript_id) source'
-            || ' ON transcript.id = source.glass_transcript_id'
-			|| ' WHERE processed = false AND strand = ' || strand
+	        || ' WHERE processed = false AND strand = ' || strand
 	        || ' ORDER BY transcription_start ASC LIMIT 1');
 	
 	IF trans IS NULL THEN RETURN false;
@@ -76,15 +70,14 @@ BEGIN
 	trans.id = NULL;
 	
 	-- Scale gap according to current transcript average_tags
-    IF scaling_factor THEN max_gap := (allowed_gap * trans.average_tags * scaling_factor)::integer;
-    ELSE max_gap := allowed_gap;
-    END IF;
+	scaling_factor := (SELECT LEAST(trans.average_tags/edge_scaling_factor::numeric, 1));
+    max_edge := (allowed_edge * scaling_factor)::integer;
     
     -- Pull any transcripts that fall into the left hand radius of this transcript
-    trans := SELECT glass_atlas_%s_%s.merge_close_transcripts(trans, max_gap, 'left');
-    trans := SELECT glass_atlas_%s_%s.merge_close_transcripts(trans, max_gap, 'right');
+    trans := (SELECT glass_atlas_%s_%s.merge_close_transcripts(trans, max_edge, 'left'));
+    trans := (SELECT glass_atlas_%s_%s.merge_close_transcripts(trans, max_edge, 'right'));
     
-    trans := (SELECT glass_atlas_%s_%s.insert_transcript(trans));
+    trans := (SELECT glass_atlas_%s_%s.insert_transcript(trans, density_multiplier));
     UPDATE "glass_atlas_%s_%s_prep"."glass_transcript" SET processed = true WHERE id = orig_id;
     PERFORM glass_atlas_%s_%s.insert_transcript_source_records(trans);
     PERFORM glass_atlas_%s_%s.insert_associated_regions(trans);
@@ -93,7 +86,7 @@ BEGIN
 END;
 $$ LANGUAGE 'plpgsql';
 
-CREATE OR REPLACE FUNCTION glass_atlas_%s_%s.merge_close_transcripts(trans glass_atlas_%s_%s.glass_transcript, allowed_gap integer, side text)
+CREATE OR REPLACE FUNCTION glass_atlas_%s_%s.merge_close_transcripts(trans glass_atlas_%s_%s.glass_transcript, max_edge integer, side text)
 RETURNS glass_atlas_%s_%s.glass_transcript AS $$
 DECLARE
     side_op text;
@@ -108,9 +101,9 @@ BEGIN
     ELSE 
         side_op = '&>'; -- Does not extend to the left of
         circ_center = trans.start_end_density[1];
-    END IF
+    END IF;
 	
-	circ = '(' || circ_center || ', ' || allowed_gap || ')'::circle;
+	circ = '(' || circ_center || ', ' || max_edge || ')'::circle;
 	FOR close_trans IN
 	    EXECUTE 'SELECT' 
             || ' transcript.*::glass_atlas_%s_%s.glass_transcript '
@@ -120,21 +113,22 @@ BEGIN
             || ' AND start_end_density && ' || circ
         || ' ORDER BY transcription_start ASC'
     LOOP
-        trans := (SELECT glass_atlas_%s_%s.resize_transcripts(trans, close_trans); 
+        trans := (SELECT glass_atlas_%s_%s.resize_transcripts(trans, close_trans)); 
         UPDATE "glass_atlas_%s_%s_prep"."glass_transcript" SET processed = true WHERE id = close_trans.id;
         merged_count := merged_count + 1;
-    END LOOP
+    END LOOP;
 	RETURN trans;
 END;
 $$ LANGUAGE 'plpgsql';
 
-CREATE OR REPLACE FUNCTION glass_atlas_%s_%s.insert_transcript(rec glass_atlas_%s_%s.glass_transcript)
+CREATE OR REPLACE FUNCTION glass_atlas_%s_%s.insert_transcript(rec glass_atlas_%s_%s.glass_transcript, density_multiplier integer)
 RETURNS glass_atlas_%s_%s.glass_transcript AS $$
 DECLARE
     transcript glass_atlas_%s_%s.glass_transcript;
+    average_tags float;
 BEGIN
     -- Update record
-    trans.average_tags = (SELECT glass_atlas_%s_%s.get_average_tags(trans));
+    average_tags = (SELECT glass_atlas_%s_%s.get_average_tags(trans, density_multiplier));
     EXECUTE 'INSERT INTO glass_atlas_%s_%s.glass_transcript_' || rec.chromosome_id 
     || ' (chromosome_id, strand, transcription_start, transcription_end, '
         || ' start_end, start_end_density, average_tags, modified, created) '
@@ -143,7 +137,7 @@ BEGIN
         || ' public.make_box(' || rec.transcription_start || ', 0' 
             || ',' ||  rec.transcription_end || ', 0),'
         || ' public.make_box(' || rec.transcription_start || ',' || rec.average_tags 
-            || ',' ||  rec.transcription_end || ',' || rec.average_tags || '),'
+            || ',' ||  rec.transcription_end || ',' || average_tags || '),'
         || rec.average_tags || ', modified = NOW(), created = NOW()) RETURNING *' INTO transcript;
     RETURN transcript;
 END;
@@ -244,7 +238,7 @@ BEGIN
 END;
 $$ LANGUAGE 'plpgsql';
 
-""" % tuple([genome, cell_type]*55)
+""" % tuple([genome, cell_type]*54)
 
 if __name__ == '__main__':
     print sql(genome, cell_type)

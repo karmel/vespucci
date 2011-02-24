@@ -23,6 +23,8 @@ class TranscriptsFromTagsParser(GlassOptionParser):
                            help='Output directory for bed file.'),
                make_option('--skip_stitching',action='store_true', dest='skip_stitching',  
                            help='Should the stitching together of transcripts be skipped?'),
+               make_option('--draw_edges',action='store_true', dest='draw_edges',  
+                           help='Should the edges between transcripts be created and saved?'),
                make_option('--reset_score_thresholds',action='store_true', dest='reset_score_thresholds',  
                            help='Should the expected score thresholds for each chromosome and strand be reset?'),
                make_option('--skip_scoring',action='store_true', dest='skip_scoring',  
@@ -31,8 +33,8 @@ class TranscriptsFromTagsParser(GlassOptionParser):
                            help='Should obtaining nucleotide sequences to transcripts be attempted?'),
                make_option('--skip_reassociation',action='store_true', dest='skip_reassociation',  
                            help='Should reassociation of peak features to transcripts be skipped?'),
-               make_option('--disable_extended_gaps',action='store_true', dest='disable_extended_gaps',  
-                           help='Should extended gaps (i.e., under RefSeq regions) be disallowed?'),
+               make_option('--allow_extended_gaps',action='store_true', dest='allow_extended_gaps',  
+                           help='Should extended gaps (i.e., under RefSeq regions) be allowed?'),
                 ]
 if __name__ == '__main__':
     parser = TranscriptsFromTagsParser()
@@ -54,9 +56,13 @@ if __name__ == '__main__':
         cell_base.glass_transcript.force_vacuum()
     
     if not options.skip_stitching:
-        allow_extended_gaps = True
-        if options.disable_extended_gaps: allow_extended_gaps = False
+        allow_extended_gaps = False
+        if options.allow_extended_gaps: allow_extended_gaps = True
         cell_base.glass_transcript.stitch_together_transcripts(allow_extended_gaps=allow_extended_gaps)
+        cell_base.glass_transcript.force_vacuum()
+
+    if options.draw_edges:
+        cell_base.glass_transcript.draw_transcript_edges()
         cell_base.glass_transcript.force_vacuum()
     
     if options.associate_nucleotides:

@@ -29,6 +29,9 @@ TAG_EXTENSION = 50
 
 MAX_GAP = 0 # Max gap between transcripts from the same run
 MAX_STITCHING_GAP = MAX_GAP # Max gap between transcripts being stitched together
+MAX_EDGE = 100 # Max edge length of transcript graph subgraphs to be created
+EDGE_SCALING_FACTOR = 10 # Number of transcripts per 100 required to get full allowed edge length
+DENSITY_MULTIPLIER = 1000 # Scaling factor on density-- think of as bps worth of tags to consider
 MIN_SCORE = 15 # Hide transcripts with scores below this threshold.
 
 def multiprocess_all_chromosomes(func, cls, *args):
@@ -46,8 +49,17 @@ def multiprocess_all_chromosomes(func, cls, *args):
             all_chr = [chr['id'] for chr in all_chr]
             if not all_chr: raise Exception
         except Exception:
-            # cls in question does not have explicit relation to chromosomes; get all
-            all_chr = Chromosome.objects.order_by('?').values_list('id', flat=True)
+            try:
+                all_chr = Chromosome.objects.values('id').annotate(
+                                row_count=Count(cls.cell_base.glass_transcript_prep.__name__.lower())
+                                        ).order_by('-row_count').filter(row_count__gt=0)
+                print all_chr.query
+                all_chr = [chr['id'] for chr in all_chr]
+                if not all_chr: raise Exception
+            except Exception:
+                # cls in question does not have explicit relation to chromosomes; get all
+                all_chr = Chromosome.objects.order_by('?').values_list('id', flat=True)
+            
         total_count = len(all_chr)
         # Chromosomes are sorted by count descending, so we want to interleave them
         # in order to create even-ish groups.
@@ -62,6 +74,7 @@ def multiprocess_all_chromosomes(func, cls, *args):
 def wrap_add_transcripts_from_groseq(cls, chr_list, *args): wrap_errors(cls._add_transcripts_from_groseq, chr_list, *args)
 
 def wrap_stitch_together_transcripts(cls, chr_list, *args): wrap_errors(cls._stitch_together_transcripts, chr_list, *args)
+def wrap_draw_transcript_edges(cls, chr_list): wrap_errors(cls._draw_transcript_edges, chr_list)
 def wrap_set_score_thresholds(cls, chr_list, *args): wrap_errors(cls._set_score_thresholds, chr_list, *args)
 def wrap_set_scores(cls, chr_list): wrap_errors(cls._set_scores, chr_list)
 def wrap_associate_nucleotides(cls, chr_list): wrap_errors(cls._associate_nucleotides, chr_list)
@@ -127,10 +140,7 @@ class TranscriptModelBase(GlassModel):
     class Meta:
         abstract = True
         
-class TranscriptBase(TranscriptModelBase):
-    '''
-    Unique transcribed regions in the genome, as determined via GRO-Seq.
-    '''   
+class TranscriptionRegionBase(TranscriptModelBase):
     # Use JS for browser link to auto-include in Django Admin form 
     ucsc_session_url = 'http%3A%2F%2Fbiowhat.ucsd.edu%2Fkallison%2Fucsc%2Fsessions%2F'
     ucsc_browser_link_1 = '''<a href="#" onclick="window.open('http://genome.ucsc.edu/cgi-bin/hgTracks?'''\
@@ -156,12 +166,6 @@ class TranscriptBase(TranscriptModelBase):
     transcription_end       = models.IntegerField(max_length=12, help_text='<span id="length-message"></span>')
     
     start_end               = BoxField(null=True, default=None, help_text='This is a placeholder for the PostgreSQL box type.')
-    start_end_density       = BoxField(null=True, default=None, help_text='This is a placeholder for the PostgreSQL box type.')
-
-    average_tags            = models.FloatField(null=True)
-    
-    modified        = models.DateTimeField(auto_now=True)
-    created         = models.DateTimeField(auto_now_add=True)
     
     class Meta:
         abstract = True
@@ -214,6 +218,10 @@ class TranscriptBase(TranscriptModelBase):
             execute_query_without_transaction('VACUUM FULL ANALYZE "%s_%d";' % (
                                                                     cls.cell_base.glass_transcript._meta.db_table, 
                                                                     chr_id))
+            
+            execute_query_without_transaction('VACUUM FULL ANALYZE "%s_%d";' % (
+                                                                    cls.cell_base.glass_transcript_prep._meta.db_table, 
+                                                                    chr_id))
 
     @classmethod
     def toggle_autovacuum(cls, on=True):
@@ -239,12 +247,31 @@ class TranscriptBase(TranscriptModelBase):
         daemon from spinning up and using up resources before we're ready.
         '''
         cls.toggle_autovacuum(on=False)
+            
+class TranscriptBase(TranscriptionRegionBase):
+    '''
+    Unique transcribed regions in the genome, as determined via GRO-Seq.
+    '''   
+    start_end_density       = BoxField(null=True, default=None, help_text='This is a placeholder for the PostgreSQL box type.')
+    
+    class Meta:
+        abstract = True
         
+class GlassTranscriptPrep(TranscriptBase):
+    processed               = models.NullBooleanField(default=None, help_text='Do we have RNA-Seq confirmation?')
+    
+    class Meta:
+        abstract    = True
+
 class GlassTranscript(TranscriptBase):
+    average_tags            = models.FloatField(null=True)
+    
     spliced                 = models.NullBooleanField(default=None, help_text='Do we have RNA-Seq confirmation?')
     score                   = models.FloatField(null=True, default=None, 
                                     help_text='Total mapped tags x sequencing runs transcribed in / total sequencing runs possible')
-    requires_reload         = models.BooleanField(default=None, help_text='Does this transcript need to be re-associated?')
+    
+    modified        = models.DateTimeField(auto_now=True)
+    created         = models.DateTimeField(auto_now_add=True)
     
     class Meta:
         abstract    = True
@@ -262,11 +289,11 @@ class GlassTranscript(TranscriptBase):
         for chr_id in chr_list:
             print 'Adding transcripts for chromosome %d' % chr_id
             query = """
-                SELECT glass_atlas_%s_%s.save_transcripts_from_sequencing_run(%d, %d,'%s', %d, %d);
+                SELECT glass_atlas_%s_%s_prep.save_transcripts_from_sequencing_run(%d, %d,'%s', %d, %d, %d);
                 """ % (current_settings.TRANSCRIPT_GENOME,
                        current_settings.CURRENT_CELL_TYPE.lower(),
                        sequencing_run.id, chr_id, 
-                       sequencing_run.source_table.strip(), MAX_GAP, TAG_EXTENSION)
+                       sequencing_run.source_table.strip(), MAX_GAP, TAG_EXTENSION, DENSITY_MULTIPLIER)
             execute_query(query)
     
     ################################################
@@ -279,14 +306,34 @@ class GlassTranscript(TranscriptBase):
     
     @classmethod
     def _stitch_together_transcripts(cls, chr_list, allow_extended_gaps=True):
+        '''
+        This is tag-level agnostic, stitching based on gap size alone.
+        '''
         for chr_id in chr_list:
             print 'Stitching together transcripts for chromosome %d' % chr_id
             query = """
-                SELECT glass_atlas_%s_%s.stitch_transcripts_together(%d, %d, %s);
+                SELECT glass_atlas_%s_%s_prep.stitch_transcripts_together(%d, %d, %d, %s);
                 """ % (current_settings.TRANSCRIPT_GENOME, 
                        current_settings.CURRENT_CELL_TYPE.lower(),
-                       chr_id, MAX_STITCHING_GAP,
+                       chr_id, MAX_STITCHING_GAP, DENSITY_MULTIPLIER,
                        allow_extended_gaps and 'true' or 'false')
+            execute_query(query)
+            
+    @classmethod
+    def draw_transcript_edges(cls):
+        multiprocess_all_chromosomes(wrap_draw_transcript_edges, cls)
+        #wrap_stitch_together_transcripts(cls,[21, 22])
+    
+    @classmethod
+    def _draw_transcript_edges(cls, chr_list):
+        for chr_id in chr_list:
+            print 'Drawing transcripts for chromosome %d' % chr_id
+            query = """
+                -- @todo: delete existing tables?
+                SELECT glass_atlas_%s_%s.draw_transcript_edges(%d, %d, %f);
+                """ % (current_settings.TRANSCRIPT_GENOME, 
+                       current_settings.CURRENT_CELL_TYPE.lower(),
+                       chr_id, MAX_EDGE, DENSITY_MULTIPLIER)
             execute_query(query)
             
     @classmethod
@@ -502,6 +549,10 @@ class TranscriptSourceBase(TranscriptModelBase):
                                           self.tag_count,
                                           self.sequencing_run.source_table.strip())
         
+class GlassTranscriptSourcePrep(TranscriptSourceBase):
+    class Meta:
+        abstract = True
+
 class GlassTranscriptSource(TranscriptSourceBase):
     class Meta:
         abstract = True

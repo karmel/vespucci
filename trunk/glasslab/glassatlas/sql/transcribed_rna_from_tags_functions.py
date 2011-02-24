@@ -5,7 +5,7 @@ Created on Nov 12, 2010
 
 Convenience script for transcribed RNA functions.
 '''
-genome = 'gap2_200'
+genome = 'gap3_100_10'
 cell_type = 'thiomac'
 def sql(genome, cell_type):
     return """
@@ -82,7 +82,7 @@ $$ LANGUAGE 'plpgsql';
 CREATE OR REPLACE FUNCTION glass_atlas_%s_%s.save_transcribed_rna_from_sequencing_run(seq_run_id integer, chr_id integer, source_t text, max_gap integer)
 RETURNS VOID AS $$
  DECLARE
-	rec glass_atlas_%s_%s.glass_transcript_row;
+	rec glass_atlas_%s_%s_prep.glass_transcript_row;
 	transcribed_rna glass_atlas_%s_%s.glass_transcribed_rna;
  BEGIN
  	FOR strand IN 0..1 
@@ -182,7 +182,7 @@ BEGIN
 		<<pair_loop>>
 		FOR trans IN
 			SELECT * FROM unnest(transcribed_rna_group.transcribed)
-			ORDER BY start_end ASC
+			ORDER BY transcription_start ASC
 		LOOP
 			max_gap := (SELECT GREATEST(COALESCE(.5*transcribed_rna_group.exon_length::numeric,
 										.5*transcribed_rna_group.ncrna_length::numeric,

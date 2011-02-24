@@ -6,7 +6,8 @@ Created on Dec 22, 2010
 from glasslab.glassatlas.datatypes.transcript import GlassTranscript,\
     FilteredGlassTranscript, GlassTranscriptNucleotides, GlassTranscriptSource,\
     GlassTranscriptSequence, GlassTranscriptConserved, GlassTranscriptPatterned,\
-    GlassTranscriptNonCoding, CellTypeBase
+    GlassTranscriptNonCoding, CellTypeBase, GlassTranscriptSourcePrep,\
+    GlassTranscriptPrep
 from glasslab.config import current_settings
 from glasslab.glassatlas.datatypes.transcribed_rna import GlassTranscribedRna,\
     GlassTranscribedRnaSource
@@ -21,6 +22,8 @@ class ThioMacBase(CellTypeBase):
            
     @property
     def glass_transcript(self): return GlassTranscriptThioMac
+    @property
+    def glass_transcript_prep(self): return GlassTranscriptPrepThioMac
     @property
     def filtered_glass_transcript(self): return FilteredGlassTranscriptThioMac
     @property
@@ -52,6 +55,14 @@ class GlassTranscriptThioMac(GlassTranscript):
         verbose_name = 'Unfiltered Glass transcript (%s)' % CELL_TYPE
         verbose_name_plural = 'Unfiltered Glass transcripts (%s)' % CELL_TYPE
 
+class GlassTranscriptPrepThioMac(GlassTranscriptPrep):
+    cell_base = ThioMacBase()
+    class Meta:
+        db_table    = 'glass_atlas_%s_%s_prep"."glass_transcript' % (current_settings.TRANSCRIPT_GENOME, CELL_TYPE.lower())
+        app_label   = 'Transcription_%s' % CELL_TYPE
+        verbose_name = 'Preparatory Glass transcript (%s)' % CELL_TYPE
+        verbose_name_plural = 'Preparatory Glass transcripts (%s)' % CELL_TYPE
+
 class FilteredGlassTranscriptThioMac(GlassTranscriptThioMac, FilteredGlassTranscript):
     cell_base = ThioMacBase()
     objects = FilteredGlassTranscript.objects
@@ -70,6 +81,15 @@ class GlassTranscriptNucleotidesThioMac(GlassTranscriptNucleotides):
         verbose_name = 'Glass transcript nucleotide sequence (%s)' % CELL_TYPE
         verbose_name_plural = 'Glass transcript nucleotide sequences (%s)' % CELL_TYPE
       
+class GlassTranscriptSourcePrepThioMac(GlassTranscriptSourcePrep):
+    glass_transcript = models.ForeignKey(GlassTranscriptPrepThioMac, related_name='glasstranscriptsource')
+    cell_base = ThioMacBase()
+    class Meta:
+        db_table    = 'glass_atlas_%s_%s_prep"."glass_transcript_source' % (current_settings.TRANSCRIPT_GENOME, CELL_TYPE.lower())
+        app_label   = 'Transcription_%s' % CELL_TYPE
+        verbose_name = 'Preparatory Glass transcript source (%s)' % CELL_TYPE
+        verbose_name_plural = 'Preparatory Glass transcript sources (%s)' % CELL_TYPE
+
 class GlassTranscriptSourceThioMac(GlassTranscriptSource):
     glass_transcript = models.ForeignKey(GlassTranscriptThioMac, related_name='glasstranscriptsource')
     cell_base = ThioMacBase()

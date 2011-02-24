@@ -6,10 +6,13 @@ Created on Jan 4, 2011
 import unittest
 from glasslab.config import current_settings
 from glasslab.utils.database import execute_query
+from glasslab.glassatlas.sql.create_schema_sql import sql as schema_sql
 from glasslab.glassatlas.sql.generate_transcript_table_sql import sql as transcript_table_sql
+from glasslab.glassatlas.sql.generate_transcript_prep_table_sql import sql as prep_table_sql
 from glasslab.glassatlas.sql.generate_transcribed_rna_table_sql import sql as transcribed_rna_table_sql
 from glasslab.glassatlas.sql.generate_feature_table_sql import sql as features_table_sql
 from glasslab.glassatlas.sql.transcripts_from_tags_functions import sql as transcript_function_sql
+from glasslab.glassatlas.sql.transcripts_from_prep_functions import sql as transcript_from_prep_function_sql
 from glasslab.glassatlas.sql.transcribed_rna_from_tags_functions import sql as transcribed_rna_function_sql
 from glasslab.glassatlas.sql.features_functions import sql as features_function_sql
 from glasslab.sequencing.datatypes.tag import GlassTag
@@ -41,12 +44,13 @@ class GlassTestCase(unittest.TestCase):
         self.sequencing_runs = []
         
         if self.set_up_db:
-            execute_query('CREATE SCHEMA %s' % current_settings.CURRENT_SCHEMA)
+            execute_query(schema_sql(current_settings.TRANSCRIPT_GENOME, 
+                                     current_settings.CURRENT_CELL_TYPE))
     
-            for func in (transcript_table_sql, transcribed_rna_table_sql,
-                         features_table_sql,
-                         transcript_function_sql, transcribed_rna_function_sql,
-                         features_function_sql):
+            for func in (prep_table_sql, transcript_table_sql, 
+                         transcribed_rna_table_sql, features_table_sql,
+                         transcript_function_sql, transcript_from_prep_function_sql,  
+                         transcribed_rna_function_sql, features_function_sql):
                 execute_query(func(current_settings.TRANSCRIPT_GENOME, 
                                    current_settings.CURRENT_CELL_TYPE))
         
@@ -68,6 +72,7 @@ class GlassTestCase(unittest.TestCase):
                                 % (SequencingRun._meta.db_table, SequencingRun._meta.db_table)) 
         
         execute_query('DROP SCHEMA %s CASCADE' % current_settings.CURRENT_SCHEMA)
+        execute_query('DROP SCHEMA %s_prep CASCADE' % current_settings.CURRENT_SCHEMA)
         
     def create_tag_table(self, sequencing_run_name='', sequencing_run_type='Gro-Seq'):
         '''

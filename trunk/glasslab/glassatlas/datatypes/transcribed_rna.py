@@ -4,11 +4,13 @@ Created on Dec 16, 2010
 @author: karmel
 '''
 from glasslab.config import current_settings
-from glasslab.glassatlas.datatypes.transcript import TranscriptBase, \
+from glasslab.glassatlas.datatypes.transcript import TranscriptionRegionBase, \
     multiprocess_all_chromosomes, TranscriptSourceBase, MAX_GAP
+    
 from glasslab.sequencing.datatypes.tag import multiprocess_glass_tags,\
     wrap_errors
 from glasslab.utils.database import execute_query
+from django.db import models
 
 def wrap_add_transcribed_rna_from_rnaseq(cls, chr_list, *args): 
     wrap_errors(cls._add_transcribed_rna_from_rnaseq, chr_list, *args)
@@ -18,10 +20,13 @@ def wrap_stitch_together_transcribed_rna(cls, chr_list):
     wrap_errors(cls._stitch_together_transcribed_rna, chr_list)
 
 MAX_GAP_RNA = MAX_GAP
-class GlassTranscribedRna(TranscriptBase):
+class GlassTranscribedRna(TranscriptionRegionBase):
     '''
     Transcribed RNA sequenced in RNA-Seq experiments.
     '''
+    modified        = models.DateTimeField(auto_now=True)
+    created         = models.DateTimeField(auto_now_add=True)
+    
     class Meta:
         abstract = True
         
