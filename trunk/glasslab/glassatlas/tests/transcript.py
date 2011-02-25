@@ -181,10 +181,10 @@ class TranscriptTestCase(GlassTestCase):
         
         trans = self.cell_base.glass_transcript_prep.objects.all()[:1][0]
         self.assertEquals(trans.transcription_start, 1000)
-        self.assertEquals(trans.transcription_end, 1750)
+        self.assertEquals(trans.transcription_end, 1750+TAG_EXTENSION)
         self.assertEquals(trans.strand, 0)
         self.assertEquals(trans.chromosome_id, 1)
-        self.assertEquals(trans.start_end, '((1000,0), (1750,0))')
+        self.assertEquals(trans.start_end, '(%d,0),(%d,0)' % (1750+TAG_EXTENSION, 1000))
     
     def test_within_max_gap(self):
         # Two transcripts that are separated by less than max_gap stitch.
@@ -211,11 +211,11 @@ class TranscriptTestCase(GlassTestCase):
         self.assertEquals(self.cell_base.glass_transcript_prep.objects.count(), 1)
         
         trans = self.cell_base.glass_transcript_prep.objects.all()[:1][0]
-        self.assertEquals(trans.transcription_start, start)
+        self.assertEquals(trans.transcription_start, start - TAG_EXTENSION)
         self.assertEquals(trans.transcription_end, end_2)
         self.assertEquals(trans.strand, 1)
         self.assertEquals(trans.chromosome_id, 20)
-        self.assertEquals(trans.start_end, '((%d, 0), (%d, 0))' % (start, end_2))
+        self.assertEquals(trans.start_end, '(%d,0),(%d,0)' % (end_2, start - TAG_EXTENSION))
     
     def test_beyond_max_gap(self):
         # Two transcripts that are separated by more than max_gap don't stitch.
@@ -267,11 +267,11 @@ class TranscriptTestCase(GlassTestCase):
         self.assertEquals(self.cell_base.glass_transcript_prep.objects.count(), 1)
         
         trans = self.cell_base.glass_transcript_prep.objects.all()[:1][0]
-        self.assertEquals(trans.transcription_start, start)
+        self.assertEquals(trans.transcription_start, start - TAG_EXTENSION)
         self.assertEquals(trans.transcription_end, end_2)
         self.assertEquals(trans.strand, 1)
         self.assertEquals(trans.chromosome_id, 17)
-        self.assertEquals(trans.start_end, '((%d, 0), (%d, 0))' % (start, end_2))
+        self.assertEquals(trans.start_end, '(%d,0),(%d,0)' % (end_2, start - TAG_EXTENSION))
     
     def test_large_gap_within_sequence(self):
         # Two transcripts that are contained within TNF but very far apart don't stitch.

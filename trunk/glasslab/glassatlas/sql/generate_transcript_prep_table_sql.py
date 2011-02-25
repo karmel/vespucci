@@ -6,7 +6,7 @@ Created on Nov 12, 2010
 Convenience script for generated create table statements for transcript tables.
 '''
 
-genome = 'no_overlap'
+genome = 'gap3_200_10_1000'
 cell_type = 'thiomac'
 def sql(genome, cell_type):
     return """
@@ -323,11 +323,8 @@ BEGIN
     || quote_literal(NEW.transcription_start) || ','
     || quote_literal(NEW.transcription_end) || ','
     || 'public.make_box(' || quote_literal(NEW.transcription_start) || ', 0, ' 
-        || quote_literal(NEW.transcription_end) || ', 0),'
-    || coalesce(quote_literal(NEW.spliced),'NULL') || ','
-    || coalesce(quote_literal(NEW.score),'NULL') || ','
-    || quote_literal(NEW.modified) || ','
-    || quote_literal(NEW.created) || ')';
+        || quote_literal(NEW.transcription_end) || ', 0)'
+    || ')';
     RETURN NULL;
 END;
 $$

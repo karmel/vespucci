@@ -53,7 +53,6 @@ def multiprocess_all_chromosomes(func, cls, *args):
                 all_chr = Chromosome.objects.values('id').annotate(
                                 row_count=Count(cls.cell_base.glass_transcript_prep.__name__.lower())
                                         ).order_by('-row_count').filter(row_count__gt=0)
-                print all_chr.query
                 all_chr = [chr['id'] for chr in all_chr]
                 if not all_chr: raise Exception
             except Exception:
@@ -312,11 +311,18 @@ class GlassTranscript(TranscriptBase):
         for chr_id in chr_list:
             print 'Stitching together transcripts for chromosome %d' % chr_id
             query = """
-                SELECT glass_atlas_%s_%s_prep.stitch_transcripts_together(%d, %d, %d, %s);
+                SELECT glass_atlas_%s_%s_prep.save_transcripts_from_existing(%d, %d, %s);
                 """ % (current_settings.TRANSCRIPT_GENOME, 
                        current_settings.CURRENT_CELL_TYPE.lower(),
-                       chr_id, MAX_STITCHING_GAP, DENSITY_MULTIPLIER,
+                       chr_id, MAX_STITCHING_GAP, 
                        allow_extended_gaps and 'true' or 'false')
+            execute_query(query)
+            print 'Setting average tags for transcripts for chromosome %d' % chr_id
+            query = """
+                SELECT glass_atlas_%s_%s_prep.set_average_tags(%d, %d, %s);
+                """ % (current_settings.TRANSCRIPT_GENOME, 
+                       current_settings.CURRENT_CELL_TYPE.lower(),
+                       chr_id, DENSITY_MULTIPLIER, 'true')
             execute_query(query)
             
     @classmethod
@@ -330,10 +336,10 @@ class GlassTranscript(TranscriptBase):
             print 'Drawing transcripts for chromosome %d' % chr_id
             query = """
                 -- @todo: delete existing tables?
-                SELECT glass_atlas_%s_%s.draw_transcript_edges(%d, %d, %f);
+                SELECT glass_atlas_%s_%s.draw_transcript_edges(%d, %d, %d, %d);
                 """ % (current_settings.TRANSCRIPT_GENOME, 
                        current_settings.CURRENT_CELL_TYPE.lower(),
-                       chr_id, MAX_EDGE, DENSITY_MULTIPLIER)
+                       chr_id, MAX_EDGE, EDGE_SCALING_FACTOR, DENSITY_MULTIPLIER)
             execute_query(query)
             
     @classmethod
