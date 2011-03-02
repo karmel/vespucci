@@ -5,36 +5,11 @@ Created on Nov 12, 2010
 
 Convenience script for transcript functions.
 '''
-genome = 'gap3_200_10_1000'
+genome = 'gap3_100_10_1000'
 cell_type='thiomac'
 def sql(genome, cell_type):
     return """
 -- Not run from within the codebase, but kept here in case functions need to be recreated.
-
-CREATE OR REPLACE FUNCTION glass_atlas_%s_%s.resize_transcripts(merged_trans glass_atlas_%s_%s.glass_transcript, trans glass_atlas_%s_%s.glass_transcript)
-RETURNS glass_atlas_%s_%s.glass_transcript AS $$
-BEGIN 
-	-- Update the merged transcript
-	merged_trans.transcription_start := (SELECT LEAST(merged_trans.transcription_start, trans.transcription_start));
-	merged_trans.transcription_end := (SELECT GREATEST(merged_trans.transcription_end, trans.transcription_end));
-	RETURN merged_trans;
-END;
-$$ LANGUAGE 'plpgsql';
-
-CREATE OR REPLACE FUNCTION glass_atlas_%s_%s.transcript_from_prep(trans_prep glass_atlas_%s_%s_prep.glass_transcript)
-RETURNS glass_atlas_%s_%s.glass_transcript AS $$
-DECLARE
-    trans glass_atlas_%s_%s.glass_transcript;
-BEGIN 
-	trans.chromosome_id := trans_prep.chromosome_id;
-	trans.strand := trans_prep.strand;
-	trans.transcription_start := trans_prep.transcription_start;
-	trans.transcription_end := trans_prep.transcription_end;
-	trans.start_end := trans_prep.start_end;
-	trans.start_end_density := trans_prep.start_end_density;
-	RETURN trans;
-END;
-$$ LANGUAGE 'plpgsql';
 
 CREATE OR REPLACE FUNCTION glass_atlas_%s_%s.get_average_tags(trans glass_atlas_%s_%s.glass_transcript, density_multiplier integer)
 RETURNS float AS $$
@@ -48,112 +23,86 @@ BEGIN
 END;
 $$ LANGUAGE 'plpgsql';
 
-CREATE OR REPLACE FUNCTION glass_atlas_%s_%s.draw_transcript_edges(chr_id integer, allowed_edge integer, edge_scaling_factor integer, density_multiplier integer)
+CREATE OR REPLACE FUNCTION glass_atlas_%s_%s.draw_transcript_edges(chr_id integer)
 RETURNS VOID AS $$
 DECLARE
-    processing boolean := true;
-BEGIN
-    FOR strand IN 0..1
-    LOOP
-        WHILE processing = true
-        LOOP
-            processing := (SELECT glass_atlas_%s_%s.next_transcript_edge(chr_id, strand, allowed_edge, edge_scaling_factor, density_multiplier));
-        END LOOP;
-    END LOOP;
-END;
-$$ LANGUAGE 'plpgsql';
-
-CREATE OR REPLACE FUNCTION glass_atlas_%s_%s.next_transcript_edge(chr_id integer, strand integer, allowed_edge integer, edge_scaling_factor integer, density_multiplier integer)
-RETURNS boolean AS $$
- DECLARE
-    trans_prep glass_atlas_%s_%s_prep.glass_transcript;
+    strand integer;
+    last_trans glass_atlas_%s_%s.glass_transcript;
     trans glass_atlas_%s_%s.glass_transcript;
-    orig_id integer;
-    overlapping_length integer;
-    max_edge integer;
-    scaling_factor float;
+    transcript glass_atlas_%s_%s.glass_transcript;
 BEGIN
-    EXECUTE 'SELECT' 
-            || ' transcript.* '
-        || ' FROM "glass_atlas_%s_%s_prep"."glass_transcript_' || chr_id ||'" transcript'
-        || ' WHERE processed = false AND strand = ' || strand
-        || ' ORDER BY transcription_start ASC LIMIT 1' INTO trans_prep;
-
-	IF trans_prep IS NULL THEN RETURN false;
-	END IF;
-	
-	-- Cast trans as proper type
-	trans := (SELECT glass_atlas_%s_%s.transcript_from_prep(trans_prep));
-	orig_id = trans_prep.id;
-	
-	-- Scale gap according to current transcript average_tags
-	scaling_factor := (SELECT LEAST(trans.average_tags/edge_scaling_factor::numeric, 1));
-    max_edge := (allowed_edge * scaling_factor)::integer;
-    
-    -- Pull any transcripts that fall into the left hand radius of this transcript
-    trans := (SELECT glass_atlas_%s_%s.merge_close_transcripts(trans, max_edge, 'left'));
-    trans := (SELECT glass_atlas_%s_%s.merge_close_transcripts(trans, max_edge, 'right'));
-    
-    trans := (SELECT glass_atlas_%s_%s.insert_transcript(trans, density_multiplier));
-    UPDATE "glass_atlas_%s_%s_prep"."glass_transcript" SET processed = true WHERE id = orig_id;
-    PERFORM glass_atlas_%s_%s.insert_transcript_source_records(trans);
-    PERFORM glass_atlas_%s_%s.insert_associated_transcript_regions(trans);
-    
-    RETURN true;
-END;
-$$ LANGUAGE 'plpgsql';
-
-CREATE OR REPLACE FUNCTION glass_atlas_%s_%s.merge_close_transcripts(trans glass_atlas_%s_%s.glass_transcript, max_edge integer, side text)
-RETURNS glass_atlas_%s_%s.glass_transcript AS $$
-DECLARE
-    side_op text;
-    circ_center point;
-    circ circle;
-    close_trans_prep glass_atlas_%s_%s_prep.glass_transcript;
-    close_trans glass_atlas_%s_%s.glass_transcript;
-    orig_id integer;
-    merged_count integer := 0;
-BEGIN 
-    IF side = 'left' THEN 
-        side_op = '&<'; -- Does not extend to the right of
-        circ_center = trans.start_end_density[0];
-    ELSE 
-        side_op = '&>'; -- Does not extend to the left of
-        circ_center = trans.start_end_density[1];
-    END IF;
-	
-	circ = ('(' || circ_center || ', ' || max_edge || ')')::circle;
-	FOR close_trans_prep IN
-	    EXECUTE 'SELECT' 
-            || ' transcript.* '
-        || ' FROM "glass_atlas_%s_%s_prep"."glass_transcript_' || trans.chromosome_id ||'" transcript'
-        || ' WHERE strand = ' || trans.strand
-            || ' AND start_end_density ' || side_op || ' ''' || trans.start_end_density || '''::box' 
-            || ' AND start_end_density[0] <@ ''' || circ || '''::circle'
-        || ' ORDER BY transcription_start ASC'
+    FOR strand in 0..1
     LOOP
-        IF close_trans_prep IS NOT NULL THEN
-            orig_id := close_trans_prep.id;
-            close_trans := (SELECT glass_atlas_%s_%s.transcript_from_prep(close_trans_prep));
-            
-            trans := (SELECT glass_atlas_%s_%s.resize_transcripts(trans, close_trans)); 
-            UPDATE "glass_atlas_%s_%s_prep"."glass_transcript" SET processed = true WHERE id = orig_id;
-            merged_count := merged_count + 1;
+        last_trans := NULL;
+        FOR trans IN 
+            SELECT * FROM glass_atlas_%s_%s.get_close_transcripts(chr_id, strand)
+        LOOP
+            -- Initialize the transcript to be saved if necessary
+            IF last_trans IS NULL THEN 
+                last_trans := trans;
+            ELSE
+                
+                -- Include this tag if it overlaps or has < max_gap bp gap
+                -- Else, this is a new transcript; close off the current and restart.
+                IF last_trans.transcription_end >= trans.transcription_start THEN 
+                    last_trans.transcription_start := (SELECT LEAST(last_trans.transcription_start, trans.transcription_start));
+                    last_trans.transcription_end := (SELECT GREATEST(last_trans.transcription_end, trans.transcription_end));
+                ELSE
+                    transcript := (SELECT glass_atlas_%s_%s.insert_transcript(last_trans));
+                    last_trans := trans;
+                END IF;
+            END IF;
+        END LOOP;
+        -- And the last one..
+        IF last_trans.transcription_start IS NOT NULL THEN
+            transcript := (SELECT glass_atlas_%s_%s.insert_transcript(last_trans));
         END IF;
     END LOOP;
-	RETURN trans;
+        
+    PERFORM glass_atlas_%s_%s.insert_transcript_source_records(chr_id);
+    PERFORM glass_atlas_%s_%s.insert_associated_transcript_regions(chr_id);
+    RETURN;
 END;
 $$ LANGUAGE 'plpgsql';
 
-CREATE OR REPLACE FUNCTION glass_atlas_%s_%s.insert_transcript(rec glass_atlas_%s_%s.glass_transcript, density_multiplier integer)
+CREATE OR REPLACE FUNCTION glass_atlas_%s_%s.get_close_transcripts(chr_id integer, strand integer)
+RETURNS SETOF glass_atlas_%s_%s.glass_transcript AS $$
+DECLARE
+    trans record;
+    transcript glass_atlas_%s_%s.glass_transcript;    
+BEGIN
+        -- From prep tables, get close-enough transcripts
+    FOR trans IN 
+        EXECUTE 'SELECT t1.id, t1.strand, t1.transcription_start, t1.transcription_end, max(t2.transcription_end) as max_end'
+        || ' FROM glass_atlas_%s_%s_prep.glass_transcript_' || chr_id || ' t1'
+        || ' LEFT OUTER JOIN glass_atlas_%s_%s_prep.glass_transcript_' || chr_id || ' t2'
+        || ' ON t1.density_circle @> t2.start_density '
+            || ' AND t1.strand = t2.strand '
+        || ' WHERE t1.strand = ' || strand
+        || ' GROUP by t1.id, t1.strand, t1.transcription_start, t1.transcription_end '
+        || ' ORDER by t1.transcription_start ASC'
+    LOOP
+        IF trans.id IS NOT NULL THEN
+            -- Reset transcript record.
+            transcript := NULL;
+            transcript.chromosome_id = chr_id;
+            transcript.strand = trans.strand;
+            transcript.transcription_start = trans.transcription_start;
+            transcript.transcription_end = (SELECT COALESCE(trans.max_end, trans.transcription_end));
+            
+            RETURN NEXT transcript;
+        END IF;
+    END LOOP;
+    RETURN;
+END;
+$$ LANGUAGE 'plpgsql';
+
+CREATE OR REPLACE FUNCTION glass_atlas_%s_%s.insert_transcript(rec glass_atlas_%s_%s.glass_transcript)
 RETURNS glass_atlas_%s_%s.glass_transcript AS $$
 DECLARE
     transcript glass_atlas_%s_%s.glass_transcript;
-    average_tags float;
 BEGIN
     -- Update record
-    --average_tags = (SELECT glass_atlas_%s_%s.get_average_tags(rec, density_multiplier));
-
     EXECUTE 'INSERT INTO glass_atlas_%s_%s.glass_transcript_' || rec.chromosome_id 
     || ' (chromosome_id, strand, transcription_start, transcription_end, '
         || ' start_end, modified, created) '
@@ -166,26 +115,27 @@ BEGIN
 END;
 $$ LANGUAGE 'plpgsql';
 
-CREATE OR REPLACE FUNCTION glass_atlas_%s_%s.insert_transcript_source_records(trans glass_atlas_%s_%s.glass_transcript)
+CREATE OR REPLACE FUNCTION glass_atlas_%s_%s.insert_transcript_source_records(chr_id integer)
 RETURNS VOID AS $$
 BEGIN 
-    INSERT INTO glass_atlas_%s_%s.glass_transcript_source
-        (glass_transcript_id, sequencing_run_id, tag_count, gaps)
-        SELECT trans.id, source.sequencing_run_id, 
-            SUM(source.tag_count), COUNT(source.glass_transcript_id) - 1
-        FROM (
-            SELECT * FROM glass_atlas_%s_%s_prep.glass_transcript t
-            JOIN glass_atlas_%s_%s_prep.glass_transcript_source s
-            ON t.id = s.glass_transcript_id) source
-        WHERE source.chromosome_id = trans.chromosome_id
-            AND source.strand = trans.strand
-            AND source.start_end <@ trans.start_end
-        GROUP BY source.sequencing_run_id;
+    EXECUTE 'INSERT INTO glass_atlas_%s_%s.glass_transcript_source'
+        || ' (glass_transcript_id, sequencing_run_id, tag_count, gaps)'
+        || ' SELECT der.transcript_id, der.sequencing_run_id, '
+            || ' SUM(der.tag_count), COUNT(der.glass_transcript_id) - 1'
+        || ' FROM ('
+            || ' SELECT trans.id as transcript_id,* '
+            || ' FROM glass_atlas_%s_%s.glass_transcript_' || chr_id || ' trans'
+            || ' JOIN (SELECT * FROM glass_atlas_%s_%s_prep.glass_transcript_' || chr_id || ' t'
+                || ' JOIN glass_atlas_%s_%s_prep.glass_transcript_source s'
+                || ' ON t.id = s.glass_transcript_id) source'
+            || ' ON source.strand = trans.strand'
+            || ' AND source.start_end <@ trans.start_end) der'
+        || ' GROUP BY der.transcript_id, der.sequencing_run_id';
     RETURN;
 END;
 $$ LANGUAGE 'plpgsql';
 
-CREATE OR REPLACE FUNCTION glass_atlas_%s_%s.insert_associated_transcript_regions(rec glass_atlas_%s_%s.glass_transcript)
+CREATE OR REPLACE FUNCTION glass_atlas_%s_%s.insert_associated_transcript_regions(chr_id integer)
 RETURNS VOID AS $$
 DECLARE
     region_types text[] := ARRAY['sequence','non_coding','conserved','patterned'];
@@ -199,19 +149,20 @@ BEGIN
         EXECUTE 'INSERT INTO glass_atlas_%s_%s.glass_transcript_'
         || table_type || ' (glass_transcript_id, '
         || table_type || '_transcription_region_id, relationship)'
-        || '(SELECT ' || rec.id || ', id, '
-        || '(CASE WHEN start_end ~= ''' || rec.start_end || '''::box THEN '
-        || ' glass_atlas_%s_%s.glass_transcript_transcription_region_relationship(''is equal to'') '
-        || ' WHEN start_end <@ ''' || rec.start_end || '''::box THEN '
-        || ' glass_atlas_%s_%s.glass_transcript_transcription_region_relationship(''contains'') '
-        || ' WHEN start_end @> ''' || rec.start_end || '''::box THEN '
-        || ' glass_atlas_%s_%s.glass_transcript_transcription_region_relationship(''is contained by'') '
-        || 'ELSE glass_atlas_%s_%s.glass_transcript_transcription_region_relationship(''overlaps with'') END)'
-        || ' FROM genome_reference_mm9.'
-        || table_type || '_transcription_region '
-        || ' WHERE chromosome_id = ' || rec.chromosome_id 
-        || ' AND (strand IS NULL OR strand = ' || rec.strand || ')'
-        || ' AND start_end && ''' || rec.start_end || '''::box )';
+            || '(SELECT trans.id, reg.id, '
+                || '(CASE WHEN reg.start_end ~= trans.start_end THEN '
+                || ' glass_atlas_%s_%s.glass_transcript_transcription_region_relationship(''is equal to'') '
+                || ' WHEN reg.start_end <@ trans.start_end THEN '
+                || ' glass_atlas_%s_%s.glass_transcript_transcription_region_relationship(''contains'') '
+                || ' WHEN reg.start_end @> trans.start_end THEN '
+                || ' glass_atlas_%s_%s.glass_transcript_transcription_region_relationship(''is contained by'') '
+                || 'ELSE glass_atlas_%s_%s.glass_transcript_transcription_region_relationship(''overlaps with'') END)'
+            || ' FROM glass_atlas_%s_%s.glass_transcript_' || chr_id || ' trans'
+            || ' JOIN genome_reference_mm9.' || table_type || '_transcription_region reg'
+            || ' ON reg.start_end && trans.start_end'
+            || ' WHERE reg.chromosome_id = ' || chr_id 
+            || ' AND (reg.strand IS NULL OR reg.strand = trans.strand))';
+            
     END LOOP;
     RETURN;
 END;
@@ -261,7 +212,25 @@ BEGIN
 END;
 $$ LANGUAGE 'plpgsql';
 
-""" % tuple([genome, cell_type]*59)
+CREATE OR REPLACE FUNCTION glass_atlas_%s_%s.set_average_tags(chr_id integer, density_multiplier integer, null_only boolean)
+RETURNS VOID AS $$
+DECLARE
+    where_clause text;
+BEGIN
+    IF null_only = true THEN where_clause := 'start_end_density IS NULL';
+    ELSE where_clause := '1=1';
+    END IF;
+    
+    EXECUTE 'UPDATE glass_atlas_%s_%s.glass_transcript_' || chr_id || ' t '
+        || ' SET start_end_density = public.make_box(transcription_start, ' 
+            || ' glass_atlas_%s_%s.get_average_tags(t.*, ' || density_multiplier || ')::numeric,'
+            || ' transcription_end,'
+            || ' glass_atlas_%s_%s.get_average_tags(t.*, ' || density_multiplier || ')::numeric), '
+            || ' average_tags = glass_atlas_%s_%s.get_average_tags(t.*, ' || density_multiplier || ')::numeric'
+        || ' WHERE ' || where_clause;
+END;
+$$ LANGUAGE 'plpgsql';
+""" % tuple([genome, cell_type]*47)
 
 if __name__ == '__main__':
     print sql(genome, cell_type)

@@ -77,8 +77,6 @@ BEGIN
 		|| ' transcription_end = ' || rec.transcription_end || ','
 		|| ' start_end = public.make_box(' || rec.transcription_start || ', 0' 
             || ',' ||  rec.transcription_end || ', 0),'
-        --|| ' start_end_density = public.make_box(' || rec.transcription_start || ',' || average_tags 
-        --    || ',' ||  rec.transcription_end || ',' || average_tags || '),'
 		|| ' processed = false'
 	|| ' WHERE id = ' || rec.id;
 
@@ -229,7 +227,7 @@ RETURNS SETOF glass_atlas_%s_%s_prep.glass_transcript_row AS $$
 END;
 $$ LANGUAGE 'plpgsql';
 
-CREATE OR REPLACE FUNCTION glass_atlas_%s_%s_prep.save_transcripts_from_sequencing_run(seq_run_id integer, chr_id integer, source_t text, max_gap integer, tag_extension integer, density_multiplier integer)
+CREATE OR REPLACE FUNCTION glass_atlas_%s_%s_prep.save_transcripts_from_sequencing_run(seq_run_id integer, chr_id integer, source_t text, max_gap integer, tag_extension integer, allowed_edge integer, edge_scaling_factor integer, density_multiplier integer)
 RETURNS VOID AS $$
  DECLARE
 	rec glass_atlas_%s_%s_prep.glass_transcript_row;
@@ -247,13 +245,15 @@ RETURNS VOID AS $$
 				EXECUTE 'INSERT INTO glass_atlas_%s_%s_prep.glass_transcript_' || rec.chromosome_id
 					|| ' ("chromosome_id", "strand", '
 					|| ' "transcription_start", "transcription_end",' 
-					|| ' "start_end", "start_end_density")'
+					|| ' "start_end", "density_circle", "start_density")'
 					|| ' VALUES (' || rec.chromosome_id || ' , ' || rec.strand || ' , '
 					|| rec.transcription_start || ' , ' || rec.transcription_end || ' , '
 					|| ' public.make_box(' || rec.transcription_start || ', 0' 
                         || ',' ||  rec.transcription_end || ', 0),'
-                    || ' public.make_box(' || rec.transcription_start || ',' || average_tags 
-                        || ',' ||  rec.transcription_end || ',' || average_tags || ')'
+                    || ' circle(point(' || rec.transcription_end || ',' || average_tags 
+                        || '::float), ' || allowed_edge || '*LEAST(' || average_tags || '::numeric/' 
+                        || edge_scaling_factor || '::numeric,1)), '
+                    || ' point(' || rec.transcription_start || ',' || average_tags || ') '
                     || ' ) RETURNING *' INTO transcript;
 	
 				-- Save the record of the sequencing run source
@@ -309,25 +309,27 @@ RETURNS VOID AS $$
 END;
 $$ LANGUAGE 'plpgsql';
 
-CREATE OR REPLACE FUNCTION glass_atlas_%s_%s_prep.set_average_tags(chr_id integer, density_multiplier integer, null_only boolean)
+CREATE OR REPLACE FUNCTION glass_atlas_%s_%s_prep.set_average_tags(chr_id integer, allowed_edge integer, edge_scaling_factor integer, density_multiplier integer, null_only boolean)
 RETURNS VOID AS $$
 DECLARE
     where_clause text;
 BEGIN
-    IF null_only = true THEN where_clause := 'start_end_density IS NULL';
+    IF null_only = true THEN where_clause := 'density_circle IS NULL';
     ELSE where_clause := '1=1';
     END IF;
     
     EXECUTE 'UPDATE glass_atlas_%s_%s_prep.glass_transcript_' || chr_id || ' t '
-        || ' SET start_end_density = public.make_box(transcription_start, ' 
-            || ' glass_atlas_%s_%s_prep.get_average_tags(t.*, ' || density_multiplier || ')::numeric,'
-            || ' transcription_end,'
-            || ' glass_atlas_%s_%s_prep.get_average_tags(t.*, ' || density_multiplier || ')::numeric)'
+        || ' SET density_circle = circle(point(transcription_end, ' 
+            || ' glass_atlas_%s_%s_prep.get_average_tags(t.*, ' || density_multiplier || ')::numeric), '
+            || allowed_edge || '*LEAST(glass_atlas_%s_%s_prep.get_average_tags(t.*, ' 
+                || density_multiplier || ')::numeric/' || edge_scaling_factor || '::numeric, 1)),'
+        || ' start_density = point(transcription_start,glass_atlas_%s_%s_prep.get_average_tags(t.*, ' 
+            || density_multiplier || ')::numeric) '
         || ' WHERE ' || where_clause;
 END;
 $$ LANGUAGE 'plpgsql';
 
-""" % tuple([genome, cell_type]*47)
+""" % tuple([genome, cell_type]*48)
 
 if __name__ == '__main__':
     print sql(genome, cell_type)

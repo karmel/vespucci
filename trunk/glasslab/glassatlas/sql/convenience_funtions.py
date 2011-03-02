@@ -6,6 +6,26 @@ Created on Nov 24, 2010
 
 def sql():
     return """
+    
+CREATE OR REPLACE FUNCTION public.box_equality(left_hand box, right_hand box)
+RETURNS integer AS $$
+BEGIN 
+    -- WARNING! Not intended to be an accurate measure of equality!
+    -- This exists only so that the Django Admin default DISTINCT queries will work.
+    -- For sorting boxes, use gist.
+    RETURN -1;
+END;
+$$ LANGUAGE 'plpgsql';
+
+CREATE OPERATOR CLASS public.box_ops
+    DEFAULT FOR TYPE box USING btree AS
+        OPERATOR        1       < ,
+        OPERATOR        2       <= ,
+        OPERATOR        3       = ,
+        OPERATOR        4       >= ,
+        OPERATOR        5       > ,
+        FUNCTION        1       public.box_equality(box, box);
+
 CREATE OR REPLACE FUNCTION public.admin_link(id integer)
 RETURNS text AS $$
 BEGIN

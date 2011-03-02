@@ -29,7 +29,7 @@ TAG_EXTENSION = 50
 
 MAX_GAP = 0 # Max gap between transcripts from the same run
 MAX_STITCHING_GAP = MAX_GAP # Max gap between transcripts being stitched together
-MAX_EDGE = 100 # Max edge length of transcript graph subgraphs to be created
+MAX_EDGE = 200 # Max edge length of transcript graph subgraphs to be created
 EDGE_SCALING_FACTOR = 10 # Number of transcripts per 100 required to get full allowed edge length
 DENSITY_MULTIPLIER = 1000 # Scaling factor on density-- think of as bps worth of tags to consider
 MIN_SCORE = 15 # Hide transcripts with scores below this threshold.
@@ -251,8 +251,6 @@ class TranscriptBase(TranscriptionRegionBase):
     '''
     Unique transcribed regions in the genome, as determined via GRO-Seq.
     '''   
-    start_end_density       = BoxField(null=True, default=None, help_text='This is a placeholder for the PostgreSQL box type.')
-    
     class Meta:
         abstract = True
         
@@ -264,6 +262,7 @@ class GlassTranscriptPrep(TranscriptBase):
 
 class GlassTranscript(TranscriptBase):
     average_tags            = models.FloatField(null=True)
+    start_end_density       = BoxField(null=True, default=None, help_text='This is a placeholder for the PostgreSQL box type.')
     
     spliced                 = models.NullBooleanField(default=None, help_text='Do we have RNA-Seq confirmation?')
     score                   = models.FloatField(null=True, default=None, 
@@ -288,11 +287,13 @@ class GlassTranscript(TranscriptBase):
         for chr_id in chr_list:
             print 'Adding transcripts for chromosome %d' % chr_id
             query = """
-                SELECT glass_atlas_%s_%s_prep.save_transcripts_from_sequencing_run(%d, %d,'%s', %d, %d, %d);
+                SELECT glass_atlas_%s_%s_prep.save_transcripts_from_sequencing_run(%d, %d,'%s', %d, %d, %d, %d, %d);
                 """ % (current_settings.TRANSCRIPT_GENOME,
                        current_settings.CURRENT_CELL_TYPE.lower(),
                        sequencing_run.id, chr_id, 
-                       sequencing_run.source_table.strip(), MAX_GAP, TAG_EXTENSION, DENSITY_MULTIPLIER)
+                       sequencing_run.source_table.strip(), 
+                       MAX_GAP, TAG_EXTENSION, 
+                       MAX_EDGE, EDGE_SCALING_FACTOR, DENSITY_MULTIPLIER)
             execute_query(query)
     
     ################################################
@@ -308,7 +309,7 @@ class GlassTranscript(TranscriptBase):
         '''
         This is tag-level agnostic, stitching based on gap size alone.
         '''
-        for chr_id in chr_list:
+        for chr_id  in chr_list:
             print 'Stitching together transcripts for chromosome %d' % chr_id
             query = """
                 SELECT glass_atlas_%s_%s_prep.save_transcripts_from_existing(%d, %d, %s);
@@ -317,12 +318,13 @@ class GlassTranscript(TranscriptBase):
                        chr_id, MAX_STITCHING_GAP, 
                        allow_extended_gaps and 'true' or 'false')
             execute_query(query)
-            print 'Setting average tags for transcripts for chromosome %d' % chr_id
+            print 'Setting average tags for preparatory transcripts for chromosome %d' % chr_id
             query = """
-                SELECT glass_atlas_%s_%s_prep.set_average_tags(%d, %d, %s);
+                SELECT glass_atlas_%s_%s_prep.set_average_tags(%d, %d, %d, %d, %s);
                 """ % (current_settings.TRANSCRIPT_GENOME, 
                        current_settings.CURRENT_CELL_TYPE.lower(),
-                       chr_id, DENSITY_MULTIPLIER, 'true')
+                       chr_id, MAX_EDGE, EDGE_SCALING_FACTOR, 
+                       DENSITY_MULTIPLIER, 'true')
             execute_query(query)
             
     @classmethod
@@ -333,13 +335,20 @@ class GlassTranscript(TranscriptBase):
     @classmethod
     def _draw_transcript_edges(cls, chr_list):
         for chr_id in chr_list:
-            print 'Drawing transcripts for chromosome %d' % chr_id
+            print 'Drawing edges for transcripts for chromosome %d' % chr_id
             query = """
                 -- @todo: delete existing tables?
-                SELECT glass_atlas_%s_%s.draw_transcript_edges(%d, %d, %d, %d);
+                SELECT glass_atlas_%s_%s.draw_transcript_edges(%d);
                 """ % (current_settings.TRANSCRIPT_GENOME, 
                        current_settings.CURRENT_CELL_TYPE.lower(),
-                       chr_id, MAX_EDGE, EDGE_SCALING_FACTOR, DENSITY_MULTIPLIER)
+                       chr_id)
+            execute_query(query)
+            print 'Setting average tags for transcripts for chromosome %d' % chr_id
+            query = """
+                SELECT glass_atlas_%s_%s.set_average_tags(%d, %d, %s);
+                """ % (current_settings.TRANSCRIPT_GENOME, 
+                       current_settings.CURRENT_CELL_TYPE.lower(),
+                       chr_id, DENSITY_MULTIPLIER, 'true')
             execute_query(query)
             
     @classmethod
