@@ -9,8 +9,10 @@ from glasslab.glassatlas.tests.base import GlassTestCase
 from glasslab.sequencing.datatypes.peak import GlassPeak
 from django.db import connection
 from glasslab.glassatlas.datatypes.metadata import SequencingRun
+from glasslab.glassatlas.datatypes.transcript import TAG_EXTENSION
 
 class FeatureTestCase(GlassTestCase):
+    
     def create_peak_table(self, sequencing_run_name='', sequencing_run_type='ChIP-Seq'):
         '''
         Can be called in order to create tag tables (split by chromosome)
@@ -23,7 +25,7 @@ class FeatureTestCase(GlassTestCase):
         self.sequencing_runs.append(GlassPeak.add_record_of_tags(description='Created during a unit test.', 
                                                                 type=sequencing_run_type))
         connection.close()
-      
+
     def test_peak_type_determination_0(self):
         GlassPeak._peak_type = None
         peak_type = GlassPeak.peak_type('1234_H3k4ME1_hrgsf')
@@ -47,7 +49,7 @@ class FeatureTestCase(GlassTestCase):
                                 start_end=(start_1, 0, end_1, 0)
                                 )
         
-        source_1 = self._create_transcript(chr_1, 0, start_1, end_1)
+        source_1 = self._create_transcript(chr_1, 0, start_1, end_1-TAG_EXTENSION)
         connection.close()
         self.cell_base.peak_feature.add_from_peaks(GlassPeak._meta.db_table)
         connection.close()
@@ -58,7 +60,7 @@ class FeatureTestCase(GlassTestCase):
         self.assertEquals(feature.relationship.strip(), 'is equal to')
         self.assertEquals(instance.peak_feature, feature)
         self.assertEquals(instance.distance_to_tss, 250)
-        
+
     def test_transcript_contains(self):
         self.create_peak_table(sequencing_run_name='sample_run_1_h3k4me1', sequencing_run_type='ChIP-Seq')
         chr_1, start_1, end_1 = 3, 58345, 58945
@@ -78,7 +80,7 @@ class FeatureTestCase(GlassTestCase):
         self.assertEquals(feature.relationship.strip(), 'contains')
         self.assertEquals(instance.peak_feature, feature)
         self.assertEquals(instance.distance_to_tss, 300)
-
+    
     def test_transcript_is_contained_by(self):
         self.create_peak_table(sequencing_run_name='sample_run_1_h3k4me1', sequencing_run_type='ChIP-Seq')
         chr_1, start_1, end_1 = 14, 100000900, 100010900
@@ -87,7 +89,7 @@ class FeatureTestCase(GlassTestCase):
                                 start_end=(start_1, 0, end_1, 0)
                                 )
         
-        source_1 = self._create_transcript(chr_1, 0, start_1+1, end_1)
+        source_1 = self._create_transcript(chr_1, 0, start_1+1, end_1 - TAG_EXTENSION)
         connection.close()
         self.cell_base.peak_feature.add_from_peaks(GlassPeak._meta.db_table)
         connection.close()
@@ -285,7 +287,7 @@ class FeatureTestCase(GlassTestCase):
         connection.close()
         count = self.cell_base.peak_feature.objects.count()
         self.assertTrue(count)
-        
+
     def test_two_transcripts(self):
         self.create_peak_table(sequencing_run_name='sample_run_1_h3k4me1', sequencing_run_type='ChIP-Seq')
         chr_1, start_1, end_1 = 5, 10000, 10200
@@ -293,8 +295,8 @@ class FeatureTestCase(GlassTestCase):
                                 start=start_1, end=end_1,
                                 start_end=(start_1, 0, end_1, 0)
                                 )
-        source_1 = self._create_transcript(chr_1, 0, start_1-300, start_1)
-        source_2 = self._create_transcript(chr_1, 0, end_1+1, end_1+500)
+        source_1 = self._create_transcript(chr_1, 0, start_1-300, start_1-TAG_EXTENSION, skip_stitching=True)
+        source_2 = self._create_transcript(chr_1, 0, end_1+1, end_1+500-TAG_EXTENSION)
         connection.close()
         self.cell_base.peak_feature.add_from_peaks(GlassPeak._meta.db_table)
         connection.close()
@@ -307,43 +309,6 @@ class FeatureTestCase(GlassTestCase):
         self.assertEquals(instance_1.distance_to_tss, 400)
         self.assertEquals(instance_2.distance_to_tss, 101)
     
-    def test_change_transcript(self):
-        self.create_peak_table(sequencing_run_name='sample_run_1_h3k4me1', sequencing_run_type='ChIP-Seq')
-        chr_1, start_1, end_1 = 25, 10000, 10200
-        GlassPeak.objects.create(chromosome_id=chr_1,
-                                start=start_1, end=end_1,
-                                start_end=(start_1, 0, end_1, 0)
-                                )
-        source_1 = self._create_transcript(chr_1, 0, start_1-300, start_1)
-        connection.close()
-        self.cell_base.peak_feature.add_from_peaks(GlassPeak._meta.db_table)
-        connection.close()
-        feature = self.cell_base.peak_feature.objects.all()[:1][0]
-        instance = self.cell_base.peak_feature_instance.objects.all()[:1][0]
-        trans = self.cell_base.glass_transcript.objects.all()[:1][0]
-        self.assertEquals(feature.glass_transcript, trans)
-        self.assertEquals(feature.relationship, 'overlaps with')
-        self.assertEquals(instance.distance_to_tss, 400)
-        
-        trans.transcription_start = start_1 - 500
-        trans.transcription_end = end_1 + 100
-        trans.start_end = (trans.transcription_start, 0, trans.transcription_end, 0)
-        trans.requires_reload = True
-        trans.save()
-        
-        connection.close()
-        self.cell_base.peak_feature.update_peak_features_by_transcript()
-        connection.close()
-        
-        count = self.cell_base.peak_feature.objects.count()
-        feature = self.cell_base.peak_feature.objects.all()[:1][0]
-        instance = self.cell_base.peak_feature_instance.objects.all()[:1][0]
-        trans = self.cell_base.glass_transcript.objects.all()[:1][0]
-        self.assertEquals(count, 1)
-        self.assertEquals(feature.glass_transcript, trans)
-        self.assertEquals(feature.relationship, 'contains')
-        self.assertEquals(instance.distance_to_tss, 600)
-        
     def test_no_reload(self):
         self.create_peak_table(sequencing_run_name='sample_run_1_h3k4me1', sequencing_run_type='ChIP-Seq')
         chr_1, start_1, end_1 = 5, 10000, 10200

@@ -5,25 +5,25 @@ Created on Nov 12, 2010
 
 Convenience script for feature association functions.
 '''
-genome = 'gap_0'
+genome = 'gap3_300_10_1000'
 cell_type='thiomac'
 def sql(genome, cell_type):
     return """
 -- Not run from within the codebase, but kept here in case functions need to be recreated.
 
-CREATE OR REPLACE FUNCTION glass_atlas_%s_%s.insert_associated_peak_features_from_run(run_id integer, chr_id integer, requires_reload_only boolean)
+CREATE OR REPLACE FUNCTION glass_atlas_%s_%s.insert_associated_peak_features_from_run(run_id integer, chr_id integer)
 RETURNS VOID AS $$
 DECLARE
     run glass_atlas_mm9.sequencing_run;
 BEGIN
     run := (SELECT (seq_run.*)::glass_atlas_mm9.sequencing_run 
             FROM glass_atlas_mm9.sequencing_run seq_run WHERE id = run_id);
-    PERFORM glass_atlas_%s_%s.insert_associated_peak_features(run, chr_id, requires_reload_only);
+    PERFORM glass_atlas_%s_%s.insert_associated_peak_features(run, chr_id);
     RETURN;
 END;
 $$ LANGUAGE 'plpgsql';
 
-CREATE OR REPLACE FUNCTION glass_atlas_%s_%s.insert_associated_peak_features(run glass_atlas_mm9.sequencing_run, chr_id integer, requires_reload_only boolean)
+CREATE OR REPLACE FUNCTION glass_atlas_%s_%s.insert_associated_peak_features(run glass_atlas_mm9.sequencing_run, chr_id integer)
 RETURNS VOID AS $$
 DECLARE
     rec record;
@@ -64,9 +64,7 @@ BEGIN
         ON public.make_box(transcription_start - ' || padding || ', 0, transcription_end + ' || padding || ', 0)
             && glass_peak.start_end
         WHERE transcript.chromosome_id = ' || chr_id || '
-        AND glass_peak.chromosome_id = ' || chr_id || '
-        AND (' || requires_reload_only || ' = false OR transcript.requires_reload = true)'
-        
+        AND glass_peak.chromosome_id = ' || chr_id 
     LOOP
         IF (rec.id IS NOT NULL) THEN
             -- Find or create peak_feature_instance record
@@ -112,7 +110,7 @@ BEGIN
 END;
 $$ LANGUAGE 'plpgsql';
 	
-CREATE OR REPLACE FUNCTION glass_atlas_%s_%s.update_peak_features(chr_id integer, run_requires_reload_only boolean, transcript_requires_reload_only boolean)
+CREATE OR REPLACE FUNCTION glass_atlas_%s_%s.update_peak_features(chr_id integer, run_requires_reload_only boolean)
 RETURNS VOID AS $$
 DECLARE
     run glass_atlas_mm9.sequencing_run;
@@ -122,7 +120,7 @@ BEGIN
         WHERE (run_requires_reload_only = false OR requires_reload = true)
             AND peak_type_id IS NOT NULL
     LOOP
-        PERFORM glass_atlas_%s_%s.insert_associated_peak_features(run, chr_id, transcript_requires_reload_only);
+        PERFORM glass_atlas_%s_%s.insert_associated_peak_features(run, chr_id);
     END LOOP;
         
 	RETURN;

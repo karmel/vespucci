@@ -86,7 +86,7 @@ class GlassTestCase(unittest.TestCase):
                                                                 type=sequencing_run_type, standard=True))
         connection.close()
         
-    def _create_transcript(self, chr, strand, start, end):
+    def _create_transcript(self, chr, strand, start, end, skip_stitching=False):
         # Create corresponding transcript for exon/ncRNA stitching, association
         source_table = 'sample_transcript_run_%d' % randint(0,10000)
         self.create_tag_table(sequencing_run_name=source_table, sequencing_run_type='Gro-Seq')
@@ -96,4 +96,7 @@ class GlassTestCase(unittest.TestCase):
                                 start_end=(start, 0, end, 0)
                                 )
         self.cell_base.glass_transcript.add_from_tags(GlassTag._meta.db_table)
+        if not skip_stitching:
+            self.cell_base.glass_transcript.stitch_together_transcripts()
+            self.cell_base.glass_transcript.draw_transcript_edges()
         return source_table

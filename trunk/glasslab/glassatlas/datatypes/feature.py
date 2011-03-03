@@ -54,7 +54,7 @@ class PeakFeature(GlassModel):
         for chr_id in chr_list:
             print 'Adding peak features for chromosome %d' % chr_id
             query = """
-                SELECT glass_atlas_%s_%s.insert_associated_peak_features_from_run(%d, %d, false);
+                SELECT glass_atlas_%s_%s.insert_associated_peak_features_from_run(%d, %d);
                 """ % (current_settings.TRANSCRIPT_GENOME,
                        current_settings.CURRENT_CELL_TYPE.lower(),
                        sequencing_run.id, chr_id)
@@ -65,26 +65,18 @@ class PeakFeature(GlassModel):
         '''
         Update peak features for all transcripts for runs where requires_reload = true
         '''
-        multiprocess_all_chromosomes(wrap_update_peak_features, cls, True, False)
-
-    @classmethod 
-    def update_peak_features_by_transcript(cls):
-        '''
-        Update peak features for all runs for transcripts where requires_reload = true
-        '''
-        multiprocess_all_chromosomes(wrap_update_peak_features, cls, False, True)
+        multiprocess_all_chromosomes(wrap_update_peak_features, cls, True)
         
     @classmethod
-    def _update_peak_features(cls, chr_list, run_requires_reload_only=True, transcript_requires_reload_only=True):
+    def _update_peak_features(cls, chr_list, run_requires_reload_only=True):
         for chr_id in chr_list:
             print 'Updating peak features for chromosome %d' % chr_id
             query = """
-                SELECT glass_atlas_%s_%s.update_peak_features(%d, %s, %s);
+                SELECT glass_atlas_%s_%s.update_peak_features(%d, %s);
                 """ % (current_settings.TRANSCRIPT_GENOME,
                        current_settings.CURRENT_CELL_TYPE.lower(),
                        chr_id, 
-                       run_requires_reload_only and 'true' or 'false',
-                       transcript_requires_reload_only and 'true' or 'false')
+                       run_requires_reload_only and 'true' or 'false')
             execute_query(query)
             
 class PeakFeatureInstance(GlassModel):

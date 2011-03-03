@@ -42,7 +42,8 @@ class BoxField(models.Field):
             values = value.strip('(').strip(')').split(',')
             l = []
             for value in values:
-                l = l + map(lambda x: int(x.strip('(').strip(')')), value.split(','))
+                l = l + map(lambda x: float(x.strip('(').strip(')')), value.split(','))
+            return l
         except Exception: return value
         
     def get_prep_value(self, value):

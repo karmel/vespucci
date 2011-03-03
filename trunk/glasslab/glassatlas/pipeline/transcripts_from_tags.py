@@ -23,6 +23,8 @@ class TranscriptsFromTagsParser(GlassOptionParser):
                            help='Output directory for bed file.'),
                make_option('--skip_stitching',action='store_true', dest='skip_stitching',  
                            help='Should the stitching together of transcripts be skipped?'),
+               make_option('--set_average_tags',action='store_true', dest='set_average_tags',  
+                           help='Should the stitching together of transcripts be replaced with forcing reset of average tags?'),
                make_option('--draw_edges',action='store_true', dest='draw_edges',  
                            help='Should the edges between transcripts be created and saved?'),
                make_option('--reset_score_thresholds',action='store_true', dest='reset_score_thresholds',  
@@ -55,7 +57,10 @@ if __name__ == '__main__':
         cell_base.glass_transcript.add_from_tags(GlassTag._meta.db_table)
         cell_base.glass_transcript.force_vacuum()
     
-    if not options.skip_stitching:
+    if options.set_average_tags:
+        cell_base.glass_transcript.set_average_tags()
+        cell_base.glass_transcript.force_vacuum()
+    elif not options.skip_stitching:
         allow_extended_gaps = False
         if options.allow_extended_gaps: allow_extended_gaps = True
         cell_base.glass_transcript.stitch_together_transcripts(allow_extended_gaps=allow_extended_gaps)
