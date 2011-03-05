@@ -15,7 +15,7 @@ from __future__ import division
 from django.db import models, connection
 from glasslab.config import current_settings
 from glasslab.glassatlas.datatypes.transcript import CellTypeBase
-from matplotlib import pyplot
+from matplotlib import pyplot, font_manager
 from random import choice
 
 class ParameterPerformance(models.Model):
@@ -40,9 +40,12 @@ class ParameterPerformance(models.Model):
             set score = 15
     
     '''
-    db_choices  = ('ref',#'gap_0', 'gap_5', 'gap_10', 'gap_20', 'gap_25', 'gap_50', 'gap_100', 'gap_200',
-                   #'gap2_0', 'gap2_25', 'gap2_50', 'gap2_50_no_ext', 'gap2_100', 'gap2_200', 'gap2_1000',
+    db_choices_1  = ('ref','gap_0', 'gap_5', 'gap_10', 'gap_20', 'gap_25', 'gap_50', 'gap_100', 'gap_200',
+                   'gap2_0', 'gap2_25', 'gap2_50', 'gap2_50_no_ext', 'gap2_100', 'gap2_200', 'gap2_1000',
                    )
+    db_choices_2  = ('ref', 'gap2_200', 'gap3_100_10_1000', 'gap3_200_10_1000', 'gap3_300_10_1000', 'gap3_400_10_1000', 'gap3_500_10_1000',
+                   )
+    db_choices = db_choices_2
     
     cell_base = CellTypeBase().get_cell_type_base(current_settings.CURRENT_CELL_TYPE)()
     
@@ -67,7 +70,7 @@ class ParameterPerformance(models.Model):
         glass_transcript = cls.cell_base.glass_transcript
         # First, get all PolII Serine5 peaks
         glass_transcript.reset_table_name(genome='ref') 
-        ref_transcripts = list(glass_transcript.objects.filter(score__gte=15).order_by('?')[:10])
+        ref_transcripts = list(glass_transcript.objects.filter(score__gte=15).order_by('?')[:1000])
         
         # For each parameter tested, evaluate whether the ref transcript was 
         # appropriately called.   
@@ -136,8 +139,8 @@ class ParameterPerformance(models.Model):
         Modeled after Algorithm 1 in https://cours.etsmtl.ca/sys828/REFS/A1/Fawcett_PRL2006.pdf
         '''
         # Set up pyplot
-        pyplot.figure(figsize=(8,12))
-        pyplot.title('ROC: Gap Threshold Comparisons')
+        pyplot.figure(figsize=(10,10))
+        pyplot.title('ROC: Parameter Comparisons')
         pyplot.xlabel('False positive rate')
         pyplot.ylabel('True positive rate')
         
@@ -180,7 +183,8 @@ class ParameterPerformance(models.Model):
             # Add labeled line to pyplot
             label = '%s (AUC: %.3f)' % (db_version, area)
             pyplot.plot(fp_rate, tp_rate, choice(['-','--','-.',':']), label=label)
-        pyplot.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=1, ncol=3, mode="expand", borderaxespad=0.)
+        pyplot.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=1, ncol=4, mode="expand", borderaxespad=0.,
+                      prop=font_manager.FontProperties(size=7))
         pyplot.savefig('/Users/karmel/Desktop/Projects/GlassLab/Notes and Reports/Glass Atlas/parameter_determination_2011_01_28/pyplot/roc_comparison.png')
 
     @classmethod

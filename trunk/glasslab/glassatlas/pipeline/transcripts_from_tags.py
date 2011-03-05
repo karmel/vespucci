@@ -8,8 +8,6 @@ from glasslab.sequencing.datatypes.tag import GlassTag
 from glasslab.utils.scripting import GlassOptionParser
 from optparse import make_option
 from glasslab.config import current_settings
-from datetime import datetime
-import os
 
 class TranscriptsFromTagsParser(GlassOptionParser):
     options = [

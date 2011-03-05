@@ -17,16 +17,17 @@ from django.db import connection
 class DensityAnalyzer(object):
     cell_base = CellTypeBase().get_cell_type_base(current_settings.CURRENT_CELL_TYPE)()
     
-    def get_transcripts_for_chromosome(self, chr_id, strand=0):
+    def get_transcripts_for_chromosome(self, chr_id, strand=0, limit=None):
         '''
         Get transcripts by chromosome and strand; annotate with length, tag_count,
         and number of runs present.
         '''
-        trans = self.cell_base.glass_transcript.objects.filter(chromosome__id=chr_id, strand=strand)
+        trans = self.cell_base.glass_transcript_prep.objects.filter(chromosome__id=chr_id, strand=strand)
         trans = trans.extra(select={'length': '(transcription_end - transcription_start)'})
         trans = trans.annotate(tag_count=Sum('glasstranscriptsource__tag_count'))
         trans = trans.annotate(run_count=Count('glasstranscriptsource__sequencing_run'))
         trans = trans.order_by('transcription_start')
+        if limit: trans = trans[:limit]
         return trans
     
     def graph_density(self):
@@ -35,8 +36,8 @@ class DensityAnalyzer(object):
         and per-run density over that area.
         '''
         # Set up pyplot
-        for chr_id in (21,22):
-            pyplot.figure(figsize=(24,24))
+        for chr_id in (20,):
+            pyplot.figure(figsize=(12,12))
             for strand in (0,1):
                 # Set up subplot
                 ax = pyplot.subplot(211 + strand)
@@ -44,7 +45,7 @@ class DensityAnalyzer(object):
                 pyplot.title('Transcript region density: Chromosome %d, strand %s' % (chr_id, strand and '-' or '+'))
                 pyplot.xlabel('Position on chromosome' )
                 pyplot.ylabel('Average density (tags/run/bp)')
-                transcripts = self.get_transcripts_for_chromosome(chr_id, strand)
+                transcripts = self.get_transcripts_for_chromosome(chr_id, strand, limit=5)
                 
                 for trans in transcripts:
                     # Add line from start to end pos, with avg density as y val
@@ -55,13 +56,13 @@ class DensityAnalyzer(object):
 
                 connection.close()
                 
-            pyplot.savefig('/Users/karmel/Desktop/Projects/GlassLab/Notes and Reports/Glass Atlas/density_analysis/pyplot2/density_graph_%d.png' % chr_id)
+            pyplot.savefig('/Users/karmel/Desktop/Projects/GlassLab/Notes and Reports/Glass Atlas/density_analysis/pyplot3/density_graph_%d.png' % chr_id)
 
     def density_csv(self):
         for chr_id in (22,):
             
             for strand in (0,1):
-                transcripts = self.get_transcripts_for_chromosome(chr_id, strand)
+                transcripts = self.get_transcripts_for_chromosome(chr_id, strand, limit=100)
                 output = ''
                 for trans in transcripts:
                     # Add line from start to end pos, with avg density as y val

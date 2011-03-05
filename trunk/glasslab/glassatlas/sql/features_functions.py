@@ -5,7 +5,7 @@ Created on Nov 12, 2010
 
 Convenience script for feature association functions.
 '''
-genome = 'gap3_300_10_1000'
+genome = 'gap3_200_10_1000'
 cell_type='thiomac'
 def sql(genome, cell_type):
     return """
@@ -61,7 +61,7 @@ BEGIN
             END) as relationship
         FROM glass_atlas_%s_%s.glass_transcript transcript
         JOIN "' || run.source_table || '" glass_peak
-        ON public.make_box(transcription_start - ' || padding || ', 0, transcription_end + ' || padding || ', 0)
+        ON box(point(transcription_start - ' || padding || ', 0), point(transcription_end + ' || padding || ', 0))
             && glass_peak.start_end
         WHERE transcript.chromosome_id = ' || chr_id || '
         AND glass_peak.chromosome_id = ' || chr_id 

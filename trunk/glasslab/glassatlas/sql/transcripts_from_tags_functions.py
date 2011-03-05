@@ -5,7 +5,7 @@ Created on Nov 12, 2010
 
 Convenience script for transcript functions.
 '''
-genome = 'gap3_100_10_1000'
+genome = 'gap3_200_0_1000'
 cell_type='thiomac'
 def sql(genome, cell_type):
     return """
@@ -126,7 +126,7 @@ RETURNS SETOF glass_atlas_%s_%s_prep.glass_transcript_row AS $$
 		    -- We can therefore extend the mapped tag region by a set number of bp if an extension is passed in
 		    IF tag_extension IS NOT NULL THEN
     		    IF strand = 0 THEN rec.transcription_end = rec.transcription_end + tag_extension;
-    		    ELSE rec.transcription_start = rec.transcription_start - tag_extension;
+    		    ELSE rec.transcription_start := (SELECT LEAST(0,rec.transcription_start - tag_extension));
     		    END IF;
 		    END IF;
 		    
@@ -233,7 +233,12 @@ RETURNS VOID AS $$
 	rec glass_atlas_%s_%s_prep.glass_transcript_row;
 	transcript glass_atlas_%s_%s_prep.glass_transcript;
 	average_tags float;
+	scaling_factor text;
  BEGIN
+    IF edge_scaling_factor = 0 THEN scaling_factor := 'NULL';
+    ELSE scaling_factor := edge_scaling_factor::text;
+    END IF;
+    
  	FOR strand IN 0..1 
  	LOOP
 		FOR rec IN 
@@ -252,7 +257,7 @@ RETURNS VOID AS $$
                         || ',' ||  rec.transcription_end || ', 0),'
                     || ' circle(point(' || rec.transcription_end || ',' || average_tags 
                         || '::float), ' || allowed_edge || '*LEAST(' || average_tags || '::numeric/' 
-                        || edge_scaling_factor || '::numeric,1)), '
+                        || scaling_factor || '::numeric,1)), '
                     || ' point(' || rec.transcription_start || ',' || average_tags || ') '
                     || ' ) RETURNING *' INTO transcript;
 	
@@ -313,16 +318,21 @@ CREATE OR REPLACE FUNCTION glass_atlas_%s_%s_prep.set_average_tags(chr_id intege
 RETURNS VOID AS $$
 DECLARE
     where_clause text;
+    scaling_factor text;
 BEGIN
     IF null_only = true THEN where_clause := 'density_circle IS NULL';
     ELSE where_clause := '1=1';
+    END IF;
+    
+    IF edge_scaling_factor = 0 THEN scaling_factor := 'NULL';
+    ELSE scaling_factor := edge_scaling_factor::text;
     END IF;
     
     EXECUTE 'UPDATE glass_atlas_%s_%s_prep.glass_transcript_' || chr_id || ' t '
         || ' SET density_circle = circle(point(transcription_end, ' 
             || ' glass_atlas_%s_%s_prep.get_average_tags(t.*, ' || density_multiplier || ')::numeric), '
             || allowed_edge || '*LEAST(glass_atlas_%s_%s_prep.get_average_tags(t.*, ' 
-                || density_multiplier || ')::numeric/' || edge_scaling_factor || '::numeric, 1)),'
+                || density_multiplier || ')::numeric/' || scaling_factor || '::numeric, 1)),'
         || ' start_density = point(transcription_start,glass_atlas_%s_%s_prep.get_average_tags(t.*, ' 
             || density_multiplier || ')::numeric) '
         || ' WHERE ' || where_clause;
