@@ -13,7 +13,7 @@ should be set on a run-wide basis.
 GENOME_CHOICES = ['test','mm9']
 
 REFERENCE_GENOME = 'mm9'
-TRANSCRIPT_GENOME = 'gap3_200_20_1000' # Separated for easy use of the 'test' DB while keeping reference DB
+TRANSCRIPT_GENOME = 'gap3_200_10_1000' # Separated for easy use of the 'test' DB while keeping reference DB
 GENOME = REFERENCE_GENOME
 
 GENOME_ASSEMBLY_PATHS = {'mm9': '/Volumes/Unknowme/kallison/Genomes/mm9/fasta',}

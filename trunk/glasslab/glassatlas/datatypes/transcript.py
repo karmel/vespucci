@@ -30,7 +30,7 @@ TAG_EXTENSION = 50
 MAX_GAP = 0 # Max gap between transcripts from the same run
 MAX_STITCHING_GAP = MAX_GAP # Max gap between transcripts being stitched together
 MAX_EDGE = 200 # Max edge length of transcript graph subgraphs to be created
-EDGE_SCALING_FACTOR = 20 # Number of transcripts per DENSITY_MULTIPLIER bp required to get full allowed edge length
+EDGE_SCALING_FACTOR = 10 # Number of transcripts per DENSITY_MULTIPLIER bp required to get full allowed edge length
 DENSITY_MULTIPLIER = 1000 # Scaling factor on density-- think of as bps worth of tags to consider
 MIN_SCORE = 15 # Hide transcripts with scores below this threshold.
 
@@ -533,9 +533,11 @@ class FilteredGlassTranscript(object):
         
         for trans in transcripts:
             # chrom start end name score strand thick_start thick_end colors? exon_count csv_exon_sizes csv_exon_starts
-            row = [trans.chromosome.name, str(trans.transcription_start), str(trans.transcription_end), 
+            start = max(0,trans.transcription_start)
+            end = min(trans.chromosome.length - 1,trans.transcription_end)
+            row = [trans.chromosome.name, str(start), str(end), 
                    'Transcript_' + str(trans.id), str((float(trans.score)/max_score)*1000),
-                   trans.strand and '-' or '+', str(trans.transcription_start), str(trans.transcription_end), 
+                   trans.strand and '-' or '+', str(start), str(end), 
                    trans.strand and '0,255,0' or '0,0,255']
             
             # Add in exons
@@ -550,7 +552,7 @@ class FilteredGlassTranscript(object):
                                 ex.transcription_end - ex.transcription_start)) for ex in exons] + ['1']),
                     ','.join(['0'] +
                              [str(max(0, ex.transcription_start - trans.transcription_start)) for ex in exons] 
-                                + [str(trans.transcription_end - trans.transcription_start - 1)]),
+                                + [str(end - start - 1)]),
                     ]
         
             output += '\t'.join(row) + '\n'
