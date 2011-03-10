@@ -376,7 +376,7 @@ class TranscriptPrepTestCase(GlassTestCase):
     ##################################################
     # Calculating average tags
     ##################################################
-    def test_transcript_average_tags(self): 
+    def test_transcript_density(self): 
         # Average tags is tags per bp for one run
         self.create_tag_table(sequencing_run_name='sample_run_1', sequencing_run_type='Gro-Seq')
         start, end = 1050, 5500
@@ -394,9 +394,9 @@ class TranscriptPrepTestCase(GlassTestCase):
         self.assertEquals(self.cell_base.glass_transcript.objects.count(), 1)
         
         trans = self.cell_base.glass_transcript.objects.all()[:1][0]
-        self.assertAlmostEquals(trans.average_tags, DENSITY_MULTIPLIER*50/4500)
+        self.assertAlmostEquals(trans.density, DENSITY_MULTIPLIER*50/4500)
         
-    def test_transcript_average_tags_2(self): 
+    def test_transcript_density_2(self): 
         # Average tags should be tags per bp per run
         self.create_tag_table(sequencing_run_name='sample_run_1', sequencing_run_type='Gro-Seq')
         start, end = 1050, 2500
@@ -424,7 +424,7 @@ class TranscriptPrepTestCase(GlassTestCase):
         self.assertEquals(self.cell_base.glass_transcript.objects.count(), 1)
         
         trans = self.cell_base.glass_transcript.objects.all()[:1][0]
-        self.assertAlmostEquals(trans.average_tags, DENSITY_MULTIPLIER*70/2/1500)
+        self.assertAlmostEquals(trans.density, DENSITY_MULTIPLIER*70/2/1500)
     
     def test_transcript_start_end_density(self): 
         # Average tags gets transfered over to start_end_density
@@ -444,9 +444,9 @@ class TranscriptPrepTestCase(GlassTestCase):
         self.assertEquals(self.cell_base.glass_transcript.objects.count(), 1)
         
         trans = self.cell_base.glass_transcript.objects.all()[:1][0]
-        self.assertEquals(trans.average_tags, DENSITY_MULTIPLIER*10/1000)
-        self.assertEquals(trans.start_end_density, '(%d,%d),(%d,%d)' % (end, trans.average_tags, 
-                                                                       start - TAG_EXTENSION, trans.average_tags))
+        self.assertEquals(trans.density, DENSITY_MULTIPLIER*10/1000)
+        self.assertEquals(trans.start_end_density, '(%d,%d),(%d,%d)' % (end, trans.density, 
+                                                                       start - TAG_EXTENSION, trans.density))
                                                                        
     
     ##################################################

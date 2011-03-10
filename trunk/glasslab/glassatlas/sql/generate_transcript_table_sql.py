@@ -18,7 +18,7 @@ CREATE TABLE "glass_atlas_%s_%s"."glass_transcript" (
     "transcription_end" int8 DEFAULT NULL,
     "start_end" box DEFAULT NULL,
     "start_end_density" box DEFAULT NULL,
-    "average_tags" float DEFAULT NULL,
+    "density" float DEFAULT NULL,
     "spliced" boolean DEFAULT NULL,
     "score" numeric DEFAULT NULL,
     "modified" timestamp(6) NULL DEFAULT NULL,
@@ -365,7 +365,7 @@ BEGIN
     || 'public.make_box(' || quote_literal(NEW.transcription_start) || ', 0, ' 
         || quote_literal(NEW.transcription_end) || ', 0),'
     || coalesce(quote_literal(NEW.start_end_density),'NULL') || ','
-    || coalesce(quote_literal(NEW.average_tags),'NULL') || ','
+    || coalesce(quote_literal(NEW.density),'NULL') || ','
     || coalesce(quote_literal(NEW.spliced),'NULL') || ','
     || coalesce(quote_literal(NEW.score),'NULL') || ','
     || quote_literal(NEW.modified) || ','

@@ -35,10 +35,10 @@ class TranscriptTestCase(GlassTestCase):
         # Add a random number of tags
         tag_count = randint(100, 999)
         for _ in xrange(0, tag_count):
-            start = randint(0,1000000)
+            start = randint(TAG_EXTENSION,1000000)
             end = start + randint(0,100000)
             GlassTag.objects.create(strand=randint(0,1),
-                                    chromosome_id=randint(1,22),
+                                    chromosome_id=randint(1,20),
                                     start=start, end=end,
                                     start_end=(start, 0, end, 0)
                                     )
@@ -67,7 +67,7 @@ class TranscriptTestCase(GlassTestCase):
                                   transcripts.filter(strand=strand).aggregate(
                                             tags=Sum('glasstranscriptsource__tag_count'))['tags'])
             # Per chromosome count
-            for chr_id in xrange(1,23):
+            for chr_id in xrange(1,20):
                 self.assertEquals(GlassTag.objects.filter(chromosome__id=chr_id).count(), 
                                   transcripts.filter(chromosome__id=chr_id).aggregate(
                                             tags=Sum('glasstranscriptsource__tag_count'))['tags'])
@@ -77,7 +77,8 @@ class TranscriptTestCase(GlassTestCase):
                                 LEFT OUTER JOIN "%s" transcript
                                 ON tag.chromosome_id = transcript.chromosome_id
                                     AND tag.strand = transcript.strand
-                                    AND tag.start_end <@ transcript.start_end
+                                    AND tag.start_end <@ 
+                                        public.make_box(transcript.transcription_start, 0, transcript.transcription_end, 0)
                                 WHERE transcript.chromosome_id IS NULL''' %
                                 (GlassTag._meta.db_table, 
                                  self.cell_base.glass_transcript_prep._meta.db_table))
@@ -87,7 +88,70 @@ class TranscriptTestCase(GlassTestCase):
         self.assertEquals(total_tags, 
                           self.cell_base.glass_transcript_prep.objects.aggregate(
                                         tags=Sum('glasstranscriptsource__tag_count'))['tags'])
-    
+
+    ##################################################
+    # Transcript extensions
+    ##################################################
+    def test_tag_extension_0(self):
+        # Transcript edges include extension
+        self.create_tag_table(sequencing_run_name='sample_run_1', sequencing_run_type='Gro-Seq')
+        start, end = 1000,1500
+        GlassTag.objects.create(strand=0,
+                                chromosome_id=1,
+                                start=start, end=end,
+                                start_end=(start, 0, end, 0)
+                                )
+        self.cell_base.glass_transcript.add_from_tags(GlassTag._meta.db_table)
+        connection.close()
+        trans = self.cell_base.glass_transcript_prep.objects.all()[:1][0]
+        self.assertEquals(trans.transcription_start,start)
+        self.assertEquals(trans.transcription_end,end + TAG_EXTENSION)
+        
+    def test_tag_extension_1(self):
+        # Transcript edges include extension
+        self.create_tag_table(sequencing_run_name='sample_run_1', sequencing_run_type='Gro-Seq')
+        start, end = 1000,1500
+        GlassTag.objects.create(strand=1,
+                                chromosome_id=1,
+                                start=start, end=end,
+                                start_end=(start, 0, end, 0)
+                                )
+        self.cell_base.glass_transcript.add_from_tags(GlassTag._meta.db_table)
+        connection.close()
+        trans = self.cell_base.glass_transcript_prep.objects.all()[:1][0]
+        self.assertEquals(trans.transcription_start,start - TAG_EXTENSION)
+        self.assertEquals(trans.transcription_end,end)
+
+    def test_chrom_range_0(self):
+        # Negative position values are set to zero
+        self.create_tag_table(sequencing_run_name='sample_run_1', sequencing_run_type='Gro-Seq')
+        start, end = 0,500
+        GlassTag.objects.create(strand=1,
+                                chromosome_id=1,
+                                start=start, end=end,
+                                start_end=(start, 0, end, 0)
+                                )
+        self.cell_base.glass_transcript.add_from_tags(GlassTag._meta.db_table)
+        connection.close()
+        trans = self.cell_base.glass_transcript_prep.objects.all()[:1][0]
+        self.assertEquals(trans.transcription_start,0)
+        self.assertEquals(trans.transcription_end,end)
+
+    def test_chrom_range_1(self):
+        # Values larger than the chromosome length are maxed out at chrom length
+        self.create_tag_table(sequencing_run_name='sample_run_1', sequencing_run_type='Gro-Seq')
+        start, end = 1000, 5000000000
+        GlassTag.objects.create(strand=0,
+                                chromosome_id=1,
+                                start=start, end=end,
+                                start_end=(start, 0, end, 0)
+                                )
+        self.cell_base.glass_transcript.add_from_tags(GlassTag._meta.db_table)
+        connection.close()
+        trans = self.cell_base.glass_transcript_prep.objects.all()[:1][0]
+        self.assertEquals(trans.transcription_start,start)
+        self.assertEquals(trans.transcription_end,trans.chromosome.length - 1)
+        
     ##################################################
     # Stitching transcripts together
     ##################################################

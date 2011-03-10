@@ -11,7 +11,7 @@ def sql(genome, cell_type):
     return """
 -- Not run from within the codebase, but kept here in case functions need to be recreated.
 
-CREATE OR REPLACE FUNCTION glass_atlas_%s_%s.get_average_tags(trans glass_atlas_%s_%s.glass_transcript, density_multiplier integer)
+CREATE OR REPLACE FUNCTION glass_atlas_%s_%s.get_density(trans glass_atlas_%s_%s.glass_transcript, density_multiplier integer)
 RETURNS float AS $$
 DECLARE
     sum integer;
@@ -212,7 +212,7 @@ BEGIN
 END;
 $$ LANGUAGE 'plpgsql';
 
-CREATE OR REPLACE FUNCTION glass_atlas_%s_%s.set_average_tags(chr_id integer, density_multiplier integer, null_only boolean)
+CREATE OR REPLACE FUNCTION glass_atlas_%s_%s.set_density(chr_id integer, density_multiplier integer, null_only boolean)
 RETURNS VOID AS $$
 DECLARE
     where_clause text;
@@ -223,10 +223,10 @@ BEGIN
     
     EXECUTE 'UPDATE glass_atlas_%s_%s.glass_transcript_' || chr_id || ' t '
         || ' SET start_end_density = public.make_box(transcription_start, ' 
-            || ' glass_atlas_%s_%s.get_average_tags(t.*, ' || density_multiplier || ')::numeric,'
+            || ' glass_atlas_%s_%s.get_density(t.*, ' || density_multiplier || ')::numeric,'
             || ' transcription_end,'
-            || ' glass_atlas_%s_%s.get_average_tags(t.*, ' || density_multiplier || ')::numeric), '
-            || ' average_tags = glass_atlas_%s_%s.get_average_tags(t.*, ' || density_multiplier || ')::numeric'
+            || ' glass_atlas_%s_%s.get_density(t.*, ' || density_multiplier || ')::numeric), '
+            || ' density = glass_atlas_%s_%s.get_density(t.*, ' || density_multiplier || ')::numeric'
         || ' WHERE ' || where_clause;
 END;
 $$ LANGUAGE 'plpgsql';

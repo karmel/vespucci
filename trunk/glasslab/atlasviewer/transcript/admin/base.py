@@ -162,6 +162,14 @@ class TranscriptBase(ReadOnlyAdmin):
                      
     ucsc_browser_link.short_description = 'UCSC Browser' 
     ucsc_browser_link.allow_tags = True 
+    
+    def truncated_score(self, obj):
+        return '%.3f' % obj.score
+    truncated_score.short_description = 'Score' 
+    
+    def truncated_density(self, obj):
+        return '%.3f' % obj.density
+    truncated_density.short_description = 'Density'
 
 class GlassTranscriptAdmin(TranscriptBase):
     def render_change_form(self, request, context, *args, **kwargs):
@@ -181,7 +189,7 @@ class GlassTranscriptAdmin(TranscriptBase):
         return super(GlassTranscriptAdmin, self).render_change_form(request, context, *args, **kwargs)
     
     list_display    = ('chromosome','transcription_start','transcription_end','strand',
-                       'transcript_length', 'score', 'spliced', 'ucsc_browser_link', 'modified')
+                       'transcript_length', 'truncated_density','truncated_score', 'spliced', 'ucsc_browser_link', 'modified')
     list_filter     = ('chromosome','strand','spliced')
     inlines         = [GlassTranscriptSequenceInline,
                        GlassTranscriptNonCodingInline,

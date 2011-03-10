@@ -100,3 +100,5 @@ INSTALLED_APPS = (
     'glasslab.atlasviewer.utilities',
     
 )
+
+LOGIN_URL = '/admin/login/'

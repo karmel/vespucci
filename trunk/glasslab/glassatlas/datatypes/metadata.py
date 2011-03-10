@@ -39,6 +39,12 @@ class SequencingRun(GlassModel):
                                           help_text='Is this a standard run, that should affect expected scores and transcript boundaries?')
     requires_reload = models.BooleanField(default=False, help_text='Should this run be reloaded with the next processing cycle?')
     
+    timepoint       = models.CharField(max_length=10, blank=True, null=True)
+    wt              = models.BooleanField(default=False)    
+    notx            = models.BooleanField(default=False)    
+    kla             = models.BooleanField(default=False)    
+    other_conditions= models.BooleanField(default=False)    
+    
     modified        = models.DateTimeField(auto_now=True)
     created         = models.DateTimeField(auto_now_add=True)
     

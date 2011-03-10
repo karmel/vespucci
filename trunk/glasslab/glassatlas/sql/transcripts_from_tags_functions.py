@@ -51,7 +51,7 @@ BEGIN
 END;
 $$ LANGUAGE 'plpgsql';
 
-CREATE OR REPLACE FUNCTION glass_atlas_%s_%s_prep.get_average_tags(trans glass_atlas_%s_%s_prep.glass_transcript, density_multiplier integer)
+CREATE OR REPLACE FUNCTION glass_atlas_%s_%s_prep.get_density(trans glass_atlas_%s_%s_prep.glass_transcript, density_multiplier integer)
 RETURNS float AS $$
 DECLARE
     sum integer;
@@ -65,11 +65,8 @@ $$ LANGUAGE 'plpgsql';
 
 CREATE OR REPLACE FUNCTION glass_atlas_%s_%s_prep.save_transcript(rec glass_atlas_%s_%s_prep.glass_transcript, density_multiplier integer)
 RETURNS VOID AS $$
-DECLARE 
-    average_tags float;
 BEGIN 	
 	-- Update record
-	--average_tags := (SELECT glass_atlas_%s_%s_prep.get_average_tags(rec, density_multiplier)); 
 	EXECUTE 'UPDATE glass_atlas_%s_%s_prep.glass_transcript_' || rec.chromosome_id 
 	|| ' SET'
 		|| ' strand = ' || rec.strand || ','
@@ -102,6 +99,7 @@ $$ LANGUAGE 'plpgsql';
 CREATE OR REPLACE FUNCTION glass_atlas_%s_%s_prep.determine_transcripts_from_table(chr_id integer, strand integer, source_t text, max_gap integer, tag_extension integer, field_prefix text, span_repeats boolean, allow_extended_gaps boolean)
 RETURNS SETOF glass_atlas_%s_%s_prep.glass_transcript_row AS $$
  DECLARE
+    max_chrom_pos bigint;
     rec record;
     row glass_atlas_%s_%s_prep.glass_transcript_row;
     overlapping_length integer;
@@ -115,7 +113,10 @@ RETURNS SETOF glass_atlas_%s_%s_prep.glass_transcript_row AS $$
     should_merge boolean := false;
     finish_row boolean := false;
     repeat_region integer;
- BEGIN 
+BEGIN 
+    -- Tag extension can exceed the boundaries of the chromosome if we are not careful.
+    -- Make sure to keep lengths in range.
+    max_chrom_pos := (SELECT (length - 1) FROM genome_reference_mm9.chromosome WHERE id = chr_id);
 	FOR rec IN 
 		EXECUTE 'SELECT *, "' 
 		|| field_prefix || 'start" as transcription_start, "' || field_prefix || 'end" as transcription_end '
@@ -125,10 +126,14 @@ RETURNS SETOF glass_atlas_%s_%s_prep.glass_transcript_row AS $$
 		    -- The tags returned from the sequencing run are shorter than we know them to be biologically
 		    -- We can therefore extend the mapped tag region by a set number of bp if an extension is passed in
 		    IF tag_extension IS NOT NULL THEN
-    		    IF strand = 0 THEN rec.transcription_end = rec.transcription_end + tag_extension;
-    		    ELSE rec.transcription_start := (SELECT LEAST(0,rec.transcription_start - tag_extension));
+    		    IF strand = 0 THEN rec.transcription_end := rec.transcription_end + tag_extension;
+    		    ELSE rec.transcription_start := rec.transcription_start - tag_extension;
     		    END IF;
 		    END IF;
+		    
+		    -- Ensure values are in range
+		    rec.transcription_start := (SELECT GREATEST(0,rec.transcription_start));
+		    rec.transcription_end := (SELECT LEAST(max_chrom_pos, rec.transcription_end));
 		    
 			-- Initialize the start and end if necessary
 			IF (last_start = 0) THEN 
@@ -232,7 +237,7 @@ RETURNS VOID AS $$
  DECLARE
 	rec glass_atlas_%s_%s_prep.glass_transcript_row;
 	transcript glass_atlas_%s_%s_prep.glass_transcript;
-	average_tags float;
+	density float;
 	scaling_factor text;
  BEGIN
     IF edge_scaling_factor = 0 THEN scaling_factor := 'NULL';
@@ -246,7 +251,7 @@ RETURNS VOID AS $$
 		LOOP
 			IF rec IS NOT NULL THEN
 				-- Save the transcript.
-				average_tags := (density_multiplier*rec.tag_count::numeric)/(rec.transcription_end - rec.transcription_start)::numeric;
+				density := (density_multiplier*rec.tag_count::numeric)/(rec.transcription_end - rec.transcription_start)::numeric;
 				EXECUTE 'INSERT INTO glass_atlas_%s_%s_prep.glass_transcript_' || rec.chromosome_id
 					|| ' ("chromosome_id", "strand", '
 					|| ' "transcription_start", "transcription_end",' 
@@ -255,10 +260,10 @@ RETURNS VOID AS $$
 					|| rec.transcription_start || ' , ' || rec.transcription_end || ' , '
 					|| ' public.make_box(' || rec.transcription_start || ', 0' 
                         || ',' ||  rec.transcription_end || ', 0),'
-                    || ' circle(point(' || rec.transcription_end || ',' || average_tags 
-                        || '::float), ' || allowed_edge || '*LEAST(' || average_tags || '::numeric/' 
+                    || ' circle(point(' || rec.transcription_end || ',' || density 
+                        || '::float), ' || allowed_edge || '*LEAST(' || density || '::numeric/' 
                         || scaling_factor || '::numeric,1)), '
-                    || ' point(' || rec.transcription_start || ',' || average_tags || ') '
+                    || ' point(' || rec.transcription_start || ',' || density || ') '
                     || ' ) RETURNING *' INTO transcript;
 	
 				-- Save the record of the sequencing run source
@@ -314,7 +319,7 @@ RETURNS VOID AS $$
 END;
 $$ LANGUAGE 'plpgsql';
 
-CREATE OR REPLACE FUNCTION glass_atlas_%s_%s_prep.set_average_tags(chr_id integer, allowed_edge integer, edge_scaling_factor integer, density_multiplier integer, null_only boolean)
+CREATE OR REPLACE FUNCTION glass_atlas_%s_%s_prep.set_density(chr_id integer, allowed_edge integer, edge_scaling_factor integer, density_multiplier integer, null_only boolean)
 RETURNS VOID AS $$
 DECLARE
     where_clause text;
@@ -330,16 +335,16 @@ BEGIN
     
     EXECUTE 'UPDATE glass_atlas_%s_%s_prep.glass_transcript_' || chr_id || ' t '
         || ' SET density_circle = circle(point(transcription_end, ' 
-            || ' glass_atlas_%s_%s_prep.get_average_tags(t.*, ' || density_multiplier || ')::numeric), '
-            || allowed_edge || '*LEAST(glass_atlas_%s_%s_prep.get_average_tags(t.*, ' 
+            || ' glass_atlas_%s_%s_prep.get_density(t.*, ' || density_multiplier || ')::numeric), '
+            || allowed_edge || '*LEAST(glass_atlas_%s_%s_prep.get_density(t.*, ' 
                 || density_multiplier || ')::numeric/' || scaling_factor || '::numeric, 1)),'
-        || ' start_density = point(transcription_start,glass_atlas_%s_%s_prep.get_average_tags(t.*, ' 
+        || ' start_density = point(transcription_start,glass_atlas_%s_%s_prep.get_density(t.*, ' 
             || density_multiplier || ')::numeric) '
         || ' WHERE ' || where_clause;
 END;
 $$ LANGUAGE 'plpgsql';
 
-""" % tuple([genome, cell_type]*48)
+""" % tuple([genome, cell_type]*47)
 
 if __name__ == '__main__':
     print sql(genome, cell_type)

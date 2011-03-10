@@ -13,8 +13,9 @@ class SavedQuery(models.Model):
     name    = models.CharField(max_length=255)
     query   = models.TextField()
     notes   = models.TextField(blank=True)
-    modified= models.DateTimeField(auto_now=True)
-    created = models.DateTimeField(auto_now_add=True)
+    stored_results  = models.TextField(blank=True, help_text='Tab-separated values. Include header row.')
+    modified        = models.DateTimeField(auto_now=True)
+    created         = models.DateTimeField(auto_now_add=True)
     
     class Meta:
         db_table = 'atlas_viewer_utilities"."saved_query'

@@ -17,6 +17,43 @@ from glasslab.atlasviewer.utilities.models import SavedQuery
 from django.template.defaultfilters import urlencode
 
 @login_required
+def stored_results(request, id):
+    q = SavedQuery.objects.get(id=id)
+    field_names, rows = _split_stored_results(q.stored_results)
+    context = {'rows': rows,
+               'field_names': field_names,
+               'stored_query': True, 
+               'query': q, }
+    return render_to_response('custom_query.html',
+                              context,
+                              context_instance=RequestContext(request))
+
+@login_required
+def stored_results_export(request, id):
+    q = SavedQuery.objects.get(id=id)
+    field_names, rows = _split_stored_results(q.stored_results)
+    context = {'rows': rows,
+               'field_names': field_names,
+               'stored_query': True, 
+               'query': q, }
+    return _query_export(request, context)
+
+def _split_stored_results(results):
+    '''
+    Get cleaned lists from TSV.
+    '''
+    results = results.split('\n')
+    field_names = [(_clean_stored_results(name),) for name in results[0].split('\t')]
+    rows = [map(_clean_stored_results,row.split('\t')) for row in results[1:]]
+    return field_names, rows
+
+def _clean_stored_results(string):
+    ''' 
+    Turn stored TSV values into HTML displayables.
+    '''
+    return string.strip('"').strip().replace('""','"')
+
+@login_required
 def custom_query_redirect(request, id):
     q = SavedQuery.objects.get(id=id)
     return HttpResponseRedirect('/transcript/custom_query?query=%s' % urlencode(q.query))
@@ -31,6 +68,9 @@ def custom_query(request):
 @login_required
 def custom_query_export(request):
     context = _custom_query(request, limit=100000)
+    return _query_export(request, context)
+
+def _query_export(request, context):
     data = render_to_string('custom_query_export.txt',
                               context,
                               context_instance=RequestContext(request))

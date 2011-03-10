@@ -21,7 +21,6 @@ import os
 from random import randint, sample
 from django.db.models.aggregates import Count, Max, Sum
 from datetime import datetime
-from math import ceil
 
 # The tags returned from the sequencing run are shorter than we know them to be biologically
 # We can therefore extend the mapped tag region by a set number of bp if an extension is passed in
@@ -29,9 +28,9 @@ TAG_EXTENSION = 50
 
 MAX_GAP = 0 # Max gap between transcripts from the same run
 MAX_STITCHING_GAP = MAX_GAP # Max gap between transcripts being stitched together
-MAX_EDGE = 200 # Max edge length of transcript graph subgraphs to be created
-EDGE_SCALING_FACTOR = 10 # Number of transcripts per DENSITY_MULTIPLIER bp required to get full allowed edge length
-DENSITY_MULTIPLIER = 1000 # Scaling factor on density-- think of as bps worth of tags to consider
+MAX_EDGE = 300 # Max edge length of transcript graph subgraphs to be created
+EDGE_SCALING_FACTOR = 40 # Number of transcripts per DENSITY_MULTIPLIER bp required to get full allowed edge length
+DENSITY_MULTIPLIER = 2000 # Scaling factor on density-- think of as bps worth of tags to consider
 MIN_SCORE = 15 # Hide transcripts with scores below this threshold.
 
 def multiprocess_all_chromosomes(func, cls, *args):
@@ -73,7 +72,7 @@ def multiprocess_all_chromosomes(func, cls, *args):
 def wrap_add_transcripts_from_groseq(cls, chr_list, *args): wrap_errors(cls._add_transcripts_from_groseq, chr_list, *args)
 
 def wrap_stitch_together_transcripts(cls, chr_list, *args): wrap_errors(cls._stitch_together_transcripts, chr_list, *args)
-def wrap_set_average_tags(cls, chr_list): wrap_errors(cls._set_average_tags, chr_list)
+def wrap_set_density(cls, chr_list): wrap_errors(cls._set_density, chr_list)
 def wrap_draw_transcript_edges(cls, chr_list): wrap_errors(cls._draw_transcript_edges, chr_list)
 def wrap_set_score_thresholds(cls, chr_list, *args): wrap_errors(cls._set_score_thresholds, chr_list, *args)
 def wrap_set_scores(cls, chr_list): wrap_errors(cls._set_scores, chr_list)
@@ -262,11 +261,11 @@ class GlassTranscriptPrep(TranscriptBase):
         abstract    = True
 
 class GlassTranscript(TranscriptBase):
-    average_tags            = models.FloatField(null=True)
-    start_end_density       = BoxField(null=True, default=None, help_text='This is a placeholder for the PostgreSQL box type.')
+    density             = models.FloatField(null=True)
+    start_end_density   = BoxField(null=True, default=None, help_text='This is a placeholder for the PostgreSQL box type.')
     
-    spliced                 = models.NullBooleanField(default=None, help_text='Do we have RNA-Seq confirmation?')
-    score                   = models.FloatField(null=True, default=None, 
+    spliced             = models.NullBooleanField(default=None, help_text='Do we have RNA-Seq confirmation?')
+    score               = models.FloatField(null=True, default=None, 
                                     help_text='Total mapped tags x sequencing runs transcribed in / total sequencing runs possible')
     
     modified        = models.DateTimeField(auto_now=True)
@@ -281,7 +280,7 @@ class GlassTranscript(TranscriptBase):
     @classmethod 
     def add_transcripts_from_groseq(cls,  tag_table, sequencing_run):
         multiprocess_glass_tags(wrap_add_transcripts_from_groseq, cls, sequencing_run)
-        #wrap_add_transcripts_from_tags(cls,[21, 22],sequencing_run)
+        #wrap_add_transcripts_from_groseq(cls,[1, 22],sequencing_run)
         
     @classmethod
     def _add_transcripts_from_groseq(cls, chr_list, sequencing_run):
@@ -321,7 +320,7 @@ class GlassTranscript(TranscriptBase):
             execute_query(query)
             print 'Setting average tags for preparatory transcripts for chromosome %d' % chr_id
             query = """
-                SELECT glass_atlas_%s_%s_prep.set_average_tags(%d, %d, %d, %d, %s);
+                SELECT glass_atlas_%s_%s_prep.set_density(%d, %d, %d, %d, %s);
                 """ % (current_settings.TRANSCRIPT_GENOME, 
                        current_settings.CURRENT_CELL_TYPE.lower(),
                        chr_id, MAX_EDGE, EDGE_SCALING_FACTOR, 
@@ -329,18 +328,18 @@ class GlassTranscript(TranscriptBase):
             execute_query(query)
     
     @classmethod
-    def set_average_tags(cls):
-        multiprocess_all_chromosomes(wrap_set_average_tags, cls)
+    def set_density(cls):
+        multiprocess_all_chromosomes(wrap_set_density, cls)
     
     @classmethod
-    def _set_average_tags(cls, chr_list):
+    def _set_density(cls, chr_list):
         '''
         Force reset average tags for prep DB.
         '''
         for chr_id  in chr_list:
             print 'Setting average tags for preparatory transcripts for chromosome %d' % chr_id
             query = """
-                SELECT glass_atlas_%s_%s_prep.set_average_tags(%d, %d, %d, %d, %s);
+                SELECT glass_atlas_%s_%s_prep.set_density(%d, %d, %d, %d, %s);
                 """ % (current_settings.TRANSCRIPT_GENOME, 
                        current_settings.CURRENT_CELL_TYPE.lower(),
                        chr_id, MAX_EDGE, EDGE_SCALING_FACTOR, 
@@ -365,7 +364,7 @@ class GlassTranscript(TranscriptBase):
             execute_query(query)
             print 'Setting average tags for transcripts for chromosome %d' % chr_id
             query = """
-                SELECT glass_atlas_%s_%s.set_average_tags(%d, %d, %s);
+                SELECT glass_atlas_%s_%s.set_density(%d, %d, %s);
                 """ % (current_settings.TRANSCRIPT_GENOME, 
                        current_settings.CURRENT_CELL_TYPE.lower(),
                        chr_id, DENSITY_MULTIPLIER, 'true')

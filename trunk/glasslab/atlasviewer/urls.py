@@ -16,6 +16,7 @@ urlpatterns += patterns('django.views.generic.simple',
     
     (r'^admin/doc/', include('django.contrib.admindocs.urls')),
     (r'^admin/', include(admin.site.urls)),
+    (r'^accounts/', include(admin.site.urls)),
     
     # Transcript app
     (r'^transcript/', include('glasslab.atlasviewer.transcript.urls')),
