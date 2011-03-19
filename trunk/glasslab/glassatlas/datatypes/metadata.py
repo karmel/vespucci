@@ -43,7 +43,7 @@ class SequencingRun(GlassModel):
     wt              = models.BooleanField(default=False)    
     notx            = models.BooleanField(default=False)    
     kla             = models.BooleanField(default=False)    
-    other_conditions= models.BooleanField(default=False)    
+    other_conditions= models.BooleanField(default=False)  
     
     modified        = models.DateTimeField(auto_now=True)
     created         = models.DateTimeField(auto_now_add=True)

@@ -4,7 +4,7 @@ Created on Feb 23, 2011
 @author: karmel
 '''
 
-genome = 'gap3_100_10'
+genome = 'lncrna'
 cell_type='thiomac'
 def sql(genome, cell_type):
     return """

@@ -58,12 +58,15 @@ def multiprocess_all_chromosomes(func, cls, *args):
                 # cls in question does not have explicit relation to chromosomes; get all
                 all_chr = Chromosome.objects.order_by('?').values_list('id', flat=True)
             
-        total_count = len(all_chr)
-        # Chromosomes are sorted by count descending, so we want to interleave them
-        # in order to create even-ish groups.
-        current_settings.CHR_LISTS = [[all_chr[x] for x in xrange(i,total_count,processes)] 
-                                                    for i in xrange(0,processes)]
-  
+        # Chromosomes are sorted by count descending, so we want to snake them
+        # back and forth to create even-ish groups
+        chr_sets = [[] for _ in xrange(0, processes)]
+        for i,chr in enumerate(all_chr):
+            if i and not i % processes: chr_sets.reverse()
+            chr_sets[i % processes].append(chr)
+             
+        current_settings.CHR_LISTS = chr_sets
+        
     for chr_list in current_settings.CHR_LISTS:
         p.apply_async(func, args=[cls, chr_list,] + list(args))
     p.close()
