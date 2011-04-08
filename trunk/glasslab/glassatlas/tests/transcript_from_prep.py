@@ -16,7 +16,7 @@ class TranscriptPrepTestCase(GlassTestCase):
     ##################################################
     # Associating transcripts
     ##################################################
-    """
+    
     def test_contains_sequence(self):
         # Transcript gets associated with Serbp1.
         self.create_tag_table(sequencing_run_name='sample_run_1', sequencing_run_type='Gro-Seq')
@@ -511,7 +511,7 @@ class TranscriptPrepTestCase(GlassTestCase):
         self.cell_base.glass_transcript.draw_transcript_edges()
         connection.close()
         self.assertEquals(self.cell_base.glass_transcript.objects.count(), 2)
-    """
+    
     def test_no_edge_low_density(self): 
         # With low densities, transcripts exactly MAX_EDGE apart should not unite
         self.create_tag_table(sequencing_run_name='sample_run_1', sequencing_run_type='Gro-Seq')

@@ -20,6 +20,7 @@ CREATE TABLE "glass_atlas_%s_%s"."glass_transcript" (
     "start_end_density" box DEFAULT NULL,
     "density" float DEFAULT NULL,
     "spliced" boolean DEFAULT NULL,
+    "polya" boolean DEFAULT NULL,
     "score" numeric DEFAULT NULL,
     "modified" timestamp(6) NULL DEFAULT NULL,
     "created" timestamp(6) NULL DEFAULT NULL
@@ -41,6 +42,7 @@ CREATE TABLE "glass_atlas_%s_%s"."glass_transcript_1" (
 ) INHERITS ("glass_atlas_%s_%s"."glass_transcript");
 CREATE INDEX glass_transcript_1_chr_idx ON "glass_atlas_%s_%s"."glass_transcript_1" USING btree (chromosome_id);
 CREATE INDEX glass_transcript_1_strand_idx ON "glass_atlas_%s_%s"."glass_transcript_1" USING btree (strand);
+CREATE INDEX glass_transcript_1_score_idx ON "glass_atlas_%s_%s"."glass_transcript_1" USING btree (score);
 CREATE INDEX glass_transcript_1_start_end_idx ON "glass_atlas_%s_%s"."glass_transcript_1" USING gist (start_end);
 CREATE INDEX glass_transcript_1_start_end_density_idx ON "glass_atlas_%s_%s"."glass_transcript_1" USING gist (start_end_density);
 CREATE INDEX glass_transcript_1_start_end_wide_idx ON "glass_atlas_%s_%s"."glass_transcript_1" USING gist (box(point(transcription_start - 2000, 0), point(transcription_end + 2000, 0)));
@@ -50,6 +52,7 @@ CREATE TABLE "glass_atlas_%s_%s"."glass_transcript_2" (
 ) INHERITS ("glass_atlas_%s_%s"."glass_transcript");
 CREATE INDEX glass_transcript_2_chr_idx ON "glass_atlas_%s_%s"."glass_transcript_2" USING btree (chromosome_id);
 CREATE INDEX glass_transcript_2_strand_idx ON "glass_atlas_%s_%s"."glass_transcript_2" USING btree (strand);
+CREATE INDEX glass_transcript_2_score_idx ON "glass_atlas_%s_%s"."glass_transcript_2" USING btree (score);
 CREATE INDEX glass_transcript_2_start_end_idx ON "glass_atlas_%s_%s"."glass_transcript_2" USING gist (start_end);
 CREATE INDEX glass_transcript_2_start_end_density_idx ON "glass_atlas_%s_%s"."glass_transcript_2" USING gist (start_end_density);
 CREATE INDEX glass_transcript_2_start_end_wide_idx ON "glass_atlas_%s_%s"."glass_transcript_2" USING gist (box(point(transcription_start - 2000, 0), point(transcription_end + 2000, 0)));
@@ -59,6 +62,7 @@ CREATE TABLE "glass_atlas_%s_%s"."glass_transcript_3" (
 ) INHERITS ("glass_atlas_%s_%s"."glass_transcript");
 CREATE INDEX glass_transcript_3_chr_idx ON "glass_atlas_%s_%s"."glass_transcript_3" USING btree (chromosome_id);
 CREATE INDEX glass_transcript_3_strand_idx ON "glass_atlas_%s_%s"."glass_transcript_3" USING btree (strand);
+CREATE INDEX glass_transcript_3_score_idx ON "glass_atlas_%s_%s"."glass_transcript_3" USING btree (score);
 CREATE INDEX glass_transcript_3_start_end_idx ON "glass_atlas_%s_%s"."glass_transcript_3" USING gist (start_end);
 CREATE INDEX glass_transcript_3_start_end_density_idx ON "glass_atlas_%s_%s"."glass_transcript_3" USING gist (start_end_density);
 CREATE INDEX glass_transcript_3_start_end_wide_idx ON "glass_atlas_%s_%s"."glass_transcript_3" USING gist (box(point(transcription_start - 2000, 0), point(transcription_end + 2000, 0)));
@@ -68,6 +72,7 @@ CREATE TABLE "glass_atlas_%s_%s"."glass_transcript_4" (
 ) INHERITS ("glass_atlas_%s_%s"."glass_transcript");
 CREATE INDEX glass_transcript_4_chr_idx ON "glass_atlas_%s_%s"."glass_transcript_4" USING btree (chromosome_id);
 CREATE INDEX glass_transcript_4_strand_idx ON "glass_atlas_%s_%s"."glass_transcript_4" USING btree (strand);
+CREATE INDEX glass_transcript_4_score_idx ON "glass_atlas_%s_%s"."glass_transcript_4" USING btree (score);
 CREATE INDEX glass_transcript_4_start_end_idx ON "glass_atlas_%s_%s"."glass_transcript_4" USING gist (start_end);
 CREATE INDEX glass_transcript_4_start_end_density_idx ON "glass_atlas_%s_%s"."glass_transcript_4" USING gist (start_end_density);
 CREATE INDEX glass_transcript_4_start_end_wide_idx ON "glass_atlas_%s_%s"."glass_transcript_4" USING gist (box(point(transcription_start - 2000, 0), point(transcription_end + 2000, 0)));
@@ -77,6 +82,7 @@ CREATE TABLE "glass_atlas_%s_%s"."glass_transcript_5" (
 ) INHERITS ("glass_atlas_%s_%s"."glass_transcript");
 CREATE INDEX glass_transcript_5_chr_idx ON "glass_atlas_%s_%s"."glass_transcript_5" USING btree (chromosome_id);
 CREATE INDEX glass_transcript_5_strand_idx ON "glass_atlas_%s_%s"."glass_transcript_5" USING btree (strand);
+CREATE INDEX glass_transcript_5_score_idx ON "glass_atlas_%s_%s"."glass_transcript_5" USING btree (score);
 CREATE INDEX glass_transcript_5_start_end_idx ON "glass_atlas_%s_%s"."glass_transcript_5" USING gist (start_end);
 CREATE INDEX glass_transcript_5_start_end_density_idx ON "glass_atlas_%s_%s"."glass_transcript_5" USING gist (start_end_density);
 CREATE INDEX glass_transcript_5_start_end_wide_idx ON "glass_atlas_%s_%s"."glass_transcript_5" USING gist (box(point(transcription_start - 2000, 0), point(transcription_end + 2000, 0)));
@@ -86,6 +92,7 @@ CREATE TABLE "glass_atlas_%s_%s"."glass_transcript_6" (
 ) INHERITS ("glass_atlas_%s_%s"."glass_transcript");
 CREATE INDEX glass_transcript_6_chr_idx ON "glass_atlas_%s_%s"."glass_transcript_6" USING btree (chromosome_id);
 CREATE INDEX glass_transcript_6_strand_idx ON "glass_atlas_%s_%s"."glass_transcript_6" USING btree (strand);
+CREATE INDEX glass_transcript_6_score_idx ON "glass_atlas_%s_%s"."glass_transcript_6" USING btree (score);
 CREATE INDEX glass_transcript_6_start_end_idx ON "glass_atlas_%s_%s"."glass_transcript_6" USING gist (start_end);
 CREATE INDEX glass_transcript_6_start_end_density_idx ON "glass_atlas_%s_%s"."glass_transcript_6" USING gist (start_end_density);
 CREATE INDEX glass_transcript_6_start_end_wide_idx ON "glass_atlas_%s_%s"."glass_transcript_6" USING gist (box(point(transcription_start - 2000, 0), point(transcription_end + 2000, 0)));
@@ -95,6 +102,7 @@ CREATE TABLE "glass_atlas_%s_%s"."glass_transcript_7" (
 ) INHERITS ("glass_atlas_%s_%s"."glass_transcript");
 CREATE INDEX glass_transcript_7_chr_idx ON "glass_atlas_%s_%s"."glass_transcript_7" USING btree (chromosome_id);
 CREATE INDEX glass_transcript_7_strand_idx ON "glass_atlas_%s_%s"."glass_transcript_7" USING btree (strand);
+CREATE INDEX glass_transcript_7_score_idx ON "glass_atlas_%s_%s"."glass_transcript_7" USING btree (score);
 CREATE INDEX glass_transcript_7_start_end_idx ON "glass_atlas_%s_%s"."glass_transcript_7" USING gist (start_end);
 CREATE INDEX glass_transcript_7_start_end_density_idx ON "glass_atlas_%s_%s"."glass_transcript_7" USING gist (start_end_density);
 CREATE INDEX glass_transcript_7_start_end_wide_idx ON "glass_atlas_%s_%s"."glass_transcript_7" USING gist (box(point(transcription_start - 2000, 0), point(transcription_end + 2000, 0)));
@@ -104,6 +112,7 @@ CREATE TABLE "glass_atlas_%s_%s"."glass_transcript_8" (
 ) INHERITS ("glass_atlas_%s_%s"."glass_transcript");
 CREATE INDEX glass_transcript_8_chr_idx ON "glass_atlas_%s_%s"."glass_transcript_8" USING btree (chromosome_id);
 CREATE INDEX glass_transcript_8_strand_idx ON "glass_atlas_%s_%s"."glass_transcript_8" USING btree (strand);
+CREATE INDEX glass_transcript_8_score_idx ON "glass_atlas_%s_%s"."glass_transcript_8" USING btree (score);
 CREATE INDEX glass_transcript_8_start_end_idx ON "glass_atlas_%s_%s"."glass_transcript_8" USING gist (start_end);
 CREATE INDEX glass_transcript_8_start_end_density_idx ON "glass_atlas_%s_%s"."glass_transcript_8" USING gist (start_end_density);
 CREATE INDEX glass_transcript_8_start_end_wide_idx ON "glass_atlas_%s_%s"."glass_transcript_8" USING gist (box(point(transcription_start - 2000, 0), point(transcription_end + 2000, 0)));
@@ -113,6 +122,7 @@ CREATE TABLE "glass_atlas_%s_%s"."glass_transcript_9" (
 ) INHERITS ("glass_atlas_%s_%s"."glass_transcript");
 CREATE INDEX glass_transcript_9_chr_idx ON "glass_atlas_%s_%s"."glass_transcript_9" USING btree (chromosome_id);
 CREATE INDEX glass_transcript_9_strand_idx ON "glass_atlas_%s_%s"."glass_transcript_9" USING btree (strand);
+CREATE INDEX glass_transcript_9_score_idx ON "glass_atlas_%s_%s"."glass_transcript_9" USING btree (score);
 CREATE INDEX glass_transcript_9_start_end_idx ON "glass_atlas_%s_%s"."glass_transcript_9" USING gist (start_end);
 CREATE INDEX glass_transcript_9_start_end_density_idx ON "glass_atlas_%s_%s"."glass_transcript_9" USING gist (start_end_density);
 CREATE INDEX glass_transcript_9_start_end_wide_idx ON "glass_atlas_%s_%s"."glass_transcript_9" USING gist (box(point(transcription_start - 2000, 0), point(transcription_end + 2000, 0)));
@@ -122,6 +132,7 @@ CREATE TABLE "glass_atlas_%s_%s"."glass_transcript_10" (
 ) INHERITS ("glass_atlas_%s_%s"."glass_transcript");
 CREATE INDEX glass_transcript_10_chr_idx ON "glass_atlas_%s_%s"."glass_transcript_10" USING btree (chromosome_id);
 CREATE INDEX glass_transcript_10_strand_idx ON "glass_atlas_%s_%s"."glass_transcript_10" USING btree (strand);
+CREATE INDEX glass_transcript_10_score_idx ON "glass_atlas_%s_%s"."glass_transcript_10" USING btree (score);
 CREATE INDEX glass_transcript_10_start_end_idx ON "glass_atlas_%s_%s"."glass_transcript_10" USING gist (start_end);
 CREATE INDEX glass_transcript_10_start_end_density_idx ON "glass_atlas_%s_%s"."glass_transcript_10" USING gist (start_end_density);
 CREATE INDEX glass_transcript_10_start_end_wide_idx ON "glass_atlas_%s_%s"."glass_transcript_10" USING gist (box(point(transcription_start - 2000, 0), point(transcription_end + 2000, 0)));
@@ -131,6 +142,7 @@ CREATE TABLE "glass_atlas_%s_%s"."glass_transcript_11" (
 ) INHERITS ("glass_atlas_%s_%s"."glass_transcript");
 CREATE INDEX glass_transcript_11_chr_idx ON "glass_atlas_%s_%s"."glass_transcript_11" USING btree (chromosome_id);
 CREATE INDEX glass_transcript_11_strand_idx ON "glass_atlas_%s_%s"."glass_transcript_11" USING btree (strand);
+CREATE INDEX glass_transcript_11_score_idx ON "glass_atlas_%s_%s"."glass_transcript_11" USING btree (score);
 CREATE INDEX glass_transcript_11_start_end_idx ON "glass_atlas_%s_%s"."glass_transcript_11" USING gist (start_end);
 CREATE INDEX glass_transcript_11_start_end_density_idx ON "glass_atlas_%s_%s"."glass_transcript_11" USING gist (start_end_density);
 CREATE INDEX glass_transcript_11_start_end_wide_idx ON "glass_atlas_%s_%s"."glass_transcript_11" USING gist (box(point(transcription_start - 2000, 0), point(transcription_end + 2000, 0)));
@@ -140,6 +152,7 @@ CREATE TABLE "glass_atlas_%s_%s"."glass_transcript_12" (
 ) INHERITS ("glass_atlas_%s_%s"."glass_transcript");
 CREATE INDEX glass_transcript_12_chr_idx ON "glass_atlas_%s_%s"."glass_transcript_12" USING btree (chromosome_id);
 CREATE INDEX glass_transcript_12_strand_idx ON "glass_atlas_%s_%s"."glass_transcript_12" USING btree (strand);
+CREATE INDEX glass_transcript_12_score_idx ON "glass_atlas_%s_%s"."glass_transcript_12" USING btree (score);
 CREATE INDEX glass_transcript_12_start_end_idx ON "glass_atlas_%s_%s"."glass_transcript_12" USING gist (start_end);
 CREATE INDEX glass_transcript_12_start_end_density_idx ON "glass_atlas_%s_%s"."glass_transcript_12" USING gist (start_end_density);
 CREATE INDEX glass_transcript_12_start_end_wide_idx ON "glass_atlas_%s_%s"."glass_transcript_12" USING gist (box(point(transcription_start - 2000, 0), point(transcription_end + 2000, 0)));
@@ -149,6 +162,7 @@ CREATE TABLE "glass_atlas_%s_%s"."glass_transcript_13" (
 ) INHERITS ("glass_atlas_%s_%s"."glass_transcript");
 CREATE INDEX glass_transcript_13_chr_idx ON "glass_atlas_%s_%s"."glass_transcript_13" USING btree (chromosome_id);
 CREATE INDEX glass_transcript_13_strand_idx ON "glass_atlas_%s_%s"."glass_transcript_13" USING btree (strand);
+CREATE INDEX glass_transcript_13_score_idx ON "glass_atlas_%s_%s"."glass_transcript_13" USING btree (score);
 CREATE INDEX glass_transcript_13_start_end_idx ON "glass_atlas_%s_%s"."glass_transcript_13" USING gist (start_end);
 CREATE INDEX glass_transcript_13_start_end_density_idx ON "glass_atlas_%s_%s"."glass_transcript_13" USING gist (start_end_density);
 CREATE INDEX glass_transcript_13_start_end_wide_idx ON "glass_atlas_%s_%s"."glass_transcript_13" USING gist (box(point(transcription_start - 2000, 0), point(transcription_end + 2000, 0)));
@@ -158,6 +172,7 @@ CREATE TABLE "glass_atlas_%s_%s"."glass_transcript_14" (
 ) INHERITS ("glass_atlas_%s_%s"."glass_transcript");
 CREATE INDEX glass_transcript_14_chr_idx ON "glass_atlas_%s_%s"."glass_transcript_14" USING btree (chromosome_id);
 CREATE INDEX glass_transcript_14_strand_idx ON "glass_atlas_%s_%s"."glass_transcript_14" USING btree (strand);
+CREATE INDEX glass_transcript_14_score_idx ON "glass_atlas_%s_%s"."glass_transcript_14" USING btree (score);
 CREATE INDEX glass_transcript_14_start_end_idx ON "glass_atlas_%s_%s"."glass_transcript_14" USING gist (start_end);
 CREATE INDEX glass_transcript_14_start_end_density_idx ON "glass_atlas_%s_%s"."glass_transcript_14" USING gist (start_end_density);
 CREATE INDEX glass_transcript_14_start_end_wide_idx ON "glass_atlas_%s_%s"."glass_transcript_14" USING gist (box(point(transcription_start - 2000, 0), point(transcription_end + 2000, 0)));
@@ -167,6 +182,7 @@ CREATE TABLE "glass_atlas_%s_%s"."glass_transcript_15" (
 ) INHERITS ("glass_atlas_%s_%s"."glass_transcript");
 CREATE INDEX glass_transcript_15_chr_idx ON "glass_atlas_%s_%s"."glass_transcript_15" USING btree (chromosome_id);
 CREATE INDEX glass_transcript_15_strand_idx ON "glass_atlas_%s_%s"."glass_transcript_15" USING btree (strand);
+CREATE INDEX glass_transcript_15_score_idx ON "glass_atlas_%s_%s"."glass_transcript_15" USING btree (score);
 CREATE INDEX glass_transcript_15_start_end_idx ON "glass_atlas_%s_%s"."glass_transcript_15" USING gist (start_end);
 CREATE INDEX glass_transcript_15_start_end_density_idx ON "glass_atlas_%s_%s"."glass_transcript_15" USING gist (start_end_density);
 CREATE INDEX glass_transcript_15_start_end_wide_idx ON "glass_atlas_%s_%s"."glass_transcript_15" USING gist (box(point(transcription_start - 2000, 0), point(transcription_end + 2000, 0)));
@@ -176,6 +192,7 @@ CREATE TABLE "glass_atlas_%s_%s"."glass_transcript_16" (
 ) INHERITS ("glass_atlas_%s_%s"."glass_transcript");
 CREATE INDEX glass_transcript_16_chr_idx ON "glass_atlas_%s_%s"."glass_transcript_16" USING btree (chromosome_id);
 CREATE INDEX glass_transcript_16_strand_idx ON "glass_atlas_%s_%s"."glass_transcript_16" USING btree (strand);
+CREATE INDEX glass_transcript_16_score_idx ON "glass_atlas_%s_%s"."glass_transcript_16" USING btree (score);
 CREATE INDEX glass_transcript_16_start_end_idx ON "glass_atlas_%s_%s"."glass_transcript_16" USING gist (start_end);
 CREATE INDEX glass_transcript_16_start_end_density_idx ON "glass_atlas_%s_%s"."glass_transcript_16" USING gist (start_end_density);
 CREATE INDEX glass_transcript_16_start_end_wide_idx ON "glass_atlas_%s_%s"."glass_transcript_16" USING gist (box(point(transcription_start - 2000, 0), point(transcription_end + 2000, 0)));
@@ -185,6 +202,7 @@ CREATE TABLE "glass_atlas_%s_%s"."glass_transcript_17" (
 ) INHERITS ("glass_atlas_%s_%s"."glass_transcript");
 CREATE INDEX glass_transcript_17_chr_idx ON "glass_atlas_%s_%s"."glass_transcript_17" USING btree (chromosome_id);
 CREATE INDEX glass_transcript_17_strand_idx ON "glass_atlas_%s_%s"."glass_transcript_17" USING btree (strand);
+CREATE INDEX glass_transcript_17_score_idx ON "glass_atlas_%s_%s"."glass_transcript_17" USING btree (score);
 CREATE INDEX glass_transcript_17_start_end_idx ON "glass_atlas_%s_%s"."glass_transcript_17" USING gist (start_end);
 CREATE INDEX glass_transcript_17_start_end_density_idx ON "glass_atlas_%s_%s"."glass_transcript_17" USING gist (start_end_density);
 CREATE INDEX glass_transcript_17_start_end_wide_idx ON "glass_atlas_%s_%s"."glass_transcript_17" USING gist (box(point(transcription_start - 2000, 0), point(transcription_end + 2000, 0)));
@@ -194,6 +212,7 @@ CREATE TABLE "glass_atlas_%s_%s"."glass_transcript_18" (
 ) INHERITS ("glass_atlas_%s_%s"."glass_transcript");
 CREATE INDEX glass_transcript_18_chr_idx ON "glass_atlas_%s_%s"."glass_transcript_18" USING btree (chromosome_id);
 CREATE INDEX glass_transcript_18_strand_idx ON "glass_atlas_%s_%s"."glass_transcript_18" USING btree (strand);
+CREATE INDEX glass_transcript_18_score_idx ON "glass_atlas_%s_%s"."glass_transcript_18" USING btree (score);
 CREATE INDEX glass_transcript_18_start_end_idx ON "glass_atlas_%s_%s"."glass_transcript_18" USING gist (start_end);
 CREATE INDEX glass_transcript_18_start_end_density_idx ON "glass_atlas_%s_%s"."glass_transcript_18" USING gist (start_end_density);
 CREATE INDEX glass_transcript_18_start_end_wide_idx ON "glass_atlas_%s_%s"."glass_transcript_18" USING gist (box(point(transcription_start - 2000, 0), point(transcription_end + 2000, 0)));
@@ -203,6 +222,7 @@ CREATE TABLE "glass_atlas_%s_%s"."glass_transcript_19" (
 ) INHERITS ("glass_atlas_%s_%s"."glass_transcript");
 CREATE INDEX glass_transcript_19_chr_idx ON "glass_atlas_%s_%s"."glass_transcript_19" USING btree (chromosome_id);
 CREATE INDEX glass_transcript_19_strand_idx ON "glass_atlas_%s_%s"."glass_transcript_19" USING btree (strand);
+CREATE INDEX glass_transcript_19_score_idx ON "glass_atlas_%s_%s"."glass_transcript_19" USING btree (score);
 CREATE INDEX glass_transcript_19_start_end_idx ON "glass_atlas_%s_%s"."glass_transcript_19" USING gist (start_end);
 CREATE INDEX glass_transcript_19_start_end_density_idx ON "glass_atlas_%s_%s"."glass_transcript_19" USING gist (start_end_density);
 CREATE INDEX glass_transcript_19_start_end_wide_idx ON "glass_atlas_%s_%s"."glass_transcript_19" USING gist (box(point(transcription_start - 2000, 0), point(transcription_end + 2000, 0)));
@@ -212,6 +232,7 @@ CREATE TABLE "glass_atlas_%s_%s"."glass_transcript_20" (
 ) INHERITS ("glass_atlas_%s_%s"."glass_transcript");
 CREATE INDEX glass_transcript_20_chr_idx ON "glass_atlas_%s_%s"."glass_transcript_20" USING btree (chromosome_id);
 CREATE INDEX glass_transcript_20_strand_idx ON "glass_atlas_%s_%s"."glass_transcript_20" USING btree (strand);
+CREATE INDEX glass_transcript_20_score_idx ON "glass_atlas_%s_%s"."glass_transcript_20" USING btree (score);
 CREATE INDEX glass_transcript_20_start_end_idx ON "glass_atlas_%s_%s"."glass_transcript_20" USING gist (start_end);
 CREATE INDEX glass_transcript_20_start_end_density_idx ON "glass_atlas_%s_%s"."glass_transcript_20" USING gist (start_end_density);
 CREATE INDEX glass_transcript_20_start_end_wide_idx ON "glass_atlas_%s_%s"."glass_transcript_20" USING gist (box(point(transcription_start - 2000, 0), point(transcription_end + 2000, 0)));
@@ -221,6 +242,7 @@ CREATE TABLE "glass_atlas_%s_%s"."glass_transcript_21" (
 ) INHERITS ("glass_atlas_%s_%s"."glass_transcript");
 CREATE INDEX glass_transcript_21_chr_idx ON "glass_atlas_%s_%s"."glass_transcript_21" USING btree (chromosome_id);
 CREATE INDEX glass_transcript_21_strand_idx ON "glass_atlas_%s_%s"."glass_transcript_21" USING btree (strand);
+CREATE INDEX glass_transcript_21_score_idx ON "glass_atlas_%s_%s"."glass_transcript_21" USING btree (score);
 CREATE INDEX glass_transcript_21_start_end_idx ON "glass_atlas_%s_%s"."glass_transcript_21" USING gist (start_end);
 CREATE INDEX glass_transcript_21_start_end_density_idx ON "glass_atlas_%s_%s"."glass_transcript_21" USING gist (start_end_density);
 CREATE INDEX glass_transcript_21_start_end_wide_idx ON "glass_atlas_%s_%s"."glass_transcript_21" USING gist (box(point(transcription_start - 2000, 0), point(transcription_end + 2000, 0)));
@@ -230,126 +252,10 @@ CREATE TABLE "glass_atlas_%s_%s"."glass_transcript_22" (
 ) INHERITS ("glass_atlas_%s_%s"."glass_transcript");
 CREATE INDEX glass_transcript_22_chr_idx ON "glass_atlas_%s_%s"."glass_transcript_22" USING btree (chromosome_id);
 CREATE INDEX glass_transcript_22_strand_idx ON "glass_atlas_%s_%s"."glass_transcript_22" USING btree (strand);
+CREATE INDEX glass_transcript_22_score_idx ON "glass_atlas_%s_%s"."glass_transcript_22" USING btree (score);
 CREATE INDEX glass_transcript_22_start_end_idx ON "glass_atlas_%s_%s"."glass_transcript_22" USING gist (start_end);
 CREATE INDEX glass_transcript_22_start_end_density_idx ON "glass_atlas_%s_%s"."glass_transcript_22" USING gist (start_end_density);
 CREATE INDEX glass_transcript_22_start_end_wide_idx ON "glass_atlas_%s_%s"."glass_transcript_22" USING gist (box(point(transcription_start - 2000, 0), point(transcription_end + 2000, 0)));
-
-CREATE TABLE "glass_atlas_%s_%s"."glass_transcript_23" (
-    CHECK ( chromosome_id = 23 )
-) INHERITS ("glass_atlas_%s_%s"."glass_transcript");
-CREATE INDEX glass_transcript_23_chr_idx ON "glass_atlas_%s_%s"."glass_transcript_23" USING btree (chromosome_id);
-CREATE INDEX glass_transcript_23_strand_idx ON "glass_atlas_%s_%s"."glass_transcript_23" USING btree (strand);
-CREATE INDEX glass_transcript_23_start_end_idx ON "glass_atlas_%s_%s"."glass_transcript_23" USING gist (start_end);
-CREATE INDEX glass_transcript_23_start_end_density_idx ON "glass_atlas_%s_%s"."glass_transcript_23" USING gist (start_end_density);
-CREATE INDEX glass_transcript_23_start_end_wide_idx ON "glass_atlas_%s_%s"."glass_transcript_23" USING gist (box(point(transcription_start - 2000, 0), point(transcription_end + 2000, 0)));
-
-CREATE TABLE "glass_atlas_%s_%s"."glass_transcript_24" (
-    CHECK ( chromosome_id = 24 )
-) INHERITS ("glass_atlas_%s_%s"."glass_transcript");
-CREATE INDEX glass_transcript_24_chr_idx ON "glass_atlas_%s_%s"."glass_transcript_24" USING btree (chromosome_id);
-CREATE INDEX glass_transcript_24_strand_idx ON "glass_atlas_%s_%s"."glass_transcript_24" USING btree (strand);
-CREATE INDEX glass_transcript_24_start_end_idx ON "glass_atlas_%s_%s"."glass_transcript_24" USING gist (start_end);
-CREATE INDEX glass_transcript_24_start_end_density_idx ON "glass_atlas_%s_%s"."glass_transcript_24" USING gist (start_end_density);
-CREATE INDEX glass_transcript_24_start_end_wide_idx ON "glass_atlas_%s_%s"."glass_transcript_24" USING gist (box(point(transcription_start - 2000, 0), point(transcription_end + 2000, 0)));
-
-CREATE TABLE "glass_atlas_%s_%s"."glass_transcript_25" (
-    CHECK ( chromosome_id = 25 )
-) INHERITS ("glass_atlas_%s_%s"."glass_transcript");
-CREATE INDEX glass_transcript_25_chr_idx ON "glass_atlas_%s_%s"."glass_transcript_25" USING btree (chromosome_id);
-CREATE INDEX glass_transcript_25_strand_idx ON "glass_atlas_%s_%s"."glass_transcript_25" USING btree (strand);
-CREATE INDEX glass_transcript_25_start_end_idx ON "glass_atlas_%s_%s"."glass_transcript_25" USING gist (start_end);
-CREATE INDEX glass_transcript_25_start_end_density_idx ON "glass_atlas_%s_%s"."glass_transcript_25" USING gist (start_end_density);
-CREATE INDEX glass_transcript_25_start_end_wide_idx ON "glass_atlas_%s_%s"."glass_transcript_25" USING gist (box(point(transcription_start - 2000, 0), point(transcription_end + 2000, 0)));
-
-CREATE TABLE "glass_atlas_%s_%s"."glass_transcript_26" (
-    CHECK ( chromosome_id = 26 )
-) INHERITS ("glass_atlas_%s_%s"."glass_transcript");
-CREATE INDEX glass_transcript_26_chr_idx ON "glass_atlas_%s_%s"."glass_transcript_26" USING btree (chromosome_id);
-CREATE INDEX glass_transcript_26_strand_idx ON "glass_atlas_%s_%s"."glass_transcript_26" USING btree (strand);
-CREATE INDEX glass_transcript_26_start_end_idx ON "glass_atlas_%s_%s"."glass_transcript_26" USING gist (start_end);
-CREATE INDEX glass_transcript_26_start_end_density_idx ON "glass_atlas_%s_%s"."glass_transcript_26" USING gist (start_end_density);
-CREATE INDEX glass_transcript_26_start_end_wide_idx ON "glass_atlas_%s_%s"."glass_transcript_26" USING gist (box(point(transcription_start - 2000, 0), point(transcription_end + 2000, 0)));
-
-CREATE TABLE "glass_atlas_%s_%s"."glass_transcript_27" (
-    CHECK ( chromosome_id = 27 )
-) INHERITS ("glass_atlas_%s_%s"."glass_transcript");
-CREATE INDEX glass_transcript_27_chr_idx ON "glass_atlas_%s_%s"."glass_transcript_27" USING btree (chromosome_id);
-CREATE INDEX glass_transcript_27_strand_idx ON "glass_atlas_%s_%s"."glass_transcript_27" USING btree (strand);
-CREATE INDEX glass_transcript_27_start_end_idx ON "glass_atlas_%s_%s"."glass_transcript_27" USING gist (start_end);
-CREATE INDEX glass_transcript_27_start_end_density_idx ON "glass_atlas_%s_%s"."glass_transcript_27" USING gist (start_end_density);
-CREATE INDEX glass_transcript_27_start_end_wide_idx ON "glass_atlas_%s_%s"."glass_transcript_27" USING gist (box(point(transcription_start - 2000, 0), point(transcription_end + 2000, 0)));
-
-CREATE TABLE "glass_atlas_%s_%s"."glass_transcript_28" (
-    CHECK ( chromosome_id = 28 )
-) INHERITS ("glass_atlas_%s_%s"."glass_transcript");
-CREATE INDEX glass_transcript_28_chr_idx ON "glass_atlas_%s_%s"."glass_transcript_28" USING btree (chromosome_id);
-CREATE INDEX glass_transcript_28_strand_idx ON "glass_atlas_%s_%s"."glass_transcript_28" USING btree (strand);
-CREATE INDEX glass_transcript_28_start_end_idx ON "glass_atlas_%s_%s"."glass_transcript_28" USING gist (start_end);
-CREATE INDEX glass_transcript_28_start_end_density_idx ON "glass_atlas_%s_%s"."glass_transcript_28" USING gist (start_end_density);
-CREATE INDEX glass_transcript_28_start_end_wide_idx ON "glass_atlas_%s_%s"."glass_transcript_28" USING gist (box(point(transcription_start - 2000, 0), point(transcription_end + 2000, 0)));
-
-CREATE TABLE "glass_atlas_%s_%s"."glass_transcript_29" (
-    CHECK ( chromosome_id = 29 )
-) INHERITS ("glass_atlas_%s_%s"."glass_transcript");
-CREATE INDEX glass_transcript_29_chr_idx ON "glass_atlas_%s_%s"."glass_transcript_29" USING btree (chromosome_id);
-CREATE INDEX glass_transcript_29_strand_idx ON "glass_atlas_%s_%s"."glass_transcript_29" USING btree (strand);
-CREATE INDEX glass_transcript_29_start_end_idx ON "glass_atlas_%s_%s"."glass_transcript_29" USING gist (start_end);
-CREATE INDEX glass_transcript_29_start_end_density_idx ON "glass_atlas_%s_%s"."glass_transcript_29" USING gist (start_end_density);
-CREATE INDEX glass_transcript_29_start_end_wide_idx ON "glass_atlas_%s_%s"."glass_transcript_29" USING gist (box(point(transcription_start - 2000, 0), point(transcription_end + 2000, 0)));
-
-CREATE TABLE "glass_atlas_%s_%s"."glass_transcript_30" (
-    CHECK ( chromosome_id = 30 )
-) INHERITS ("glass_atlas_%s_%s"."glass_transcript");
-CREATE INDEX glass_transcript_30_chr_idx ON "glass_atlas_%s_%s"."glass_transcript_30" USING btree (chromosome_id);
-CREATE INDEX glass_transcript_30_strand_idx ON "glass_atlas_%s_%s"."glass_transcript_30" USING btree (strand);
-CREATE INDEX glass_transcript_30_start_end_idx ON "glass_atlas_%s_%s"."glass_transcript_30" USING gist (start_end);
-CREATE INDEX glass_transcript_30_start_end_density_idx ON "glass_atlas_%s_%s"."glass_transcript_30" USING gist (start_end_density);
-CREATE INDEX glass_transcript_30_start_end_wide_idx ON "glass_atlas_%s_%s"."glass_transcript_30" USING gist (box(point(transcription_start - 2000, 0), point(transcription_end + 2000, 0)));
-
-CREATE TABLE "glass_atlas_%s_%s"."glass_transcript_31" (
-    CHECK ( chromosome_id = 31 )
-) INHERITS ("glass_atlas_%s_%s"."glass_transcript");
-CREATE INDEX glass_transcript_31_chr_idx ON "glass_atlas_%s_%s"."glass_transcript_31" USING btree (chromosome_id);
-CREATE INDEX glass_transcript_31_strand_idx ON "glass_atlas_%s_%s"."glass_transcript_31" USING btree (strand);
-CREATE INDEX glass_transcript_31_start_end_idx ON "glass_atlas_%s_%s"."glass_transcript_31" USING gist (start_end);
-CREATE INDEX glass_transcript_31_start_end_density_idx ON "glass_atlas_%s_%s"."glass_transcript_31" USING gist (start_end_density);
-CREATE INDEX glass_transcript_31_start_end_wide_idx ON "glass_atlas_%s_%s"."glass_transcript_31" USING gist (box(point(transcription_start - 2000, 0), point(transcription_end + 2000, 0)));
-
-CREATE TABLE "glass_atlas_%s_%s"."glass_transcript_32" (
-    CHECK ( chromosome_id = 32 )
-) INHERITS ("glass_atlas_%s_%s"."glass_transcript");
-CREATE INDEX glass_transcript_32_chr_idx ON "glass_atlas_%s_%s"."glass_transcript_32" USING btree (chromosome_id);
-CREATE INDEX glass_transcript_32_strand_idx ON "glass_atlas_%s_%s"."glass_transcript_32" USING btree (strand);
-CREATE INDEX glass_transcript_32_start_end_idx ON "glass_atlas_%s_%s"."glass_transcript_32" USING gist (start_end);
-CREATE INDEX glass_transcript_32_start_end_density_idx ON "glass_atlas_%s_%s"."glass_transcript_32" USING gist (start_end_density);
-CREATE INDEX glass_transcript_32_start_end_wide_idx ON "glass_atlas_%s_%s"."glass_transcript_32" USING gist (box(point(transcription_start - 2000, 0), point(transcription_end + 2000, 0)));
-
-CREATE TABLE "glass_atlas_%s_%s"."glass_transcript_33" (
-    CHECK ( chromosome_id = 33 )
-) INHERITS ("glass_atlas_%s_%s"."glass_transcript");
-CREATE INDEX glass_transcript_33_chr_idx ON "glass_atlas_%s_%s"."glass_transcript_33" USING btree (chromosome_id);
-CREATE INDEX glass_transcript_33_strand_idx ON "glass_atlas_%s_%s"."glass_transcript_33" USING btree (strand);
-CREATE INDEX glass_transcript_33_start_end_idx ON "glass_atlas_%s_%s"."glass_transcript_33" USING gist (start_end);
-CREATE INDEX glass_transcript_33_start_end_density_idx ON "glass_atlas_%s_%s"."glass_transcript_33" USING gist (start_end_density);
-CREATE INDEX glass_transcript_33_start_end_wide_idx ON "glass_atlas_%s_%s"."glass_transcript_33" USING gist (box(point(transcription_start - 2000, 0), point(transcription_end + 2000, 0)));
-
-CREATE TABLE "glass_atlas_%s_%s"."glass_transcript_34" (
-    CHECK ( chromosome_id = 34 )
-) INHERITS ("glass_atlas_%s_%s"."glass_transcript");
-CREATE INDEX glass_transcript_34_chr_idx ON "glass_atlas_%s_%s"."glass_transcript_34" USING btree (chromosome_id);
-CREATE INDEX glass_transcript_34_strand_idx ON "glass_atlas_%s_%s"."glass_transcript_34" USING btree (strand);
-CREATE INDEX glass_transcript_34_start_end_idx ON "glass_atlas_%s_%s"."glass_transcript_34" USING gist (start_end);
-CREATE INDEX glass_transcript_34_start_end_density_idx ON "glass_atlas_%s_%s"."glass_transcript_34" USING gist (start_end_density);
-CREATE INDEX glass_transcript_34_start_end_wide_idx ON "glass_atlas_%s_%s"."glass_transcript_34" USING gist (box(point(transcription_start - 2000, 0), point(transcription_end + 2000, 0)));
-
-CREATE TABLE "glass_atlas_%s_%s"."glass_transcript_35" (
-    CHECK ( chromosome_id = 35 )
-) INHERITS ("glass_atlas_%s_%s"."glass_transcript");
-CREATE INDEX glass_transcript_35_chr_idx ON "glass_atlas_%s_%s"."glass_transcript_35" USING btree (chromosome_id);
-CREATE INDEX glass_transcript_35_strand_idx ON "glass_atlas_%s_%s"."glass_transcript_35" USING btree (strand);
-CREATE INDEX glass_transcript_35_start_end_idx ON "glass_atlas_%s_%s"."glass_transcript_35" USING gist (start_end);
-CREATE INDEX glass_transcript_35_start_end_density_idx ON "glass_atlas_%s_%s"."glass_transcript_35" USING gist (start_end_density);
-CREATE INDEX glass_transcript_35_start_end_wide_idx ON "glass_atlas_%s_%s"."glass_transcript_35" USING gist (box(point(transcription_start - 2000, 0), point(transcription_end + 2000, 0)));
 
 
 
@@ -404,7 +310,8 @@ CREATE TABLE "glass_atlas_%s_%s"."glass_transcript_source" (
     "glass_transcript_id" int4 DEFAULT NULL,
     "sequencing_run_id" int4 DEFAULT NULL,
     "tag_count" int4 DEFAULT NULL,
-    "gaps" int4 DEFAULT NULL
+    "gaps" int4 DEFAULT NULL,
+    "polya_count" int4 DEFAULT NULL
 );
 GRANT ALL ON TABLE "glass_atlas_%s_%s"."glass_transcript_source" TO  "glass";
 CREATE SEQUENCE "glass_atlas_%s_%s"."glass_transcript_source_id_seq"
@@ -417,7 +324,7 @@ ALTER SEQUENCE "glass_atlas_%s_%s"."glass_transcript_source_id_seq" OWNED BY "gl
 ALTER TABLE "glass_atlas_%s_%s"."glass_transcript_source" ALTER COLUMN id SET DEFAULT nextval('"glass_atlas_%s_%s"."glass_transcript_source_id_seq"'::regclass);
 ALTER TABLE ONLY "glass_atlas_%s_%s"."glass_transcript_source" ADD CONSTRAINT glass_transcript_source_pkey PRIMARY KEY (id);
 CREATE INDEX glass_transcript_source_transcript_idx ON "glass_atlas_%s_%s"."glass_transcript_source" USING btree (glass_transcript_id);
-
+CREATE INDEX glass_transcript_source_sequencing_run_idx ON "glass_atlas_%s_%s"."glass_transcript_source" USING btree (sequencing_run_id);
 
 CREATE TYPE "glass_atlas_%s_%s"."glass_transcript_transcription_region_relationship" 
     AS ENUM('contains','is contained by','overlaps with','is equal to');
@@ -494,7 +401,7 @@ ALTER TABLE "glass_atlas_%s_%s"."glass_transcript_patterned" ALTER COLUMN id SET
 ALTER TABLE ONLY "glass_atlas_%s_%s"."glass_transcript_patterned" ADD CONSTRAINT glass_transcript_patterned_pkey PRIMARY KEY (id);
 CREATE INDEX glass_transcript_patterned_transcript_idx ON "glass_atlas_%s_%s"."glass_transcript_patterned" USING btree (glass_transcript_id);
 
-""" % tuple([genome, cell_type]*316)
+""" % tuple([genome, cell_type]*248)
 
 if __name__ == '__main__':
     print sql(genome, cell_type)

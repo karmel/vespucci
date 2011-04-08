@@ -19,13 +19,13 @@ def check_input(options):
     '''
     Check that required arguments and directories are in place.
     '''
-    if not options.file_path and not getattr(options, 'bowtie_table', None):
+    if not options.file_path and not getattr(options, 'bowtie_table', None) and not getattr(options, 'skip_tag_table', None):
             raise Exception('Please make sure you have supplied an input file.')
         
     if options.file_path and not os.path.exists(options.file_path):
         raise Exception('Sorry, but the specified input file cannot be found: %s' % os.path.realpath(options.file_path))
     
-    if options.output_dir and not os.path.exists(options.output_dir):
+    if getattr(options,'output_dir',None) and not os.path.exists(options.output_dir):
         os.mkdir(options.output_dir)
         _print('Creating output directory %s' % options.output_dir)
     

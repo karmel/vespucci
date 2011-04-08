@@ -43,8 +43,7 @@ class ParameterPerformance(models.Model):
     db_choices_1  = ('ref','gap_0', 'gap_5', 'gap_10', 'gap_20', 'gap_25', 'gap_50', 'gap_100', 'gap_200',
                    'gap2_0', 'gap2_25', 'gap2_50', 'gap2_50_no_ext', 'gap2_100', 'gap2_200', 'gap2_1000',
                    )
-    db_choices_2  = ('ref', 'gap2_200', 'gap3_200_10_1000', 'gap3_200_20_2000', 
-                     'gap3_300_10_500', 'gap3_300_20_1000', 'gap3_300_40_2000', 'gap3_300_60_3000',
+    db_choices_2  = ('ref', 'pre_mm9', 'pre_mm9_1'
                    )
     db_choices = db_choices_2
     

@@ -30,6 +30,7 @@
 <h2>{{ query.name }}</h2>
 <a href="/transcript/custom_query_redirect/{{ query.id }}/" target="_blank">Rerun query</a>
 <br />
+<p>{{ query.notes|safe }}</p>
 {% endif %}
 
 {% if field_names %}

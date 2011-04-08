@@ -5,14 +5,14 @@ Created on Nov 12, 2010
 
 Convenience script for transcript functions.
 '''
-genome = 'gap3_200_0_1000'
+genome = 'mm9'
 cell_type='thiomac'
 def sql(genome, cell_type):
     return """
 -- Not run from within the codebase, but kept here in case functions need to be recreated.
 
 CREATE TYPE glass_atlas_%s_%s_prep.glass_transcript_row AS ("chromosome_id" integer, "strand" smallint, 
-	transcription_start bigint, transcription_end bigint, tag_count integer, gaps integer, ids integer[]);
+	transcription_start bigint, transcription_end bigint, tag_count integer, gaps integer, polya_count integer, ids integer[]);
 
 CREATE OR REPLACE FUNCTION glass_atlas_%s_%s_prep.update_transcript_source_records(trans glass_atlas_%s_%s_prep.glass_transcript, old_id integer)
 RETURNS VOID AS $$
@@ -20,7 +20,8 @@ BEGIN
 	-- Update redundant records: those that already exist for the merge
 	UPDATE glass_atlas_%s_%s_prep.glass_transcript_source merged_assoc
 		SET tag_count = (merged_assoc.tag_count + trans_assoc.tag_count),
-			gaps = (merged_assoc.gaps + trans_assoc.gaps)
+			gaps = (merged_assoc.gaps + trans_assoc.gaps),
+			polya_count = (merged_assoc.polya_count + trans_assoc.polya_count)
 		FROM glass_atlas_%s_%s_prep.glass_transcript_source trans_assoc
 		WHERE merged_assoc.glass_transcript_id = trans.id
 			AND trans_assoc.glass_transcript_id = old_id
@@ -57,9 +58,16 @@ DECLARE
     sum integer;
     count integer;
 BEGIN 
-    sum := (SELECT SUM(tag_count) FROM glass_atlas_%s_%s_prep.glass_transcript_source WHERE glass_transcript_id = trans.id);
-    count := (SELECT COUNT(sequencing_run_id) FROM glass_atlas_%s_%s_prep.glass_transcript_source WHERE glass_transcript_id = trans.id);
-    RETURN (density_multiplier*sum::numeric)/(count*(trans.transcription_end - trans.transcription_start)::numeric); 
+    sum := (SELECT SUM(tag_count) - SUM(polya_count) FROM glass_atlas_%s_%s.glass_transcript_source source
+            JOIN glass_atlas_mm9.sequencing_run run
+                ON source.sequencing_run_id = run.id
+            WHERE glass_transcript_id = trans.id 
+                AND run.use_for_scoring = true);
+    count := (SELECT COUNT(sequencing_run_id) FROM glass_atlas_%s_%s.glass_transcript_source source
+            JOIN glass_atlas_mm9.sequencing_run run
+                ON source.sequencing_run_id = run.id
+            WHERE glass_transcript_id = trans.id AND run.use_for_scoring = true);
+    RETURN GREATEST(0,(density_multiplier*sum::numeric)/(count*(trans.transcription_end - trans.transcription_start)::numeric)); 
 END;
 $$ LANGUAGE 'plpgsql';
 
@@ -81,26 +89,30 @@ BEGIN
 END;
 $$ LANGUAGE 'plpgsql';
 
-CREATE OR REPLACE FUNCTION glass_atlas_%s_%s_prep.determine_transcripts_from_sequencing_run(chr_id integer, strand integer, source_t text, max_gap integer, tag_extension integer)
+CREATE OR REPLACE FUNCTION glass_atlas_%s_%s_prep.determine_transcripts_from_sequencing_run(chr_id integer, strand integer, source_t text, max_gap integer, tag_extension integer, start_end box)
 RETURNS SETOF glass_atlas_%s_%s_prep.glass_transcript_row AS $$
 BEGIN 
 
-    RETURN QUERY SELECT * FROM glass_atlas_%s_%s_prep.determine_transcripts_from_table(chr_id, strand, source_t, max_gap, tag_extension,'', false, false);
+    RETURN QUERY SELECT * FROM glass_atlas_%s_%s_prep.determine_transcripts_from_table(chr_id, strand, source_t, max_gap, tag_extension,'', false, false, start_end);
 END;
 $$ LANGUAGE 'plpgsql';
 
 CREATE OR REPLACE FUNCTION glass_atlas_%s_%s_prep.determine_transcripts_from_existing(chr_id integer, strand integer, max_gap integer, allow_extended_gaps boolean)
 RETURNS SETOF glass_atlas_%s_%s_prep.glass_transcript_row AS $$
 BEGIN 
-    RETURN QUERY SELECT * FROM glass_atlas_%s_%s_prep.determine_transcripts_from_table(chr_id, strand, 'glass_atlas_%s_%s_prep"."glass_transcript', max_gap, 0,'transcription_', true, allow_extended_gaps);
+    RETURN QUERY SELECT * FROM glass_atlas_%s_%s_prep.determine_transcripts_from_table(chr_id, strand, 'glass_atlas_%s_%s_prep"."glass_transcript', max_gap, 0,'transcription_', true, allow_extended_gaps, NULL);
 END;
 $$ LANGUAGE 'plpgsql';
 
-CREATE OR REPLACE FUNCTION glass_atlas_%s_%s_prep.determine_transcripts_from_table(chr_id integer, strand integer, source_t text, max_gap integer, tag_extension integer, field_prefix text, span_repeats boolean, allow_extended_gaps boolean)
+CREATE OR REPLACE FUNCTION glass_atlas_%s_%s_prep.determine_transcripts_from_table(
+        chr_id integer, strand integer, source_t text, max_gap integer, 
+        tag_extension integer, field_prefix text, span_repeats boolean, allow_extended_gaps boolean,
+        start_end box)
 RETURNS SETOF glass_atlas_%s_%s_prep.glass_transcript_row AS $$
  DECLARE
     max_chrom_pos bigint;
     rec record;
+    start_end_clause text := '';
     row glass_atlas_%s_%s_prep.glass_transcript_row;
     overlapping_length integer;
     length_gap integer;
@@ -108,6 +120,7 @@ RETURNS SETOF glass_atlas_%s_%s_prep.glass_transcript_row AS $$
     last_start bigint := 0;
     last_end bigint := 0;
     tag_count integer := 0;
+    polya_count integer := 0;
     gaps integer := 0;
     ids integer[];
     should_merge boolean := false;
@@ -117,11 +130,19 @@ BEGIN
     -- Tag extension can exceed the boundaries of the chromosome if we are not careful.
     -- Make sure to keep lengths in range.
     max_chrom_pos := (SELECT (length - 1) FROM genome_reference_mm9.chromosome WHERE id = chr_id);
+    
+    -- IF a start_end is passed, use that to limit transcripts
+    IF start_end IS NOT NULL THEN
+        start_end_clause := ' and start_end && public.make_box(' || (start_end[0])[0] || ',0,' || (start_end[1])[0] || ',0) ';
+    END IF;
+    
 	FOR rec IN 
 		EXECUTE 'SELECT *, "' 
 		|| field_prefix || 'start" as transcription_start, "' || field_prefix || 'end" as transcription_end '
 		|| ' FROM "' || source_t || '_' || chr_id
-		|| '" WHERE strand = ' || strand || ' ORDER BY ' || field_prefix || 'start ASC;'
+		|| '" WHERE strand = ' || strand 
+		|| start_end_clause
+		|| ' ORDER BY ' || field_prefix || 'start ASC;'
 		LOOP
 		    -- The tags returned from the sequencing run are shorter than we know them to be biologically
 		    -- We can therefore extend the mapped tag region by a set number of bp if an extension is passed in
@@ -179,6 +200,12 @@ BEGIN
 			
 			IF should_merge = true THEN
 				tag_count := tag_count + 1;
+				IF field_prefix = '' THEN
+				    -- This is a tag row, with the polya t/f 
+				    IF (rec.polya = true) THEN
+				        polya_count := polya_count + 1;
+    				END IF;
+				END IF;
 				IF (rec.transcription_start > last_end) THEN
 					gaps := gaps + 1;
 				END IF;
@@ -198,6 +225,7 @@ BEGIN
 			row.transcription_start := last_start;
 			row.transcription_end := last_end;
 			row.tag_count := tag_count;
+			row.polya_count := polya_count;
 			row.gaps := gaps;
 			row.ids := ids;
 			
@@ -208,6 +236,10 @@ BEGIN
 				last_start := rec.transcription_start;
 				last_end := rec.transcription_end;
 				tag_count := 1;
+				IF field_prefix = '' THEN
+				    polya_count := (SELECT CASE WHEN rec.polya = true THEN 1 ELSE 0 END);
+				ELSE polya_count := 0;
+				END IF;
 				gaps := 0;
 				ids := array[rec.id]::integer[];
 				finish_row := false;
@@ -218,6 +250,7 @@ BEGIN
 				row.transcription_start := last_start;
 				row.transcription_end := last_end;
 				row.tag_count := tag_count;
+				row.polya_count := polya_count;
 				row.gaps := gaps;
 				row.ids := ids;
 				
@@ -232,44 +265,63 @@ BEGIN
 END;
 $$ LANGUAGE 'plpgsql';
 
-CREATE OR REPLACE FUNCTION glass_atlas_%s_%s_prep.save_transcripts_from_sequencing_run(seq_run_id integer, chr_id integer, source_t text, max_gap integer, tag_extension integer, allowed_edge integer, edge_scaling_factor integer, density_multiplier integer)
+CREATE OR REPLACE FUNCTION glass_atlas_%s_%s_prep.save_transcripts_from_sequencing_run(
+    seq_run_id integer, chr_id integer, source_t text, max_gap integer, 
+    tag_extension integer, allowed_edge integer, edge_scaling_factor integer, density_multiplier integer, 
+    start_end box, one_strand integer)
 RETURNS VOID AS $$
  DECLARE
 	rec glass_atlas_%s_%s_prep.glass_transcript_row;
 	transcript glass_atlas_%s_%s_prep.glass_transcript;
 	density float;
 	scaling_factor text;
+	strand_start integer := 0;
+	strand_end integer := 1;
+	use_for_scoring boolean;
  BEGIN
     IF edge_scaling_factor = 0 THEN scaling_factor := 'NULL';
     ELSE scaling_factor := edge_scaling_factor::text;
     END IF;
     
- 	FOR strand IN 0..1 
+    -- Allow for strand selection
+    IF one_strand IS NOT NULL THEN
+        strand_start := one_strand;
+        strand_end := one_strand;
+    END IF; 
+    
+    -- Should this run have tags counted for density?
+    use_for_scoring := (SELECT r.use_for_scoring FROM glass_atlas_mm9.sequencing_run r WHERE id = seq_run_id);
+    
+ 	FOR strand IN strand_start..strand_end 
  	LOOP
 		FOR rec IN 
-			SELECT * FROM glass_atlas_%s_%s_prep.determine_transcripts_from_sequencing_run(chr_id, strand, source_t, max_gap, tag_extension)
+			SELECT * FROM glass_atlas_%s_%s_prep.determine_transcripts_from_sequencing_run(chr_id, strand, source_t, max_gap, tag_extension, start_end)
 		LOOP
 			IF rec IS NOT NULL THEN
 				-- Save the transcript.
-				density := (density_multiplier*rec.tag_count::numeric)/(rec.transcription_end - rec.transcription_start)::numeric;
+				IF use_for_scoring = true THEN
+				    density := (density_multiplier*(rec.tag_count - rec.polya_count)::numeric)/
+				                    (rec.transcription_end - rec.transcription_start)::numeric;
+				ELSE density := 0;
+				END IF;
+				
 				EXECUTE 'INSERT INTO glass_atlas_%s_%s_prep.glass_transcript_' || rec.chromosome_id
-					|| ' ("chromosome_id", "strand", '
-					|| ' "transcription_start", "transcription_end",' 
-					|| ' "start_end", "density_circle", "start_density")'
-					|| ' VALUES (' || rec.chromosome_id || ' , ' || rec.strand || ' , '
-					|| rec.transcription_start || ' , ' || rec.transcription_end || ' , '
-					|| ' public.make_box(' || rec.transcription_start || ', 0' 
-                        || ',' ||  rec.transcription_end || ', 0),'
-                    || ' circle(point(' || rec.transcription_end || ',' || density 
+					|| ' ("chromosome_id", "strand", 
+					"transcription_start", "transcription_end", 
+					"start_end", "density_circle", "start_density")
+					VALUES (' || rec.chromosome_id || ' , ' || rec.strand || ' , '
+					|| rec.transcription_start || ' , ' || rec.transcription_end || ' , 
+					public.make_box(' || rec.transcription_start || ', 0, ' || rec.transcription_end || ', 0),
+                    circle(point(' || rec.transcription_end || ',' || density 
                         || '::float), ' || allowed_edge || '*LEAST(' || density || '::numeric/' 
-                        || scaling_factor || '::numeric,1)), '
-                    || ' point(' || rec.transcription_start || ',' || density || ') '
-                    || ' ) RETURNING *' INTO transcript;
+                        || scaling_factor || '::numeric,1)), 
+                    point(' || rec.transcription_start || ',' || density || ') 
+                        ) RETURNING *' INTO transcript;
 	
 				-- Save the record of the sequencing run source
 				INSERT INTO glass_atlas_%s_%s_prep.glass_transcript_source 
-					("glass_transcript_id", "sequencing_run_id", "tag_count", "gaps") 
-					VALUES (transcript.id, seq_run_id, rec.tag_count, rec.gaps);
+					("glass_transcript_id", "sequencing_run_id", "tag_count", "gaps", "polya_count") 
+					VALUES (transcript.id, seq_run_id, rec.tag_count, rec.gaps, rec.polya_count);
 
 			END IF;
 		END LOOP;
@@ -344,7 +396,73 @@ BEGIN
 END;
 $$ LANGUAGE 'plpgsql';
 
-""" % tuple([genome, cell_type]*47)
+CREATE OR REPLACE FUNCTION glass_atlas_%s_%s_prep.remove_rogue_run(
+    chr_id integer, max_gap integer, 
+    tag_extension integer, allowed_edge integer, edge_scaling_factor integer, density_multiplier integer)
+RETURNS VOID AS $$
+DECLARE
+    row record;
+    source record;
+    matching integer;
+    ids integer[] := array[]::integer[];
+BEGIN
+	FOR strand IN 0..1 
+ 	LOOP
+    	FOR row IN 
+	        EXECUTE 'SELECT dex.*, t.id as t_id, t.start_end as t_start_end 
+	        FROM glass_atlas_fixup_thiomac_prep.glass_transcript_' || chr_id || ' dex
+	        JOIN glass_atlas_%s_%s_prep.glass_transcript_' || chr_id || ' t
+	        ON dex.start_end && t.start_end
+	        and dex.strand = ' || strand
+			|| ' and t.strand = ' || strand
+	    LOOP
+	        IF row.chromosome_id IS NOT NULL THEN
+	            FOR source IN 
+	                SELECT * FROM glass_atlas_%s_%s_prep.glass_transcript_source s
+	                JOIN glass_atlas_mm9.sequencing_run r
+	                    ON s.sequencing_run_id = r.id
+	                WHERE glass_transcript_id = row.t_id
+	                    --AND sequencing_run_id != run_id
+	            LOOP 
+	                EXECUTE 'SELECT id FROM "' || trim(source.source_table) || '_' || chr_id ||'"
+	                    WHERE start_end && public.make_box(' || row.transcription_start || ', 0, ' || row.transcription_end || ', 0) 
+	                        AND strand = ' || row.strand || ' LIMIT 1' INTO matching;
+	                IF matching IS NOT NULL THEN EXIT;
+	                END IF;
+	            END LOOP;
+            
+	            IF matching IS NULL THEN
+	                FOR source IN 
+	                    SELECT * FROM glass_atlas_%s_%s_prep.glass_transcript_source s
+	                    JOIN glass_atlas_mm9.sequencing_run r
+	                        ON s.sequencing_run_id = r.id
+	                    WHERE glass_transcript_id = row.t_id
+	                        -- AND sequencing_run_id != run_id
+	                LOOP
+	                    PERFORM glass_atlas_%s_%s_prep.save_transcripts_from_sequencing_run(
+	                        source.sequencing_run_id, chr_id, trim(source.source_table),  max_gap, 
+	                        tag_extension, allowed_edge, edge_scaling_factor, density_multiplier,
+	                        row.t_start_end, row.strand);
+	                END LOOP;
+	                ids := ids || row.t_id;
+	            END IF;
+	        END IF;
+		END LOOP;
+    END LOOP;
+    IF array_length(ids,1) > 0 THEN
+        -- Next, remove all glass transcripts with the bad id
+        EXECUTE 'DELETE FROM glass_atlas_%s_%s_prep.glass_transcript_' || chr_id || '
+        WHERE id IN (' || array_to_string(ids, ',') || ')';
+        
+        -- And all bad source records
+        EXECUTE 'DELETE FROM glass_atlas_%s_%s_prep.glass_transcript_source
+        WHERE glass_transcript_id IN (' || array_to_string(ids, ',') || ')';
+    END IF;
+    RETURN;
+END;
+$$ LANGUAGE 'plpgsql';
+
+""" % tuple([genome, cell_type]*54)
 
 if __name__ == '__main__':
     print sql(genome, cell_type)

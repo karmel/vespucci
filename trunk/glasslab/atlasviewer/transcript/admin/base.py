@@ -6,7 +6,7 @@ Created on Nov 8, 2010
 from glasslab.glassatlas.datatypes.transcript import GlassTranscriptSource,\
     GlassTranscriptSequence, GlassTranscriptNonCoding,\
     GlassTranscriptConserved, GlassTranscriptPatterned,\
-    GlassTranscriptNucleotides
+    GlassTranscriptNucleotides, GlassTranscriptSourcePrep
 from glasslab.config import current_settings
 from glasslab.atlasviewer.shared.admin import make_all_fields_readonly,\
     ReadOnlyInline, ReadOnlyAdmin, ReadOnlyInput
@@ -102,6 +102,10 @@ class GlassTranscriptSourceInline(ReadOnlyInline):
     model = GlassTranscriptSource    
     readonly_fields = make_all_fields_readonly(model)
 
+class GlassTranscriptSourcePrepInline(ReadOnlyInline):
+    model = GlassTranscriptSourcePrep
+    readonly_fields = make_all_fields_readonly(model)
+
 class GlassTranscribedRnaInline(ReadOnlyInline):
     model = GlassTranscribedRna
     readonly_fields = make_all_fields_readonly(model)
@@ -164,11 +168,11 @@ class TranscriptBase(ReadOnlyAdmin):
     ucsc_browser_link.allow_tags = True 
     
     def truncated_score(self, obj):
-        return '%.3f' % obj.score
+        return obj.score is not None and '%.3f' % obj.score or 'None'
     truncated_score.short_description = 'Score' 
     
     def truncated_density(self, obj):
-        return '%.3f' % obj.density
+        return obj.density is not None and '%.3f' % obj.density or 'None'
     truncated_density.short_description = 'Density'
 
 class GlassTranscriptAdmin(TranscriptBase):
@@ -198,6 +202,13 @@ class GlassTranscriptAdmin(TranscriptBase):
                        #GlassTranscriptNucleotidesInline, 
                        ]
 
+class GlassTranscriptPrepAdmin(TranscriptBase):
+    list_display    = ('chromosome','transcription_start','transcription_end','strand',
+                       'transcript_length', 'ucsc_browser_link')
+    list_filter     = ('chromosome','strand')
+    inlines         = [GlassTranscriptSourcePrepInline, 
+                       ]
+    
 class GlassTranscribedRnaSourceInline(ReadOnlyInline):
     model = GlassTranscribedRnaSource   
     readonly_fields = make_all_fields_readonly(model)
@@ -227,3 +238,5 @@ class PeakFeatureAdmin(ReadOnlyAdmin):
                                obj.glass_transcript.id, str(obj.glass_transcript))
     glass_transcript_link.short_description = 'Glass Transcript' 
     glass_transcript_link.allow_tags = True 
+    
+    

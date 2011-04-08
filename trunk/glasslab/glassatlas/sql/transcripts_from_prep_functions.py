@@ -5,7 +5,7 @@ Created on Nov 12, 2010
 
 Convenience script for transcript functions.
 '''
-genome = 'gap3_100_10_1000'
+genome = 'mm9'
 cell_type='thiomac'
 def sql(genome, cell_type):
     return """
@@ -17,9 +17,26 @@ DECLARE
     sum integer;
     count integer;
 BEGIN 
-	sum := (SELECT SUM(tag_count) FROM glass_atlas_%s_%s.glass_transcript_source WHERE glass_transcript_id = trans.id);
-	count := (SELECT COUNT(sequencing_run_id) FROM glass_atlas_%s_%s.glass_transcript_source WHERE glass_transcript_id = trans.id);
-	RETURN (density_multiplier*sum::numeric)/(count*(trans.transcription_end - trans.transcription_start)::numeric); 
+	sum := (SELECT SUM(tag_count) - SUM(polya_count) FROM glass_atlas_%s_%s.glass_transcript_source source
+	        JOIN glass_atlas_mm9.sequencing_run run
+                ON source.sequencing_run_id = run.id
+            WHERE glass_transcript_id = trans.id AND run.use_for_scoring = true);
+	count := (SELECT COUNT(sequencing_run_id) FROM glass_atlas_%s_%s.glass_transcript_source source
+	        JOIN glass_atlas_mm9.sequencing_run run
+                ON source.sequencing_run_id = run.id
+            WHERE glass_transcript_id = trans.id AND run.use_for_scoring = true);
+	RETURN GREATEST(0,(density_multiplier*sum::numeric)/(count*(trans.transcription_end - trans.transcription_start)::numeric)); 
+END;
+$$ LANGUAGE 'plpgsql';
+
+CREATE OR REPLACE FUNCTION glass_atlas_%s_%s.get_polya(trans glass_atlas_%s_%s.glass_transcript)
+RETURNS boolean AS $$
+BEGIN 
+	RETURN (SELECT SUM(polya_count)::numeric/SUM(tag_count)::numeric >= .5
+	        FROM glass_atlas_%s_%s.glass_transcript_source source
+	        JOIN glass_atlas_mm9.sequencing_run run
+                ON source.sequencing_run_id = run.id
+            WHERE glass_transcript_id = trans.id AND run.use_for_scoring = true); 
 END;
 $$ LANGUAGE 'plpgsql';
 
@@ -75,7 +92,14 @@ BEGIN
     FOR trans IN 
         EXECUTE 'SELECT t1.id, t1.strand, t1.transcription_start, t1.transcription_end, max(t2.transcription_end) as max_end'
         || ' FROM glass_atlas_%s_%s_prep.glass_transcript_' || chr_id || ' t1'
-        || ' LEFT OUTER JOIN glass_atlas_%s_%s_prep.glass_transcript_' || chr_id || ' t2'
+        || ' LEFT OUTER JOIN (
+                SELECT * FROM glass_atlas_%s_%s_prep.glass_transcript_' || chr_id || ' 
+                WHERE id IN (SELECT t.id
+                FROM  glass_atlas_%s_%s_prep.glass_transcript_' || chr_id || ' t
+                JOIN glass_atlas_%s_%s_prep.glass_transcript_source s
+                    ON t.id = s.glass_transcript_id
+                GROUP BY t.id
+                HAVING sum(s.tag_count) > 1 AND count(s.sequencing_run_id) > 1)) t2'
         || ' ON t1.density_circle @> t2.start_density '
             || ' AND t1.strand = t2.strand '
         || ' WHERE t1.strand = ' || strand
@@ -88,7 +112,7 @@ BEGIN
             transcript.chromosome_id = chr_id;
             transcript.strand = trans.strand;
             transcript.transcription_start = trans.transcription_start;
-            transcript.transcription_end = (SELECT COALESCE(trans.max_end, trans.transcription_end));
+            transcript.transcription_end = (SELECT GREATEST(trans.max_end, trans.transcription_end));
             
             RETURN NEXT transcript;
         END IF;
@@ -118,19 +142,20 @@ $$ LANGUAGE 'plpgsql';
 CREATE OR REPLACE FUNCTION glass_atlas_%s_%s.insert_transcript_source_records(chr_id integer)
 RETURNS VOID AS $$
 BEGIN 
-    EXECUTE 'INSERT INTO glass_atlas_%s_%s.glass_transcript_source'
-        || ' (glass_transcript_id, sequencing_run_id, tag_count, gaps)'
-        || ' SELECT der.transcript_id, der.sequencing_run_id, '
-            || ' SUM(der.tag_count), COUNT(der.glass_transcript_id) - 1'
-        || ' FROM ('
-            || ' SELECT trans.id as transcript_id,* '
-            || ' FROM glass_atlas_%s_%s.glass_transcript_' || chr_id || ' trans'
-            || ' JOIN (SELECT * FROM glass_atlas_%s_%s_prep.glass_transcript_' || chr_id || ' t'
-                || ' JOIN glass_atlas_%s_%s_prep.glass_transcript_source s'
-                || ' ON t.id = s.glass_transcript_id) source'
-            || ' ON source.strand = trans.strand'
-            || ' AND source.start_end <@ trans.start_end) der'
-        || ' GROUP BY der.transcript_id, der.sequencing_run_id';
+    EXECUTE 'INSERT INTO glass_atlas_%s_%s.glass_transcript_source
+            (glass_transcript_id, sequencing_run_id, tag_count, gaps, polya_count, polya)
+            SELECT der.transcript_id, der.sequencing_run_id, 
+                SUM(der.tag_count), COUNT(der.glass_transcript_id) - 1,
+                SUM(der.polya_count)
+            FROM (
+                SELECT trans.id as transcript_id,* 
+                FROM glass_atlas_%s_%s.glass_transcript_' || chr_id || ' trans
+                JOIN (SELECT * FROM glass_atlas_%s_%s_prep.glass_transcript_' || chr_id || ' t
+                    JOIN glass_atlas_%s_%s_prep.glass_transcript_source s
+                    ON t.id = s.glass_transcript_id) source
+                ON source.strand = trans.strand
+            AND source.start_end <@ trans.start_end) der
+        GROUP BY der.transcript_id, der.sequencing_run_id';
     RETURN;
 END;
 $$ LANGUAGE 'plpgsql';
@@ -171,21 +196,25 @@ $$ LANGUAGE 'plpgsql';
 CREATE OR REPLACE FUNCTION glass_atlas_%s_%s.calculate_scores(chr_id integer)
 RETURNS VOID AS $$
 BEGIN 
-	EXECUTE 'UPDATE glass_atlas_%s_%s.glass_transcript_' || chr_id || ' transcript'
-		|| ' SET score = derived.score '
-		|| ' FROM (SELECT '
-				|| ' transcript.id,' 
-				|| ' (MAX(source.tag_count)::numeric*1000)/'
-				|| ' (GREATEST(1000, (transcript.transcription_end - transcript.transcription_start)::numeric/1.5)) as score'
-			|| ' FROM glass_atlas_%s_%s.glass_transcript_' || chr_id || ' transcript, '
-				|| ' glass_atlas_%s_%s.glass_transcript_source source'
-			|| ' WHERE source.glass_transcript_id = transcript.id'
-				|| ' AND transcript.chromosome_id = ' || chr_id
-				|| ' AND transcript.score IS NULL'
-			|| ' GROUP BY transcript.id, transcript.transcription_end, transcript.transcription_start'
-		|| ' ) derived'
-		|| ' WHERE transcript.id = derived.id';
-
+	EXECUTE 'UPDATE glass_atlas_%s_%s.glass_transcript_' || chr_id || ' transcript
+		    SET score = derived.score 
+		    FROM (SELECT 
+				    transcript.id,
+				    GREATEST(0,(MAX(source.tag_count - source.polya_count)::numeric*1000)/
+				    (GREATEST(1000, (transcript.transcription_end - transcript.transcription_start)::numeric/1.5))) as score
+			    FROM glass_atlas_%s_%s.glass_transcript_' || chr_id || ' transcript 
+				JOIN glass_atlas_%s_%s.glass_transcript_source source
+			    ON source.glass_transcript_id = transcript.id
+			    JOIN glass_atlas_mm9.sequencing_run run
+			    ON source.sequencing_run_id = run.id
+			    WHERE run.use_for_scoring = true
+				    AND transcript.chromosome_id = ' || chr_id || ' 
+				    --AND transcript.score IS NULL
+			    GROUP BY transcript.id, transcript.transcription_end, transcript.transcription_start
+		    ) derived
+		    WHERE transcript.id = derived.id';
+    EXECUTE 'UPDATE glass_atlas_%s_%s.glass_transcript_' || chr_id || ' transcript
+            SET score = 0 WHERE transcript.score IS NULL';
 	RETURN;
 END;
 $$ LANGUAGE 'plpgsql';
@@ -221,16 +250,17 @@ BEGIN
     ELSE where_clause := '1=1';
     END IF;
     
-    EXECUTE 'UPDATE glass_atlas_%s_%s.glass_transcript_' || chr_id || ' t '
-        || ' SET start_end_density = public.make_box(transcription_start, ' 
-            || ' glass_atlas_%s_%s.get_density(t.*, ' || density_multiplier || ')::numeric,'
-            || ' transcription_end,'
-            || ' glass_atlas_%s_%s.get_density(t.*, ' || density_multiplier || ')::numeric), '
-            || ' density = glass_atlas_%s_%s.get_density(t.*, ' || density_multiplier || ')::numeric'
-        || ' WHERE ' || where_clause;
+    EXECUTE 'UPDATE glass_atlas_%s_%s.glass_transcript_' || chr_id || ' t 
+            SET start_end_density = public.make_box(transcription_start, 
+                glass_atlas_%s_%s.get_density(t.*, ' || density_multiplier || ')::numeric,
+                transcription_end,
+                glass_atlas_%s_%s.get_density(t.*, ' || density_multiplier || ')::numeric), 
+                density = glass_atlas_%s_%s.get_density(t.*, ' || density_multiplier || ')::numeric,
+                polya = glass_atlas_%s_%s.get_polya(t.*)
+            WHERE ' || where_clause;
 END;
 $$ LANGUAGE 'plpgsql';
-""" % tuple([genome, cell_type]*47)
+""" % tuple([genome, cell_type]*54)
 
 if __name__ == '__main__':
     print sql(genome, cell_type)

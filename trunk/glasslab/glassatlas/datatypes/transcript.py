@@ -28,7 +28,7 @@ TAG_EXTENSION = 50
 
 MAX_GAP = 0 # Max gap between transcripts from the same run
 MAX_STITCHING_GAP = MAX_GAP # Max gap between transcripts being stitched together
-MAX_EDGE = 300 # Max edge length of transcript graph subgraphs to be created
+MAX_EDGE = 200 # Max edge length of transcript graph subgraphs to be created
 EDGE_SCALING_FACTOR = 40 # Number of transcripts per DENSITY_MULTIPLIER bp required to get full allowed edge length
 DENSITY_MULTIPLIER = 2000 # Scaling factor on density-- think of as bps worth of tags to consider
 MIN_SCORE = 15 # Hide transcripts with scores below this threshold.
@@ -73,6 +73,7 @@ def multiprocess_all_chromosomes(func, cls, *args):
     p.join()
     
 def wrap_add_transcripts_from_groseq(cls, chr_list, *args): wrap_errors(cls._add_transcripts_from_groseq, chr_list, *args)
+def wrap_remove_rogue_run(cls, chr_list): wrap_errors(cls._remove_rogue_run, chr_list)
 
 def wrap_stitch_together_transcripts(cls, chr_list, *args): wrap_errors(cls._stitch_together_transcripts, chr_list, *args)
 def wrap_set_density(cls, chr_list): wrap_errors(cls._set_density, chr_list)
@@ -283,19 +284,34 @@ class GlassTranscript(TranscriptBase):
     @classmethod 
     def add_transcripts_from_groseq(cls,  tag_table, sequencing_run):
         multiprocess_glass_tags(wrap_add_transcripts_from_groseq, cls, sequencing_run)
-        #wrap_add_transcripts_from_groseq(cls,[1, 22],sequencing_run)
-        
+         
     @classmethod
     def _add_transcripts_from_groseq(cls, chr_list, sequencing_run):
         for chr_id in chr_list:
             print 'Adding transcripts for chromosome %d' % chr_id
             query = """
-                SELECT glass_atlas_%s_%s_prep.save_transcripts_from_sequencing_run(%d, %d,'%s', %d, %d, %d, %d, %d);
+                SELECT glass_atlas_%s_%s_prep.save_transcripts_from_sequencing_run(%d, %d,'%s', %d, %d, %d, %d, %d, NULL, 1);
                 """ % (current_settings.TRANSCRIPT_GENOME,
                        current_settings.CURRENT_CELL_TYPE.lower(),
                        sequencing_run.id, chr_id, 
                        sequencing_run.source_table.strip(), 
                        MAX_GAP, TAG_EXTENSION, 
+                       MAX_EDGE, EDGE_SCALING_FACTOR, DENSITY_MULTIPLIER)
+            execute_query(query)
+
+    @classmethod 
+    def remove_rogue_run(cls):
+        multiprocess_glass_tags(wrap_remove_rogue_run, cls)
+   
+    @classmethod
+    def _remove_rogue_run(cls, chr_list):
+        for chr_id in chr_list:
+            print 'Removing rogue transcripts for chromosome %d' % chr_id
+            query = """
+                SELECT glass_atlas_%s_%s_prep.remove_rogue_run(%d, %d, %d, %d, %d, %d);
+                """ % (current_settings.TRANSCRIPT_GENOME,
+                       current_settings.CURRENT_CELL_TYPE.lower(),
+                       chr_id, MAX_GAP, TAG_EXTENSION, 
                        MAX_EDGE, EDGE_SCALING_FACTOR, DENSITY_MULTIPLIER)
             execute_query(query)
     
@@ -579,6 +595,7 @@ class TranscriptSourceBase(TranscriptModelBase):
     sequencing_run          = models.ForeignKey(SequencingRun)
     tag_count               = models.IntegerField(max_length=12)
     gaps                    = models.IntegerField(max_length=12)
+    polya_count             = models.IntegerField(max_length=12)
     
     class Meta:
         abstract = True

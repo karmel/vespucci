@@ -26,6 +26,7 @@ from glasslab.config import current_settings
 import shutil
 from glasslab.sequencing.pipeline.annotate_base import check_input, _print,\
     call_bowtie, create_schema
+from glasslab.glassatlas.datatypes.metadata import SequencingRun
 
 class FastqOptionParser(GlassOptionParser):
     options = [
@@ -44,8 +45,10 @@ class FastqOptionParser(GlassOptionParser):
                            help='Skip bowtie; presume MACS uses input file directly.'),
                make_option('--bowtie_table',action='store', dest='bowtie_table',
                            help='Skip transferring bowtie tags to table; bowtie tag table will be used directly.'),
-               make_option('--skip_tag_table',action='store_true', dest='skip_tag_table', default=False, 
-                           help='Skip translation of bowtie columns into tag table.'),
+               make_option('--skip_tag_table',action='store_true', dest='skip_tag_table',
+                           help='Skip transferring tags to table; tag table will be used directly.'),
+               make_option('--generate_bed',action='store_true', dest='generate_bed',
+                           help='Generate BED tracks of the tag regions?'),
                
                ]
     
@@ -111,6 +114,7 @@ def translate_bowtie_columns(file_name):
     GlassTag.create_parent_table(file_name)
     GlassTag.create_partition_tables()
     GlassTag.translate_from_bowtie()
+    GlassTag.set_polya()
     GlassTag.add_record_of_tags()
     
 def add_indices():
@@ -138,7 +142,12 @@ if __name__ == '__main__':
     
     parser = FastqOptionParser()
     options, args = parser.parse_args()
-    
+    """
+    for seq in SequencingRun.objects.filter(type='Gro-Seq').filter(
+            source_table__in=['thiomac_groseq_2010"."tag_ncor_ko_kla_1h_08_10','thiomac_groseq_2010"."tag_ncor_ko_kla_1h_09_10','thiomac_groseq_2010"."tag_ncor_ko_notx_1h_09_10','thiomac_groseq_2011"."tag_wt_dex_4h_02_11','thiomac_groseq_2011"."tag_wt_vegfa_6h_02_11','thiomac_groseq_2011"."tag_wt_pigf_6h_02_11','thiomac_groseq_2011"."tag_wt_dmso_4h_02_11','thiomac_groseq_2011"."tag_wt_vegfa_24h_02_11','thiomac_groseq_2011"."tag_wt_vegfb_1h_02_11','thiomac_groseq_2010"."tag_wt_notx_1h_06_10','thiomac_groseq_2010"."tag_ncor_ko_notx_12h_09_10','thiomac_groseq_2010"."tag_wt_notx_12h_09_10','thiomac_groseq_2010"."tag_wt_kla_dex_1h_11_10','thiomac_groseq_2010"."tag_wt_dex_1h_11_10','thiomac_groseq_2010"."tag_wt_kla_dex_1h_08_10',]):
+        GlassTag._meta.db_table = seq.source_table.strip()
+        GlassTag.set_polya()
+    """
     # Allow for easy running from Eclipse
     if not run_from_command_line:
         options.do_bowtie = False
@@ -148,30 +157,34 @@ if __name__ == '__main__':
         
     file_name = check_input(options)
     
-    
-    if not options.skip_bowtie and not options.bowtie_table:
-        _print('Processing FASTQ file using bowtie.')
-        bowtie_file_path = call_bowtie(options, file_name, suppress_columns=True)
-    else:
-        _print('Skipping bowtie.')
-        bowtie_file_path = options.file_path
-    
-    if not options.bowtie_table:
-        _print('Creating schema if necessary.')
-        create_schema()
-        _print('Uploading bowtie file into table.')
-        bowtie_split_dir = split_bowtie_file(options, file_name, bowtie_file_path)
-        upload_bowtie_files(options, file_name, bowtie_split_dir)
-    else:
-        _print('Skipping upload of bowtie rows into table.')
-        GlassTag.set_bowtie_table(options.bowtie_table)
-    
     if not options.skip_tag_table:
+        if not options.skip_bowtie and not options.bowtie_table:
+            _print('Processing FASTQ file using bowtie.')
+            bowtie_file_path = call_bowtie(options, file_name, suppress_columns=True)
+        else:
+            _print('Skipping bowtie.')
+            bowtie_file_path = options.file_path
+        
+        if not options.bowtie_table:
+            _print('Creating schema if necessary.')
+            create_schema()
+            _print('Uploading bowtie file into table.')
+            bowtie_split_dir = split_bowtie_file(options, file_name, bowtie_file_path)
+            upload_bowtie_files(options, file_name, bowtie_split_dir)
+        else:
+            _print('Skipping upload of bowtie rows into table.')
+            GlassTag.set_bowtie_table(options.bowtie_table)
+        
+        
         _print('Translating bowtie columns to integers.')
         translate_bowtie_columns(file_name)
         _print('Adding indices.')
         add_indices()
     else:
-        _print('Skipping translation of bowtie columns to integers')
-        GlassTag.set_table_name(options.tag_table)
+        _print('Skipping creation of tag table')
+        GlassTag.set_table_name('tag_' + file_name)
+    
+    if options.generate_bed:
+        _print('Generating BED file')
+        GlassTag.generate_bed_file(options.output_dir)
     

@@ -14,6 +14,8 @@ from glasslab.config import current_settings
 from glasslab.utils.datatypes.basic_model import DynamicTable, BoxField
 from glasslab.glassatlas.datatypes.metadata import SequencingRun
 from glasslab.utils.database import execute_query, fetch_rows
+from datetime import datetime
+import os
 
 def multiprocess_glass_tags(func, cls, *args):
     ''' 
@@ -44,6 +46,7 @@ def wrap_errors(func, *args):
 def wrap_partition_tables(cls, chr_list): wrap_errors(cls._create_partition_tables, chr_list)
 def wrap_translate_from_bowtie(cls, chr_list): wrap_errors(cls._translate_from_bowtie, chr_list)
 def wrap_set_start_end_box(cls, chr_list): wrap_errors(cls._set_start_end_box, chr_list)
+def wrap_set_polya(cls, chr_list): wrap_errors(cls._set_polya, chr_list)
 def wrap_insert_matching_tags(cls, chr_list): wrap_errors(cls._insert_matching_tags, chr_list)
 def wrap_update_start_site_tags(cls, chr_list): wrap_errors(cls._update_start_site_tags, chr_list)
 def wrap_update_exon_tags(cls, chr_list): wrap_errors(cls._update_exon_tags, chr_list)
@@ -66,6 +69,7 @@ class GlassSequencingOutput(DynamicTable):
     _chromosomes = None
     @classmethod 
     def chromosomes(cls): 
+        return list(xrange(1,23))
         if not cls._chromosomes:
             if cls._meta.db_table:
                 chr_sql = """
@@ -161,7 +165,8 @@ class GlassTag(GlassSequencingOutput):
             strand smallint default NULL,
             "start" bigint,
             "end" bigint,
-            start_end box
+            start_end box,
+            polya boolean default false
         );
         CREATE SEQUENCE "%s_id_seq"
             START WITH 1
@@ -204,9 +209,10 @@ class GlassTag(GlassSequencingOutput):
                 || quote_literal(NEW.chromosome_id) || ','
                 || quote_literal(NEW.strand) || ','
                 || quote_literal(NEW.start) || ','
-                || quote_literal(NEW."end") || ','
-                || 'public.make_box(' || quote_literal(NEW.start) || ', 0, ' 
-                    || quote_literal(NEW."end") || ', 0))';
+                || quote_literal(NEW."end") || ',
+                    public.make_box(' || quote_literal(NEW.start) || ', 0, ' 
+                    || quote_literal(NEW."end") || ', 0), '
+                || quote_literal(NEW.polya) || ')';
                 RETURN NULL;
             END;
             $$
@@ -273,6 +279,25 @@ class GlassTag(GlassSequencingOutput):
             UPDATE "%s" set start_end = public.make_box("start", 0, "end", 0) WHERE chromosome_id = %d;
             """ % (cls._meta.db_table, chr_id)
             execute_query(update_query)
+    
+    @classmethod
+    def set_polya(cls):
+        multiprocess_glass_tags(wrap_set_polya, cls)
+        
+    @classmethod
+    def _set_polya(cls, chr_list):
+        '''
+        Create type box field for faster interval searching with the PostgreSQL box.
+        '''
+        for chr_id in chr_list:
+            update_query = """
+            -- IGNORE strand, since either side match is a match
+            UPDATE "%s_%d" tag 
+            SET polya = true 
+            FROM genome_reference_mm9.tag_polya_region_%d pol
+            WHERE tag.start_end @> pol.start_end;
+            """ % (cls._meta.db_table, chr_id, chr_id)
+            execute_query(update_query)
             
     @classmethod
     def delete_bowtie_columns(cls):
@@ -325,6 +350,43 @@ class GlassTag(GlassSequencingOutput):
                                                )
         return s
 
+
+    @classmethod
+    def generate_bed_file(cls, output_dir):
+        '''
+        Generates a BED file (http://genome.ucsc.edu/FAQ/FAQformat.html#format1)
+        of all the tags and their exons for viewing in the UCSC Genome Browser.
+        '''
+        
+        transcripts = cls.objects.order_by('chromosome__id','start')
+        cls._generate_bed_file(output_dir, transcripts, strand=0)
+        cls._generate_bed_file(output_dir,transcripts, strand=1)
+        
+    @classmethod
+    def _generate_bed_file(cls, output_dir, transcripts, strand=0):
+        file_name = 'Glass_Transcripts_%s_%d.bed' % (datetime.now().strftime('%Y_%m_%d'), strand)
+        file_path = os.path.join(output_dir, file_name)
+        
+        transcripts = transcripts.filter(strand=strand)
+        
+        strand_char = strand and '-' or '+'
+        output = 'track name=%s_%d description="Glass Atlas %s Tags %s strand" useScore=1 itemRgb=On\n' \
+                        % (cls.name, strand, cls.name, strand_char)
+        
+        for trans in transcripts:
+            # chrom start end name score strand thick_start thick_end colors? exon_count csv_exon_sizes csv_exon_starts
+            start = max(0,trans.start)
+            end = min(trans.chromosome.length - 1,trans.end)
+            row = [trans.chromosome.name, str(start), str(end), 
+                   'Tag_' + str(trans.id),
+                   trans.strand and '-' or '+', str(start), str(end), 
+                   trans.strand and '0,255,0' or '0,0,255']
+            output += '\t'.join(row) + '\n'
+        
+        f = open(file_path, 'w')
+        f.write(output)
+        f.close()
+        
 class GlassTagTranscriptionRegionTable(DynamicTable):
     glass_tag       = models.ForeignKey(GlassTag)
     

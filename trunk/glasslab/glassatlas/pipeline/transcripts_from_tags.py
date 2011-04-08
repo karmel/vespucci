@@ -19,6 +19,8 @@ class TranscriptsFromTagsParser(GlassOptionParser):
                            help='Optional name to be used as schema for created DB tables.'),
                make_option('-o', '--output_dir',action='store', type='string', dest='output_dir',  
                            help='Output directory for bed file.'),
+               make_option('--remove_rogue_run',action='store_true', dest='remove_rogue_run',  
+                           help='Should the records from this run be removed?'),
                make_option('--skip_stitching',action='store_true', dest='skip_stitching',  
                            help='Should the stitching together of transcripts be skipped?'),
                make_option('--set_density',action='store_true', dest='set_density',  
@@ -53,6 +55,9 @@ if __name__ == '__main__':
         GlassTag._meta.db_table = options.schema_name and '%s"."%s' % (options.schema_name, options.tag_table) \
                                     or options.tag_table
         cell_base.glass_transcript.add_from_tags(GlassTag._meta.db_table)
+        cell_base.glass_transcript.force_vacuum()
+    elif options.remove_rogue_run:
+        cell_base.glass_transcript.remove_rogue_run()
         cell_base.glass_transcript.force_vacuum()
     
     if options.set_density:
