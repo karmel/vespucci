@@ -278,17 +278,17 @@ class HomerPeak(GlassSequencingOutput):
                      end=row[3] and int(row[3]) or None,
                      start_end=(int(row[2]), 0, int(row[3]), 0),
                      peak_score=row[5] and int(row[5]) or None,
-                     annotation=str(row[6]).strip(),
-                     detailed_annotation=str(row[7]).strip(),
-                     distance_to_tss=row[8] and int(row[8]) or None,
-                     nearest_promoter=str(row[9]).strip(),
-                     promoter_id=row[10] and int(row[10]) or None,
-                     nearest_unigene=str(row[11]).strip(),
-                     nearest_refseq=str(row[12]).strip(),
-                     nearest_ensembl=str(row[13]).strip(),
-                     gene_name=str(row[14]).strip(),
-                     gene_alias=str(row[15]).strip(),
-                     gene_description=str(row[16]).strip()                     
+                     annotation=str(row[7]).strip(),
+                     detailed_annotation=str(row[8]).strip(),
+                     distance_to_tss=row[9] and int(row[9]) or None,
+                     nearest_promoter=str(row[10]).strip(),
+                     promoter_id=row[11] and int(row[11]) or None,
+                     nearest_unigene=str(row[12]).strip(),
+                     nearest_refseq=str(row[13]).strip(),
+                     nearest_ensembl=str(row[14]).strip(),
+                     gene_name=str(row[15]).strip(),
+                     gene_alias=str(row[16]).strip(),
+                     gene_description=str(row[17]).strip()                     
                      )
         except Exception: 
             print row

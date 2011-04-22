@@ -21,6 +21,10 @@ class TranscribedRnaFromTagsParser(GlassOptionParser):
                            help='Should the stitching together of transcripts be skipped?'),
                make_option('--skip_associating',action='store_true', dest='skip_associating',  
                            help='Should the association of transcribed RNA to transcripts be skipped?'),
+               make_option('--skip_scoring',action='store_true', dest='skip_scoring',  
+                           help='Should the scoring of transcribed RNA be skipped?'),
+               make_option('--skip_scoring',action='store_true', dest='skip_spliced',  
+                           help='Should the marking of transcripts as spliced be skipped?'),
                 ]
 if __name__ == '__main__':
     parser = TranscribedRnaFromTagsParser()
@@ -40,14 +44,19 @@ if __name__ == '__main__':
                                     or options.tag_table
         cell_base.glass_transcribed_rna.add_from_tags(GlassTag._meta.db_table)
         cell_base.glass_transcribed_rna.force_vacuum()
-    
-    if not options.skip_associating:
-        # Associate first to optimize stitching.
-        cell_base.glass_transcribed_rna.associate_transcribed_rna()
-    
+        
     if not options.skip_stitching:
         cell_base.glass_transcribed_rna.stitch_together_transcribed_rna()
         cell_base.glass_transcribed_rna.force_vacuum()
+    
+    if not options.skip_associating:
+        cell_base.glass_transcribed_rna.associate_transcribed_rna()
+
+    if not options.skip_scoring:
+        cell_base.glass_transcribed_rna.set_scores()
+
+    if not options.skip_spliced:
+        cell_base.glass_transcript.mark_as_spliced()
         
     cell_base.glass_transcribed_rna.turn_on_autovacuum()
     

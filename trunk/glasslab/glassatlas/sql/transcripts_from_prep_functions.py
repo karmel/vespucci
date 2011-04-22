@@ -90,21 +90,27 @@ DECLARE
 BEGIN
         -- From prep tables, get close-enough transcripts
     FOR trans IN 
-        EXECUTE 'SELECT t1.id, t1.strand, t1.transcription_start, t1.transcription_end, max(t2.transcription_end) as max_end'
-        || ' FROM glass_atlas_%s_%s_prep.glass_transcript_' || chr_id || ' t1'
-        || ' LEFT OUTER JOIN (
+        EXECUTE 'SELECT t1.id, t1.strand, t1.transcription_start, t1.transcription_end, 
+                    GREATEST(max(t2.transcription_end), t1.transcription_end) as max_end,
+                    count(s.sequencing_run_id) as run_count
+            FROM glass_atlas_%s_%s_prep.glass_transcript_' || chr_id || ' t1
+            LEFT OUTER JOIN (
                 SELECT * FROM glass_atlas_%s_%s_prep.glass_transcript_' || chr_id || ' 
                 WHERE id IN (SELECT t.id
                 FROM  glass_atlas_%s_%s_prep.glass_transcript_' || chr_id || ' t
                 JOIN glass_atlas_%s_%s_prep.glass_transcript_source s
                     ON t.id = s.glass_transcript_id
                 GROUP BY t.id
-                HAVING sum(s.tag_count) > 1 AND count(s.sequencing_run_id) > 1)) t2'
-        || ' ON t1.density_circle @> t2.start_density '
-            || ' AND t1.strand = t2.strand '
-        || ' WHERE t1.strand = ' || strand
-        || ' GROUP by t1.id, t1.strand, t1.transcription_start, t1.transcription_end '
-        || ' ORDER by t1.transcription_start ASC'
+                HAVING sum(s.tag_count) > 1 AND count(s.sequencing_run_id) > 1) -- Omit one-tag-wonders and one-run-transcripts
+                ) t2 
+            ON t1.density_circle @> t2.start_density 
+                AND t1.strand = t2.strand 
+            JOIN glass_atlas_%s_%s_prep.glass_transcript_source s
+                ON t1.id = s.glass_transcript_id
+            WHERE t1.strand = ' || strand || '
+            GROUP by t1.id, t1.strand, t1.transcription_start, t1.transcription_end
+            HAVING sum(s.tag_count) > 1  -- Omit one-tag-wonders
+            ORDER by t1.transcription_start ASC'
     LOOP
         IF trans.id IS NOT NULL THEN
             -- Reset transcript record.
@@ -112,7 +118,12 @@ BEGIN
             transcript.chromosome_id = chr_id;
             transcript.strand = trans.strand;
             transcript.transcription_start = trans.transcription_start;
-            transcript.transcription_end = (SELECT GREATEST(trans.max_end, trans.transcription_end));
+            -- Take max end unless this transcript only belongs to one run;
+            -- In that case, leave it as is.
+            IF trans.run_count > 1 THEN
+                transcript.transcription_end = trans.max_end;
+            ELSE transcript.transcription_end = trans.transcription_end;
+            END IF;
             
             RETURN NEXT transcript;
         END IF;
@@ -195,13 +206,26 @@ $$ LANGUAGE 'plpgsql';
 
 CREATE OR REPLACE FUNCTION glass_atlas_%s_%s.calculate_scores(chr_id integer)
 RETURNS VOID AS $$
+DECLARE
+    total_runs integer;
 BEGIN 
+    -- Tag count is scaled avg and max tags: sqrt(avg_tags * max_tags)
+    -- Score is tag count divided by the lesser of length/1000 and 2*log(length),
+    -- which allows lower tag counts per bp for longer transcripts.
+    
+    total_runs := (SELECT count(DISTINCT sequencing_run_id) FROM glass_atlas_%s_%s.glass_transcript_source);
 	EXECUTE 'UPDATE glass_atlas_%s_%s.glass_transcript_' || chr_id || ' transcript
 		    SET score = derived.score 
 		    FROM (SELECT 
 				    transcript.id,
-				    GREATEST(0,(MAX(source.tag_count - source.polya_count)::numeric*1000)/
-				    (GREATEST(1000, (transcript.transcription_end - transcript.transcription_start)::numeric/1.5))) as score
+				    GREATEST(0,
+                        SQRT((SUM(source.tag_count - source.polya_count)::numeric/' || total_runs || ')
+                        *MAX(source.tag_count - source.polya_count)::numeric)
+                        /LEAST(
+                            GREATEST(1000, transcript.transcription_end - transcript.transcription_start)::numeric/1000,
+                            2*LOG(transcript.transcription_end - transcript.transcription_start)
+                            )
+                    ) as score
 			    FROM glass_atlas_%s_%s.glass_transcript_' || chr_id || ' transcript 
 				JOIN glass_atlas_%s_%s.glass_transcript_source source
 			    ON source.glass_transcript_id = transcript.id
@@ -260,7 +284,22 @@ BEGIN
             WHERE ' || where_clause;
 END;
 $$ LANGUAGE 'plpgsql';
-""" % tuple([genome, cell_type]*54)
+
+
+CREATE OR REPLACE FUNCTION glass_atlas_%s_%s.mark_transcripts_spliced(chr_id integer, score_threshold numeric)
+RETURNS VOID AS $$
+BEGIN
+    -- Mark transcripts as spliced if sufficiently high-scoring RNA exists
+    EXECUTE 'UPDATE glass_atlas_%s_%s.glass_transcript_' || chr_id || ' transcript 
+        SET spliced = true
+        FROM glass_atlas_%s_%s.glass_transcribed_rna_' || chr_id || ' transcribed_rna
+        WHERE transcribed_rna.glass_transcript_id = transcript.id
+            AND transcribed_rna.score >= ' || score_threshold;
+    RETURN;
+END;
+$$ LANGUAGE 'plpgsql'; 
+
+""" % tuple([genome, cell_type]*59)
 
 if __name__ == '__main__':
     print sql(genome, cell_type)

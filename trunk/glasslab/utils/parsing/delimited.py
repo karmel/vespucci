@@ -16,6 +16,13 @@ class DelimitedFileParser(object):
         self.file_name = file_name
         self.file = open(file_name)
         
+    def convert_line_endings(self):
+        output = self.file.read().replace('\r\n','\n').replace('\r','\n')
+        outfile = open(self.file_name, 'w')
+        outfile.write(output)
+        outfile.close()
+        self.file = open(self.file_name)
+        
     def get_array(self, delimiter='\t', strip=False):
         '''
         For initialized file, parse into numpy array and return.

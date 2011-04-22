@@ -348,6 +348,9 @@ class GlassTag(GlassSequencingOutput):
                                                   'type': type,
                                                   'standard': standard }
                                                )
+        if not created: 
+            s.total_tags = cls.objects.count()
+            s.save() 
         return s
 
 

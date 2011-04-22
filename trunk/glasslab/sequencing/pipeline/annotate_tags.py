@@ -27,6 +27,7 @@ import shutil
 from glasslab.sequencing.pipeline.annotate_base import check_input, _print,\
     call_bowtie, create_schema
 from glasslab.glassatlas.datatypes.metadata import SequencingRun
+from glasslab.utils.database import execute_query_without_transaction
 
 class FastqOptionParser(GlassOptionParser):
     options = [
@@ -114,13 +115,14 @@ def translate_bowtie_columns(file_name):
     GlassTag.create_parent_table(file_name)
     GlassTag.create_partition_tables()
     GlassTag.translate_from_bowtie()
-    GlassTag.set_polya()
     GlassTag.add_record_of_tags()
     
 def add_indices():
     # Execute after all the ends have been calculated,
     # as otherwise the insertion of ends takes far too long.
     GlassTag.add_indices()
+    execute_query_without_transaction('VACUUM FULL ANALYZE "%s";' % (GlassTag._meta.db_table))
+    GlassTag.set_polya()
     
 def associate_sequences(options, file_name):
     #GlassTagSequence.set_table_name('tag_sequence_' + file_name)
@@ -157,13 +159,14 @@ if __name__ == '__main__':
         
     file_name = check_input(options)
     
+    if not options.skip_bowtie and not options.bowtie_table:
+        _print('Processing FASTQ file using bowtie.')
+        bowtie_file_path = call_bowtie(options, file_name, suppress_columns=True)
+    else:
+        _print('Skipping bowtie.')
+        bowtie_file_path = options.file_path
+    
     if not options.skip_tag_table:
-        if not options.skip_bowtie and not options.bowtie_table:
-            _print('Processing FASTQ file using bowtie.')
-            bowtie_file_path = call_bowtie(options, file_name, suppress_columns=True)
-        else:
-            _print('Skipping bowtie.')
-            bowtie_file_path = options.file_path
         
         if not options.bowtie_table:
             _print('Creating schema if necessary.')

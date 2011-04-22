@@ -80,6 +80,7 @@ def wrap_set_density(cls, chr_list): wrap_errors(cls._set_density, chr_list)
 def wrap_draw_transcript_edges(cls, chr_list): wrap_errors(cls._draw_transcript_edges, chr_list)
 def wrap_set_score_thresholds(cls, chr_list, *args): wrap_errors(cls._set_score_thresholds, chr_list, *args)
 def wrap_set_scores(cls, chr_list): wrap_errors(cls._set_scores, chr_list)
+def wrap_mark_as_spliced(cls, chr_list): wrap_errors(cls._mark_as_spliced, chr_list)
 def wrap_associate_nucleotides(cls, chr_list): wrap_errors(cls._associate_nucleotides, chr_list)
 def wrap_force_vacuum(cls, chr_list): wrap_errors(cls._force_vacuum, chr_list)
 
@@ -269,8 +270,7 @@ class GlassTranscript(TranscriptBase):
     start_end_density   = BoxField(null=True, default=None, help_text='This is a placeholder for the PostgreSQL box type.')
     
     spliced             = models.NullBooleanField(default=None, help_text='Do we have RNA-Seq confirmation?')
-    score               = models.FloatField(null=True, default=None, 
-                                    help_text='Total mapped tags x sequencing runs transcribed in / total sequencing runs possible')
+    score               = models.FloatField(null=True, default=None)
     
     modified        = models.DateTimeField(auto_now=True)
     created         = models.DateTimeField(auto_now_add=True)
@@ -290,7 +290,7 @@ class GlassTranscript(TranscriptBase):
         for chr_id in chr_list:
             print 'Adding transcripts for chromosome %d' % chr_id
             query = """
-                SELECT glass_atlas_%s_%s_prep.save_transcripts_from_sequencing_run(%d, %d,'%s', %d, %d, %d, %d, %d, NULL, 1);
+                SELECT glass_atlas_%s_%s_prep.save_transcripts_from_sequencing_run(%d, %d,'%s', %d, %d, %d, %d, %d, NULL, NULL);
                 """ % (current_settings.TRANSCRIPT_GENOME,
                        current_settings.CURRENT_CELL_TYPE.lower(),
                        sequencing_run.id, chr_id, 
@@ -463,6 +463,22 @@ class GlassTranscript(TranscriptBase):
                 """ % (current_settings.TRANSCRIPT_GENOME,
                        current_settings.CURRENT_CELL_TYPE.lower(), chr_id)
             execute_query(query) 
+    @classmethod
+    def mark_as_spliced(cls):
+        multiprocess_all_chromosomes(wrap_mark_as_spliced, cls)
+        #wrap_set_scores(cls,[21, 22])
+    
+    @classmethod
+    def _mark_as_spliced(cls, chr_list):
+        from glasslab.glassatlas.datatypes.transcribed_rna import MIN_SCORE_RNA
+        for chr_id in chr_list:
+            print 'Marking transcripts as spliced for chromosome %d' % chr_id
+            query = """
+                SELECT glass_atlas_%s_%s.mark_transcripts_spliced(%d, %d);
+                """ % (current_settings.TRANSCRIPT_GENOME,
+                       current_settings.CURRENT_CELL_TYPE.lower(), chr_id, 
+                       MIN_SCORE_RNA)
+            execute_query(query) 
     
     @classmethod
     def associate_nucleotides(cls):
@@ -595,7 +611,7 @@ class TranscriptSourceBase(TranscriptModelBase):
     sequencing_run          = models.ForeignKey(SequencingRun)
     tag_count               = models.IntegerField(max_length=12)
     gaps                    = models.IntegerField(max_length=12)
-    polya_count             = models.IntegerField(max_length=12)
+    #polya_count             = models.IntegerField(max_length=12)
     
     class Meta:
         abstract = True

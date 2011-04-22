@@ -31,9 +31,11 @@ def import_peaks(file_name, peaks_file_path):
     NOTE: Homer peak file should be converted into a CSV file first!
     
     '''
-    HomerPeak.create_table(file_name)
+    parser = DelimitedFileParser(peaks_file_path)
+    parser.convert_line_endings()
+    data = parser.get_array(strip=True)
     
-    data = DelimitedFileParser(peaks_file_path).get_array(strip=True)
+    HomerPeak.create_table(file_name)
     for row in data:
         if not row[0].strip() or row[0].strip().find('Cluster') >= 0:
             continue

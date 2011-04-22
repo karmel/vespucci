@@ -5,7 +5,7 @@ Created on Dec 16, 2010
 '''
 from glasslab.config import current_settings
 from glasslab.glassatlas.datatypes.transcript import TranscriptionRegionBase, \
-    multiprocess_all_chromosomes, TranscriptSourceBase, MAX_GAP
+    multiprocess_all_chromosomes, TranscriptSourceBase, MAX_GAP, TAG_EXTENSION
     
 from glasslab.sequencing.datatypes.tag import multiprocess_glass_tags,\
     wrap_errors
@@ -18,14 +18,15 @@ def wrap_associate_transcribed_rna(cls, chr_list):
     wrap_errors(cls._associate_transcribed_rna, chr_list)
 def wrap_stitch_together_transcribed_rna(cls, chr_list): 
     wrap_errors(cls._stitch_together_transcribed_rna, chr_list)
+def wrap_set_scores(cls, chr_list): wrap_errors(cls._set_scores, chr_list)
 
 MAX_GAP_RNA = MAX_GAP
+MIN_SCORE_RNA = 3
 class GlassTranscribedRna(TranscriptionRegionBase):
     '''
     Transcribed RNA sequenced in RNA-Seq experiments.
     '''
-    modified        = models.DateTimeField(auto_now=True)
-    created         = models.DateTimeField(auto_now_add=True)
+    score               = models.FloatField(null=True, default=None)
     
     class Meta:
         abstract = True
@@ -42,16 +43,32 @@ class GlassTranscribedRna(TranscriptionRegionBase):
         for chr_id in chr_list:
             print 'Adding transcribed RNA for chromosome %d' % chr_id
             query = """
-                SELECT glass_atlas_%s_%s.save_transcribed_rna_from_sequencing_run(%d, %d,'%s', %d);
+                SELECT glass_atlas_%s_%s_rna.save_transcribed_rna_from_sequencing_run(%d, %d,'%s', %d, %d, NULL);
                 """ % (current_settings.TRANSCRIPT_GENOME,
                        current_settings.CURRENT_CELL_TYPE.lower(),
                        sequencing_run.id, chr_id, 
-                       sequencing_run.source_table.strip(), MAX_GAP_RNA)
+                       sequencing_run.source_table.strip(), 
+                       MAX_GAP_RNA, TAG_EXTENSION)
             execute_query(query)
             
     ################################################
     # Transcript cleanup and refinement
     ################################################
+    @classmethod
+    def stitch_together_transcribed_rna(cls):
+        multiprocess_all_chromosomes(wrap_stitch_together_transcribed_rna, cls)
+    
+    @classmethod
+    def _stitch_together_transcribed_rna(cls, chr_list):
+        for chr_id in chr_list:
+            print 'Stitching together transcribed RNA for chromosome %d' % chr_id
+            query = """
+                SELECT glass_atlas_%s_%s_rna.save_transcribed_rna_from_existing(%d, %d, %s);
+                """ % (current_settings.TRANSCRIPT_GENOME, 
+                       current_settings.CURRENT_CELL_TYPE.lower(),
+                       chr_id, MAX_GAP_RNA,'false')
+            execute_query(query)
+    
     @classmethod
     def associate_transcribed_rna(cls):
         multiprocess_all_chromosomes(wrap_associate_transcribed_rna, cls)
@@ -67,22 +84,19 @@ class GlassTranscribedRna(TranscriptionRegionBase):
             execute_query(query) 
             
     @classmethod
-    def stitch_together_transcribed_rna(cls):
-        multiprocess_all_chromosomes(wrap_stitch_together_transcribed_rna, cls)
+    def set_scores(cls):
+        multiprocess_all_chromosomes(wrap_set_scores, cls)
     
     @classmethod
-    def _stitch_together_transcribed_rna(cls, chr_list):
+    def _set_scores(cls, chr_list):
         for chr_id in chr_list:
-            print 'Stitching together transcribed RNA for chromosome %d' % chr_id
+            print 'Scoring transcribed_rna for chromosome %d' % chr_id
             query = """
-                SELECT glass_atlas_%s_%s.stitch_transcribed_rna_together(%d, %d);
-                SELECT glass_atlas_%s_%s.mark_transcripts_as_spliced(%d);
+                SELECT glass_atlas_%s_%s.calculate_scores_transcribed_rna(%d);
                 """ % (current_settings.TRANSCRIPT_GENOME,
-                       current_settings.CURRENT_CELL_TYPE.lower(), 
-                       chr_id, MAX_GAP_RNA,
-                       current_settings.TRANSCRIPT_GENOME,
                        current_settings.CURRENT_CELL_TYPE.lower(), chr_id)
-            execute_query(query)
+            execute_query(query) 
+
 
 class GlassTranscribedRnaSource(TranscriptSourceBase):
     class Meta:
