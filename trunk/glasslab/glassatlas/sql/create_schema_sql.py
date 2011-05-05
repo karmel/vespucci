@@ -4,7 +4,7 @@ Created on Feb 23, 2011
 @author: karmel
 '''
 
-genome = 'mm9'
+genome = 'erna'
 cell_type='thiomac'
 def sql(genome, cell_type):
     return """

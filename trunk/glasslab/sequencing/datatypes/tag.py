@@ -16,6 +16,8 @@ from glasslab.glassatlas.datatypes.metadata import SequencingRun
 from glasslab.utils.database import execute_query, fetch_rows
 from datetime import datetime
 import os
+from django.db.utils import DatabaseError
+from django.db.backends import postgresql_psycopg2
 
 def multiprocess_glass_tags(func, cls, *args):
     ''' 
@@ -45,6 +47,7 @@ def wrap_errors(func, *args):
     
 def wrap_partition_tables(cls, chr_list): wrap_errors(cls._create_partition_tables, chr_list)
 def wrap_translate_from_bowtie(cls, chr_list): wrap_errors(cls._translate_from_bowtie, chr_list)
+def wrap_delete_tags(cls, chr_list): wrap_errors(cls._delete_tags, chr_list)
 def wrap_set_start_end_box(cls, chr_list): wrap_errors(cls._set_start_end_box, chr_list)
 def wrap_set_polya(cls, chr_list): wrap_errors(cls._set_polya, chr_list)
 def wrap_insert_matching_tags(cls, chr_list): wrap_errors(cls._insert_matching_tags, chr_list)
@@ -127,8 +130,10 @@ class GlassTag(GlassSequencingOutput):
     start                   = models.IntegerField(max_length=12)
     end                     = models.IntegerField(max_length=12)
     
-    start_end               = BoxField(max_length=255, help_text='This is a placeholder for the PostgreSQL box type.')
-     
+    start_end               = BoxField(max_length=255, help_text='This is a placeholder for the PostgreSQL box type.', null=True)
+    
+    polya                   = models.NullBooleanField(default=None)
+    
     @classmethod        
     def create_bowtie_table(cls, name):
         '''
@@ -191,6 +196,7 @@ class GlassTag(GlassSequencingOutput):
         '''
         Can't be multiprocessed; too many attempts to ANALYZE at once.
         '''
+        
         for chr_id in cls.chromosomes():
             table_sql = """
             CREATE TABLE "%s_%d" (
@@ -199,20 +205,34 @@ class GlassTag(GlassSequencingOutput):
                                      chr_id, chr_id,
                                      cls._meta.db_table)
             execute_query(table_sql)
-            
+        
         trigger_sql = '''
             CREATE OR REPLACE FUNCTION %s.glass_tag_insert_trigger()
             RETURNS TRIGGER AS $$
+            DECLARE
+                polya_string text;
+                start_end_string text;
             BEGIN
+                IF NEW.polya IS NULL THEN
+                    polya_string := 'NULL';
+                ELSE
+                    polya_string := NEW.polya::text;
+                END IF;
+                
+                IF NEW.start_end IS NULL THEN
+                    start_end_string := 'NULL';
+                ELSE
+                    start_end_string := 'public.make_box(' || quote_literal(NEW.start) || ', 0, ' 
+                    || quote_literal(NEW."end") || ', 0)';
+                END IF;
                 EXECUTE 'INSERT INTO "%s_' || NEW.chromosome_id || '" VALUES ('
                 || quote_literal(NEW.id) || ','
                 || quote_literal(NEW.chromosome_id) || ','
                 || quote_literal(NEW.strand) || ','
                 || quote_literal(NEW.start) || ','
-                || quote_literal(NEW."end") || ',
-                    public.make_box(' || quote_literal(NEW.start) || ', 0, ' 
-                    || quote_literal(NEW."end") || ', 0), '
-                || quote_literal(NEW.polya) || ')';
+                || quote_literal(NEW."end") || ','
+                || start_end_string || ','
+                || polya_string || ')';
                 RETURN NULL;
             END;
             $$
@@ -227,7 +247,7 @@ class GlassTag(GlassSequencingOutput):
                cls._meta.db_table,
                current_settings.CURRENT_SCHEMA)
         execute_query(trigger_sql)
-           
+        
     @classmethod
     def associate_chromosome(cls):
         '''
@@ -250,11 +270,12 @@ class GlassTag(GlassSequencingOutput):
         '''
         for chr_id in chr_list:
             update_query = """
-            INSERT INTO "%s_%d" (chromosome_id, strand, "start", "end", start_end)
+            INSERT INTO "%s_%d" (chromosome_id, strand, "start", "end", start_end, polya)
             SELECT * FROM (
                 SELECT %d, (CASE WHEN bowtie.strand_char = '-' THEN 1 ELSE 0 END), 
                 bowtie."start", (bowtie."start" + char_length(bowtie.sequence_matched)),
-                public.make_box(bowtie."start", 0, (bowtie."start" + char_length(bowtie.sequence_matched)), 0)
+                public.make_box(bowtie."start", 0, (bowtie."start" + char_length(bowtie.sequence_matched)), 0),
+                NULL::boolean
             FROM "%s" bowtie
             JOIN "%s" chr ON chr.name = bowtie.chromosome
             WHERE chr.id = %d) derived;
@@ -262,6 +283,57 @@ class GlassTag(GlassSequencingOutput):
                    chr_id, cls.bowtie_table,
                    Chromosome._meta.db_table,
                    chr_id)
+            '''
+            update_query = """
+            UPDATE "%s_%d" tag
+                SET strand = (CASE WHEN bowtie.strand_char = '-' THEN 1 ELSE 0 END),
+                "start" = bowtie."start",
+                "end" = (bowtie."start" + char_length(bowtie.sequence_matched)),
+                start_end = public.make_box(bowtie."start", 0, (bowtie."start" + char_length(bowtie.sequence_matched)), 0)
+            FROM "%s" bowtie, "%s" chr
+            WHERE chr.name = bowtie.chromosome
+            AND chr.id = %d
+            AND bowtie.start = tag.start
+            AND tag.start_end IS NULL;
+            """ % (cls._meta.db_table,chr_id,
+                   cls.bowtie_table,
+                   Chromosome._meta.db_table,
+                   chr_id)
+            '''
+            execute_query(update_query)
+    @classmethod
+    def delete_tags(cls):
+        multiprocess_glass_tags(wrap_delete_tags, cls)
+        
+    @classmethod
+    def _delete_tags(cls, chr_list):
+        '''
+        Take bowtied uploaded values and streamline into ints and sequence ends.
+        '''
+        for chr_id in chr_list:
+            update_query = """
+            DELETE FROM "%s" bowtie
+            WHERE chromosome = (SELECT name FROM "%s"
+                WHERE id = %d)
+            AND start IN (SELECT start FROM "%s_%d" tag
+                WHERE strand = 0)
+            AND strand_char = '+';
+            DELETE FROM "%s" bowtie
+            WHERE chromosome = (SELECT name FROM "%s"
+                WHERE id = %d)
+            AND start IN (SELECT start FROM "%s_%d" tag
+                WHERE strand = 1)
+            AND strand_char = '-';
+            DELETE FROM "%s_%d" tag
+            WHERE start_end IS NULL;
+            """ % (cls.bowtie_table,
+                   Chromosome._meta.db_table, chr_id,
+                   cls._meta.db_table,chr_id,
+                   cls.bowtie_table,
+                   Chromosome._meta.db_table, chr_id,
+                   cls._meta.db_table,chr_id,
+                   cls._meta.db_table,chr_id,
+                   )
             
             execute_query(update_query)
                     
@@ -295,7 +367,9 @@ class GlassTag(GlassSequencingOutput):
             UPDATE "%s_%d" tag 
             SET polya = true 
             FROM genome_reference_mm9.tag_polya_region_%d pol
-            WHERE tag.start_end @> pol.start_end;
+            WHERE tag.start_end @> pol.start_end
+            AND polya IS NULL
+            ;
             """ % (cls._meta.db_table, chr_id, chr_id)
             execute_query(update_query)
             
@@ -353,7 +427,27 @@ class GlassTag(GlassSequencingOutput):
             s.save() 
         return s
 
+    @classmethod
+    def fix_tags(cls, bowtie_row):
+        '''
+        Method implemented to fix existing tags without reloading all.
+        '''
+        chr = Chromosome.objects.get(name=bowtie_row[1])
+        tags = cls.objects.filter(chromosome=chr,
+                                  start=int(bowtie_row[2]),
+                                  start_end=None).order_by('id')
+        
+        if not tags: 
+            tag = cls(chromosome=chr, start=int(bowtie_row[2]))
+        else:
+            tag = tags[0]
 
+        tag.end = int(bowtie_row[2]) + len(bowtie_row[3])
+        tag.start_end = (tag.start, 0, tag.end, 0)
+        tag.strand = bowtie_row[0] == '-' and 1 or 0
+        tag.save()
+        connection.close()
+        
     @classmethod
     def generate_bed_file(cls, output_dir):
         '''

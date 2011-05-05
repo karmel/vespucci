@@ -154,7 +154,7 @@ CREATE OR REPLACE FUNCTION glass_atlas_%s_%s.insert_transcript_source_records(ch
 RETURNS VOID AS $$
 BEGIN 
     EXECUTE 'INSERT INTO glass_atlas_%s_%s.glass_transcript_source
-            (glass_transcript_id, sequencing_run_id, tag_count, gaps, polya_count, polya)
+            (glass_transcript_id, sequencing_run_id, tag_count, gaps, polya_count)
             SELECT der.transcript_id, der.sequencing_run_id, 
                 SUM(der.tag_count), COUNT(der.glass_transcript_id) - 1,
                 SUM(der.polya_count)

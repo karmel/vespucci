@@ -215,7 +215,7 @@ class GlassTranscribedRnaSourceInline(ReadOnlyInline):
     
 class GlassTranscribedRnaAdmin(TranscriptBase):
     list_display    = ('chromosome','transcription_start','transcription_end','strand',
-                       'transcript_length', 'glass_transcript_link','ucsc_browser_link', 'modified')
+                       'transcript_length', 'score','glass_transcript_link','ucsc_browser_link')
     list_filter     = ('chromosome','strand',)
     
     def glass_transcript_link(self, obj):

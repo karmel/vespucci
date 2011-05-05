@@ -25,9 +25,10 @@ from multiprocessing import Pool
 from glasslab.config import current_settings
 import shutil
 from glasslab.sequencing.pipeline.annotate_base import check_input, _print,\
-    call_bowtie, create_schema
+    call_bowtie, create_schema, trim_sequences, clean_bowtie_file
 from glasslab.glassatlas.datatypes.metadata import SequencingRun
 from glasslab.utils.database import execute_query_without_transaction
+from glasslab.utils.parsing.delimited import DelimitedFileParser
 
 class FastqOptionParser(GlassOptionParser):
     options = [
@@ -42,6 +43,11 @@ class FastqOptionParser(GlassOptionParser):
                make_option('--schema_name',action='store', type='string', dest='schema_name',  
                            help='Optional name to be used as schema for created DB tables.'),
                
+               make_option('--clean_bowtie',action='store_true', dest='clean_bowtie', default=False, 
+                           help='Clean an already bowtied file of dupes.'),                           
+               make_option('--skip_trim',action='store_true', dest='skip_trim', default=False, 
+                           help='Trim the sequences of polyA regions before sending to bowtie.'),
+                           
                make_option('--skip_bowtie',action='store_true', dest='skip_bowtie', default=False, 
                            help='Skip bowtie; presume MACS uses input file directly.'),
                make_option('--bowtie_table',action='store', dest='bowtie_table',
@@ -111,19 +117,27 @@ def translate_bowtie_columns(file_name):
     '''
     Transfer bowtie tags to indexed, streamlined Glass tags for annotation.
     '''
-    #GlassTag.set_table_name('tag_' + file_name)
-    GlassTag.create_parent_table(file_name)
-    GlassTag.create_partition_tables()
+    GlassTag.set_table_name('tag_' + file_name)
+    #GlassTag.create_parent_table(file_name)
+    #GlassTag.create_partition_tables()
     GlassTag.translate_from_bowtie()
     GlassTag.add_record_of_tags()
     
 def add_indices():
     # Execute after all the ends have been calculated,
     # as otherwise the insertion of ends takes far too long.
-    GlassTag.add_indices()
+    #GlassTag.add_indices()
     execute_query_without_transaction('VACUUM FULL ANALYZE "%s";' % (GlassTag._meta.db_table))
     GlassTag.set_polya()
     
+def fix_tags(bowtie_file, file_name):
+    GlassTag.set_table_name('tag_' + file_name)
+    GlassTag.create_partition_tables()
+    f = open(bowtie_file)
+    for line in f.readlines():
+        line = line.strip('\n')
+        GlassTag.fix_tags(line.split('\t'))
+
 def associate_sequences(options, file_name):
     #GlassTagSequence.set_table_name('tag_sequence_' + file_name)
     GlassTagSequence.create_table(file_name)
@@ -144,12 +158,7 @@ if __name__ == '__main__':
     
     parser = FastqOptionParser()
     options, args = parser.parse_args()
-    """
-    for seq in SequencingRun.objects.filter(type='Gro-Seq').filter(
-            source_table__in=['thiomac_groseq_2010"."tag_ncor_ko_kla_1h_08_10','thiomac_groseq_2010"."tag_ncor_ko_kla_1h_09_10','thiomac_groseq_2010"."tag_ncor_ko_notx_1h_09_10','thiomac_groseq_2011"."tag_wt_dex_4h_02_11','thiomac_groseq_2011"."tag_wt_vegfa_6h_02_11','thiomac_groseq_2011"."tag_wt_pigf_6h_02_11','thiomac_groseq_2011"."tag_wt_dmso_4h_02_11','thiomac_groseq_2011"."tag_wt_vegfa_24h_02_11','thiomac_groseq_2011"."tag_wt_vegfb_1h_02_11','thiomac_groseq_2010"."tag_wt_notx_1h_06_10','thiomac_groseq_2010"."tag_ncor_ko_notx_12h_09_10','thiomac_groseq_2010"."tag_wt_notx_12h_09_10','thiomac_groseq_2010"."tag_wt_kla_dex_1h_11_10','thiomac_groseq_2010"."tag_wt_dex_1h_11_10','thiomac_groseq_2010"."tag_wt_kla_dex_1h_08_10',]):
-        GlassTag._meta.db_table = seq.source_table.strip()
-        GlassTag.set_polya()
-    """
+
     # Allow for easy running from Eclipse
     if not run_from_command_line:
         options.do_bowtie = False
@@ -159,7 +168,13 @@ if __name__ == '__main__':
         
     file_name = check_input(options)
     
-    if not options.skip_bowtie and not options.bowtie_table:
+    if options.clean_bowtie:
+        _print('Cleaning existing bowtie file.')
+        bowtie_file_path = clean_bowtie_file(options, file_name)
+    elif not options.skip_bowtie and not options.bowtie_table:
+        if not options.skip_trim:
+            trim_sequences(options, file_name)
+            
         _print('Processing FASTQ file using bowtie.')
         bowtie_file_path = call_bowtie(options, file_name, suppress_columns=True)
     else:
@@ -182,6 +197,7 @@ if __name__ == '__main__':
         _print('Translating bowtie columns to integers.')
         translate_bowtie_columns(file_name)
         _print('Adding indices.')
+        GlassTag.set_table_name('tag_' + file_name)
         add_indices()
     else:
         _print('Skipping creation of tag table')

@@ -35,7 +35,7 @@ class TranscriptsFromTagsParser(GlassOptionParser):
                            help='Should obtaining nucleotide sequences to transcripts be attempted?'),
                make_option('--skip_reassociation',action='store_true', dest='skip_reassociation',  
                            help='Should reassociation of peak features to transcripts be skipped?'),
-               make_option('--allow_extended_gaps',action='store_true', dest='allow_extended_gaps',  
+               make_option('--no_extended_gaps',action='store_true', dest='no_extended_gaps',  
                            help='Should extended gaps (i.e., under RefSeq regions) be allowed?'),
                 ]
 if __name__ == '__main__':
@@ -50,6 +50,9 @@ if __name__ == '__main__':
     if options.cell_type: current_settings.CURRENT_CELL_TYPE = options.cell_type
     cell_base = CellTypeBase().get_cell_type_base(current_settings.CURRENT_CELL_TYPE)()
     
+    allow_extended_gaps = True
+    if options.no_extended_gaps: allow_extended_gaps = False
+        
     cell_base.glass_transcript.turn_off_autovacuum()    
     if options.tag_table:
         GlassTag._meta.db_table = options.schema_name and '%s"."%s' % (options.schema_name, options.tag_table) \
@@ -61,11 +64,9 @@ if __name__ == '__main__':
         cell_base.glass_transcript.force_vacuum()
     
     if options.set_density:
-        cell_base.glass_transcript.set_density()
+        cell_base.glass_transcript.set_density(allow_extended_gaps=allow_extended_gaps)
         cell_base.glass_transcript.force_vacuum()
     elif not options.skip_stitching:
-        allow_extended_gaps = False
-        if options.allow_extended_gaps: allow_extended_gaps = True
         cell_base.glass_transcript.stitch_together_transcripts(allow_extended_gaps=allow_extended_gaps)
         cell_base.glass_transcript.force_vacuum()
 

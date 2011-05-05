@@ -47,7 +47,7 @@ class BoxField(models.Field):
         except Exception: return value
         
     def get_prep_value(self, value):
-        if value is None:
+        if not value:
             return None
         try: return AsIs('public.make_box(%d,%d,%d,%d)' % tuple(value))
         except TypeError:
