@@ -9,7 +9,7 @@ from glasslab.atlasviewer.utilities.models import SavedQuery
 
 
 class SavedQueryAdmin(admin.ModelAdmin):
-    list_display    = ('id','topic', 'name', 'query_link','stored_link')
+    list_display    = ('id','topic', 'name', 'query_link','stored_link','restore_link')
     list_filter     = ('topic',)
     ordering        = ('-modified','topic','name')
     
@@ -26,5 +26,10 @@ class SavedQueryAdmin(admin.ModelAdmin):
         else: return ''
     stored_link.short_description = 'Stored Results' 
     stored_link.allow_tags = True 
+
+    def restore_link(self, obj):
+        return '<a href="/transcript/restore_query/%d" target="_blank">Re-store</a>' % obj.id
+    restore_link.short_description = 'Re-store Results' 
+    restore_link.allow_tags = True
 
 admin.site.register(SavedQuery, SavedQueryAdmin)

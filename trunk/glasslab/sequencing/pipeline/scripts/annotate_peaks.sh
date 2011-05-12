@@ -5,9 +5,8 @@ if [ "$CURRENT_PATH" == "" ]; then
 fi 
 
 export PYTHONPATH=$CURRENT_PATH:$PYTHONPATH
-
-export PATH=/Volumes/Unknowme/bowtie/bowtie-0.12.5:$PATH
-export BOWTIE_INDEXES=/Volumes/Unknowme/bowtie/bowtie-0.12.5/indexes
+export PATH=/Volumes/Unknowme/bowtie/bowtie-0.12.7:$PATH
+export BOWTIE_INDEXES=/Volumes/Unknowme/bowtie/bowtie-0.12.7/indexes
 
 export DJANGO_SETTINGS_MODULE=glasslab.config.django_settings
 

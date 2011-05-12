@@ -118,15 +118,15 @@ def translate_bowtie_columns(file_name):
     Transfer bowtie tags to indexed, streamlined Glass tags for annotation.
     '''
     GlassTag.set_table_name('tag_' + file_name)
-    #GlassTag.create_parent_table(file_name)
-    #GlassTag.create_partition_tables()
+    GlassTag.create_parent_table(file_name)
+    GlassTag.create_partition_tables()
     GlassTag.translate_from_bowtie()
     GlassTag.add_record_of_tags()
     
 def add_indices():
     # Execute after all the ends have been calculated,
     # as otherwise the insertion of ends takes far too long.
-    #GlassTag.add_indices()
+    GlassTag.add_indices()
     execute_query_without_transaction('VACUUM FULL ANALYZE "%s";' % (GlassTag._meta.db_table))
     GlassTag.set_polya()
     
@@ -192,7 +192,6 @@ if __name__ == '__main__':
         else:
             _print('Skipping upload of bowtie rows into table.')
             GlassTag.set_bowtie_table(options.bowtie_table)
-        
         
         _print('Translating bowtie columns to integers.')
         translate_bowtie_columns(file_name)

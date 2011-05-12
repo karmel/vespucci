@@ -283,23 +283,6 @@ class GlassTag(GlassSequencingOutput):
                    chr_id, cls.bowtie_table,
                    Chromosome._meta.db_table,
                    chr_id)
-            '''
-            update_query = """
-            UPDATE "%s_%d" tag
-                SET strand = (CASE WHEN bowtie.strand_char = '-' THEN 1 ELSE 0 END),
-                "start" = bowtie."start",
-                "end" = (bowtie."start" + char_length(bowtie.sequence_matched)),
-                start_end = public.make_box(bowtie."start", 0, (bowtie."start" + char_length(bowtie.sequence_matched)), 0)
-            FROM "%s" bowtie, "%s" chr
-            WHERE chr.name = bowtie.chromosome
-            AND chr.id = %d
-            AND bowtie.start = tag.start
-            AND tag.start_end IS NULL;
-            """ % (cls._meta.db_table,chr_id,
-                   cls.bowtie_table,
-                   Chromosome._meta.db_table,
-                   chr_id)
-            '''
             execute_query(update_query)
     @classmethod
     def delete_tags(cls):
@@ -368,9 +351,13 @@ class GlassTag(GlassSequencingOutput):
             SET polya = true 
             FROM genome_reference_mm9.tag_polya_region_%d pol
             WHERE tag.start_end @> pol.start_end
-            AND polya IS NULL
-            ;
-            """ % (cls._meta.db_table, chr_id, chr_id)
+            AND polya IS NULL;
+
+            UPDATE "%s_%d" tag 
+            SET polya = false 
+            WHERE polya IS NULL;
+            """ % (cls._meta.db_table, chr_id, chr_id,
+                   cls._meta.db_table, chr_id)
             execute_query(update_query)
             
     @classmethod

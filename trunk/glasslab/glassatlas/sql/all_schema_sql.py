@@ -24,10 +24,21 @@ def print_all(genome, cell_type='thiomac'):
     print transcript_from_prep_function_sql(genome, cell_type)
     print transcribed_rna_function_sql(genome, cell_type)
     print features_function_sql(genome, cell_type)
+
+def print_final(genome, cell_type='thiomac'):
+    print schema_sql(genome, cell_type, subset='final')
+    print transcript_table_sql(genome, cell_type)
+    print features_table_sql(genome, cell_type)
+    print transcript_from_prep_function_sql(genome, cell_type)
+    print features_function_sql(genome, cell_type)
     
     
 if __name__ == '__main__':
     genome = len(sys.argv) > 1 and sys.argv[1] or 'gap3_100_10'
     cell_type = len(sys.argv) > 2 and sys.argv[2] or 'thiomac'
-    print_all(genome, cell_type)
+    subset = len(sys.argv) > 3 and sys.argv[3] or False
+    
+    if subset == 'final':
+        print_final(genome, cell_type)
+    else: print_all(genome, cell_type)
     

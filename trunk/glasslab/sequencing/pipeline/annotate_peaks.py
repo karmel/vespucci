@@ -18,7 +18,7 @@ import traceback
 from glasslab.sequencing.datatypes.peak import GlassPeak
 from glasslab.utils.parsing.delimited import DelimitedFileParser
 from glasslab.sequencing.pipeline.annotate_base import check_input, call_bowtie,\
-    create_schema, _print
+    create_schema, _print, trim_sequences
 from glasslab.sequencing.analysis.peakfinding.sicer_handler import SicerHandler
 
 class FastqOptionParser(GlassOptionParser):
@@ -41,6 +41,8 @@ class FastqOptionParser(GlassOptionParser):
                            
                make_option('--skip_bowtie',action='store_true', dest='skip_bowtie', default=False, 
                            help='Skip bowtie; presume MACS or SICER uses input file directly.'),
+               make_option('--skip_trim',action='store_true', dest='skip_trim', default=False, 
+                           help='Trim the sequences of polyA regions before sending to bowtie.'),
                make_option('--skip_bed',action='store_true', dest='skip_bed', default=False, 
                            help='Skip conversion to BED; presume SICER uses input file directly.'),
                make_option('--skip_peak_finding',action='store_true', dest='skip_peak_finding', default=False, 
@@ -173,6 +175,8 @@ if __name__ == '__main__':
     
     if not options.skip_bowtie:
         _print('Processing FASTQ file using bowtie.')
+        if not options.skip_trim:
+            trim_sequences(options, file_name)
         bowtie_file_path = call_bowtie(options, file_name, suppress_columns=False)
     else:
         _print('Skipping bowtie.')

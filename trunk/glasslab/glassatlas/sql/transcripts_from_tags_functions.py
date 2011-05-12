@@ -105,7 +105,7 @@ CREATE OR REPLACE FUNCTION glass_atlas_%s_%s_prep.determine_transcripts_from_seq
 RETURNS SETOF glass_atlas_%s_%s_prep.glass_transcript_row AS $$
 BEGIN 
 
-    RETURN QUERY SELECT * FROM glass_atlas_%s_%s_prep.determine_transcripts_from_table(chr_id, strand, source_t, max_gap, tag_extension,'', false, false, start_end);
+    RETURN QUERY SELECT * FROM glass_atlas_%s_%s_prep.determine_transcripts_from_table(chr_id, strand, source_t, max_gap, tag_extension,'', false, start_end);
 END;
 $$ LANGUAGE 'plpgsql';
 

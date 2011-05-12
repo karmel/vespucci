@@ -77,8 +77,23 @@ def _query_export(request, context):
     response = HttpResponse(data, mimetype='text/tab-separated-values')
     response['Content-Disposition'] = 'attachment; filename=custom_query_%s.tsv' % randint(0,9999)
     return response
+
+@login_required
+def restore_query(request, id):
+    q = SavedQuery.objects.get(id=id)
+    context = _custom_query(request, limit=100000, query=q.query)
+    stored_results = _restore_query(request, context)
+    q.stored_results = stored_results
+    q.save()
+    return HttpResponseRedirect('/transcript/stored_results/%d/' % q.id)
+
+def _restore_query(request, context):
+    data = render_to_string('custom_query_export.txt',
+                              context,
+                              context_instance=RequestContext(request))
+    return data
         
-def _custom_query(request, limit=10000):
+def _custom_query(request, limit=10000, query=None):
     '''
     DANGEROUS! Accepts custom, raw SQL queries for searches.
     
@@ -89,7 +104,7 @@ def _custom_query(request, limit=10000):
         return redirect('/admin/')
     
     rows, field_names = [], []
-    query = request.REQUEST.get('query', '')
+    query = query or request.REQUEST.get('query', '')
     if query:
         rows, cursor = fetch_rows(query, return_cursor=True, using='read_only')
         field_names = cursor.description
