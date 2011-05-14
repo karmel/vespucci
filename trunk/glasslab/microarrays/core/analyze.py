@@ -63,11 +63,14 @@ class MicroarrayAnalyzer(object):
         and two separate matrices of values, with each column separated depending on 
         whether or not it is a control. 
         '''
+        # Zero out negative values by shifting upwards
+        offsets = [min([0,min(col)]) for col in numpy.transpose(self.matrix)]
+
         self.control_samples = [sample for sample in self.samples if sample.control]
         self.test_samples = [sample for sample in self.samples if not sample.control]
-        control_matrix = [self.matrix[:,i] for i,sample 
+        control_matrix = [self.matrix[:,i] - offsets[i] for i,sample 
                           in enumerate(self.samples) if sample.control]
-        test_matrix = [self.matrix[:,i] for i,sample 
+        test_matrix = [self.matrix[:,i] - offsets[i] for i,sample 
                        in enumerate(self.samples) if not sample.control]
         
         # Sometimes we have fewer controls than samples; reuse the controls for comparison
@@ -143,9 +146,12 @@ class MicroarrayAnalyzer(object):
         if self.normalization_factors is None: self.set_total_intensity_normalization_factors()
         log_transformations = []
         for i,ratio_col in enumerate(numpy.transpose(self.expression_ratios)):
-            col_transformations = [(math.log(ratio,2) - math.log(self.normalization_factors[i],2))
-                                   for ratio in ratio_col]
-            log_transformations.append(col_transformations)
+            try:
+                col_transformations = [(math.log(ratio,2) - math.log(self.normalization_factors[i],2))
+                                       for ratio in ratio_col]
+                log_transformations.append(col_transformations)
+            except ValueError:
+                raise
         self.log_transformations = numpy.transpose(numpy.array(log_transformations))
         
     def set_mean_log_transformations(self):

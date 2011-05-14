@@ -65,11 +65,11 @@ def bowtie_to_bed(options, file_name, bowtie_file_path):
                                 % traceback.format_exc())
     return bed_file_path
 
-def call_macs(options, file_name, bowtie_file_path):
+def call_macs(options, file_name, bowtie_file_path, type='BOWTIE'):
     # Note that MACS does not allow output file specification; cd inline to force output into directory
-    macs_command = 'cd %s && macs -t %s -n %s -g %s -f BOWTIE' % (options.output_dir,
+    macs_command = 'cd %s && macs -t %s -n %s -g %s -f %s' % (options.output_dir,
                                                                   bowtie_file_path, file_name, 
-                                                                  'hs' and options.genome[:2] == 'hg' or 'mm')
+                                                                  'hs' and options.genome[:2] == 'hg' or 'mm', type)
     if options.control: macs_command += ' -c %s' % options.control
     
     try: subprocess.check_call(macs_command, shell=True)
@@ -189,7 +189,10 @@ if __name__ == '__main__':
                                           (options.peak_type or options.project_name))
         if not peak_type.diffuse:
             _print('Processing bowtie file using MACS')
-            peaks_file_path = call_macs(options, file_name, bowtie_file_path)
+            if options.skip_bed:
+                # File is a bed file already, not a BOWTIE file
+                peaks_file_path = call_macs(options, file_name, bowtie_file_path, type='BED')
+            else: peaks_file_path = call_macs(options, file_name, bowtie_file_path)
         else:
             if not options.skip_bed:
                 _print('Converting bowtie file to BED')

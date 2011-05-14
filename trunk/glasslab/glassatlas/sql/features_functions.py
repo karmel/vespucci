@@ -5,7 +5,7 @@ Created on Nov 12, 2010
 
 Convenience script for feature association functions.
 '''
-genome = 'gap3_200_10_1000'
+genome = 'mm9'
 cell_type='thiomac'
 def sql(genome, cell_type):
     return """
@@ -29,8 +29,8 @@ DECLARE
     rec record;
 	padding integer := 2000;
 	existing_feature glass_atlas_%s_%s.peak_feature;
-	instance glass_atlas_%s_%s.peak_feature_instance;
 	distance integer;
+	peak_touches boolean;
 BEGIN    
 	-- Find relevant peaks
 	FOR rec in 
@@ -39,6 +39,8 @@ BEGIN
 	       glass_peak.id as glass_peak_id,
 	       glass_peak."end" as glass_peak_end,
 	       glass_peak.start as glass_peak_start,
+	       glass_peak.length as glass_peak_length,
+	       glass_peak.tag_count as tag_count,
            (CASE WHEN transcript.start_end ~= glass_peak.start_end THEN
                 glass_atlas_%s_%s.glass_transcript_feature_relationship(''is equal to'')
             WHEN transcript.start_end @> glass_peak.start_end THEN
@@ -67,45 +69,45 @@ BEGIN
         AND glass_peak.chromosome_id = ' || chr_id 
     LOOP
         IF (rec.id IS NOT NULL) THEN
-            -- Find or create peak_feature_instance record
-            instance := (SELECT (inst.*)::glass_atlas_%s_%s.peak_feature_instance inst
-                            FROM glass_atlas_%s_%s.peak_feature_instance inst
-                            JOIN glass_atlas_%s_%s.peak_feature feat
-                            ON inst.peak_feature_id = feat.id
-                            WHERE inst.glass_peak_id = rec.glass_peak_id
-                            AND inst.sequencing_run_id = run.id
-                            AND feat.glass_transcript_id = rec.id);
+            -- Find or create feature record
+            existing_feature := (SELECT (feat.*)::glass_atlas_%s_%s.peak_feature
+                            FROM glass_atlas_%s_%s.peak_feature feat
+                            WHERE feat.glass_transcript_id = rec.id
+                            AND feat.glass_peak_id = rec.glass_peak_id
+                            AND feat.sequencing_run_id = run.id);
         	
-        	-- Find or create peak_feature record
-        	existing_feature := (SELECT (feature.*)::glass_atlas_%s_%s.peak_feature FROM glass_atlas_%s_%s.peak_feature feature 
-        	                        WHERE glass_transcript_id = rec.id
-        	                        AND peak_type_id = run.peak_type_id
-        	                        AND relationship = rec.relationship);
-        	IF existing_feature IS NULL THEN
-        	    INSERT INTO glass_atlas_%s_%s.peak_feature 
-                    (glass_transcript_id, peak_type_id, relationship) VALUES
-                    (rec.id, run.peak_type_id, rec.relationship) RETURNING * INTO existing_feature;
+        	IF rec.relationship = glass_atlas_%s_%s.glass_transcript_feature_relationship('is downstream of')
+                OR rec.relationship = glass_atlas_%s_%s.glass_transcript_feature_relationship('is upstream of')
+                THEN peak_touches := false;
+            ELSE peak_touches := true;
             END IF;
-            
+        
             -- Find the absolute val of the distance from the midpoint of the peak to the tss 
-            distance := (SELECT abs((rec.glass_peak_end + rec.glass_peak_start)/2::integer
-                                    - (CASE WHEN rec.strand = 0 THEN rec.transcription_start ELSE rec.transcription_end END)));
-            IF instance IS NULL THEN
-                INSERT INTO glass_atlas_%s_%s.peak_feature_instance
-                    (peak_feature_id, sequencing_run_id, glass_peak_id, distance_to_tss) VALUES
-                    (existing_feature.id, run.id, rec.glass_peak_id, distance) RETURNING * INTO instance;
+            
+            distance := (SELECT (rec.glass_peak_start + rec.glass_peak_length/2.0)::integer
+                                - (CASE WHEN rec.strand = 0 THEN rec.transcription_start ELSE rec.transcription_end END));
+            
+            IF existing_feature IS NULL THEN
+                INSERT INTO glass_atlas_%s_%s.peak_feature
+                    (glass_transcript_id, glass_peak_id, sequencing_run_id, peak_type_id, 
+                    relationship, touches, length, tag_count, distance_to_tss) VALUES
+                    (rec.id, rec.glass_peak_id, run.id, run.peak_type_id,
+                    rec.relationship, peak_touches, rec.glass_peak_length, rec.tag_count, distance) 
+                    RETURNING * INTO existing_feature;
             ELSE
-                UPDATE glass_atlas_%s_%s.peak_feature_instance 
-                    SET peak_feature_id = existing_feature.id,
-                        distance_to_tss = distance WHERE id = instance.id;
+                UPDATE glass_atlas_%s_%s.peak_feature 
+                    SET 
+                        peak_type_id = run.peak_type_id,
+                        relationship = rec.relationship,
+                        touches = peak_touches,
+                        length = rec.glass_peak_length,
+                        tag_count = rec.tag_count,
+                        distance_to_tss = distance 
+                    WHERE id = existing_feature.id;
             END IF;
     	END IF;
     END LOOP;
     
-    -- Finally, remove any peak features that have been de-associated
-    DELETE FROM glass_atlas_%s_%s.peak_feature WHERE id NOT IN (
-        SELECT DISTINCT peak_feature_id FROM glass_atlas_%s_%s.peak_feature_instance);
-        
 	RETURN;
 END;
 $$ LANGUAGE 'plpgsql';
@@ -128,7 +130,7 @@ END;
 $$ LANGUAGE 'plpgsql';
 	
 
-""" % tuple([genome, cell_type]*25)
+""" % tuple([genome, cell_type]*20)
 
 if __name__ == '__main__':
     print sql(genome, cell_type)

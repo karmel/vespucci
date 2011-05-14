@@ -120,10 +120,6 @@ class CellTypeBase(object):
     def peak_feature(self): 
         from glasslab.glassatlas.datatypes.feature import PeakFeature
         return PeakFeature
-    @property
-    def peak_feature_instance(self):
-        from glasslab.glassatlas.datatypes.feature import PeakFeatureInstance 
-        return PeakFeatureInstance
     
     def get_transcript_models(self):
         return [self.glass_transcript, self.filtered_glass_transcript,
@@ -131,7 +127,7 @@ class CellTypeBase(object):
                 self.glass_transcript_sequence, self.glass_transcript_non_coding,
                 self.glass_transcript_patterned, self.glass_transcript_conserved,
                 self.glass_transcribed_rna, self.glass_transcribed_rna_source,
-                self.peak_feature, self.peak_feature_instance]
+                self.peak_feature]
 
     def get_cell_type_base(self, cell_type):
         correlations = self.__class__.get_correlations()

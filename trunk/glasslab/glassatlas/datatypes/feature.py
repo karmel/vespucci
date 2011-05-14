@@ -24,16 +24,21 @@ class PeakFeature(GlassModel):
     # Transcript is cell specific.
     glass_transcript = None
     relationship    = models.CharField(max_length=100)
-    peak_type   = models.ForeignKey(PeakType)
+    peak_type       = models.ForeignKey(PeakType)
+    glass_peak_id   = models.IntegerField(max_length=12)
+    sequencing_run  = models.ForeignKey(SequencingRun)
+    length          = models.IntegerField(max_length=12)
+    tag_count       = models.IntegerField(max_length=12)
+    distance_to_tss = models.IntegerField(max_length=12)
     
     class Meta:
         abstract    = True
           
     def __unicode__(self):
-        return '%s %s %s (Avg Dist from Peak Center to TSS: %d)' % (str(self.glass_transcript), 
+        return '%s %s %s (Dist to TSS: %d)' % (str(self.glass_transcript), 
                              self.relationship.strip(),
                              str(self.peak_type),
-                             self.peak_feature_instance_set.aggregate(dist=Avg('distance_to_tss'))['dist'])
+                             self.distance_to_tss)
         
     @classmethod 
     def add_from_peaks(cls,  tag_table):
@@ -78,22 +83,3 @@ class PeakFeature(GlassModel):
                        chr_id, 
                        run_requires_reload_only and 'true' or 'false')
             execute_query(query)
-            
-class PeakFeatureInstance(GlassModel):
-    ''' 
-    Record of an individual peak and source to a feature assigned to a glass transcript.
-    '''
-    # PeakFeature is cell specific.
-    glass_peak_id   = models.IntegerField(max_length=12)
-    sequencing_run  = models.ForeignKey(SequencingRun)
-    
-    distance_to_tss = models.IntegerField(max_length=12)
-    
-    class Meta:
-        abstract    = True
-          
-    def __unicode__(self):
-        return '%s from %s (%d to TSS)' % (str(self.peak_feature), 
-                                           str(self.sequencing_run), 
-                                           self.distance_to_tss)
-

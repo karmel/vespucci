@@ -80,14 +80,6 @@ def _query_export(request, context):
 
 @login_required
 def restore_query(request, id):
-    if int(id) == 0:
-        qs = SavedQuery.objects.filter(id__gte=38).exclude(id__in=[68,69,70]).order_by('-id')
-        for q in qs:
-            context = _custom_query(request, limit=100000, query=q.query)
-            stored_results = _restore_query(request, context)
-            q.stored_results = stored_results
-            q.save()
-        return
     q = SavedQuery.objects.get(id=id)
     context = _custom_query(request, limit=100000, query=q.query)
     stored_results = _restore_query(request, context)

@@ -15,8 +15,7 @@ from django.utils.safestring import mark_safe
 from glasslab.glassatlas.datatypes.transcribed_rna import GlassTranscribedRna,\
     GlassTranscribedRnaSource
 from django.db.models.aggregates import Sum
-from glasslab.glassatlas.datatypes.feature import PeakFeature,\
-    PeakFeatureInstance
+from glasslab.glassatlas.datatypes.feature import PeakFeature
 
 class NucleotideSequenceInput(ReadOnlyInput):
     '''
@@ -133,10 +132,6 @@ class PeakFeatureInline(ReadOnlyInline):
     model = PeakFeature
     readonly_fields = make_all_fields_readonly(model)
 
-class PeakFeatureInstanceInline(ReadOnlyInline):
-    model = PeakFeatureInstance
-    readonly_fields = make_all_fields_readonly(model)
-    
 class TranscriptBase(ReadOnlyAdmin):
     ordering        = ('chromosome','transcription_start')
     search_fields   = ['transcription_start','transcription_end',]

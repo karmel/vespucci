@@ -7,15 +7,14 @@ from glasslab.atlasviewer.transcript.admin.base import GlassTranscriptAdmin,\
     GlassTranscribedRnaAdmin, GlassTranscriptSequenceInline,\
     GlassTranscriptNonCodingInline, GlassTranscriptSourceInline,\
     GlassTranscribedRnaInline, GlassTranscriptNucleotidesInline,\
-    PeakFeatureInline, PeakFeatureInstanceInline, PeakFeatureAdmin,\
+    PeakFeatureInline, PeakFeatureAdmin,\
     GlassTranscriptPrepAdmin, GlassTranscriptSourcePrepInline
 from glasslab.glassatlas.datatypes.celltypes.thiomac import FilteredGlassTranscriptThioMac,\
     GlassTranscriptThioMac, GlassTranscribedRnaThioMac,\
     GlassTranscriptSequenceThioMac, GlassTranscriptSourceThioMac,\
     GlassTranscriptNonCodingThioMac, GlassTranscriptNucleotidesThioMac,\
     GlassTranscribedRnaSourceThioMac, PeakFeatureThioMac,\
-    PeakFeatureInstanceThioMac, GlassTranscriptSourcePrepThioMac,\
-    GlassTranscriptPrepThioMac
+    GlassTranscriptSourcePrepThioMac, GlassTranscriptPrepThioMac
 from django.contrib import admin
 
 
@@ -37,9 +36,6 @@ class GlassTranscribedRnaThioMacInline(GlassTranscribedRnaInline):
 class GlassTranscriptNucleotidesThioMacInline(GlassTranscriptNucleotidesInline):
     model = GlassTranscriptNucleotidesThioMac
 
-class PeakFeatureInstanceThioMacInline(PeakFeatureInstanceInline):
-    model = PeakFeatureInstanceThioMac
-
 class PeakFeatureThioMacInline(PeakFeatureInline):
     model = PeakFeatureThioMac
     
@@ -60,9 +56,8 @@ class GlassTranscribedRnaThioMacAdmin(GlassTranscribedRnaAdmin):
     inlines         = [GlassTranscribedRnaSourceThioMacInline,]
 
 class PeakFeatureThioMacAdmin(PeakFeatureAdmin):
-    inlines = [PeakFeatureInstanceThioMacInline,]
-     
-    
+    pass
+
 admin.site.register(FilteredGlassTranscriptThioMac, GlassTranscriptThioMacAdmin)
 admin.site.register(GlassTranscriptThioMac, GlassTranscriptThioMacAdmin)
 admin.site.register(GlassTranscriptPrepThioMac, GlassTranscriptPrepThioMacAdmin)
