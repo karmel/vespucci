@@ -163,21 +163,40 @@ class GlassPeak(GlassSequencingOutput):
         return cls._peak_type
     
     @classmethod 
-    def add_record_of_tags(cls, description='', type='ChIP-Seq', peak_type=None):
+    def add_record_of_tags(cls, description='', type='ChIP-Seq', peak_type=None, stats_file=None):
         '''
         Add SequencingRun record with the details of this run.
         
         Should be called only after all tags have been added.
         ''' 
         connection.close()
+        # If possible, retrieve bowtie stats
+        try:
+            f = file(stats_file)
+            for i,line in enumerate(f.readlines()):
+                if i > 4: raise Exception # Something is wrong with this file
+                if line.find('reads with at least one reported alignment') >= 0:
+                    pieces = line.split()
+                    percent_mapped = float(re.search('([\d\.]+)',pieces[-1:][0]).group(0))
+                    total_tags = int(re.search('([\d]+)',pieces[-2:][0]).group(0))
+                    break
+        except: 
+            percent_mapped = None
+            total_tags = None
+            
         s, created = SequencingRun.objects.get_or_create(source_table=cls._meta.db_table,
                                         defaults={'name': cls.name, 
-                                                  'total_tags': cls.objects.count(),
+                                                  'total_tags': total_tags,
                                                   'description': description,
                                                   'cell_type': current_settings.CURRENT_CELL_TYPE,
                                                   'type': type,
-                                                  'peak_type': peak_type or cls.peak_type() }
+                                                  'peak_type': peak_type or cls.peak_type(),
+                                                  'percent_mapped': percent_mapped }
                                                )
+        if not created: 
+            s.total_tags = total_tags
+            s.percent_mapped = percent_mapped
+            s.save() 
         return s
     
 class HomerPeak(GlassSequencingOutput):
