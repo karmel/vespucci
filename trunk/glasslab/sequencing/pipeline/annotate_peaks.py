@@ -110,7 +110,7 @@ def import_peaks(options, file_name, peaks_file_path, peak_type):
         peak.save()
     
     GlassPeak.add_indices()
-    GlassPeak.add_record_of_tags(peak_type=peak_type)
+    GlassPeak.add_record_of_tags(peak_type=peak_type,stats_file=getattr(options,'bowtie_stats_file',None))
     
 def annotate_peaks(options):
     '''

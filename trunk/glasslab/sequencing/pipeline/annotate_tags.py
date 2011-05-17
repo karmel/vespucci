@@ -121,7 +121,7 @@ def translate_bowtie_columns(file_name):
     GlassTag.create_parent_table(file_name)
     GlassTag.create_partition_tables()
     GlassTag.translate_from_bowtie()
-    GlassTag.add_record_of_tags()
+    GlassTag.add_record_of_tags(getattr(options,'bowtie_stats_file',None))
     
 def add_indices():
     # Execute after all the ends have been calculated,
