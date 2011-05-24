@@ -170,20 +170,8 @@ class GlassPeak(GlassSequencingOutput):
         Should be called only after all tags have been added.
         ''' 
         connection.close()
-        # If possible, retrieve bowtie stats
-        try:
-            f = file(stats_file)
-            for i,line in enumerate(f.readlines()):
-                if i > 4: raise Exception # Something is wrong with this file
-                if line.find('reads with at least one reported alignment') >= 0:
-                    pieces = line.split()
-                    percent_mapped = float(re.search('([\d\.]+)',pieces[-1:][0]).group(0))
-                    total_tags = int(re.search('([\d]+)',pieces[-2:][0]).group(0))
-                    break
-        except: 
-            percent_mapped = None
-            total_tags = None
-            
+        total_tags, percent_mapped = cls.get_bowtie_stats(stats_file)
+        wt, notx, kla, other_conditions, timepoint = cls.parse_attributes_from_name()
         s, created = SequencingRun.objects.get_or_create(source_table=cls._meta.db_table,
                                         defaults={'name': cls.name, 
                                                   'total_tags': total_tags,
@@ -191,11 +179,18 @@ class GlassPeak(GlassSequencingOutput):
                                                   'cell_type': current_settings.CURRENT_CELL_TYPE,
                                                   'type': type,
                                                   'peak_type': peak_type or cls.peak_type(),
-                                                  'percent_mapped': percent_mapped }
+                                                  'percent_mapped': percent_mapped,
+                                                  'wt': wt,
+                                                  'notx': notx,
+                                                  'kla': kla,
+                                                  'other_conditions': other_conditions,
+                                                  'timepoint': timepoint, }
                                                )
         if not created: 
             s.total_tags = total_tags
             s.percent_mapped = percent_mapped
+            s.wt, s.notx, s.kla, s.other_conditions = wt, notx, kla, other_conditions 
+            s.timepoint = timepoint  
             s.save() 
         return s
     

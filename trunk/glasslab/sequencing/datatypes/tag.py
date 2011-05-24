@@ -108,6 +108,51 @@ class GlassSequencingOutput(DynamicTable):
     
     class Meta: abstract = True
     
+    @classmethod
+    def get_bowtie_stats(cls, stats_file=None):
+        # If possible, retrieve bowtie stats
+        try:
+            f = file(stats_file)
+            for i,line in enumerate(f.readlines()):
+                if i > 4: raise Exception # Something is wrong with this file
+                if line.find('reads with at least one reported alignment') >= 0:
+                    pieces = line.split()
+                    total_tags = int(re.search('([\d]+)',pieces[-2:][0]).group(0))
+                    percent_mapped = str(float(re.search('([\d\.]+)',pieces[-1:][0]).group(0)))
+                    break
+        except Exception, e: 
+            print e
+            total_tags, percent_mapped = None, None
+        return total_tags, percent_mapped
+    
+    @classmethod
+    def parse_attributes_from_name(cls):
+        '''
+        If possible, parse run attributes from name::
+            
+            wt_kla_1h_dex_2h_05_11 ==> wt, kla, 2h, other_conditions
+        
+        '''
+        wt, notx, kla, other_conditions = True, True, True, False 
+        timepoint = ''
+        pieces = filter(lambda x: not x.isdigit(), cls.name.split('_'))
+        try: pieces.remove('wt') 
+        except ValueError: wt = False
+        try: pieces.remove('notx') 
+        except ValueError: notx = False
+        try: pieces.remove('kla') 
+        except ValueError: kla = False
+        try:
+            time = re.search('\d+[hms]',pieces[-1:][0]).group(0)
+            if time == pieces[-1:][0]: 
+                timepoint = time
+                pieces = pieces[:-1]
+        except (IndexError, AttributeError): pass
+        # Still details left over?
+        if len(pieces): other_conditions = True
+        
+        return wt, notx, kla, other_conditions, timepoint
+    
 class GlassTag(GlassSequencingOutput):
     '''
     From bowtie::
@@ -348,9 +393,9 @@ class GlassTag(GlassSequencingOutput):
             -- IGNORE strand, since either side match is a match
             UPDATE "%s_%d" tag 
             SET polya = true 
-            FROM genome_reference_mm9.tag_polya_region_%d pol
-            WHERE tag.start_end @> pol.start_end
-            AND polya IS NULL;
+            FROM glass_atlas_mm9_polya.glass_transcript_%d pol
+            WHERE pol.start_end && tag.start_end
+            AND tag.polya IS NULL;
 
             UPDATE "%s_%d" tag 
             SET polya = false 
@@ -401,17 +446,8 @@ class GlassTag(GlassSequencingOutput):
         '''
         connection.close()
         # If possible, retrieve bowtie stats
-        try:
-            f = file(stats_file)
-            for i,line in enumerate(f.readlines()):
-                if i > 4: raise Exception # Something is wrong with this file
-                if line.find('reads with at least one reported alignment') >= 0:
-                    pieces = line.split()
-                    percent_mapped = float(re.search('([\d\.]+)',pieces[-1:][0]).group(0))
-                    break
-        except: 
-            percent_mapped = None
-            
+        total_tags, percent_mapped = cls.get_bowtie_stats(stats_file)
+        wt, notx, kla, other_conditions, timepoint = cls.parse_attributes_from_name()
         s, created = SequencingRun.objects.get_or_create(source_table=cls._meta.db_table,
                                         defaults={'name': cls.name, 
                                                   'total_tags': cls.objects.count(),
@@ -419,11 +455,19 @@ class GlassTag(GlassSequencingOutput):
                                                   'cell_type': current_settings.CURRENT_CELL_TYPE,
                                                   'type': type,
                                                   'standard': standard,
-                                                  'percent_mapped': percent_mapped }
+                                                  'percent_mapped': percent_mapped,
+                                                  'wt': wt,
+                                                  'notx': notx,
+                                                  'kla': kla,
+                                                  'other_conditions': other_conditions,
+                                                  'timepoint': timepoint,
+                                                   }
                                                )
         if not created: 
             s.total_tags = cls.objects.count()
             s.percent_mapped = percent_mapped
+            s.wt, s.notx, s.kla, s.other_conditions = wt, notx, kla, other_conditions 
+            s.timepoint = timepoint 
             s.save() 
         return s
 
@@ -447,43 +491,7 @@ class GlassTag(GlassSequencingOutput):
         tag.strand = bowtie_row[0] == '-' and 1 or 0
         tag.save()
         connection.close()
-        
-    @classmethod
-    def generate_bed_file(cls, output_dir):
-        '''
-        Generates a BED file (http://genome.ucsc.edu/FAQ/FAQformat.html#format1)
-        of all the tags and their exons for viewing in the UCSC Genome Browser.
-        '''
-        
-        transcripts = cls.objects.order_by('chromosome__id','start')
-        cls._generate_bed_file(output_dir, transcripts, strand=0)
-        cls._generate_bed_file(output_dir,transcripts, strand=1)
-        
-    @classmethod
-    def _generate_bed_file(cls, output_dir, transcripts, strand=0):
-        file_name = 'Glass_Transcripts_%s_%d.bed' % (datetime.now().strftime('%Y_%m_%d'), strand)
-        file_path = os.path.join(output_dir, file_name)
-        
-        transcripts = transcripts.filter(strand=strand)
-        
-        strand_char = strand and '-' or '+'
-        output = 'track name=%s_%d description="Glass Atlas %s Tags %s strand" useScore=1 itemRgb=On\n' \
-                        % (cls.name, strand, cls.name, strand_char)
-        
-        for trans in transcripts:
-            # chrom start end name score strand thick_start thick_end colors? exon_count csv_exon_sizes csv_exon_starts
-            start = max(0,trans.start)
-            end = min(trans.chromosome.length - 1,trans.end)
-            row = [trans.chromosome.name, str(start), str(end), 
-                   'Tag_' + str(trans.id),
-                   trans.strand and '-' or '+', str(start), str(end), 
-                   trans.strand and '0,255,0' or '0,0,255']
-            output += '\t'.join(row) + '\n'
-        
-        f = open(file_path, 'w')
-        f.write(output)
-        f.close()
-        
+
 class GlassTagTranscriptionRegionTable(DynamicTable):
     glass_tag       = models.ForeignKey(GlassTag)
     
@@ -493,7 +501,7 @@ class GlassTagTranscriptionRegionTable(DynamicTable):
     
     class Meta: abstract = True
     
-    @classmethod        
+    @classmethod
     def create_table(cls, name):
         '''
         Create table that will be used for these tags,

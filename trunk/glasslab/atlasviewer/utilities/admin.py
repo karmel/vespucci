@@ -11,6 +11,7 @@ from glasslab.atlasviewer.utilities.models import SavedQuery
 class SavedQueryAdmin(admin.ModelAdmin):
     list_display    = ('id','topic', 'name', 'query_link','stored_link','restore_link')
     list_filter     = ('topic',)
+    search_fields   = ('topic','name','query')
     ordering        = ('-modified','topic','name')
     
     save_as = True

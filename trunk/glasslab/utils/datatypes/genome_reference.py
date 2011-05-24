@@ -228,6 +228,32 @@ class PatternedTranscriptionRegion(GlassModel):
 
     def __unicode__(self):
         return 'Patterned Transcription Region for %s %s' % (self.type, self.name.strip())
+
+class DupedTranscriptionRegion(GlassModel):
+    '''
+    Mappings of segmental duplication regions from the UCSC DB
+    '''
+    name                = models.CharField(max_length=100)
+    chromosome          = models.ForeignKey(Chromosome)
+    strand              = models.IntegerField(max_length=1, help_text='0 for +, 1 for -. Default NULL')
+    transcription_start = models.IntegerField(max_length=12)
+    transcription_end   = models.IntegerField(max_length=12)
+    
+    start_end           = BoxField(null=True, default=None, help_text='This is a placeholder for the PostgreSQL box type.')
+    
+    score               = models.IntegerField(max_length=5)
+    
+    other_chromosome          = models.ForeignKey(Chromosome)
+    other_strand              = models.IntegerField(max_length=1, help_text='0 for +, 1 for -. Default NULL')
+    other_transcription_start = models.IntegerField(max_length=12)
+    other_transcription_end   = models.IntegerField(max_length=12)
+    
+    class Meta: 
+        db_table    = 'genome_reference_%s"."duped_transcription_region' % current_settings.REFERENCE_GENOME
+        app_label   = 'Genome_Reference'
+
+    def __unicode__(self):
+        return 'Duped Transcription Region for %s %s' % (self.type, self.name.strip())
     
 class ConservedTranscriptionRegion(GlassModel):
     '''

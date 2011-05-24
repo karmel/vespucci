@@ -71,6 +71,7 @@ if __name__ == '__main__':
         cell_base.glass_transcript.force_vacuum()
 
     if options.draw_edges:
+        current_settings.STAGING = '_staging'
         cell_base.glass_transcript.draw_transcript_edges()
         cell_base.glass_transcript.force_vacuum()
     

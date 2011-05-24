@@ -43,9 +43,10 @@ class GlassTranscribedRna(TranscriptionRegionBase):
         for chr_id in chr_list:
             print 'Adding transcribed RNA for chromosome %d' % chr_id
             query = """
-                SELECT glass_atlas_%s_%s_rna.save_transcribed_rna_from_sequencing_run(%d, %d,'%s', %d, %d, NULL);
+                SELECT glass_atlas_%s_%s_rna%s.save_transcribed_rna_from_sequencing_run(%d, %d,'%s', %d, %d, NULL);
                 """ % (current_settings.TRANSCRIPT_GENOME,
                        current_settings.CURRENT_CELL_TYPE.lower(),
+                       current_settings.STAGING,
                        sequencing_run.id, chr_id, 
                        sequencing_run.source_table.strip(), 
                        MAX_GAP_RNA, TAG_EXTENSION)
@@ -63,9 +64,10 @@ class GlassTranscribedRna(TranscriptionRegionBase):
         for chr_id in chr_list:
             print 'Stitching together transcribed RNA for chromosome %d' % chr_id
             query = """
-                SELECT glass_atlas_%s_%s_rna.save_transcribed_rna_from_existing(%d, %d, %s);
+                SELECT glass_atlas_%s_%s_rna%s.save_transcribed_rna_from_existing(%d, %d, %s);
                 """ % (current_settings.TRANSCRIPT_GENOME, 
                        current_settings.CURRENT_CELL_TYPE.lower(),
+                       current_settings.STAGING,
                        chr_id, MAX_GAP_RNA,'false')
             execute_query(query)
     
@@ -78,9 +80,10 @@ class GlassTranscribedRna(TranscriptionRegionBase):
         for chr_id in chr_list:
             print 'Associating transcripts with transcribed RNA for chromosome %d' % chr_id
             query = """
-                SELECT glass_atlas_%s_%s.associate_transcribed_rna(%d);
+                SELECT glass_atlas_%s_%s%s.associate_transcribed_rna(%d);
                 """ % (current_settings.TRANSCRIPT_GENOME, 
-                       current_settings.CURRENT_CELL_TYPE.lower(), chr_id)
+                       current_settings.CURRENT_CELL_TYPE.lower(),
+                       current_settings.STAGING, chr_id)
             execute_query(query) 
             
     @classmethod
@@ -92,9 +95,10 @@ class GlassTranscribedRna(TranscriptionRegionBase):
         for chr_id in chr_list:
             print 'Scoring transcribed_rna for chromosome %d' % chr_id
             query = """
-                SELECT glass_atlas_%s_%s.calculate_scores_transcribed_rna(%d);
+                SELECT glass_atlas_%s_%s%s.calculate_scores_transcribed_rna(%d);
                 """ % (current_settings.TRANSCRIPT_GENOME,
-                       current_settings.CURRENT_CELL_TYPE.lower(), chr_id)
+                       current_settings.CURRENT_CELL_TYPE.lower(), 
+                       current_settings.STAGING, chr_id)
             execute_query(query) 
 
 

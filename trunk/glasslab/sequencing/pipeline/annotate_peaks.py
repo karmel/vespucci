@@ -181,6 +181,7 @@ if __name__ == '__main__':
     else:
         _print('Skipping bowtie.')
         bowtie_file_path = options.file_path
+        options.bowtie_stats_file = os.path.join(options.output_dir,'%s_bowtie_stats_summary.txt' % file_name)
     
     if not options.skip_peak_finding: 
         peak_type = GlassPeak.peak_type(options.peak_type or options.project_name)

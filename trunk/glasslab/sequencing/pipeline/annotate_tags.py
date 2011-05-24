@@ -54,8 +54,6 @@ class FastqOptionParser(GlassOptionParser):
                            help='Skip transferring bowtie tags to table; bowtie tag table will be used directly.'),
                make_option('--skip_tag_table',action='store_true', dest='skip_tag_table',
                            help='Skip transferring tags to table; tag table will be used directly.'),
-               make_option('--generate_bed',action='store_true', dest='generate_bed',
-                           help='Generate BED tracks of the tag regions?'),
                
                ]
     
@@ -117,11 +115,11 @@ def translate_bowtie_columns(file_name):
     '''
     Transfer bowtie tags to indexed, streamlined Glass tags for annotation.
     '''
-    GlassTag.set_table_name('tag_' + file_name)
+    #GlassTag.set_table_name('tag_' + file_name)
     GlassTag.create_parent_table(file_name)
     GlassTag.create_partition_tables()
     GlassTag.translate_from_bowtie()
-    GlassTag.add_record_of_tags(getattr(options,'bowtie_stats_file',None))
+    GlassTag.add_record_of_tags(stats_file=getattr(options,'bowtie_stats_file',None))
     
 def add_indices():
     # Execute after all the ends have been calculated,
@@ -180,6 +178,7 @@ if __name__ == '__main__':
     else:
         _print('Skipping bowtie.')
         bowtie_file_path = options.file_path
+        options.bowtie_stats_file = os.path.join(options.output_dir,'%s_bowtie_stats_summary.txt' % file_name)
     
     if not options.skip_tag_table:
         
@@ -201,8 +200,4 @@ if __name__ == '__main__':
     else:
         _print('Skipping creation of tag table')
         GlassTag.set_table_name('tag_' + file_name)
-    
-    if options.generate_bed:
-        _print('Generating BED file')
-        GlassTag.generate_bed_file(options.output_dir)
     

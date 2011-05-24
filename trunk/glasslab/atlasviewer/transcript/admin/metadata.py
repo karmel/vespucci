@@ -16,6 +16,7 @@ class SequencingRunAdmin(admin.ModelAdmin):
     list_display    = ('type', 'cell_type','description', 'source_table', 'total_tags','percent_mapped')
     list_filter     = ('type','cell_type','standard','requires_reload','timepoint','wt','notx','kla','other_conditions')
     ordering        = ('-modified',)
+    search_fields   = ('description','source_table')
     inlines         = [SequencingRunAnnotationInline]
 
 class PeakTypeAdmin(admin.ModelAdmin):

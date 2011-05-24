@@ -8,7 +8,8 @@ from glasslab.config import current_settings
 from django.db import models, connection
 from glasslab.utils.datatypes.genome_reference import Chromosome,\
     SequenceTranscriptionRegion, PatternedTranscriptionRegion,\
-    ConservedTranscriptionRegion, NonCodingTranscriptionRegion
+    ConservedTranscriptionRegion, NonCodingTranscriptionRegion,\
+    DupedTranscriptionRegion
 from glasslab.glassatlas.datatypes.metadata import SequencingRun,\
     ExpectedTagCount
 from glasslab.sequencing.datatypes.tag import multiprocess_glass_tags,\
@@ -181,9 +182,10 @@ class TranscriptionRegionBase(TranscriptModelBase):
         Dynamically reset the current db_table name. Useful for 
         switching between test DBs.
         '''
-        cls._meta.db_table = 'glass_atlas_%s_%s"."glass_transcript' % (
+        cls._meta.db_table = 'glass_atlas_%s_%s%s"."glass_transcript' % (
                                 genome or current_settings.TRANSCRIPT_GENOME, 
-                                cls.cell_base.cell_type.lower())
+                                cls.cell_base.cell_type.lower(),
+                                current_settings.STAGING)
         
     @classmethod 
     def add_from_tags(cls,  tag_table):
@@ -373,16 +375,18 @@ class GlassTranscript(TranscriptBase):
             print 'Drawing edges for transcripts for chromosome %d' % chr_id
             query = """
                 -- @todo: delete existing tables?
-                SELECT glass_atlas_%s_%s.draw_transcript_edges(%d);
+                SELECT glass_atlas_%s_%s%s.draw_transcript_edges(%d);
                 """ % (current_settings.TRANSCRIPT_GENOME, 
                        current_settings.CURRENT_CELL_TYPE.lower(),
+                       current_settings.STAGING,
                        chr_id)
             execute_query(query)
             print 'Setting average tags for transcripts for chromosome %d' % chr_id
             query = """
-                SELECT glass_atlas_%s_%s.set_density(%d, %d, %s);
+                SELECT glass_atlas_%s_%s%s.set_density(%d, %d, %s);
                 """ % (current_settings.TRANSCRIPT_GENOME, 
                        current_settings.CURRENT_CELL_TYPE.lower(),
+                       current_settings.STAGING,
                        chr_id, DENSITY_MULTIPLIER, 'true')
             execute_query(query)
             
@@ -456,9 +460,10 @@ class GlassTranscript(TranscriptBase):
         for chr_id in chr_list:
             print 'Scoring transcripts for chromosome %d' % chr_id
             query = """
-                SELECT glass_atlas_%s_%s.calculate_scores(%d);
+                SELECT glass_atlas_%s_%s%s.calculate_scores(%d);
                 """ % (current_settings.TRANSCRIPT_GENOME,
-                       current_settings.CURRENT_CELL_TYPE.lower(), chr_id)
+                       current_settings.CURRENT_CELL_TYPE.lower(),
+                       current_settings.STAGING, chr_id)
             execute_query(query) 
     @classmethod
     def mark_as_spliced(cls):
@@ -471,9 +476,10 @@ class GlassTranscript(TranscriptBase):
         for chr_id in chr_list:
             print 'Marking transcripts as spliced for chromosome %d' % chr_id
             query = """
-                SELECT glass_atlas_%s_%s.mark_transcripts_spliced(%d, %d);
+                SELECT glass_atlas_%s_%s%s.mark_transcripts_spliced(%d, %d);
                 """ % (current_settings.TRANSCRIPT_GENOME,
-                       current_settings.CURRENT_CELL_TYPE.lower(), chr_id, 
+                       current_settings.CURRENT_CELL_TYPE.lower(),
+                       current_settings.STAGING, chr_id, 
                        MIN_SCORE_RNA)
             execute_query(query) 
     
@@ -669,6 +675,18 @@ class GlassTranscriptNonCoding(GlassTranscriptTranscriptionRegionTable):
     class Meta: 
         abstract = True
         
+class GlassTranscriptInfrastructure(GlassTranscriptTranscriptionRegionTable):
+    '''
+    Relationship between GlassTranscript and the infrastructural ncRNA it maps to.
+    '''
+    patterned_transcription_region  = models.ForeignKey(PatternedTranscriptionRegion)
+    
+    table_type      = 'infrastructure'
+    related_class   = PatternedTranscriptionRegion
+    
+    class Meta: 
+        abstract = True
+        
 class GlassTranscriptPatterned(GlassTranscriptTranscriptionRegionTable):
     '''
     Relationship between GlassTranscript and the patterned region it maps to.
@@ -677,6 +695,18 @@ class GlassTranscriptPatterned(GlassTranscriptTranscriptionRegionTable):
     
     table_type      = 'patterned'
     related_class   = PatternedTranscriptionRegion
+    
+    class Meta: 
+        abstract = True
+        
+class GlassTranscriptDuped(GlassTranscriptTranscriptionRegionTable):
+    '''
+    Relationship between GlassTranscript and the segmental dupes region it maps to.
+    '''
+    duped_transcription_region  = models.ForeignKey(DupedTranscriptionRegion)
+    
+    table_type      = 'duped'
+    related_class   = DupedTranscriptionRegion
     
     class Meta: 
         abstract = True

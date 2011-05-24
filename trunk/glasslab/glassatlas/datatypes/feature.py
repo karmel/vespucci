@@ -59,9 +59,10 @@ class PeakFeature(GlassModel):
         for chr_id in chr_list:
             print 'Adding peak features for chromosome %d' % chr_id
             query = """
-                SELECT glass_atlas_%s_%s.insert_associated_peak_features_from_run(%d, %d);
+                SELECT glass_atlas_%s_%s%s.insert_associated_peak_features_from_run(%d, %d);
                 """ % (current_settings.TRANSCRIPT_GENOME,
                        current_settings.CURRENT_CELL_TYPE.lower(),
+                       current_settings.STAGING,
                        sequencing_run.id, chr_id)
             execute_query(query)
     
@@ -77,9 +78,10 @@ class PeakFeature(GlassModel):
         for chr_id in chr_list:
             print 'Updating peak features for chromosome %d' % chr_id
             query = """
-                SELECT glass_atlas_%s_%s.update_peak_features(%d, %s);
+                SELECT glass_atlas_%s_%s%s.update_peak_features(%d, %s);
                 """ % (current_settings.TRANSCRIPT_GENOME,
                        current_settings.CURRENT_CELL_TYPE.lower(),
+                       current_settings.STAGING,
                        chr_id, 
                        run_requires_reload_only and 'true' or 'false')
             execute_query(query)

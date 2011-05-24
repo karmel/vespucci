@@ -6,7 +6,7 @@ Created on Nov 8, 2010
 from glasslab.glassatlas.datatypes.transcript import GlassTranscriptSource,\
     GlassTranscriptSequence, GlassTranscriptNonCoding,\
     GlassTranscriptConserved, GlassTranscriptPatterned,\
-    GlassTranscriptNucleotides, GlassTranscriptSourcePrep
+    GlassTranscriptNucleotides, GlassTranscriptSourcePrep, GlassTranscriptDuped
 from glasslab.config import current_settings
 from glasslab.atlasviewer.shared.admin import make_all_fields_readonly,\
     ReadOnlyInline, ReadOnlyAdmin, ReadOnlyInput
@@ -126,6 +126,9 @@ class GlassTranscriptConservedInline(ReadOnlyInline):
     readonly_fields = make_all_fields_readonly(model)
 class GlassTranscriptPatternedInline(ReadOnlyInline):
     model = GlassTranscriptPatterned
+    readonly_fields = make_all_fields_readonly(model)
+class GlassTranscriptDupedInline(ReadOnlyInline):
+    model = GlassTranscriptDuped
     readonly_fields = make_all_fields_readonly(model)
 
 class PeakFeatureInline(ReadOnlyInline):

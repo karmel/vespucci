@@ -31,7 +31,7 @@ class DynamicTable(GlassModel):
         '''
         cls._meta.db_table = '%s"."%s' % (current_settings.CURRENT_SCHEMA, table_name)
         cls.name = table_name 
-
+    
 class BoxField(models.Field):
     '''
     Field for the PostgreSQL type box.

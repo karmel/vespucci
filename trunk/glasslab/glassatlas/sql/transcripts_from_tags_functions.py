@@ -125,6 +125,7 @@ RETURNS SETOF glass_atlas_%s_%s_prep.glass_transcript_row AS $$
     max_chrom_pos bigint;
     rec record;
     start_end_clause text := '';
+    polya_string text := '';
     row glass_atlas_%s_%s_prep.glass_transcript_row;
     last_start bigint := 0;
     last_end bigint := 0;
@@ -145,13 +146,21 @@ BEGIN
         start_end_clause := ' and start_end && public.make_box(' || (start_end[0])[0] || ',0,' || (start_end[1])[0] || ',0) ';
     END IF;
     
+    IF field_prefix = '' THEN
+        polya_string = ', polya';
+    END IF; 
+    
+    -- Select each tag set, grouped by start and polya, if that is a field.
+    -- We group here to speed up processing on tables where many tags start at the same location.
 	FOR rec IN 
-		EXECUTE 'SELECT *, "' 
-		|| field_prefix || 'start" as transcription_start, "' || field_prefix || 'end" as transcription_end '
-		|| ' FROM "' || source_t || '_' || chr_id
+		EXECUTE 'SELECT array_agg(id) as ids, ' || chr_id || ' as chromosome_id, ' || strand ||' as strand,
+		"' || field_prefix || 'start" as transcription_start, max("' || field_prefix || 'end") as transcription_end, 
+		 count(id) as tag_count ' || polya_string || '
+		 FROM "' || source_t || '_' || chr_id
 		|| '" WHERE strand = ' || strand 
 		|| start_end_clause
-		|| ' ORDER BY ' || field_prefix || 'start ASC;'
+		|| ' GROUP BY "' || field_prefix || 'start"' || polya_string || '
+		ORDER BY ' || field_prefix || 'start ASC;'
 		LOOP
 		    -- The tags returned from the sequencing run are shorter than we know them to be biologically
 		    -- We can therefore extend the mapped tag region by a set number of bp if an extension is passed in
@@ -191,11 +200,11 @@ BEGIN
 			END IF;
 			
 			IF should_merge = true THEN
-				tag_count := tag_count + 1;
+				tag_count := tag_count + rec.tag_count;
 				IF field_prefix = '' THEN
 				    -- This is a tag row, with the polya t/f 
 				    IF (rec.polya = true) THEN
-				        polya_count := polya_count + 1;
+				        polya_count := polya_count + rec.tag_count;
     				END IF;
 				END IF;
 				IF (rec.transcription_start > last_end) THEN
@@ -203,7 +212,7 @@ BEGIN
 				END IF;
 				last_start := (SELECT LEAST(last_start, rec.transcription_start));
 				last_end := (SELECT GREATEST(last_end, rec.transcription_end));
-				ids = ids || rec.id;
+				ids = ids || rec.ids::integer[];
 			ELSE
 				finish_row := true;
 			END IF;
@@ -227,13 +236,13 @@ BEGIN
 				-- Restart vars for next loop
 				last_start := rec.transcription_start;
 				last_end := rec.transcription_end;
-				tag_count := 1;
+				tag_count := rec.tag_count;
 				IF field_prefix = '' THEN
-				    polya_count := (SELECT CASE WHEN rec.polya = true THEN 1 ELSE 0 END);
+				    polya_count := (SELECT CASE WHEN rec.polya = true THEN rec.tag_count ELSE 0 END);
 				ELSE polya_count := 0;
 				END IF;
 				gaps := 0;
-				ids := array[rec.id]::integer[];
+				ids := rec.ids::integer[];
 				finish_row := false;
 				
 				-- Store row even if not done, in case this is the last loop	
