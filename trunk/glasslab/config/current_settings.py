@@ -13,8 +13,10 @@ GENOME_CHOICES = ['test','mm9']
 
 REFERENCE_GENOME = 'mm9'
 TRANSCRIPT_GENOME = 'mm9' # Separated for easy use of the 'test' DB while keeping reference DB
-STAGING = '' # Set to the appropriate suffix during DB staging.
 GENOME = REFERENCE_GENOME
+
+STAGING = '' # Set to the appropriate suffix during DB staging.
+STAGING_SUFFIX = '_staging'
 
 GENOME_ASSEMBLY_PATHS = {'mm9': '/Volumes/Unknowme/kallison/Genomes/mm9/fasta',}
 

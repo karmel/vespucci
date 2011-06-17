@@ -463,10 +463,10 @@ CREATE SEQUENCE "glass_atlas_%s_%s_staging"."norm_sum_id_seq"
 ALTER SEQUENCE "glass_atlas_%s_%s_staging"."norm_sum_id_seq" OWNED BY "glass_atlas_%s_%s_staging"."norm_sum".id;
 ALTER TABLE "glass_atlas_%s_%s_staging"."norm_sum" ALTER COLUMN id SET DEFAULT nextval('"glass_atlas_%s_%s_staging"."norm_sum_id_seq"'::regclass);
 ALTER TABLE ONLY "glass_atlas_%s_%s_staging"."norm_sum" ADD CONSTRAINT norm_sum_pkey PRIMARY KEY (id);
-CREATE UNIQUE INDEX "norm_sum_name_idx" ON "glass_atlas_mm9_thiomac"."norm_sum" USING btree(name_1,name_2 ASC NULLS LAST);
+CREATE UNIQUE INDEX "norm_sum_name_idx" ON "glass_atlas_%s_%s_staging"."norm_sum" USING btree(name_1,name_2 ASC NULLS LAST);
 
 
-""" % tuple([genome, cell_type]*276)
+""" % tuple([genome, cell_type]*277)
 
 if __name__ == '__main__':
     print sql(genome, cell_type)

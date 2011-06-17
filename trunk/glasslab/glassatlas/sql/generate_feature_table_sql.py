@@ -6,7 +6,7 @@ Created on Nov 12, 2010
 Convenience script for generated create table statements for transcript tables.
 '''
 
-genome = 'mm9'
+genome = 'erna'
 cell_type = 'thiomac'
 def sql(genome, cell_type):
     return """
@@ -22,7 +22,8 @@ CREATE TABLE "glass_atlas_%s_%s_staging"."peak_feature" (
     relationship "glass_atlas_%s_%s_staging"."glass_transcript_feature_relationship",
     "touches" boolean DEFAULT NULL,
     "length" int4 DEFAULT NULL,
-    "tag_count" int4 DEFAULT NULL,
+    "tag_count" decimal(8,2) DEFAULT NULL,
+    "score" decimal(8,2) DEFAULT NULL,
     "distance_to_tss" int4 DEFAULT NULL
 );
 GRANT ALL ON TABLE "glass_atlas_%s_%s_staging"."peak_feature" TO  "glass";

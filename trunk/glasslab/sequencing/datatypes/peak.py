@@ -49,8 +49,10 @@ class GlassPeak(GlassSequencingOutput):
     
     length          = models.IntegerField(max_length=12)
     summit          = models.IntegerField(max_length=12)
-    tag_count       = models.IntegerField(max_length=12)
+    tag_count       = models.DecimalField(max_digits=8, decimal_places=2, null=True, default=None)
+    raw_tag_count   = models.DecimalField(max_digits=8, decimal_places=2, null=True, default=None)
     
+    score               = models.DecimalField(max_digits=8, decimal_places=2, null=True, default=None)
     p_value             = models.DecimalField(max_digits=6, decimal_places=4, null=True, default=None)
     p_value_exp         = models.IntegerField(max_length=12, null=True, default=None, help_text='Exponent of 10 in p_value x 10^y')
     log_ten_p_value     = models.DecimalField(max_digits=10, decimal_places=2, null=True, default=None)
@@ -76,11 +78,13 @@ class GlassPeak(GlassSequencingOutput):
             start_end box,
             "length" int4,
             summit int8,
-            tag_count int4,
+            tag_count decimal(8,2) default NULL,
+            raw_tag_count decimal(8,2) default NULL,
+            score decimal(8,2) default NULL,
             p_value decimal(6,4) default NULL,
             p_value_exp int4 default NULL,
-            log_ten_p_value decimal(10,4) default NULL,
-            fold_enrichment decimal(10,4) default NULL,
+            log_ten_p_value decimal(10,2) default NULL,
+            fold_enrichment decimal(10,2) default NULL,
             fdr_threshold decimal(6,4) default NULL,
             fdr_threshold_exp int4 default NULL
             );
@@ -122,10 +126,51 @@ class GlassPeak(GlassSequencingOutput):
                      start_end=(int(row[1]), 0, int(row[2]), 0),
                      length=int(row[3]),
                      summit=int(row[4]),
-                     tag_count=int(row[5]),
+                     tag_count=str(row[5]),
                      log_ten_p_value=str(row[6]),
                      fold_enrichment=str(row[7])
                      )
+    @classmethod
+    def init_from_homer_row(cls, row):
+        '''
+        From a standard tab-delimited Homer peak file, create model instance.
+                '''
+        connection.close()
+        p_val = str(row[9]).lower().split('e')
+        return cls(chromosome=Chromosome.objects.get(name=str(row[1]).strip()),
+                     start=int(row[2]),
+                     end=int(row[3]),
+                     start_end=(int(row[2]), 0, int(row[3]), 0),
+                     length=int(row[3]) - int(row[2]),
+                     tag_count=str(row[5]),
+                     score=str(row[7]),
+                     p_value=str(p_val[0]),
+                     p_value_exp=len(p_val) > 1 and p_val[1] or 0,
+                     fold_enrichment=str(row[8])
+                     )
+        
+    @classmethod
+    def init_from_homer_row_old(cls, row):
+        '''
+        From a standard tab-delimited Homer peak file, create model instance.
+        
+        For use with older versions of Homer files.
+        '''
+        connection.close()
+        p_val = str(row[12]).split('e')
+        return cls(chromosome=Chromosome.objects.get(name=str(row[1]).strip()),
+                     start=int(row[2]),
+                     end=int(row[3]),
+                     start_end=(int(row[2]), 0, int(row[3]), 0),
+                     length=int(row[3]) - int(row[2]),
+                     tag_count=str(row[5]),
+                     raw_tag_count=str(row[9]),
+                     score=str(row[8]),
+                     p_value=str(p_val[0]),
+                     p_value_exp=len(p_val) > 1 and p_val[1] or 0,
+                     fold_enrichment=str(row[11])
+                     )
+        
         
     @classmethod
     def init_from_sicer_row(cls, row):
@@ -139,13 +184,28 @@ class GlassPeak(GlassSequencingOutput):
                      end=int(row[2]),
                      start_end=(int(row[1]), 0, int(row[2]), 0),
                      length=int(row[2]) - int(row[1]),
-                     tag_count=int(row[3]),
+                     tag_count=str(row[3]),
                      p_value=p_val[0],
                      p_value_exp=len(p_val) > 1 and p_val[1] or 0,
                      fold_enrichment=str(row[6]),
                      fdr_threshold=fdr[0],
                      fdr_threshold_exp=len(fdr) > 1 and fdr[1] or 0
                      )
+    @classmethod
+    def score_sicer_peaks(cls):
+        '''
+        Scale tag count to get a density-based score for peaks.
+        
+        Total tags uses only those that fall into peaks, assuming that 
+        the remaining tags are noisy.
+        '''
+        update_query = """
+        UPDATE "%s" SET
+            score = (tag_count::numeric/length/
+                (SELECT sum(tag_count) FROM "%s"))*(10^10);
+        """ % (cls._meta.db_table,
+               cls._meta.db_table)
+        execute_query(update_query)
     
     _peak_type = None
     @classmethod 

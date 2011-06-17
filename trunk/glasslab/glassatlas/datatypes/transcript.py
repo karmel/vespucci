@@ -258,7 +258,6 @@ class TranscriptBase(TranscriptionRegionBase):
         abstract = True
         
 class GlassTranscriptPrep(TranscriptBase):
-    processed               = models.NullBooleanField(default=None, help_text='Do we have RNA-Seq confirmation?')
     
     class Meta:
         abstract    = True

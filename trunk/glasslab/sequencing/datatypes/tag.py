@@ -111,6 +111,7 @@ class GlassSequencingOutput(DynamicTable):
     @classmethod
     def get_bowtie_stats(cls, stats_file=None):
         # If possible, retrieve bowtie stats
+        total_tags, percent_mapped = None, None
         try:
             f = file(stats_file)
             for i,line in enumerate(f.readlines()):

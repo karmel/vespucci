@@ -241,10 +241,7 @@ class DupedTranscriptionRegion(GlassModel):
     
     start_end           = BoxField(null=True, default=None, help_text='This is a placeholder for the PostgreSQL box type.')
     
-    score               = models.IntegerField(max_length=5)
-    
     other_chromosome          = models.ForeignKey(Chromosome)
-    other_strand              = models.IntegerField(max_length=1, help_text='0 for +, 1 for -. Default NULL')
     other_transcription_start = models.IntegerField(max_length=12)
     other_transcription_end   = models.IntegerField(max_length=12)
     
@@ -253,7 +250,7 @@ class DupedTranscriptionRegion(GlassModel):
         app_label   = 'Genome_Reference'
 
     def __unicode__(self):
-        return 'Duped Transcription Region for %s %s' % (self.type, self.name.strip())
+        return 'Duped Transcription Region: %s' % self.name.strip()
     
 class ConservedTranscriptionRegion(GlassModel):
     '''

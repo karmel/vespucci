@@ -71,8 +71,8 @@ def call_bowtie(options, file_name, suppress_columns=False):
     bowtie_file_path = os.path.join(options.output_dir, bowtie_output)
     
     bowtie_stats = file_name + '_bowtie_stats_summary.txt'
-    options.bowtie_stast_file = os.path.join(options.output_dir, bowtie_stats)
-    bowtie_stats_file = open(options.bowtie_stast_file,'w')
+    options.bowtie_stats_file = os.path.join(options.output_dir, bowtie_stats)
+    bowtie_stats_file = open(options.bowtie_stats_file,'w')
     
     
     supress_string = suppress_columns and '--suppress 1,6,7,8' or ''

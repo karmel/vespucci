@@ -10,11 +10,14 @@ import numpy
 class DelimitedFileParser(object):
     file_name = None
     file = None
+    header = False
+    fields = None
     
-    def __init__(self, file_name=''):
+    def __init__(self, file_name='', header=False):
         super(DelimitedFileParser,self).__init__()
         self.file_name = file_name
         self.file = open(file_name)
+        self.header = header
         
     def convert_line_endings(self):
         output = self.file.read().replace('\r\n','\n').replace('\r','\n')
@@ -31,5 +34,9 @@ class DelimitedFileParser(object):
         '''
         if strip: clean = lambda x: x.strip('"').strip() 
         else: clean = lambda x: x
-        return numpy.array([[clean(field) for field in line.strip('\n').split(delimiter)] 
+        arr = numpy.array([[clean(field) for field in line.strip('\n').split(delimiter)] 
                                 for line in self.file if line.strip('\n') and line[:1] != '#' ])
+        if self.header: 
+            self.fields = arr[0].tolist()
+            arr = arr[1:]
+        return arr

@@ -37,7 +37,10 @@ class TranscriptsFromTagsParser(GlassOptionParser):
                            help='Should reassociation of peak features to transcripts be skipped?'),
                make_option('--no_extended_gaps',action='store_true', dest='no_extended_gaps',  
                            help='Should extended gaps (i.e., under RefSeq regions) be allowed?'),
+               make_option('--staging',action='store_true', dest='staging', default=False,  
+                           help='Use the trancsript database with the suffix _staging?'),
                 ]
+
 if __name__ == '__main__':
     parser = TranscriptsFromTagsParser()
     options, args = parser.parse_args()
@@ -52,7 +55,9 @@ if __name__ == '__main__':
     
     allow_extended_gaps = True
     if options.no_extended_gaps: allow_extended_gaps = False
-        
+    
+    if options.staging: current_settings.STAGING = current_settings.STAGING_SUFFIX
+
     cell_base.glass_transcript.turn_off_autovacuum()    
     if options.tag_table:
         GlassTag._meta.db_table = options.schema_name and '%s"."%s' % (options.schema_name, options.tag_table) \
@@ -71,7 +76,6 @@ if __name__ == '__main__':
         cell_base.glass_transcript.force_vacuum()
 
     if options.draw_edges:
-        current_settings.STAGING = '_staging'
         cell_base.glass_transcript.draw_transcript_edges()
         cell_base.glass_transcript.force_vacuum()
     
