@@ -3,3 +3,6 @@
 /****************************/
 .stop-codon, .antisense-stop-codon { border-bottom: 1px solid red; }
 .start-codon, .antisense-start-codon { border-bottom: 1px solid blue; }
+
+.left { float: left; }
+.right { float: right; }

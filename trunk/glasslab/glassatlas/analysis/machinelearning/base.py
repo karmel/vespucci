@@ -247,22 +247,39 @@ class MLSetup(object):
         self.text_data = self.text_data[mask]
         return data[mask]
     
+    def filter_data_kla_upreg(self, data, fields):
+        # Up-reg only
+        mask = data[:,fields.index('kla_1h_fc')] >= 1
+        self.text_data = self.text_data[mask]
+        return data[mask]
+    
     def filter_data_refseq(self, data, fields):
         # Ref-seq only
         mask = data[:,fields.index('has_refseq')] == 1
         self.text_data = self.text_data[mask]
         return data[mask]
     
-    def filter_data_has_change(self, data, fields):
+    def filter_data_has_change(self, data, fields, change=1):
         # For rows with fold-change features, filter out those with no 
         # significant change in any condition
-        mask = numpy.array(map(lambda x: abs(x).max() >= .6, data))
+        if not isinstance(change, list):
+            mask = numpy.array(map(lambda x: abs(x).max() >= change, data))
+        else:
+            mask = numpy.zeros(data.shape[0], dtype=numpy.bool)
+            for i, val in enumerate(change):
+                mask += abs(data[:,i]) >= val
         self.text_data = self.text_data[mask]
         return data[mask]
     
     def filter_data_score(self, data, fields, score=10):
         # Above passed score min
         mask = data[:,fields.index('transcript_score')] >= score
+        self.text_data = self.text_data[mask]
+        return data[mask]
+    
+    def filter_data_notx_tags(self, data, fields, tags=10000):
+        # Above passed score min
+        mask = data[:,fields.index('notx_1h_tags')] >= tags
         self.text_data = self.text_data[mask]
         return data[mask]
 
@@ -275,7 +292,7 @@ class MLSetup(object):
         indices = [fields.index(s) for s in selected] 
         return self._get_vectors_and_indices(data, fields, indices) 
         
-    def get_vectors_and_indices(self, data, fields):
+    def get_vectors_and_indices(self, data, fields, erna=False):
         # Select columns
         indices = [fields.index('p65_score'), fields.index('cebpb_notx_score'), 
                    fields.index('pu_notx_score'), 
@@ -357,25 +374,26 @@ class MLSetup(object):
                    fields.index('ac_score_ratio'),
                    
                    ]
-        '''
-                   fields.index('conservation_score'),
-                   fields.index('has_refseq'), fields.index('has_erna'),
-                   fields.index('line_count'), fields.index('sine_count'),
-                   fields.index('simple_count'), fields.index('ltr_count'),
-                   fields.index('dna_count'), fields.index('rrna_count'),
-                   fields.index('trna_count'), fields.index('scrna_count'),
-                   fields.index('srprna_count'), fields.index('satt_count'),
-                   fields.index('line_length'), fields.index('sine_length'),
-                   fields.index('simple_length'), fields.index('ltr_length'),
-                   fields.index('dna_length'), fields.index('rrna_length'),
-                   fields.index('trna_length'), fields.index('scrna_length'),
-                   fields.index('srprna_length'), fields.index('satt_length'),
+        
+        if not erna:
+            indices += [fields.index('conservation_score'),
+                       fields.index('has_refseq'), fields.index('has_erna'),
+                       fields.index('line_count'), fields.index('sine_count'),
+                       fields.index('simple_count'), fields.index('ltr_count'),
+                       fields.index('dna_count'), fields.index('rrna_count'),
+                       fields.index('trna_count'), fields.index('scrna_count'),
+                       fields.index('srprna_count'), fields.index('satt_count'),
+                       fields.index('line_length'), fields.index('sine_length'),
+                       fields.index('simple_length'), fields.index('ltr_length'),
+                       fields.index('dna_length'), fields.index('rrna_length'),
+                       fields.index('trna_length'), fields.index('scrna_length'),
+                       fields.index('srprna_length'), fields.index('satt_length'),
                    #fields.index('dex_4h_fc'),
 #                   fields.index('mrl24_4h_fc'),
 #                   fields.index('gw3965_4h_fc'),
 #                   fields.index('qw0072_4h_fc'),
                    ]        
-'''
+
         indices.sort()
         return self._get_vectors_and_indices(data, fields, indices)
         

@@ -19,11 +19,9 @@ class GlassSGDClassifier(BaseClassifier):
 
 if __name__ == '__main__':
     setup = MLSetup()
-    #data, fields = setup.get_data_from_file(file_name='/Users/karmel/Desktop/Projects/GlassLab/Notes and Reports/Classification of fold change/feature_vectors_5.txt',header=True)
-    #data, fields = setup.get_data_from_file(file_name='/Users/karmel/Desktop/Projects/GlassLab/Notes and Reports/Classification of fold change/erna/erna_vectors_2.txt',header=True)
-    data, fields = setup.get_data_from_file(file_name='/Users/karmel/Desktop/Projects/GlassLab/Notes and Reports/Classification of fold change/erna/erna_vectors_ligands.txt',header=True)
-    #data, fields = setup.get_data_from_file(file_name='/Users/karmel/Desktop/Projects/GlassLab/Notes and Reports/Classification of fold change/ligands/ligand_vectors_2.txt',header=True)
-
+    data, fields = setup.get_data_from_file(file_name='/Users/karmel/Desktop/Projects/GlassLab/Notes and Reports/Classification of fold change/feature_vectors_6.txt',header=True)
+    #data, fields = setup.get_data_from_file(file_name='/Users/karmel/Desktop/Projects/GlassLab/Notes and Reports/Classification of fold change/erna/erna_vectors_3.txt',header=True)
+    
     #data = setup.filter_data_no_infrastructure(data,fields)
     #data = setup.filter_data_dmso_upreg(data,fields)
     #data = setup.filter_data_refseq(data,fields)
@@ -32,7 +30,7 @@ if __name__ == '__main__':
     #data = numpy.array(filter(lambda x: abs(float(x[fields.index('dmso_4h_tags')])) >= 20000, data))
     
     # Select columns
-    feat_data, indices = setup.get_vectors_and_indices(data, fields)
+    feat_data, indices = setup.get_vectors_and_indices(data, fields, erna=False)
     label_field = 'kla_1h_fc'
     labels = map(lambda x: int(x >= 1), data[:,fields.index(label_field)].tolist())
     #labels = map(lambda x: int(x <= -1 and -1) or (x >= 1 and 1) or 0), data[:,fields.index(label_field)].tolist())

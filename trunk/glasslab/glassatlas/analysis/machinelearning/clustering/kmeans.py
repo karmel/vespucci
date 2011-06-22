@@ -10,7 +10,7 @@ import os
 
 class GlassKMeansClusterer(object):
     
-    def cluster_rows(self, data, cluster_count=10):
+    def cluster_rows(self, data, k=10):
         ''' 
         Each row is a feature vector, with measurements across samples as the points.
         
@@ -21,7 +21,7 @@ class GlassKMeansClusterer(object):
         # Whiten the data to attain unit variance
         wh_data = whiten(data)
         # Cluster the data, obtaining the code_book of clusters
-        code_book,dist = kmeans(wh_data,cluster_count)
+        code_book,dist = kmeans(wh_data,k)
         # Obtain the cluster id for each row of data
         code_ids, distortion = vq(wh_data,code_book)
         # Group the original data by cluster
@@ -37,7 +37,7 @@ class GlassKMeansClusterer(object):
     ##########################################################
     # Illustration methods
     ##########################################################
-    def draw_heat_map(self, output_dir, prefix, raw_data, features, clusters, fields):
+    def draw_heat_map(self, output_dir, prefix, raw_data, features, clusters, fields, include_pos=False):
         '''
         Draws a color-coded HTML heat-map based on the fold variation of 
         the samples by gene. Generate a Django-template-based HTML table
@@ -47,7 +47,7 @@ class GlassKMeansClusterer(object):
         
         '''
         table_cells = self._generate_table_cells(raw_data, features, clusters)
-        self._output_heat_map(output_dir, prefix, table_cells, fields)
+        self._output_heat_map(output_dir, prefix, table_cells, fields, include_pos=include_pos)
     
     def _generate_table_cells(self, raw_data, fields, clusters):            
         # For each gene to display, set up row with gene_name and 
@@ -66,6 +66,10 @@ class GlassKMeansClusterer(object):
                 orig_data_i = selected_ids[i]
                 row = [row_class, 
                        self._clean_text(raw_data[orig_data_i][fields.index('admin_link')]), 
+                       self._clean_text(raw_data[orig_data_i][fields.index('chr_name')]), 
+                       self._clean_text(raw_data[orig_data_i][fields.index('transcription_start')]), 
+                       self._clean_text(raw_data[orig_data_i][fields.index('transcription_end')]), 
+                       self._clean_text(raw_data[orig_data_i][fields.index('strand')]),
                        self._clean_text(raw_data[orig_data_i][fields.index('ucsc_link_mm9')]), 
                        self._clean_text(raw_data[orig_data_i][fields.index('gene_names')]), 
                        cell_values] 
@@ -85,8 +89,10 @@ class GlassKMeansClusterer(object):
     def _clean_text(self, val):
         return val.strip().strip('"').strip('{').strip('}').replace('""','"')
     
-    def _output_heat_map(self, output_dir, prefix, table_cells, fields):
-        context = {'table_cells': table_cells, 'fields':fields}
+    def _output_heat_map(self, output_dir, prefix, table_cells, fields, include_pos=False):
+        context = {'table_cells': table_cells, 
+                   'fields':fields,
+                   'include_pos': include_pos}
         filename = '%sheat_map_output.html' % (prefix and prefix + '_' or '')
         
         self._output_file(output_dir, 'heat_map.html', context, filename)
@@ -111,27 +117,55 @@ class GlassKMeansClusterer(object):
         f.write(html)
         f.close()
 
-if __name__ == '__main__':
-    setup = MLSetup()
-    
-    text_fields_file = '/Users/karmel/Desktop/Projects/GlassLab/Notes and Reports/Classification of fold change/gene_names.txt' 
-    data, fields = setup.get_data_from_file(file_name='/Users/karmel/Desktop/Projects/GlassLab/Notes and Reports/Classification of fold change/ligands/ligand_vectors.txt',
-                                            text_file_name=text_fields_file, header=True)
-
+def for_ligands(data, fields, erna):
     data = setup.filter_data_refseq(data,fields)
     data = setup.filter_data_score(data,fields)
+    data = setup.filter_data_notx_tags(data,fields)
     
     # Select columns
     selected = ['rosi_4h_fc','mrl24_4h_fc','gw3965_4h_fc','qw0072_4h_fc',]#'dex_4h_fc']
     feat_data, indices = setup.get_selected_vectors(data, fields, selected)
     
-    feat_data = setup.filter_data_has_change(feat_data,fields)
+    feat_data = setup.filter_data_has_change(feat_data,fields, change=.6)
     
     clusterer = GlassKMeansClusterer()
     clusters = clusterer.cluster_rows(feat_data)
     
     output_dir = '/Users/karmel/Desktop/Projects/GlassLab/Notes and Reports/Classification of fold change/clustering/kmeans/ligands/'
-    clusterer.draw_heat_map(output_dir, 'ligands', setup.text_data, setup.text_fields, clusters, selected)
+    clusterer.draw_heat_map(output_dir, 'ligands%s' % (erna and '_erna' or ''), setup.text_data, setup.text_fields, clusters, selected)
     
+def for_dex(data, fields, erna):
+    if not erna: 
+        #data = setup.filter_data_notx_tags(data,fields, tags=5000)
+        data = setup.filter_data_refseq(data,fields)
+        data = setup.filter_data_score(data,fields)
+        #data = setup.filter_data_kla_upreg(data,fields)
+    
+    # Select columns
+    selected = ['dex_2h_fc','dex_4h_fc','dex_kla_fc',]
+    feat_data, indices = setup.get_selected_vectors(data, fields, selected)
+    
+    print ','.join([setup.text_data[i][setup.text_fields.index('gene_names')].strip('{').strip('}') for i,row in enumerate(feat_data) if row[2] <= -1.2])
+    
+    
+    '''
+    feat_data = setup.filter_data_has_change(feat_data,fields, change=[1,1,.8])
+    
+    clusterer = GlassKMeansClusterer()
+    clusters = clusterer.cluster_rows(feat_data, k=4)
+    
+    output_dir = '/Users/karmel/Desktop/Projects/GlassLab/Notes and Reports/Classification of fold change/clustering/kmeans/dex/'
+    clusterer.draw_heat_map(output_dir, 'dex%s' % (erna and '_erna' or ''), setup.text_data, setup.text_fields, clusters, selected, include_pos=True)
+    '''
+if __name__ == '__main__':
+    erna = False
+    
+    setup = MLSetup()
+    text_fields_file = '/Users/karmel/Desktop/Projects/GlassLab/Notes and Reports/Classification of fold change/%sgene_names.txt' \
+                        % (erna and 'erna/' or '')
+    data, fields = setup.get_data_from_file(file_name='/Users/karmel/Desktop/Projects/GlassLab/Notes and Reports/Classification of fold change/%sfold_change_vectors.txt' \
+                                            % (erna and 'erna/' or ''),
+                                            text_file_name=text_fields_file, header=True)
+    for_dex(data, fields, erna)
     
     

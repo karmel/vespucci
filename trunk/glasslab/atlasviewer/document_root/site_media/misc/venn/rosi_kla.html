@@ -1,0 +1,202 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+
+  <head>
+
+    <title>Venn Diagrams</title>
+
+    <META HTTP-EQUIV="CACHE-CONTROL" CONTENT="NO-CACHE">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+	<link rel="stylesheet" type="text/css" href="/site_media/css/admin.css" />
+	
+    <!--[if IE]><script type="text/javascript" src="/site_media/js/excanvas.js"></script><![endif]-->
+    <script type="text/javascript" src="/site_media/js/canvasXpress.min.js"></script>
+    
+<style type="text/css">
+
+td {
+	padding: 15px;
+	page-break-inside: avoid;	
+}
+
+h3.break { page-break-before: always;}
+</style>
+	<script>
+
+      var showVenn = function () {
+        new CanvasXpress('canvas1',
+                         {venn: {data: {A: '0', B: '0', C: 15,
+                                        AB: '0', AC: '0', BC: 11,
+                                        ABC: '0' },
+                          legend: {A: 'Rosi+KLA 2h vs. DMSO+KLA 2h <= -.6',
+                                   B: 'Rosi+KLA 2h <= -1',
+                                   C: 'DMSO+KLA 2h <= -1'}}},
+                         {graphType: 'Venn',
+                          background: 'rgb(245,245,0)',
+                          vennGroups: 3,
+                          autoExtend: true,
+                          colorScheme: 'light'});
+                          
+      new CanvasXpress('canvas2',
+                         {venn: {data: {A: 1, B: '0', C: 3,
+                                        AB: '0', AC: '0', BC: 3,
+                                        ABC: '0' },
+                          legend: {A: 'Rosi+KLA 2h vs. DMSO+KLA 2h <= -.6',
+                                   B: 'Rosi+KLA 2h <= -1',
+                                   C: 'DMSO+KLA 2h <= -1'}}},
+                         {graphType: 'Venn',
+                          background: 'rgb(245,245,245)',
+                          vennGroups: 3,
+                          autoExtend: true,
+                          colorScheme: 'light'});
+      
+      new CanvasXpress('canvas3',
+                         {venn: {data: {A: '0', B: '0', C: 9,
+                                        AB: 1, AC: '0', BC: 15,
+                                        ABC: '0' },
+                          legend: {A: 'Rosi+KLA 2h vs. DMSO+KLA 2h <= -.6',
+                                   B: 'Rosi+KLA 2h <= -1',
+                                   C: 'DMSO+KLA 2h <= -1'}}},
+                         {graphType: 'Venn',
+                          background: 'rgb(245,245,245)',
+                          vennGroups: 3,
+                          autoExtend: true,
+                          colorScheme: 'light'});
+      
+      new CanvasXpress('canvas4',
+                         {venn: {data: {A: '0', B: 1, C: 6,
+                                        AB: 1, AC: '0', BC: 10,
+                                        ABC: '0' },
+                          legend: {A: 'Rosi+KLA 2h vs. DMSO+KLA 2h <= -.6',
+                                   B: 'Rosi+KLA 2h <= -1',
+                                   C: 'DMSO+KLA 2h <= -1'}}},
+                         {graphType: 'Venn',
+                          background: 'rgb(245,245,245)',
+                          vennGroups: 3,
+                          autoExtend: true,
+                          colorScheme: 'light'});
+                               
+      new CanvasXpress('canvas5',
+                         {venn: {data: {A: '0', B: 1, C: 2,
+                                        AB: '0', AC: '0', BC: 24,
+                                        ABC: '0' },
+                          legend: {A: 'Rosi+KLA 2h vs. DMSO+KLA 2h <= -.6',
+                                   B: 'Rosi+KLA 2h <= -1',
+                                   C: 'DMSO+KLA 2h <= -1'}}},
+                         {graphType: 'Venn',
+                          background: 'rgb(245,245,245)',
+                          vennGroups: 3,
+                          autoExtend: true,
+                          colorScheme: 'light'});
+                          
+       new CanvasXpress('canvas6',
+                         {venn: {data: {A: 1, B: '0', C: 12,
+                                        AB: '0', AC: '0', BC: 23,
+                                        ABC: '0' },
+                          legend: {A: 'Rosi+KLA 2h vs. DMSO+KLA 2h <= -.6',
+                                   B: 'Rosi+KLA 2h <= -1',
+                                   C: 'DMSO+KLA 2h <= -1'}}},
+                         {graphType: 'Venn',
+                          background: 'rgb(245,245,245)',
+                          vennGroups: 3,
+                          autoExtend: true,
+                          colorScheme: 'light'});
+     
+      new CanvasXpress('canvas7',
+                         {venn: {data: {A: '0', B: 1, C: 4,
+                                        AB: '0', AC: '0', BC: 8,
+                                        ABC: 1 },
+                          legend: {A: 'Rosi+KLA 2h vs. DMSO+KLA 2h <= -.6',
+                                   B: 'Rosi+KLA 2h <= -1',
+                                   C: 'DMSO+KLA 2h <= -1'}}},
+                         {graphType: 'Venn',
+                          background: 'rgb(245,245,245)',
+                          vennGroups: 3,
+                          autoExtend: true,
+                          colorScheme: 'light'});
+                          
+         
+      }
+	/*
+	 * 
+					new CanvasXpress('canvas1',
+                         {venn: {data: {A: 340, B: 562, C: 620, D: 592,
+                                        AB: 639, AC: 456, AD: 257, BC: 915,
+                                        BD: 354, CD: 143, ABC: 552, ABD: 578,
+                                        ACD: 298, BCD: 613, ABCD: 148},
+                          legend: {A: 'List 1',
+                                   B: 'List 2',
+                                   C: 'List 3',
+                                   D: 'List 4'}}},
+                         {graphType: 'Venn',
+                          background: 'rgb(245,245,245)',
+                          vennGroups: 4,
+                          autoExtend: true,
+                          colorScheme: 'light'});	 
+                          */
+    </script>
+	
+  </head>
+
+  <body onload="showVenn();" style="width:1200px">
+<table>
+
+	<tr><td>
+	<h3>GO Term: tRNA Metabolic Process (total expressed genes: 93)</h3>
+	<div class="canvas">
+        <canvas id="canvas1" width="500" height="500"></canvas>
+        <br /><br />
+      </div>
+    
+    </td><td>
+    <h3>GO Term: rRNA Metabolic Process (total expressed genes: 81)</h3>
+	<div class="canvas">
+        <canvas id="canvas2" width="500" height="500"></canvas>
+        <br /><br />
+      </div>
+</td></tr>
+   
+   <tr><td>
+	<h3>GO Term: mRNA Metabolic Process (total expressed genes: 246)</h3>
+	<div class="canvas">
+        <canvas id="canvas3" width="500" height="500"></canvas>
+        <br /><br />
+      </div>
+      
+   </td><td>
+	<h3>GO Term: RNA Splicing (total expressed genes: 245)</h3>
+	<div class="canvas">
+        <canvas id="canvas4" width="500" height="500"></canvas>
+        <br /><br />
+      </div>
+      </td></tr>
+
+
+  
+   <tr><td>
+	<h3 class="break">GO Term: Sterol Metabolic Process (total expressed genes: 63)</h3>
+	<div class="canvas">
+        <canvas id="canvas5" width="500" height="500"></canvas>
+        <br /><br />
+      </div>
+      
+   </td><td>
+	<h3>GO Term: Glucose Metabolic Process (total expressed genes: 103)</h3>
+	<div class="canvas">
+        <canvas id="canvas6" width="500" height="500"></canvas>
+        <br /><br />
+      </div>
+</td></tr>
+
+   <tr><td>
+	<h3>GO Term: Hormone Metabolic Process (total expressed genes: 52)</h3>
+	<div class="canvas">
+        <canvas id="canvas7" width="500" height="500"></canvas>
+        <br /><br />
+      </div>
+</td><td>&nbsp;</td></tr>
+   
+  </body>
+
+</html>
