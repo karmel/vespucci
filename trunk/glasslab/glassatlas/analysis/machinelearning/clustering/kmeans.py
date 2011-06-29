@@ -145,18 +145,15 @@ def for_dex(data, fields, erna):
     selected = ['dex_2h_fc','dex_4h_fc','dex_kla_fc',]
     feat_data, indices = setup.get_selected_vectors(data, fields, selected)
     
-    print ','.join([setup.text_data[i][setup.text_fields.index('gene_names')].strip('{').strip('}') for i,row in enumerate(feat_data) if row[2] <= -1.2])
     
-    
-    '''
     feat_data = setup.filter_data_has_change(feat_data,fields, change=[1,1,.8])
     
     clusterer = GlassKMeansClusterer()
-    clusters = clusterer.cluster_rows(feat_data, k=4)
+    clusters = clusterer.cluster_rows(feat_data, k=6)
     
     output_dir = '/Users/karmel/Desktop/Projects/GlassLab/Notes and Reports/Classification of fold change/clustering/kmeans/dex/'
     clusterer.draw_heat_map(output_dir, 'dex%s' % (erna and '_erna' or ''), setup.text_data, setup.text_fields, clusters, selected, include_pos=True)
-    '''
+    
 if __name__ == '__main__':
     erna = False
     

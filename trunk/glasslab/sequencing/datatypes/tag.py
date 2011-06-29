@@ -121,9 +121,8 @@ class GlassSequencingOutput(DynamicTable):
                     total_tags = int(re.search('([\d]+)',pieces[-2:][0]).group(0))
                     percent_mapped = str(float(re.search('([\d\.]+)',pieces[-1:][0]).group(0)))
                     break
-        except Exception, e: 
-            print e
-            total_tags, percent_mapped = None, None
+        except Exception: 
+            total_tags, percent_mapped = cls.objects.count(), None
         return total_tags, percent_mapped
     
     @classmethod

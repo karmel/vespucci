@@ -76,7 +76,7 @@ def call_bowtie(options, file_name, suppress_columns=False):
     
     
     supress_string = suppress_columns and '--suppress 1,6,7,8' or ''
-    bowtie_command = 'bowtie -m 3 %s %s %s %s' % (current_settings.GENOME, options.file_path, 
+    bowtie_command = 'bowtie -m 1 %s %s %s %s' % (current_settings.GENOME, options.file_path, 
                                              bowtie_file_path, supress_string)
     try: subprocess.check_call(bowtie_command, shell=True, stdout=bowtie_stats_file, stderr=subprocess.STDOUT)
     except Exception:
