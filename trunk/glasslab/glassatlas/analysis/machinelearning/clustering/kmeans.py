@@ -71,7 +71,7 @@ class GlassKMeansClusterer(object):
                        self._clean_text(raw_data[orig_data_i][fields.index('transcription_end')]), 
                        self._clean_text(raw_data[orig_data_i][fields.index('strand')]),
                        self._clean_text(raw_data[orig_data_i][fields.index('ucsc_link_mm9')]), 
-                       self._clean_text(raw_data[orig_data_i][fields.index('gene_names')]), 
+                       self._clean_text(', '.join(raw_data[orig_data_i][fields.index('gene_names')].split(','))), 
                        cell_values] 
                 table_cells.append(row)
                 

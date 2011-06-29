@@ -19,13 +19,13 @@
         <td>3</td>
     </tr>
     <tr class="color-coded-cell">
-        <td><div class="down-regulated" style="opacity:1"> </div></td>
-        <td><div class="down-regulated" style="opacity:.66"> </div></td>
-        <td><div class="down-regulated" style="opacity:.33"> </div></td>
-        <td><div class="zero-regulated" style="opacity:0"> </div></td>
-        <td><div class="up-regulated" style="opacity:.33"> </div></td>
-        <td><div class="up-regulated" style="opacity:.66"> </div></td>
-        <td><div class="up-regulated" style="opacity:1"> </div></td>
+        <td><div class="down-regulated" style="opacity:1">&nbsp;</div></td>
+        <td><div class="down-regulated" style="opacity:.66">&nbsp;</div></td>
+        <td><div class="down-regulated" style="opacity:.33">&nbsp;</div></td>
+        <td><div class="zero-regulated" style="opacity:0">&nbsp;</div></td>
+        <td><div class="up-regulated" style="opacity:.33">&nbsp;</div></td>
+        <td><div class="up-regulated" style="opacity:.66">&nbsp;</div></td>
+        <td><div class="up-regulated" style="opacity:1">&nbsp;</div></td>
     </tr>
 </table>
 <br />
@@ -34,6 +34,12 @@
         <th> </th>
         <th>Gene Name</th>
         <th>Admin Link</th>
+        {% if include_pos %}
+        	<th>Chr</th>
+        	<th>Start</th>
+        	<th>End</th>
+        	<th>Strand</th>
+        {% endif %}
         <th>UCSC link</th>
         {% for field in fields %}
             <th>
@@ -41,7 +47,7 @@
             </th>
         {% endfor %} 
     </tr>
-    {% for row_class, admin_link, ucsc_link, gene_names, row in table_cells %}
+    {% for row_class, admin_link, chr_name, transcription_start, transcription_end, strand, ucsc_link, gene_names, row in table_cells %}
         <tr class="{{ row_class }}">
             <td class="text-cell counter-cell">{{ forloop.counter }}</td>
             <td class="text-cell gene-name-cell">
@@ -53,12 +59,18 @@
                         >Entrez</a>
                 </div>
             </td>
+            {% if include_pos %}
+	        	<td class="text-cell pos-cell">{{ chr_name }}</td>
+	        	<td class="text-cell pos-cell">{{ transcription_start }}</td>
+	        	<td class="text-cell pos-cell">{{ transcription_end }}</td>
+	        	<td class="text-cell pos-cell">{{ strand }}</td>
+	        {% endif %}
             <td class="text-cell admin-link-cell">{{ admin_link|safe }}</td>
             <td class="text-cell ucsc-link-cell"  title="{{ title }}" >{{ ucsc_link|safe }}</td>
             {% for color, opacity, title in row %}
                 <td class="heat-map-cell">
                     <div class="heat-map-div {{ color }}"
-                        style="opacity: {{opacity}}" > </div>
+                        style="opacity: {{opacity}}" >&nbsp;</div>
                 </td>
             {% endfor %}
         </tr>
