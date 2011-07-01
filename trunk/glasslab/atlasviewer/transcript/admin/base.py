@@ -16,6 +16,8 @@ from glasslab.glassatlas.datatypes.transcribed_rna import GlassTranscribedRna,\
     GlassTranscribedRnaSource
 from django.db.models.aggregates import Sum
 from glasslab.glassatlas.datatypes.feature import PeakFeature
+from django.contrib import admin
+from glasslab.glassatlas.datatypes.label import GlassTranscriptLabel
 
 class NucleotideSequenceInput(ReadOnlyInput):
     '''
@@ -135,6 +137,12 @@ class PeakFeatureInline(ReadOnlyInline):
     model = PeakFeature
     readonly_fields = make_all_fields_readonly(model)
 
+class GlassTranscriptLabelInline(admin.TabularInline):
+    extra       = 1
+    ordering    = ('manual','probability',)
+    model       = GlassTranscriptLabel
+    readonly_fields = ('chromosome','strand','start_end','probability')
+    
 class TranscriptBase(ReadOnlyAdmin):
     ordering        = ('chromosome','transcription_start')
     search_fields   = ['transcription_start','transcription_end',]
@@ -193,11 +201,13 @@ class GlassTranscriptAdmin(TranscriptBase):
     list_display    = ('chromosome','transcription_start','transcription_end','strand',
                        'transcript_length', 'truncated_density','truncated_score', 'spliced', 'ucsc_browser_link', 'modified')
     list_filter     = ('chromosome','strand','spliced')
+    
+    save_on_top     = True
     inlines         = [GlassTranscriptSequenceInline,
                        GlassTranscriptNonCodingInline,
                        GlassTranscriptSourceInline, 
                        GlassTranscribedRnaInline, 
-                       #GlassTranscriptNucleotidesInline, 
+                       GlassTranscriptLabelInline, 
                        ]
 
 class GlassTranscriptPrepAdmin(TranscriptBase):

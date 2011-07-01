@@ -13,6 +13,8 @@ from glasslab.glassatlas.datatypes.transcribed_rna import GlassTranscribedRna,\
     GlassTranscribedRnaSource
 from django.db import models
 from glasslab.glassatlas.datatypes.feature import PeakFeature
+from glasslab.glassatlas.datatypes.metadata import TranscriptClass
+from glasslab.glassatlas.datatypes.label import GlassTranscriptLabel
 
 CELL_TYPE = 'ThioMac'
 
@@ -47,9 +49,14 @@ class ThioMacBase(CellTypeBase):
     def glass_transcribed_rna_source(self): return GlassTranscribedRnaSourceThioMac
     @property
     def peak_feature(self): return PeakFeatureThioMac
+    @property
+    def glass_transcript_label(self): return GlassTranscriptLabelThioMac
     
 class GlassTranscriptThioMac(GlassTranscript):
     cell_base = ThioMacBase()
+    
+    labels = models.ManyToManyField(TranscriptClass, through='GlassTranscriptLabelThioMac')
+    
     class Meta:
         db_table    = 'glass_atlas_%s_%s%s"."glass_transcript' % (current_settings.TRANSCRIPT_GENOME, CELL_TYPE.lower(), current_settings.STAGING)
         app_label   = 'Transcription_%s' % CELL_TYPE
@@ -186,3 +193,15 @@ class PeakFeatureThioMac(PeakFeature):
         app_label   = 'Transcription_%s' % CELL_TYPE
         verbose_name = 'Peak feature (%s)' % CELL_TYPE
         verbose_name_plural = 'Peak feature (%s)' % CELL_TYPE
+
+##################################################
+# Features
+##################################################       
+class GlassTranscriptLabelThioMac(GlassTranscriptLabel):
+    glass_transcript = models.ForeignKey(GlassTranscriptThioMac)
+    cell_base = ThioMacBase()
+    class Meta:
+        db_table    = 'glass_atlas_%s_%s_prep"."glass_transcript_label' % (current_settings.TRANSCRIPT_GENOME, CELL_TYPE.lower())
+        app_label   = 'Transcription_%s' % CELL_TYPE
+        verbose_name = 'Glass transcript label (%s)' % CELL_TYPE
+        verbose_name_plural = 'Glass transcript labels (%s)' % CELL_TYPE

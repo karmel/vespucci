@@ -101,4 +101,17 @@ class ExpectedTagCount(GlassModel):
         return '"%s" note: %s' % (self.sequencing_run.source_table.strip(), self.note)
     
 
+class TranscriptClass(models.Model):
+    '''
+    Ideally, we want to be able to assign labels (classes) manually and automatically
+    to the transcripts. These labels are the total set assignable to transcripts.
+    '''
+    label = models.CharField(max_length=100)
+    description = models.CharField(max_length=255)
     
+    class Meta:
+        db_table    = 'glass_atlas_%s"."transcript_class' % current_settings.REFERENCE_GENOME
+        app_label   = 'Transcription'
+        
+    def __unicode__(self):
+        return self.label

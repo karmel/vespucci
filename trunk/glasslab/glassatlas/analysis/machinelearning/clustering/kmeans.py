@@ -136,13 +136,14 @@ def for_ligands(data, fields, erna):
     
 def for_dex(data, fields, erna):
     if not erna: 
-        #data = setup.filter_data_notx_tags(data,fields, tags=5000)
-        data = setup.filter_data_refseq(data,fields)
+        data = setup.filter_data_notx_tags(data,fields)
+        #data = setup.filter_data_refseq(data,fields)
+        data = setup.filter_data_no_infrastructure(data,fields)
         data = setup.filter_data_score(data,fields)
         #data = setup.filter_data_kla_upreg(data,fields)
     
     # Select columns
-    selected = ['dex_2h_fc','dex_4h_fc','dex_kla_fc',]
+    selected = ['dex_2h_fc','dex_4h_fc','dex_kla_vs_kla_fc',]
     feat_data, indices = setup.get_selected_vectors(data, fields, selected)
     
     

@@ -238,7 +238,7 @@ class MLSetup(object):
     def filter_data_no_infrastructure(self, data, fields):
         # Filter out rRNA, tRNA, etc.
         mask = data[:,fields.index('has_infrastructure')] == 0
-        self.text_data = self.text_data[mask]
+        if self.text_data: self.text_data = self.text_data[mask]
         return data[mask]
     
     def filter_data_dmso_upreg(self, data, fields):
@@ -250,13 +250,13 @@ class MLSetup(object):
     def filter_data_kla_upreg(self, data, fields):
         # Up-reg only
         mask = data[:,fields.index('kla_1h_fc')] >= 1
-        self.text_data = self.text_data[mask]
+        if self.text_data: self.text_data = self.text_data[mask]
         return data[mask]
     
     def filter_data_refseq(self, data, fields):
         # Ref-seq only
         mask = data[:,fields.index('has_refseq')] == 1
-        self.text_data = self.text_data[mask]
+        if self.text_data: self.text_data = self.text_data[mask]
         return data[mask]
     
     def filter_data_has_change(self, data, fields, change=1):
@@ -268,19 +268,19 @@ class MLSetup(object):
             mask = numpy.zeros(data.shape[0], dtype=numpy.bool)
             for i, val in enumerate(change):
                 mask += abs(data[:,i]) >= val
-        self.text_data = self.text_data[mask]
+        if self.text_data: self.text_data = self.text_data[mask]
         return data[mask]
     
     def filter_data_score(self, data, fields, score=10):
         # Above passed score min
         mask = data[:,fields.index('transcript_score')] >= score
-        self.text_data = self.text_data[mask]
+        if self.text_data: self.text_data = self.text_data[mask]
         return data[mask]
     
     def filter_data_notx_tags(self, data, fields, tags=10000):
         # Above passed score min
         mask = data[:,fields.index('notx_1h_tags')] >= tags
-        self.text_data = self.text_data[mask]
+        if self.text_data: self.text_data = self.text_data[mask]
         return data[mask]
 
     def convert_to_float(self, data):
