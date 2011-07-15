@@ -18,25 +18,25 @@ CREATE OR REPLACE FUNCTION glass_atlas_%s_%s_prep.update_transcript_source_recor
 RETURNS VOID AS $$
 BEGIN 
 	-- Update redundant records: those that already exist for the merge
-	UPDATE glass_atlas_%s_%s_prep.glass_transcript_source merged_assoc
+	EXECUTE 'UPDATE glass_atlas_%s_%s_prep.glass_transcript_source_' || trans.chromosome_id || ' merged_assoc
 		SET tag_count = (merged_assoc.tag_count + trans_assoc.tag_count),
 			gaps = (merged_assoc.gaps + trans_assoc.gaps),
 			polya_count = (merged_assoc.polya_count + trans_assoc.polya_count)
-		FROM glass_atlas_%s_%s_prep.glass_transcript_source trans_assoc
-		WHERE merged_assoc.glass_transcript_id = trans.id
-			AND trans_assoc.glass_transcript_id = old_id
-			AND merged_assoc.sequencing_run_id = trans_assoc.sequencing_run_id;
+		FROM glass_atlas_%s_%s_prep.glass_transcript_source_' || trans.chromosome_id || ' trans_assoc
+		WHERE merged_assoc.glass_transcript_id = ' || trans.id || '
+			AND trans_assoc.glass_transcript_id = ' || old_id || '
+			AND merged_assoc.sequencing_run_id = trans_assoc.sequencing_run_id';
 	-- UPDATE redundant records: those that don't exist for the merge
-	UPDATE glass_atlas_%s_%s_prep.glass_transcript_source
-		SET glass_transcript_id = trans.id
-		WHERE glass_transcript_id = old_id
+	EXECUTE 'UPDATE glass_atlas_%s_%s_prep.glass_transcript_source_' || trans.chromosome_id || '
+		SET glass_transcript_id = ' || trans.id || '
+		WHERE glass_transcript_id = ' || old_id || '
 		AND sequencing_run_id 
 		NOT IN (SELECT sequencing_run_id 
-				FROM glass_atlas_%s_%s_prep.glass_transcript_source
-			WHERE glass_transcript_id = trans.id);
+				FROM glass_atlas_%s_%s_prep.glass_transcript_source_' || trans.chromosome_id || '
+			WHERE glass_transcript_id = ' || trans.id || ')';
 	-- Delete those that remain for the removed transcript.
-	DELETE FROM glass_atlas_%s_%s_prep.glass_transcript_source
-		WHERE glass_transcript_id = old_id;
+	EXECUTE 'DELETE FROM glass_atlas_%s_%s_prep.glass_transcript_source_' || trans.chromosome_id || '
+		WHERE glass_transcript_id = ' || old_id;
 	RETURN;
 END;
 $$ LANGUAGE 'plpgsql';
@@ -58,15 +58,15 @@ DECLARE
     sum integer;
     count integer;
 BEGIN 
-    sum := (SELECT SUM(tag_count) - SUM(polya_count) FROM glass_atlas_%s_%s_prep.glass_transcript_source source
+    EXECUTE 'SELECT SUM(tag_count) - SUM(polya_count) FROM glass_atlas_%s_%s_prep.glass_transcript_source_' || trans.chromosome_id || ' source
             JOIN glass_atlas_mm9.sequencing_run run
                 ON source.sequencing_run_id = run.id
-            WHERE glass_transcript_id = trans.id 
-                AND run.use_for_scoring = true);
-    count := (SELECT COUNT(sequencing_run_id) FROM glass_atlas_%s_%s_prep.glass_transcript_source source
+            WHERE glass_transcript_id = ' || trans.id || ' 
+                AND run.use_for_scoring = true' INTO sum;
+    EXECUTE 'SELECT COUNT(sequencing_run_id) FROM glass_atlas_%s_%s_prep.glass_transcript_source_' || trans.chromosome_id || ' source
             JOIN glass_atlas_mm9.sequencing_run run
                 ON source.sequencing_run_id = run.id
-            WHERE glass_transcript_id = trans.id AND run.use_for_scoring = true);
+            WHERE glass_transcript_id = ' || trans.id || ' AND run.use_for_scoring = true' INTO count;
     RETURN GREATEST(0,(density_multiplier*sum::numeric)/(count*(trans.transcription_end - trans.transcription_start)::numeric)); 
 END;
 $$ LANGUAGE 'plpgsql';
@@ -317,9 +317,9 @@ RETURNS VOID AS $$
                         ) RETURNING *' INTO transcript;
 	            
 				-- Save the record of the sequencing run source
-				INSERT INTO glass_atlas_%s_%s_prep.glass_transcript_source 
-					("glass_transcript_id", "sequencing_run_id", "tag_count", "gaps", "polya_count") 
-					VALUES (transcript.id, seq_run_id, rec.tag_count, rec.gaps, rec.polya_count);
+				EXECUTE 'INSERT INTO glass_atlas_%s_%s_prep.glass_transcript_source_' || trans.chromosome_id || '
+					(chromosome_id, "glass_transcript_id", "sequencing_run_id", "tag_count", "gaps", "polya_count") 
+					VALUES (transcript.chromosome_id, transcript.id, seq_run_id, rec.tag_count, rec.gaps, rec.polya_count)';
 
 			END IF;
 		END LOOP;
@@ -412,11 +412,10 @@ BEGIN
 	    LOOP
 	        IF row.chromosome_id IS NOT NULL THEN
 	            FOR source IN 
-	                SELECT * FROM glass_atlas_%s_%s_prep.glass_transcript_source s
+	                EXECUTE 'SELECT * FROM glass_atlas_%s_%s_prep.glass_transcript_source_' || row.chromosome_id || ' s
 	                JOIN glass_atlas_mm9.sequencing_run r
 	                    ON s.sequencing_run_id = r.id
-	                WHERE glass_transcript_id = row.t_id
-	                    --AND sequencing_run_id != run_id
+	                WHERE glass_transcript_id = ' || row.t_id
 	            LOOP 
 	                EXECUTE 'SELECT id FROM "' || trim(source.source_table) || '_' || chr_id ||'"
 	                    WHERE start_end && public.make_box(' || row.transcription_start || ', 0, ' || row.transcription_end || ', 0) 
@@ -427,11 +426,10 @@ BEGIN
             
 	            IF matching IS NULL THEN
 	                FOR source IN 
-	                    SELECT * FROM glass_atlas_%s_%s_prep.glass_transcript_source s
+	                    EXECUTE 'SELECT * FROM glass_atlas_%s_%s_prep.glass_transcript_source_' || row.chromosome_id || ' s
 	                    JOIN glass_atlas_mm9.sequencing_run r
 	                        ON s.sequencing_run_id = r.id
-	                    WHERE glass_transcript_id = row.t_id
-	                        -- AND sequencing_run_id != run_id
+	                    WHERE glass_transcript_id = ' || row.t_id
 	                LOOP
 	                    PERFORM glass_atlas_%s_%s_prep.save_transcripts_from_sequencing_run(
 	                        source.sequencing_run_id, chr_id, trim(source.source_table),  max_gap, 
@@ -449,7 +447,7 @@ BEGIN
         WHERE id IN (' || array_to_string(ids, ',') || ')';
         
         -- And all bad source records
-        EXECUTE 'DELETE FROM glass_atlas_%s_%s_prep.glass_transcript_source
+        EXECUTE 'DELETE FROM glass_atlas_%s_%s_prep.glass_transcript_source_' || chr_id || '
         WHERE glass_transcript_id IN (' || array_to_string(ids, ',') || ')';
     END IF;
     RETURN;

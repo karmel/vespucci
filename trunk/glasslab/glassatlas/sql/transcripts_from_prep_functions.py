@@ -17,14 +17,14 @@ DECLARE
     sum integer;
     count integer;
 BEGIN 
-	sum := (SELECT SUM(tag_count) - SUM(polya_count) FROM glass_atlas_%s_%s_staging.glass_transcript_source source
+	EXECUTE 'SELECT SUM(tag_count) - SUM(polya_count) FROM glass_atlas_%s_%s_staging.glass_transcript_source_' || trans.chromosome_id || '  source
 	        JOIN glass_atlas_mm9.sequencing_run run
                 ON source.sequencing_run_id = run.id
-            WHERE glass_transcript_id = trans.id AND run.use_for_scoring = true);
-	count := (SELECT COUNT(sequencing_run_id) FROM glass_atlas_%s_%s_staging.glass_transcript_source source
+            WHERE glass_transcript_id = ' || trans.id || ' AND run.use_for_scoring = true' INTO sum;
+	EXECUTE 'SELECT COUNT(sequencing_run_id) FROM glass_atlas_%s_%s_staging.glass_transcript_source_' || trans.chromosome_id || '  source
 	        JOIN glass_atlas_mm9.sequencing_run run
                 ON source.sequencing_run_id = run.id
-            WHERE glass_transcript_id = trans.id AND run.use_for_scoring = true);
+            WHERE glass_transcript_id = ' || trans.id || ' AND run.use_for_scoring = true' INTO count;
 	RETURN GREATEST(0,(density_multiplier*sum::numeric)/(count*(trans.transcription_end - trans.transcription_start)::numeric)); 
 END;
 $$ LANGUAGE 'plpgsql';
@@ -32,11 +32,11 @@ $$ LANGUAGE 'plpgsql';
 CREATE OR REPLACE FUNCTION glass_atlas_%s_%s_staging.get_polya(trans glass_atlas_%s_%s_staging.glass_transcript)
 RETURNS boolean AS $$
 BEGIN 
-	RETURN (SELECT SUM(polya_count)::numeric/SUM(tag_count)::numeric >= .5
-	        FROM glass_atlas_%s_%s_staging.glass_transcript_source source
+	RETURN EXECUTE 'SELECT SUM(polya_count)::numeric/SUM(tag_count)::numeric >= .5
+	        FROM glass_atlas_%s_%s_staging.glass_transcript_source_' || trans.chromosome_id || ' source
 	        JOIN glass_atlas_mm9.sequencing_run run
                 ON source.sequencing_run_id = run.id
-            WHERE glass_transcript_id = trans.id AND run.use_for_scoring = true); 
+            WHERE glass_transcript_id = ' || trans.id || ' AND run.use_for_scoring = true'; 
 END;
 $$ LANGUAGE 'plpgsql';
 
@@ -98,14 +98,14 @@ BEGIN
                 SELECT * FROM glass_atlas_%s_%s_prep.glass_transcript_' || chr_id || ' 
                 WHERE id IN (SELECT t.id
                 FROM  glass_atlas_%s_%s_prep.glass_transcript_' || chr_id || ' t
-                JOIN glass_atlas_%s_%s_prep.glass_transcript_source s
+                JOIN glass_atlas_%s_%s_prep.glass_transcript_source_' || chr_id || ' s
                     ON t.id = s.glass_transcript_id
                 GROUP BY t.id
                 HAVING sum(s.tag_count) > 1 AND count(s.sequencing_run_id) > 1) -- Omit one-tag-wonders and one-run-transcripts
                 ) t2 
             ON t1.density_circle @> t2.start_density 
                 AND t1.strand = t2.strand 
-            JOIN glass_atlas_%s_%s_prep.glass_transcript_source s
+            JOIN glass_atlas_%s_%s_prep.glass_transcript_source_' || chr_id || ' s
                 ON t1.id = s.glass_transcript_id
             WHERE t1.strand = ' || strand || '
             GROUP by t1.id, t1.strand, t1.transcription_start, t1.transcription_end
@@ -153,16 +153,16 @@ $$ LANGUAGE 'plpgsql';
 CREATE OR REPLACE FUNCTION glass_atlas_%s_%s_staging.insert_transcript_source_records(chr_id integer)
 RETURNS VOID AS $$
 BEGIN 
-    EXECUTE 'INSERT INTO glass_atlas_%s_%s_staging.glass_transcript_source
-            (glass_transcript_id, sequencing_run_id, tag_count, gaps, polya_count)
-            SELECT der.transcript_id, der.sequencing_run_id, 
+    EXECUTE 'INSERT INTO glass_atlas_%s_%s_staging.glass_transcript_source_' || chr_id || '
+            (chromosome_id, glass_transcript_id, sequencing_run_id, tag_count, gaps, polya_count)
+            SELECT ' || chr_id || ', der.transcript_id, der.sequencing_run_id, 
                 SUM(der.tag_count), COUNT(der.glass_transcript_id) - 1,
                 SUM(der.polya_count)
             FROM (
                 SELECT trans.id as transcript_id,* 
                 FROM glass_atlas_%s_%s_staging.glass_transcript_' || chr_id || ' trans
                 JOIN (SELECT * FROM glass_atlas_%s_%s_prep.glass_transcript_' || chr_id || ' t
-                    JOIN glass_atlas_%s_%s_prep.glass_transcript_source s
+                    JOIN glass_atlas_%s_%s_prep.glass_transcript_source_' || chr_id || ' s
                     ON t.id = s.glass_transcript_id) source
                 ON source.strand = trans.strand
             AND source.start_end <@ trans.start_end) der
