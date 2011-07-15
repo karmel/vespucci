@@ -136,10 +136,10 @@ def for_ligands(data, fields, erna):
     
 def for_dex(data, fields, erna):
     if not erna: 
-        data = setup.filter_data_notx_tags(data,fields)
+        data = setup.filter_data_notx_tags(data,fields,tags=5000)
         #data = setup.filter_data_refseq(data,fields)
         data = setup.filter_data_no_infrastructure(data,fields)
-        data = setup.filter_data_score(data,fields)
+        data = setup.filter_data_score(data,fields,score=7)
         #data = setup.filter_data_kla_upreg(data,fields)
     
     # Select columns
@@ -147,7 +147,7 @@ def for_dex(data, fields, erna):
     feat_data, indices = setup.get_selected_vectors(data, fields, selected)
     
     
-    feat_data = setup.filter_data_has_change(feat_data,fields, change=[1,1,.8])
+    feat_data = setup.filter_data_has_change(feat_data,fields, change=[1,1,1])
     
     clusterer = GlassKMeansClusterer()
     clusters = clusterer.cluster_rows(feat_data, k=6)

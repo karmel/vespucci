@@ -32,7 +32,7 @@ MAX_STITCHING_GAP = MAX_GAP # Max gap between transcripts being stitched togethe
 MAX_EDGE = 100 # Max edge length of transcript graph subgraphs to be created
 EDGE_SCALING_FACTOR = 20 # Number of transcripts per DENSITY_MULTIPLIER bp required to get full allowed edge length
 DENSITY_MULTIPLIER = 1000 # Scaling factor on density-- think of as bps worth of tags to consider
-MIN_SCORE = 3 # Hide transcripts with scores below this threshold.
+MIN_SCORE = 4 # Hide transcripts with scores below this threshold.
 
 def multiprocess_all_chromosomes(func, cls, *args):
     ''' 
@@ -208,7 +208,7 @@ class TranscriptionRegionBase(TranscriptModelBase):
         '''
         print 'Vacuum analyzing all tables.'
         for model in cls.cell_base.get_transcript_models():
-            execute_query_without_transaction('VACUUM FULL ANALYZE "%s";' % (model._meta.db_table))
+            execute_query_without_transaction('VACUUM ANALYZE "%s";' % (model._meta.db_table))
         
         # Multiprocessing locks for some reason; do each separately.
         #for chr_list in current_settings.CHR_LISTS:
@@ -217,11 +217,11 @@ class TranscriptionRegionBase(TranscriptModelBase):
     @classmethod        
     def _force_vacuum(cls, chr_list):
         for chr_id in chr_list:
-            execute_query_without_transaction('VACUUM FULL ANALYZE "%s_%d";' % (
+            execute_query_without_transaction('VACUUM ANALYZE "%s_%d";' % (
                                                                     cls.cell_base.glass_transcript._meta.db_table, 
                                                                     chr_id))
             
-            execute_query_without_transaction('VACUUM FULL ANALYZE "%s_%d";' % (
+            execute_query_without_transaction('VACUUM ANALYZE "%s_%d";' % (
                                                                     cls.cell_base.glass_transcript_prep._meta.db_table, 
                                                                     chr_id))
 

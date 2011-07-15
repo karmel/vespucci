@@ -81,7 +81,7 @@ class NonCodingRnaAdmin(ReadOnlyAdmin):
 class SequenceExonInline(ReadOnlyInline):
     model = SequenceExon
     readonly_fields = make_all_fields_readonly(model)
-    ordering = ['transcription_start']
+    ordering = ['exon_start']
     
 class GlassTranscriptionRegionAdmin(ReadOnlyAdmin):
     list_display    = ['chromosome', 'strand', 'transcription_start', 'transcription_end']

@@ -11,7 +11,7 @@ DATABASES = {
         'USER': 'glass',
         'PASSWORD': 'monocyte',
         'HOST': 'localhost',
-        'PORT': '63333',
+        'PORT': '54321',
     },
     'read_only': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
@@ -19,6 +19,6 @@ DATABASES = {
         'USER': 'glass_read_only',
         'PASSWORD': 'monocyte',
         'HOST': 'localhost',
-        'PORT': '63333',
+        'PORT': '54321',
     }
 }
