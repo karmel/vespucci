@@ -1,4 +1,4 @@
-track name=glass_transcripts_0_new description="Glass Atlas Transcripts + strand" useScore=1 itemRgb=On
+track name=glass_transcripts_0 description="Glass Atlas Transcripts + strand" useScore=1 itemRgb=On
 chr1                     	4519098	4519284	Transcript_53693	0.109058138905	+	4519098	4519284	0,0,255	2	1,1	0,185
 chr1                     	4761023	4762517	Transcript_53724	0.102944092389	+	4761023	4762517	0,0,255	2	1,1	0,1493
 chr1                     	4762535	4762680	Transcript_53725	0.179050487761	+	4762535	4762680	0,0,255	2	1,1	0,144
