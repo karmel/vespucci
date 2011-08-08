@@ -4,7 +4,7 @@ Created on Feb 23, 2011
 @author: karmel
 '''
 
-genome = 'erna'
+genome = 'mm9'
 cell_type='thiomac'
 def sql(genome, cell_type, subset=False):
     count = 3

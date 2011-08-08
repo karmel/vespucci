@@ -58,26 +58,26 @@ if __name__ == '__main__':
     
     if options.staging: current_settings.STAGING = current_settings.STAGING_SUFFIX
 
-    cell_base.glass_transcript.turn_off_autovacuum()    
+    #cell_base.glass_transcript.turn_off_autovacuum()    
     if options.tag_table:
         GlassTag._meta.db_table = options.schema_name and '%s"."%s' % (options.schema_name, options.tag_table) \
                                     or options.tag_table
         cell_base.glass_transcript.add_from_tags(GlassTag._meta.db_table)
-        cell_base.glass_transcript.force_vacuum()
+        #cell_base.glass_transcript.force_vacuum_prep()
     elif options.remove_rogue_run:
         cell_base.glass_transcript.remove_rogue_run()
-        cell_base.glass_transcript.force_vacuum()
+        cell_base.glass_transcript.force_vacuum_prep()
     
     if options.set_density:
         cell_base.glass_transcript.set_density(allow_extended_gaps=allow_extended_gaps)
-        cell_base.glass_transcript.force_vacuum()
+        cell_base.glass_transcript.force_vacuum_prep()
     elif not options.skip_stitching:
         cell_base.glass_transcript.stitch_together_transcripts(allow_extended_gaps=allow_extended_gaps)
-        cell_base.glass_transcript.force_vacuum()
+        cell_base.glass_transcript.force_vacuum_prep()
 
     if options.draw_edges:
         cell_base.glass_transcript.draw_transcript_edges()
-        cell_base.glass_transcript.force_vacuum()
+        #cell_base.glass_transcript.force_vacuum()
     
     if options.associate_nucleotides:
         cell_base.glass_transcript.associate_nucleotides()
@@ -95,5 +95,5 @@ if __name__ == '__main__':
     if options.output_dir:
         cell_base.filtered_glass_transcript.generate_bed_file(options.output_dir)
         
-    cell_base.glass_transcript.turn_on_autovacuum()
+    #cell_base.glass_transcript.turn_on_autovacuum()
     

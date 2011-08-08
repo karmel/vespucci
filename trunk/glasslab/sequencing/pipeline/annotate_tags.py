@@ -97,7 +97,7 @@ def upload_bowtie_files(options, file_name, bowtie_split_dir):
     
     file_names = os.listdir(bowtie_split_dir)
     processes = current_settings.ALLOWED_PROCESSES
-    step_size = len(file_names)//processes
+    step_size = max(1,len(file_names)//processes)
     p = Pool(processes) 
     for start in xrange(0,len(file_names),step_size):
         try:
@@ -125,8 +125,8 @@ def add_indices():
     # Execute after all the ends have been calculated,
     # as otherwise the insertion of ends takes far too long.
     GlassTag.add_indices()
-    execute_query_without_transaction('VACUUM FULL ANALYZE "%s";' % (GlassTag._meta.db_table))
-    GlassTag.set_polya()
+    execute_query_without_transaction('VACUUM ANALYZE "%s";' % (GlassTag._meta.db_table))
+    #GlassTag.set_polya()
     
 def fix_tags(bowtie_file, file_name):
     GlassTag.set_table_name('tag_' + file_name)

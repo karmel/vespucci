@@ -17,7 +17,7 @@ DECLARE
     sum integer;
     count integer;
 BEGIN 
-	EXECUTE 'SELECT SUM(tag_count) - SUM(polya_count) FROM glass_atlas_%s_%s_staging.glass_transcript_source_' || trans.chromosome_id || '  source
+	EXECUTE 'SELECT SUM(tag_count) - COALESCE(SUM(polya_count),0) FROM glass_atlas_%s_%s_staging.glass_transcript_source_' || trans.chromosome_id || '  source
 	        JOIN glass_atlas_mm9.sequencing_run run
                 ON source.sequencing_run_id = run.id
             WHERE glass_transcript_id = ' || trans.id || ' AND run.use_for_scoring = true' INTO sum;
@@ -31,12 +31,15 @@ $$ LANGUAGE 'plpgsql';
 
 CREATE OR REPLACE FUNCTION glass_atlas_%s_%s_staging.get_polya(trans glass_atlas_%s_%s_staging.glass_transcript)
 RETURNS boolean AS $$
+DECLARE
+	polya boolean;
 BEGIN 
-	RETURN EXECUTE 'SELECT SUM(polya_count)::numeric/SUM(tag_count)::numeric >= .5
+	EXECUTE 'SELECT COALESCE(SUM(polya_count),0)::numeric/SUM(tag_count)::numeric >= .5
 	        FROM glass_atlas_%s_%s_staging.glass_transcript_source_' || trans.chromosome_id || ' source
 	        JOIN glass_atlas_mm9.sequencing_run run
                 ON source.sequencing_run_id = run.id
-            WHERE glass_transcript_id = ' || trans.id || ' AND run.use_for_scoring = true'; 
+            WHERE glass_transcript_id = ' || trans.id || ' AND run.use_for_scoring = true' INTO polya; 
+	RETURN polya;
 END;
 $$ LANGUAGE 'plpgsql';
 
@@ -101,7 +104,7 @@ BEGIN
                 JOIN glass_atlas_%s_%s_prep.glass_transcript_source_' || chr_id || ' s
                     ON t.id = s.glass_transcript_id
                 GROUP BY t.id
-                HAVING sum(s.tag_count) > 1 AND count(s.sequencing_run_id) > 1) -- Omit one-tag-wonders and one-run-transcripts
+                HAVING sum(s.tag_count)/count(s.sequencing_run_id)::numeric > 1 AND count(s.sequencing_run_id) > 1) -- Omit one-tag-wonders and one-run-transcripts
                 ) t2 
             ON t1.density_circle @> t2.start_density 
                 AND t1.strand = t2.strand 
@@ -238,8 +241,8 @@ BEGIN
 		    FROM (SELECT 
 				    transcript.id,
 				    GREATEST(0,
-                        SQRT((SUM(source.tag_count - source.polya_count)::numeric/' || total_runs || ')
-                        *MAX(source.tag_count - source.polya_count)::numeric)
+                        SQRT((SUM(source.tag_count - COALESCE(source.polya_count,0))::numeric/' || total_runs || ')
+                        *MAX(source.tag_count - COALESCE(source.polya_count,0))::numeric)
                         /LEAST(
                             GREATEST(1000, transcript.transcription_end - transcript.transcription_start)::numeric/1000,
                             2*LOG(transcript.transcription_end - transcript.transcription_start)

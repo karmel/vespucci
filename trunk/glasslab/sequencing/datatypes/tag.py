@@ -466,7 +466,7 @@ class GlassTag(GlassSequencingOutput):
         if not created: 
             s.total_tags = cls.objects.count()
             s.percent_mapped = percent_mapped
-            s.wt, s.notx, s.kla, s.other_conditions = wt, notx, kla, other_conditions 
+            #s.wt, s.notx, s.kla, s.other_conditions = wt, notx, kla, other_conditions 
             s.timepoint = timepoint 
             s.save() 
         return s

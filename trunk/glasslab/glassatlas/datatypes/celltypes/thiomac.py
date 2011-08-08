@@ -30,6 +30,8 @@ class ThioMacBase(CellTypeBase):
     @property
     def glass_transcript_source(self): return GlassTranscriptSourceThioMac
     @property
+    def glass_transcript_source_prep(self): return GlassTranscriptSourcePrepThioMac
+    @property
     def glass_transcript_nucleotides(self): return GlassTranscriptNucleotidesThioMac
     @property
     def glass_transcript_sequence(self): return GlassTranscriptSequenceThioMac

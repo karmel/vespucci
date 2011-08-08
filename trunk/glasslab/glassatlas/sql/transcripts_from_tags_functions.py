@@ -317,9 +317,10 @@ RETURNS VOID AS $$
                         ) RETURNING *' INTO transcript;
 	            
 				-- Save the record of the sequencing run source
-				EXECUTE 'INSERT INTO glass_atlas_%s_%s_prep.glass_transcript_source_' || trans.chromosome_id || '
+				EXECUTE 'INSERT INTO glass_atlas_%s_%s_prep.glass_transcript_source_' || rec.chromosome_id || '
 					(chromosome_id, "glass_transcript_id", "sequencing_run_id", "tag_count", "gaps", "polya_count") 
-					VALUES (transcript.chromosome_id, transcript.id, seq_run_id, rec.tag_count, rec.gaps, rec.polya_count)';
+					VALUES (' || transcript.chromosome_id || ', ' || transcript.id || ', ' || seq_run_id || ', 
+					' || rec.tag_count || ', ' || rec.gaps || ', ' || rec.polya_count || ')';
 
 			END IF;
 		END LOOP;

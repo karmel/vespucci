@@ -96,9 +96,13 @@ class CellTypeBase(object):
     @property
     def glass_transcript(self): return GlassTranscript
     @property
+    def glass_transcript_prep(self): return GlassTranscriptPrep
+    @property
     def filtered_glass_transcript(self): return FilteredGlassTranscript
     @property
     def glass_transcript_source(self): return GlassTranscriptSource
+    @property
+    def glass_transcript_source_prep(self): return GlassTranscriptSourcePrep
     @property
     def glass_transcript_nucleotides(self): return GlassTranscriptNucleotides
     @property
@@ -123,8 +127,9 @@ class CellTypeBase(object):
         return PeakFeature
     
     def get_transcript_models(self):
-        return [self.glass_transcript, self.filtered_glass_transcript,
-                self.glass_transcript_source, self.glass_transcript_nucleotides,
+        return [self.glass_transcript, self.glass_transcript_prep, 
+                self.glass_transcript_source, self.glass_transcript_source_prep, 
+                self.glass_transcript_nucleotides,
                 self.glass_transcript_sequence, self.glass_transcript_non_coding,
                 self.glass_transcript_patterned, self.glass_transcript_conserved,
                 self.glass_transcribed_rna, self.glass_transcribed_rna_source,
@@ -210,10 +215,15 @@ class TranscriptionRegionBase(TranscriptModelBase):
         for model in cls.cell_base.get_transcript_models():
             execute_query_without_transaction('VACUUM ANALYZE "%s";' % (model._meta.db_table))
         
-        # Multiprocessing locks for some reason; do each separately.
-        #for chr_list in current_settings.CHR_LISTS:
-        #    wrap_force_vacuum(cls, chr_list)
-    
+    @classmethod
+    def force_vacuum_prep(cls):
+        '''
+        VACUUM ANALYZE prep tables.
+        '''
+        print 'Vacuum analyzing prep tables.'
+        for model in [cls.cell_base.glass_transcript_prep, cls.cell_base.glass_transcript_source_prep]:
+            execute_query_without_transaction('VACUUM ANALYZE "%s";' % (model._meta.db_table))
+        
     @classmethod        
     def _force_vacuum(cls, chr_list):
         for chr_id in chr_list:
@@ -380,14 +390,14 @@ class GlassTranscript(TranscriptBase):
                        current_settings.STAGING,
                        chr_id)
             execute_query(query)
-            print 'Setting average tags for transcripts for chromosome %d' % chr_id
+            #print 'Setting average tags for transcripts for chromosome %d' % chr_id
             query = """
                 SELECT glass_atlas_%s_%s%s.set_density(%d, %d, %s);
                 """ % (current_settings.TRANSCRIPT_GENOME, 
                        current_settings.CURRENT_CELL_TYPE.lower(),
                        current_settings.STAGING,
                        chr_id, DENSITY_MULTIPLIER, 'true')
-            execute_query(query)
+            #execute_query(query)
             
     @classmethod
     def set_score_thresholds(cls, sample_count=500, sample_size=100, allow_zero=False):
