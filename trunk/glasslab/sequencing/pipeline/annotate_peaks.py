@@ -100,11 +100,15 @@ def import_peaks(options, file_name, peaks_file_path, peak_type):
     Given a MACS peak file, save a temp table and store peak data.
     '''
     GlassPeak.create_table(file_name)
+    #GlassPeak.set_table_name('peak_' + file_name)
     
-    data = DelimitedFileParser(peaks_file_path).get_array()
+    parser = DelimitedFileParser(peaks_file_path)
+    parser.convert_line_endings()
+    data = parser.get_array()
     if data[0][0] == 'chr':
         data = data[1:] # Header row
     for row in data:
+        #print row
         if options.homer:
             peak = GlassPeak.init_from_homer_row(row)
         elif not peak_type.diffuse:

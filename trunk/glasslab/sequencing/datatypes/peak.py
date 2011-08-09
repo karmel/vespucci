@@ -157,7 +157,7 @@ class GlassPeak(GlassSequencingOutput):
         For use with older versions of Homer files.
         '''
         connection.close()
-        p_val = str(row[12]).split('e')
+        p_val = str(row[12]).lower().split('e')
         return cls(chromosome=Chromosome.objects.get(name=str(row[1]).strip()),
                      start=int(row[2]),
                      end=int(row[3]),
