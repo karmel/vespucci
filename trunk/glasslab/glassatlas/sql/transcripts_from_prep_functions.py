@@ -187,7 +187,7 @@ BEGIN
         table_type := region_types[counter];
         EXECUTE 'INSERT INTO glass_atlas_%s_%s_staging.glass_transcript_'
         || table_type || ' (glass_transcript_id, '
-        || table_type || '_transcription_region_id, relationship)
+        || table_type || '_transcription_region_id, relationship, major)
             (SELECT trans.id, reg.id, 
                 (CASE WHEN reg.start_end ~= trans.start_end THEN 
                 glass_atlas_%s_%s_staging.glass_transcript_transcription_region_relationship(''is equal to'') 
@@ -195,7 +195,9 @@ BEGIN
                 glass_atlas_%s_%s_staging.glass_transcript_transcription_region_relationship(''contains'') 
                 WHEN reg.start_end @> trans.start_end THEN 
                 glass_atlas_%s_%s_staging.glass_transcript_transcription_region_relationship(''is contained by'') 
-                ELSE glass_atlas_%s_%s_staging.glass_transcript_transcription_region_relationship(''overlaps with'') END)
+                ELSE glass_atlas_%s_%s_staging.glass_transcript_transcription_region_relationship(''overlaps with'') END),
+                (CASE WHEN width(reg.start_end # trans.start_end) > width(reg.start_end)::numeric/2 THEN true
+                ELSE false END)
             FROM glass_atlas_%s_%s_staging.glass_transcript_' || chr_id || ' trans
             JOIN genome_reference_mm9.' || table_type || '_transcription_region reg
             ON reg.start_end && trans.start_end
@@ -208,7 +210,7 @@ BEGIN
     table_type := 'infrastructure';
     EXECUTE 'INSERT INTO glass_atlas_%s_%s_staging.glass_transcript_'
         || table_type || ' (glass_transcript_id, '
-        || table_type || '_transcription_region_id, relationship)
+        || table_type || '_transcription_region_id, relationship, major)
             (SELECT trans.id, reg.id, 
                 (CASE WHEN reg.start_end ~= trans.start_end THEN 
                 glass_atlas_%s_%s_staging.glass_transcript_transcription_region_relationship(''is equal to'') 
@@ -216,7 +218,9 @@ BEGIN
                 glass_atlas_%s_%s_staging.glass_transcript_transcription_region_relationship(''contains'') 
                 WHEN reg.start_end @> trans.start_end THEN 
                 glass_atlas_%s_%s_staging.glass_transcript_transcription_region_relationship(''is contained by'') 
-                ELSE glass_atlas_%s_%s_staging.glass_transcript_transcription_region_relationship(''overlaps with'') END)
+                ELSE glass_atlas_%s_%s_staging.glass_transcript_transcription_region_relationship(''overlaps with'') END),
+                (CASE WHEN width(reg.start_end # trans.start_end) > width(reg.start_end)::numeric/2 THEN true
+                ELSE false END)
             FROM glass_atlas_%s_%s_staging.glass_transcript_' || chr_id || ' trans
             JOIN genome_reference_mm9.patterned_transcription_region_' || chr_id || ' reg
             ON reg.start_end && trans.start_end

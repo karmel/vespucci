@@ -513,7 +513,8 @@ CREATE TABLE "glass_atlas_%s_%s_staging"."glass_transcript_sequence" (
     id integer NOT NULL,
     glass_transcript_id integer,
     sequence_transcription_region_id integer,
-    relationship "glass_atlas_%s_%s_staging"."glass_transcript_transcription_region_relationship"
+    relationship "glass_atlas_%s_%s_staging"."glass_transcript_transcription_region_relationship",
+    major boolean
 );
 GRANT ALL ON TABLE "glass_atlas_%s_%s_staging"."glass_transcript_sequence" TO  "glass";
 CREATE SEQUENCE "glass_atlas_%s_%s_staging"."glass_transcript_sequence_id_seq"
@@ -526,12 +527,14 @@ ALTER SEQUENCE "glass_atlas_%s_%s_staging"."glass_transcript_sequence_id_seq" OW
 ALTER TABLE "glass_atlas_%s_%s_staging"."glass_transcript_sequence" ALTER COLUMN id SET DEFAULT nextval('"glass_atlas_%s_%s_staging"."glass_transcript_sequence_id_seq"'::regclass);
 ALTER TABLE ONLY "glass_atlas_%s_%s_staging"."glass_transcript_sequence" ADD CONSTRAINT glass_transcript_sequence_pkey PRIMARY KEY (id);
 CREATE INDEX glass_transcript_sequence_transcript_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_sequence" USING btree (glass_transcript_id);
+CREATE INDEX glass_transcript_sequence_major_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_sequence" USING btree (major);
 
 CREATE TABLE "glass_atlas_%s_%s_staging"."glass_transcript_non_coding" (
     id integer NOT NULL,
     glass_transcript_id integer,
     non_coding_transcription_region_id integer,
-    relationship "glass_atlas_%s_%s_staging"."glass_transcript_transcription_region_relationship"
+    relationship "glass_atlas_%s_%s_staging"."glass_transcript_transcription_region_relationship",
+    major boolean
 );
 GRANT ALL ON TABLE "glass_atlas_%s_%s_staging"."glass_transcript_non_coding" TO  "glass";
 CREATE SEQUENCE "glass_atlas_%s_%s_staging"."glass_transcript_non_coding_id_seq"
@@ -544,12 +547,14 @@ ALTER SEQUENCE "glass_atlas_%s_%s_staging"."glass_transcript_non_coding_id_seq" 
 ALTER TABLE "glass_atlas_%s_%s_staging"."glass_transcript_non_coding" ALTER COLUMN id SET DEFAULT nextval('"glass_atlas_%s_%s_staging"."glass_transcript_non_coding_id_seq"'::regclass);
 ALTER TABLE ONLY "glass_atlas_%s_%s_staging"."glass_transcript_non_coding" ADD CONSTRAINT glass_transcript_non_coding_pkey PRIMARY KEY (id);
 CREATE INDEX glass_transcript_non_coding_transcript_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_non_coding" USING btree (glass_transcript_id);
+CREATE INDEX glass_transcript_non_coding_major_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_non_coding" USING btree (major);
 
 CREATE TABLE "glass_atlas_%s_%s_staging"."glass_transcript_conserved" (
     id integer NOT NULL,
     glass_transcript_id integer,
     conserved_transcription_region_id integer,
-    relationship "glass_atlas_%s_%s_staging"."glass_transcript_transcription_region_relationship"
+    relationship "glass_atlas_%s_%s_staging"."glass_transcript_transcription_region_relationship",
+    major boolean
 );
 GRANT ALL ON TABLE "glass_atlas_%s_%s_staging"."glass_transcript_conserved" TO  "glass";
 CREATE SEQUENCE "glass_atlas_%s_%s_staging"."glass_transcript_conserved_id_seq"
@@ -562,12 +567,14 @@ ALTER SEQUENCE "glass_atlas_%s_%s_staging"."glass_transcript_conserved_id_seq" O
 ALTER TABLE "glass_atlas_%s_%s_staging"."glass_transcript_conserved" ALTER COLUMN id SET DEFAULT nextval('"glass_atlas_%s_%s_staging"."glass_transcript_conserved_id_seq"'::regclass);
 ALTER TABLE ONLY "glass_atlas_%s_%s_staging"."glass_transcript_conserved" ADD CONSTRAINT glass_transcript_conserved_pkey PRIMARY KEY (id);
 CREATE INDEX glass_transcript_conserved_transcript_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_conserved" USING btree (glass_transcript_id);
+CREATE INDEX glass_transcript_conserved_major_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_conserved" USING btree (major);
 
 CREATE TABLE "glass_atlas_%s_%s_staging"."glass_transcript_patterned" (
     id integer NOT NULL,
     glass_transcript_id integer,
     patterned_transcription_region_id integer,
-    relationship "glass_atlas_%s_%s_staging"."glass_transcript_transcription_region_relationship"
+    relationship "glass_atlas_%s_%s_staging"."glass_transcript_transcription_region_relationship",
+    major boolean
 );
 GRANT ALL ON TABLE "glass_atlas_%s_%s_staging"."glass_transcript_patterned" TO  "glass";
 CREATE SEQUENCE "glass_atlas_%s_%s_staging"."glass_transcript_patterned_id_seq"
@@ -580,12 +587,14 @@ ALTER SEQUENCE "glass_atlas_%s_%s_staging"."glass_transcript_patterned_id_seq" O
 ALTER TABLE "glass_atlas_%s_%s_staging"."glass_transcript_patterned" ALTER COLUMN id SET DEFAULT nextval('"glass_atlas_%s_%s_staging"."glass_transcript_patterned_id_seq"'::regclass);
 ALTER TABLE ONLY "glass_atlas_%s_%s_staging"."glass_transcript_patterned" ADD CONSTRAINT glass_transcript_patterned_pkey PRIMARY KEY (id);
 CREATE INDEX glass_transcript_patterned_transcript_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_patterned" USING btree (glass_transcript_id);
+CREATE INDEX glass_transcript_patterned_major_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_patterned" USING btree (major);
 
 CREATE TABLE "glass_atlas_%s_%s_staging"."glass_transcript_infrastructure" (
     id integer NOT NULL,
     glass_transcript_id integer,
     infrastructure_transcription_region_id integer,
-    relationship "glass_atlas_%s_%s_staging"."glass_transcript_transcription_region_relationship"
+    relationship "glass_atlas_%s_%s_staging"."glass_transcript_transcription_region_relationship",
+    major boolean
 );
 GRANT ALL ON TABLE "glass_atlas_%s_%s_staging"."glass_transcript_infrastructure" TO  "glass";
 CREATE SEQUENCE "glass_atlas_%s_%s_staging"."glass_transcript_infrastructure_id_seq"
@@ -598,12 +607,14 @@ ALTER SEQUENCE "glass_atlas_%s_%s_staging"."glass_transcript_infrastructure_id_s
 ALTER TABLE "glass_atlas_%s_%s_staging"."glass_transcript_infrastructure" ALTER COLUMN id SET DEFAULT nextval('"glass_atlas_%s_%s_staging"."glass_transcript_infrastructure_id_seq"'::regclass);
 ALTER TABLE ONLY "glass_atlas_%s_%s_staging"."glass_transcript_infrastructure" ADD CONSTRAINT glass_transcript_infrastructure_pkey PRIMARY KEY (id);
 CREATE INDEX glass_transcript_infrastructure_transcript_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_infrastructure" USING btree (glass_transcript_id);
+CREATE INDEX glass_transcript_infrastructure_major_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_infrastructure" USING btree (major);
 
 CREATE TABLE "glass_atlas_%s_%s_staging"."glass_transcript_duped" (
     id integer NOT NULL,
     glass_transcript_id integer,
     duped_transcription_region_id integer,
-    relationship "glass_atlas_%s_%s_staging"."glass_transcript_transcription_region_relationship"
+    relationship "glass_atlas_%s_%s_staging"."glass_transcript_transcription_region_relationship",
+    major boolean
 );
 GRANT ALL ON TABLE "glass_atlas_%s_%s_staging"."glass_transcript_duped" TO  "glass";
 CREATE SEQUENCE "glass_atlas_%s_%s_staging"."glass_transcript_duped_id_seq"
@@ -616,6 +627,7 @@ ALTER SEQUENCE "glass_atlas_%s_%s_staging"."glass_transcript_duped_id_seq" OWNED
 ALTER TABLE "glass_atlas_%s_%s_staging"."glass_transcript_duped" ALTER COLUMN id SET DEFAULT nextval('"glass_atlas_%s_%s_staging"."glass_transcript_duped_id_seq"'::regclass);
 ALTER TABLE ONLY "glass_atlas_%s_%s_staging"."glass_transcript_duped" ADD CONSTRAINT glass_transcript_duped_pkey PRIMARY KEY (id);
 CREATE INDEX glass_transcript_duped_transcript_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_duped" USING btree (glass_transcript_id);
+CREATE INDEX glass_transcript_duped_major_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_duped" USING btree (major);
 
 
 CREATE TABLE "glass_atlas_%s_%s_staging"."norm_sum" (

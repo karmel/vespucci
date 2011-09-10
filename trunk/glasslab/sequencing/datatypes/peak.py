@@ -131,7 +131,7 @@ class GlassPeak(GlassSequencingOutput):
                      fold_enrichment=str(row[7])
                      )
     @classmethod
-    def init_from_homer_row(cls, row):
+    def init_from_homer_row_new(cls, row):
         '''
         From a standard tab-delimited Homer peak file, create model instance.
                 '''
@@ -150,7 +150,7 @@ class GlassPeak(GlassSequencingOutput):
                      )
         
     @classmethod
-    def init_from_homer_row_old(cls, row):
+    def init_from_homer_row(cls, row):
         '''
         From a standard tab-delimited Homer peak file, create model instance.
         
