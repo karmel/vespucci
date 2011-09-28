@@ -131,12 +131,12 @@ class GlassPeak(GlassSequencingOutput):
                      fold_enrichment=str(row[7])
                      )
     @classmethod
-    def init_from_homer_row_new(cls, row):
+    def init_from_homer_row(cls, row):
         '''
         From a standard tab-delimited Homer peak file, create model instance.
                 '''
         connection.close()
-        p_val = str(row[9]).lower().split('e')
+        p_val = str(row[11]).lower().split('e')
         return cls(chromosome=Chromosome.objects.get(name=str(row[1]).strip()),
                      start=int(row[2]),
                      end=int(row[3]),
@@ -146,11 +146,11 @@ class GlassPeak(GlassSequencingOutput):
                      score=str(row[7]),
                      p_value=str(p_val[0]),
                      p_value_exp=len(p_val) > 1 and p_val[1] or 0,
-                     fold_enrichment=str(row[8])
+                     fold_enrichment=str(row[10])
                      )
         
     @classmethod
-    def init_from_homer_row(cls, row):
+    def init_from_homer_row_old(cls, row):
         '''
         From a standard tab-delimited Homer peak file, create model instance.
         

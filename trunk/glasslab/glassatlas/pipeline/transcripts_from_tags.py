@@ -33,12 +33,12 @@ class TranscriptsFromTagsParser(GlassOptionParser):
                            help='Should the scoring of transcripts be skipped?'),
                make_option('--associate_nucleotides',action='store_true', dest='associate_nucleotides',  
                            help='Should obtaining nucleotide sequences to transcripts be attempted?'),
-               make_option('--skip_reassociation',action='store_true', dest='skip_reassociation',  
-                           help='Should reassociation of peak features to transcripts be skipped?'),
+               make_option('--reassociate',action='store_true', dest='reassociate',  
+                           help='Should reassociation of peak features to transcripts be attempted?'),
                make_option('--no_extended_gaps',action='store_true', dest='no_extended_gaps',  
                            help='Should extended gaps (i.e., under RefSeq regions) be allowed?'),
                make_option('--staging',action='store_true', dest='staging', default=False,  
-                           help='Use the trancsript database with the suffix _staging?'),
+                           help='Use the transcript database with the suffix _staging?'),
                 ]
 
 if __name__ == '__main__':
@@ -68,13 +68,14 @@ if __name__ == '__main__':
         cell_base.glass_transcript.remove_rogue_run()
         cell_base.glass_transcript.force_vacuum_prep()
     
-    if options.set_density:
+    if not options.skip_stitching:
+        cell_base.glass_transcript.stitch_together_transcripts(
+                        allow_extended_gaps=allow_extended_gaps, set_density=options.set_density)
+        cell_base.glass_transcript.force_vacuum_prep()
+    elif options.set_density:
         cell_base.glass_transcript.set_density(allow_extended_gaps=allow_extended_gaps)
         cell_base.glass_transcript.force_vacuum_prep()
-    elif not options.skip_stitching:
-        cell_base.glass_transcript.stitch_together_transcripts(allow_extended_gaps=allow_extended_gaps)
-        cell_base.glass_transcript.force_vacuum_prep()
-
+    
     if options.draw_edges:
         cell_base.glass_transcript.draw_transcript_edges()
         #cell_base.glass_transcript.force_vacuum()
@@ -88,7 +89,7 @@ if __name__ == '__main__':
     if not options.skip_scoring:
         cell_base.glass_transcript.set_scores()
         
-    if not options.skip_reassociation:
+    if options.reassociate:
         cell_base.peak_feature.update_peak_features_by_transcript()
         cell_base.glass_transcript.mark_all_reloaded()
         

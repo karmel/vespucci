@@ -277,6 +277,7 @@ class GlassTranscript(TranscriptBase):
     start_end_density   = BoxField(null=True, default=None, help_text='This is a placeholder for the PostgreSQL box type.')
     
     spliced             = models.NullBooleanField(default=None, help_text='Do we have RNA-Seq confirmation?')
+    deviation_score     = models.FloatField(null=True, default=None)
     score               = models.FloatField(null=True, default=None)
     
     modified        = models.DateTimeField(auto_now=True)
@@ -326,12 +327,12 @@ class GlassTranscript(TranscriptBase):
     # Transcript cleanup and refinement
     ################################################
     @classmethod
-    def stitch_together_transcripts(cls, allow_extended_gaps=True):
+    def stitch_together_transcripts(cls, allow_extended_gaps=True, set_density=False):
         multiprocess_all_chromosomes(wrap_stitch_together_transcripts, cls, allow_extended_gaps)
         #wrap_stitch_together_transcripts(cls,[21, 22])
     
     @classmethod
-    def _stitch_together_transcripts(cls, chr_list, allow_extended_gaps=True):
+    def _stitch_together_transcripts(cls, chr_list, allow_extended_gaps=True, set_density=False):
         '''
         This is tag-level agnostic, stitching based on gap size alone.
         '''
@@ -343,15 +344,16 @@ class GlassTranscript(TranscriptBase):
                        current_settings.CURRENT_CELL_TYPE.lower(),
                        chr_id, MAX_STITCHING_GAP)
             execute_query(query)
-            print 'Setting average tags for preparatory transcripts for chromosome %d' % chr_id
-            query = """
-                SELECT glass_atlas_%s_%s_prep.set_density(%d, %d, %d, %d, %s, %s);
-                """ % (current_settings.TRANSCRIPT_GENOME, 
-                       current_settings.CURRENT_CELL_TYPE.lower(),
-                       chr_id, MAX_EDGE, EDGE_SCALING_FACTOR, 
-                       DENSITY_MULTIPLIER, 
-                       allow_extended_gaps and 'true' or 'false', 'false')
-            execute_query(query)
+            if set_density:
+                print 'Setting average tags for preparatory transcripts for chromosome %d' % chr_id
+                query = """
+                    SELECT glass_atlas_%s_%s_prep.set_density(%d, %d, %d, %d, %s, %s);
+                    """ % (current_settings.TRANSCRIPT_GENOME, 
+                           current_settings.CURRENT_CELL_TYPE.lower(),
+                           chr_id, MAX_EDGE, EDGE_SCALING_FACTOR, 
+                           DENSITY_MULTIPLIER, 
+                           allow_extended_gaps and 'true' or 'false', 'false')
+                execute_query(query)
     
     @classmethod
     def set_density(cls, allow_extended_gaps=True):
@@ -468,8 +470,12 @@ class GlassTranscript(TranscriptBase):
         for chr_id in chr_list:
             print 'Scoring transcripts for chromosome %d' % chr_id
             query = """
-                SELECT glass_atlas_%s_%s%s.calculate_scores(%d);
+                -- SELECT glass_atlas_%s_%s%s.calculate_scores(%d);
+                SELECT glass_atlas_%s_%s%s.calculate_deviation_scores(%d);
                 """ % (current_settings.TRANSCRIPT_GENOME,
+                       current_settings.CURRENT_CELL_TYPE.lower(),
+                       current_settings.STAGING, chr_id,
+                       current_settings.TRANSCRIPT_GENOME,
                        current_settings.CURRENT_CELL_TYPE.lower(),
                        current_settings.STAGING, chr_id)
             execute_query(query) 

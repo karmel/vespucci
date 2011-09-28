@@ -269,6 +269,63 @@ BEGIN
 END;
 $$ LANGUAGE 'plpgsql';
 
+
+CREATE OR REPLACE FUNCTION glass_atlas_%s_%s_staging.calculate_deviation_scores(chr_id integer)
+RETURNS VOID AS $$
+DECLARE
+    total_runs integer;
+BEGIN 
+    -- We want an easily accessible measure of the expected standard error of this transcript.
+    -- Use notx replicates to get a standard deviation of tags, scaled by total tags in each run.
+    -- Then we take the sample standard deviation over the square root of the number of samples to get 
+    -- standard error of the mean (SEM).
+    
+    -- This value should be multiplied by total tags in the target run for it to be meaningful!
+    
+    -- Note that we nest the standard deviation query here three times-- once to ensure that we are using
+    -- an array padded out to the desired number of runs (filled with 0),
+    -- again to unnest the array so that we can use the Postgresql stddev(expression) function over it,
+    -- and again so that we can assign the stddev aggregate to a single update row.
+    
+    total_runs := (SELECT count(*) FROM glass_atlas_mm9.sequencing_run run
+        WHERE run.standard = true
+            AND run.type = 'Gro-Seq'
+            AND run.wt = true
+            AND run.notx = true
+            AND run.kla = false
+            AND run.other_conditions = false
+    );
+    EXECUTE 'UPDATE glass_atlas_%s_%s_staging.glass_transcript_' || chr_id || ' transcript
+            SET deviation_score = der3.score
+            
+            FROM (SELECT der2.id, stddev_samp(der2.unnest)/sqrt(' || total_runs || ')::numeric as score 
+                
+                FROM (SELECT der1.id, unnest(der1.deviation_array) 
+                    FROM (SELECT t.id, (array_agg(COALESCE(source_run.tag_count/source_run.total_tags::numeric,0)) 
+                            || array_fill(0::numeric,ARRAY[' || total_runs || ']))[1:' || total_runs || '] as deviation_array
+                        FROM glass_atlas_%s_%s_staging.glass_transcript_' || chr_id || ' t
+                        LEFT OUTER JOIN 
+                        (SELECT * FROM glass_atlas_%s_%s_staging.glass_transcript_source_' || chr_id || ' s
+                        JOIN glass_atlas_mm9.sequencing_run run
+                        ON s.sequencing_run_id = run.id
+                        WHERE run.standard = true
+                            AND run.type = ''Gro-Seq''
+                            AND run.wt = true
+                            AND run.notx = true
+                            AND run.kla = false
+                            AND run.other_conditions = false) source_run
+                        ON t.id = source_run.glass_transcript_id
+                        GROUP by t.id
+                    ) der1
+                ) der2
+                GROUP BY der2.id
+            ) der3
+            WHERE transcript.id = der3.id';
+            
+    RETURN;
+END;
+$$ LANGUAGE 'plpgsql';
+
 CREATE OR REPLACE FUNCTION glass_atlas_%s_%s_staging.calculate_scores_sample(chr_id integer)
 RETURNS VOID AS $$
 BEGIN 
@@ -325,7 +382,7 @@ BEGIN
 END;
 $$ LANGUAGE 'plpgsql'; 
 
-""" % tuple([genome, cell_type]*65)
+""" % tuple([genome, cell_type]*69)
 
 if __name__ == '__main__':
     print sql(genome, cell_type)

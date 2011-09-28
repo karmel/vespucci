@@ -47,6 +47,7 @@ class SequencingRun(GlassModel):
     kla             = models.BooleanField(default=False)    
     other_conditions= models.BooleanField(default=False)  
     
+    strain          = models.CharField(max_length=100, blank=True, null=True, help_text='Mouse strain')
     modified        = models.DateTimeField(auto_now=True)
     created         = models.DateTimeField(auto_now_add=True)
     

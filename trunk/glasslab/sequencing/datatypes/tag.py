@@ -461,6 +461,7 @@ class GlassTag(GlassSequencingOutput):
                                                   'kla': kla,
                                                   'other_conditions': other_conditions,
                                                   'timepoint': timepoint,
+                                                  'strain': wt and 'C57Bl6' or None,
                                                    }
                                                )
         if not created: 

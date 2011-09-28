@@ -22,6 +22,7 @@ CREATE TABLE "glass_atlas_%s_%s_staging"."glass_transcript" (
     "spliced" boolean DEFAULT NULL,
     "polya" boolean DEFAULT NULL,
     "score" numeric DEFAULT NULL,
+    "deviation_score" numeric DEFAULT NULL,
     "modified" timestamp(6) NULL DEFAULT NULL,
     "created" timestamp(6) NULL DEFAULT NULL
 );
@@ -658,7 +659,7 @@ ALTER TABLE ONLY "glass_atlas_%s_%s_staging"."norm_sum" ADD CONSTRAINT norm_sum_
 CREATE UNIQUE INDEX "norm_sum_name_idx" ON "glass_atlas_%s_%s_staging"."norm_sum" USING btree(name_1,name_2 ASC NULLS LAST);
 
 
-""" % tuple([genome, cell_type]*367)
+""" % tuple([genome, cell_type]*373)
 
 if __name__ == '__main__':
     print sql(genome, cell_type)

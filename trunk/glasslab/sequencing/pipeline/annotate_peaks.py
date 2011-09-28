@@ -108,7 +108,6 @@ def import_peaks(options, file_name, peaks_file_path, peak_type):
     if data[0][0] == 'chr':
         data = data[1:] # Header row
     for row in data:
-        #print row
         if options.homer:
             peak = GlassPeak.init_from_homer_row(row)
         elif not peak_type.diffuse:

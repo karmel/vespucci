@@ -50,7 +50,9 @@ class DelimitedFileParser(object):
             elif line.strip('\n') and line[:1] != '#':
                 row = []
                 for i,field in enumerate(line.strip('\n').split(delimiter)):
-                    field = cast(clean(field)) or None
+                    field = cast(clean(field))
+                    if field == '': field = None # Empty strings shouldn't count here, but 0 should
+
                     # Does the current data type match the expected?
                     # If not, default to str, or cast empty value
                     try:
@@ -68,15 +70,21 @@ class DelimitedFileParser(object):
                     row.append(field)
                 data.append(tuple(row))
             k += 1
-            
+        
+        # Get rid of leftover "None"s (replace with 0-length strings), and set string length for string fields
+        data_types = [(type == str and '|S%d' % length) \
+                      or (type == float and '<f8') \
+                      or type or '|S1' for type, length in data_types]
+         
         # If there is a header row, set the fields, and use it for column names in the array
         if self.header: 
-            # Get rid of leftover "None"s (replace with 0-length strings), and set string length for string fields
-            data_types = [(type == str and '|S%d' % length) or type or '|S1' for type, length in data_types]
             # Make sure every field has a name for column headings in the array
             field_names = [field or str(i) for i,field in enumerate(self.fields)]
-            data_types = zip(field_names, data_types)
-            
+        else:
+            # Default to a set of indices for names
+            field_names = map(str,xrange(0,len(data[0])))
+        
+        data_types = zip(field_names, data_types)
         arr = numpy.array(data, dtype=data_types)
         return arr
     
