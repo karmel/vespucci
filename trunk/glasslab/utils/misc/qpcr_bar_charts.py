@@ -12,11 +12,13 @@ import numpy
 from operator import itemgetter
 from itertools import groupby
 
-def draw_bar_charts(data, remove_outliers=2):
+def draw_bar_charts(data, remove_outliers=0):
     # First, mask any undetermined or 0 vals:
     data = data[data['C_'] > 0]
     primers = list(map(itemgetter(0), groupby(data['Target Name'])))
     samples = list(map(itemgetter(0), groupby(sorted(data['Sample Name']))))
+    
+    samples.sort(reverse=True)
     
     # Set up housekeeping data
     base_dataset = data[data['Target Name'] == primers[0]]
@@ -51,14 +53,16 @@ def draw_bar_charts(data, remove_outliers=2):
         ax.bar(ind, rq, width, yerr=error_bars)
         ax.set_ylabel('RQ')
         ax.set_title(primer)
-        ax.set_xticks(ind+width)
+        ax.set_xticks(ind+width/2)
         # Alternate labels for readability
-        if i % 2: ax.set_xticklabels([n % 2 and s or '' for n, s in enumerate(samples)])
-        else: ax.set_xticklabels([(not n % 2) and s or '' for n, s in enumerate(samples)])
+        #if i % 2: ax.set_xticklabels([n % 2 and s or '' for n, s in enumerate(samples)])
+        #else: ax.set_xticklabels([(not n % 2) and s or '' for n, s in enumerate(samples)])
         
+        # Or all labels
+        ax.set_xticklabels(samples)
     plt.show()
 
-def get_stats(dataset, samples, remove_outliers=2):
+def get_stats(dataset, samples, remove_outliers=0):
     means = numpy.array([dataset[dataset['Sample Name'] == sample]['C_'].mean() for sample in samples])
     std = numpy.array([dataset[dataset['Sample Name'] == sample]['C_'].std() for sample in samples])
     counts = numpy.array([len(dataset[dataset['Sample Name'] == sample]) for sample in samples])
@@ -81,7 +85,7 @@ def get_stats(dataset, samples, remove_outliers=2):
 if __name__ == '__main__':
     if len(sys.argv) > 1: file_name = sys.argv[1]
     else:
-        file_name = '/Users/karmel/Desktop/Projects/GlassLab/Notes and Reports/Thyroid/qPCR/T3 treated cells/Target set 2- bound genes/T3_treated_thiomacs_bound_genes_both_plates_2011_09_08_data.txt'
+        file_name = '/Users/karmel/Desktop/Projects/GlassLab/Notes and Reports/Thyroid/qPCR/T3 treated cells/RAW cells 2011-10-08/T3_treated_RAW_2011_10_08_data.txt'
 
     
     parser = DelimitedFileParser(file_name=file_name, header=True)
