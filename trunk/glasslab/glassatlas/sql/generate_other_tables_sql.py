@@ -14,10 +14,10 @@ CREATE TYPE "glass_atlas_%s"."sequencing_run_type" AS ENUM('Gro-Seq','RNA-Seq','
 CREATE TABLE "glass_atlas_%s"."sequencing_run" (
     "id" int4 NOT NULL,
     "type" glass_atlas_%s.sequencing_run_type DEFAULT NULL,
-    "cell_type" character(50) DEFAULT NULL,
-    "name" character(100) DEFAULT NULL,
-    "source_table" character(100) DEFAULT NULL,
-    "description" character(255) DEFAULT NULL,
+    "cell_type" varchar(50) DEFAULT NULL,
+    "name" varchar(100) DEFAULT NULL,
+    "source_table" varchar(100) DEFAULT NULL,
+    "description" varchar(255) DEFAULT NULL,
     "total_tags" int8 DEFAULT NULL,
     "percent_mapped" numeric(5,2) DEFAULT NULL,
     "peak_type_id" int4 DEFAULT NULL,
@@ -41,7 +41,7 @@ CREATE UNIQUE INDEX sequencing_run_source_table_idx ON "glass_atlas_%s"."sequenc
 CREATE TABLE "glass_atlas_%s"."sequencing_run_annotation" (
     "id" int4 NOT NULL,
     "sequencing_run_id" int4 DEFAULT NULL,
-    "note" character(100) DEFAULT NULL
+    "note" varchar(100) DEFAULT NULL
 );
 GRANT ALL ON TABLE "glass_atlas_%s"."sequencing_run_annotation" TO  "glass";
 CREATE SEQUENCE "glass_atlas_%s"."sequencing_run_annotation_id_seq"
@@ -57,7 +57,7 @@ CREATE INDEX sequencing_run_annotation_run_idx ON "glass_atlas_%s"."sequencing_r
 
 CREATE TABLE "glass_atlas_%s"."peak_type" (
     "id" int4 NOT NULL,
-    "type" character(50) DEFAULT NULL,
+    "type" varchar(50) DEFAULT NULL,
     "diffuse" boolean DEFAULT NULL
 );
 GRANT ALL ON TABLE "glass_atlas_%s"."peak_type" TO  "glass";

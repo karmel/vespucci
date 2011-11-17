@@ -136,17 +136,17 @@ class GlassPeak(GlassSequencingOutput):
         From a standard tab-delimited Homer peak file, create model instance.
                 '''
         connection.close()
-        p_val = str(row[11]).lower().split('e')
+        #p_val = str(row[11]).lower().split('e')
         return cls(chromosome=Chromosome.objects.get(name=str(row[1]).strip()),
                      start=int(row[2]),
                      end=int(row[3]),
                      start_end=(int(row[2]), 0, int(row[3]), 0),
                      length=int(row[3]) - int(row[2]),
-                     tag_count=str(row[5]),
-                     score=str(row[7]),
-                     p_value=str(p_val[0]),
-                     p_value_exp=len(p_val) > 1 and p_val[1] or 0,
-                     fold_enrichment=str(row[10])
+                     #tag_count=str(row[5]),
+                     score=str(row[5]),
+                     #p_value=str(p_val[0]),
+                     #p_value_exp=len(p_val) > 1 and p_val[1] or 0,
+                     #fold_enrichment=str(row[10])
                      )
         
     @classmethod
@@ -291,7 +291,7 @@ class HomerPeak(GlassSequencingOutput):
         table_sql = """
         CREATE TABLE "%s" (
             id int4,
-            cluster_id char(255),
+            cluster_id varchar(255),
             chromosome_id int4,
             strand int2,
             "start" int8,
@@ -299,16 +299,16 @@ class HomerPeak(GlassSequencingOutput):
             start_end box,
             "peak_score" int4,
             "distance_to_tss" int4,
-            annotation char(255),
-            detailed_annotation char(255),
-            nearest_promoter char(100),
+            annotation varchar(255),
+            detailed_annotation varchar(255),
+            nearest_promoter varchar(100),
             promoter_id int4,
-            nearest_unigene char(100),
-            nearest_refseq char(100),
-            nearest_ensembl char(100),
-            gene_name char(100),
-            gene_alias char(255),
-            gene_description char(255)
+            nearest_unigene varchar(100),
+            nearest_refseq varchar(100),
+            nearest_ensembl varchar(100),
+            gene_name varchar(100),
+            gene_alias varchar(255),
+            gene_description varchar(255)
             );
         CREATE SEQUENCE "%s_id_seq"
             START WITH 1

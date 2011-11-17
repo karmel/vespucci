@@ -633,8 +633,8 @@ CREATE INDEX glass_transcript_duped_major_idx ON "glass_atlas_%s_%s_staging"."gl
 
 CREATE TABLE "glass_atlas_%s_%s_staging"."norm_sum" (
     "id" int4 NOT NULL,
-    "name_1" char(100) DEFAULT NULL,
-    "name_2" char(100) DEFAULT NULL,
+    "name_1" varchar(100) DEFAULT NULL,
+    "name_2" varchar(100) DEFAULT NULL,
     "total_runs_1" int4 DEFAULT NULL,
     "total_runs_2" int4 DEFAULT NULL,
     "total_tags_1" int4 DEFAULT NULL,

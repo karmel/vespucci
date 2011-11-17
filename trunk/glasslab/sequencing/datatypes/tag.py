@@ -188,9 +188,9 @@ class GlassTag(GlassSequencingOutput):
         table_sql = """
         CREATE TABLE "%s" (
             strand_char character(1) default NULL,
-            chromosome character(20),
+            chromosome varchar(20),
             "start" bigint,
-            sequence_matched character(100)
+            sequence_matched varchar(100)
         );
         """ % cls.bowtie_table
         execute_query(table_sql)
