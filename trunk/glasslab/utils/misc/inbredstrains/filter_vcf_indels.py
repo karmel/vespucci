@@ -14,10 +14,10 @@ def filter_variants(file_name, output_file=None):
     output = output_file or (file_name + '.clean')
     o1 = file(output, 'w')
     
-    strains = (14, 19, 21) # BALB, NOD, DBA
+    strains = (14, 19, 21) # BALB, DBA, NOD
     inc_reference = (16, 14, 19, 21)
     
-    format_field_count = 8 # Info field in this file is screwed up; leave out and insert a '.'
+    format_field_count = 9
     for line in f:
         fields = line.split('\t')
         if line[:4] == '#CHR':
@@ -30,22 +30,25 @@ def filter_variants(file_name, output_file=None):
             # We want to ensure the reference matches the reference, as represented by a '.'
             continue
         else:
+            fields_to_write = [] 
             for strain_of_interest in strains:
-                fields_to_write = [] 
                 try:
                     genotype, quality = fields[strain_of_interest].split(':')
+                except ValueError: genotype, quality = fields[strain_of_interest], 40 # No Phred provided; assume good enough
+                try:
                     if genotype[0] != genotype[2]: continue # Heterozygous
                     elif int(quality) < 40: continue # Phred score too low
                     elif int(genotype[0]) > 0:
                         # This is a legit indel; keep to write to file
                         fields_to_write.append(strain_of_interest)
-                except ValueError: pass
+                except IndexError: pass
                 
-                # We only want to write indels to file if they passed the threshold; otherwise, include a '.'
-                # Info field (index 8) in this file is screwed up; leave out and insert a '.'
-                if fields_to_write:
-                    write_line(fields[:format_field_count] + ['.'] + \
-                               [i in fields_to_write and fields[i] or '.' for i in inc_reference], o1)
+            # We only want to write indels to file if they passed the threshold; otherwise, include a '.'
+            # Info field (index 8) in this file is screwed up; leave out and insert a '.'
+            if fields_to_write:
+                # We remove the info field because the allele counts are all off, since we removed many mice strains
+                write_line(fields[:format_field_count] + \
+                           [i in fields_to_write and fields[i] or '0/0' for i in inc_reference], o1)
 
     o1.close()
     return output

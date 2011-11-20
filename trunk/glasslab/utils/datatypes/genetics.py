@@ -32,8 +32,8 @@ class InbredVariant(GlassModel):
 
 class InbredStrainVariation(GlassModel):
     chromosome = models.ForeignKey(Chromosome)
-    inbred_strain = models.ForeignKey(Chromosome)
-    inbred_variant = models.ForeignKey(Chromosome)
+    inbred_strain = models.ForeignKey(InbredStrain)
+    inbred_variant = models.ForeignKey(InbredVariant)
     alternate = models.CharField(max_length=255)
     
     class Meta: 

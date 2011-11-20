@@ -17,7 +17,7 @@ def filter_variants(file_name, output_file=None):
     strains = (14, 19, 21) # BALB, NOD, DBA
     inc_reference = (16, 14, 19, 21)
     
-    atg_index = 0 # Varies with vcf version?
+    atg_index = 1 # Varies with vcf version?
     format_field_count = 9
     for line in f:
         fields = line.split('\t')
@@ -25,25 +25,26 @@ def filter_variants(file_name, output_file=None):
             # Header
             write_line(fields[:format_field_count] + [fields[i] for i in inc_reference], o1)
             continue
-        elif line[0] == '#': continue #o1.write(line) #
+        elif line[0] == '#': o1.write(line) #continue 
         elif fields[16] != '.' and int(fields[16].split(':')[atg_index]) != 0: 
             # Format:  GT:ATG:MQ:HCG:GQ:DP
             # We want ATG == 0 for black6, since that means "of quality, and matches reference"
             # Or just a '.', which means, "No difference"
             continue
         else:
+            fields_to_write = [] 
             for strain_of_interest in strains:
-                fields_to_write = [] 
                 try:
                     if fields[16] != '.' and int(fields[strain_of_interest].split(':')[atg_index]) > 0: 
                         # We want ATG == 1 for the strains, since that means "of quality, and doesn't match reference"
                         fields_to_write.append(strain_of_interest)
                 except ValueError: pass
                 
-                # We only want to write indels to file if they passed the threshold; otherwise, include a '.'
-                if fields_to_write:
-                    write_line(fields[:format_field_count] + \
-                               [i in fields_to_write and fields[i] or '.' for i in inc_reference], o1)
+            # We only want to write indels to file if they passed the threshold; otherwise, include a '.'
+            if fields_to_write:
+                # We remove the info field because the allele counts are all off, since we removed many mice strains
+                write_line(fields[:format_field_count] + \
+                           [i in fields_to_write and fields[i] or '0/0' for i in inc_reference], o1)
 
     o1.close()
     return output
@@ -54,9 +55,9 @@ def write_line(fields, output):
 if __name__ == '__main__':
     import sys
     if len(sys.argv) > 1: file_name = sys.argv[1]
-    else: file_name = '/Users/karmel/Downloads/20110602-callable-dinox-indels.vcf'
+    else: file_name = '/Users/karmel/Downloads/20110602-final-snps_v4.vcf'
     if len(sys.argv) > 2: output_file = sys.argv[2]
-    else: output_file = '/Users/karmel/Downloads/four_strain_cleaned.vcf'
+    else: output_file = '/Users/karmel/Downloads/four_strain_snps.vcf'
     
     filter_variants(file_name, output_file)
 
