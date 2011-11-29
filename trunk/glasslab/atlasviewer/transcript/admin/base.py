@@ -199,7 +199,7 @@ class GlassTranscriptAdmin(TranscriptBase):
         return super(GlassTranscriptAdmin, self).render_change_form(request, context, *args, **kwargs)
     
     list_display    = ('chromosome','transcription_start','transcription_end','strand',
-                       'transcript_length', 'truncated_density','truncated_score', 'spliced', 'ucsc_browser_link', 'modified')
+                       'transcript_length', 'truncated_score', 'spliced', 'ucsc_browser_link', 'modified')
     list_filter     = ('chromosome','strand','spliced')
     
     save_on_top     = True

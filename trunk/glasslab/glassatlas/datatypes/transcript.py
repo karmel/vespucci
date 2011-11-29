@@ -470,7 +470,7 @@ class GlassTranscript(TranscriptBase):
         for chr_id in chr_list:
             print 'Scoring transcripts for chromosome %d' % chr_id
             query = """
-                -- SELECT glass_atlas_%s_%s%s.calculate_scores(%d);
+                SELECT glass_atlas_%s_%s%s.calculate_scores(%d);
                 SELECT glass_atlas_%s_%s%s.calculate_deviation_scores(%d);
                 """ % (current_settings.TRANSCRIPT_GENOME,
                        current_settings.CURRENT_CELL_TYPE.lower(),

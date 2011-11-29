@@ -29,5 +29,5 @@ CURRENT_CELL_TYPE = 'ThioMac'
 #####################################
 # Compute power
 #####################################
-ALLOWED_PROCESSES = 4
+ALLOWED_PROCESSES = 5
 CHR_LISTS = None # Dynamically set during processing
