@@ -16,7 +16,8 @@ class InbredStrain(GlassModel):
         db_table    = 'genetics"."inbred_strain'
         app_label   = 'Genetics'
 
-
+    def __unicode__(self): return self.name
+    
 class InbredVariant(GlassModel):
     type = models.CharField(max_length=10, choices=[(x,x) for x in ('SNP','insertion','deletion','CNV')])
     chromosome = models.ForeignKey(Chromosome)
@@ -30,6 +31,8 @@ class InbredVariant(GlassModel):
         db_table    = 'genetics"."inbred_variant'
         app_label   = 'Genetics'
 
+    def __unicode__(self): return '%s at %s: %d - %d' % (self.type.capitalize(), self.chromosome.name, self.start, self.end) 
+    
 class InbredStrainVariation(GlassModel):
     chromosome = models.ForeignKey(Chromosome)
     inbred_strain = models.ForeignKey(InbredStrain)

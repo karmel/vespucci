@@ -95,6 +95,7 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.admindocs',
     'django.contrib.admin',
+    'glasslab.atlasviewer.genetics',
     'glasslab.atlasviewer.genomereference',
     'glasslab.atlasviewer.transcript',
     'glasslab.atlasviewer.utilities',
