@@ -24,6 +24,7 @@ import os
 from glasslab.utils.datatypes.genetics import InbredStrainVariation,\
     InbredStrain
 import sys
+from glasslab.utils.database import execute_query
 
 def sort_by_chr(x):
     # Integers in order first, then X, Y.
@@ -65,23 +66,25 @@ def main(strain='BALB'):
             "genetics"."inbred_strain_variation_%d"."inbred_variant_id", 
             "genetics"."inbred_strain_variation_%d"."alternate", 
             "genetics"."inbred_variant_%d"."reference", 
-            "genetics"."inbred_variant_%d"."start" 
+            "genetics"."inbred_variant_%d"."start" as ref_start
             FROM "genetics"."inbred_strain_variation_%d" 
             INNER JOIN "genetics"."inbred_variant_%d" 
             ON ("genetics"."inbred_strain_variation_%d"."inbred_variant_id" = "genetics"."inbred_variant_%d"."id") 
-            WHERE "genetics"."inbred_strain_variation_%d"."inbred_strain_id" = %d 
+            WHERE "genetics"."inbred_strain_variation_%d"."inbred_strain_id" = %d
             ORDER BY "genetics"."inbred_variant_%d"."start" ASC''' % \
                 tuple([chr_id]*12 + [strain_obj.id] + [chr_id]))
         
         tmp_dest_file = os.path.join(output_dir, 'tmp_' + file)
         print 'Using temp destination file %s.' % tmp_dest_file
-        tmp_output_file = open(tmp_dest_file, 'w')
+        #tmp_output_file = open(tmp_dest_file, 'w')
         #output_file.write(header.replace('C57BL/6J', strain_obj.long_name) + '\n')
         
         last_index = 0
-
-        for i,var in enumerate(variants):
-            start = var.start - 1
+        # We want to keep a record of what the position in the new genome is
+        # so that we can update the variants accordingly. 
+        new_position = 0
+        for i,var in enumerate(list(variants)):
+            start = var.ref_start
 
             # Sanity check
             if nucleotides[start:start + len(var.reference)] != var.reference:
@@ -90,14 +93,31 @@ def main(strain='BALB'):
                                    nucleotides[start-20:start + len(var.reference) + 20]))
                 
             # Add in chars thus far
-            tmp_output_file.write(nucleotides[last_index:start])            
+            #tmp_output_file.write(nucleotides[last_index:start])            
             
             # Add in variation segment
-            tmp_output_file.write(var.alternate)
+            #tmp_output_file.write(var.alternate)
+            
+            # Update variant record with position in the new genome
+            new_start = new_position + (start - last_index)
+            new_end = new_start + len(var.alternate) - 1 # Subtract 1 because end is inclusive
+            
+            # Run query manually for the sake of speed.
+            execute_query('''UPDATE "%s_%d" 
+                set "start" = %d,
+                    "end" = %d, 
+                    "start_end" = public.make_box(%d, 0, %d, 0)
+                    WHERE id = %d;''' % (InbredStrainVariation._meta.db_table,
+                                         chr_id, new_start, new_end,
+                                         new_start, new_end, var.id)
+                    )
+            
             # Skip to end of reference segment
             last_index = start + len(var.reference)
+            new_position = new_start + len(var.alternate)
+            
             if i%10000==0: print "Processed variant %d with position %d." % (i, start)
-        
+        '''
         # Last bit
         tmp_output_file.write(nucleotides[last_index:])
         tmp_output_file.close()
@@ -117,7 +137,7 @@ def main(strain='BALB'):
         print 'Deleting temp file at %s.' % tmp_dest_file
         tmp_output_file.close()
         os.remove(tmp_dest_file)
-        
+        '''
         
 if __name__=='__main__':
     if len(sys.argv) > 1: strain = sys.argv[1]

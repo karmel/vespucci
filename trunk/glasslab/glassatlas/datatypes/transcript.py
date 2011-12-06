@@ -161,10 +161,8 @@ class TranscriptionRegionBase(TranscriptModelBase):
                         + ''' + '-' + django.jQuery('#id_transcription_end').val(),'Glass Atlas UCSC View ' + '''\
                         + str(randint(100,99999)) + '''); return false;">'''
                         
-    ucsc_browser_link = ucsc_browser_link_1 + ucsc_browser_sess_1 + ucsc_browser_link_3\
-                        + '''View in UCSC Browser</a> | '''\
-                        + ucsc_browser_link_1 + ucsc_browser_sess_2 + ucsc_browser_link_3\
-                        + '''All tracks</a> '''
+    ucsc_browser_link = ucsc_browser_link_1 + ucsc_browser_sess_2 + ucsc_browser_link_3\
+                        + '''View in UCSC Browser</a>'''
                         
     chromosome              = models.ForeignKey(Chromosome, help_text=ucsc_browser_link)
     strand                  = models.IntegerField(max_length=1, help_text='0 for +, 1 for -')
@@ -627,9 +625,8 @@ class GlassTranscriptNucleotides(TranscriptModelBase):
 class TranscriptSourceBase(TranscriptModelBase):
     sequencing_run          = models.ForeignKey(SequencingRun)
     tag_count               = models.IntegerField(max_length=12)
-    polya_count               = models.IntegerField(max_length=12)
+    polya_count             = models.IntegerField(max_length=12)
     gaps                    = models.IntegerField(max_length=12)
-    #polya_count             = models.IntegerField(max_length=12)
     
     class Meta:
         abstract = True

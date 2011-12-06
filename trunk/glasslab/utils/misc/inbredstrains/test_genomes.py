@@ -20,7 +20,7 @@ def main(strain='BALB'):
     
     strain_obj = InbredStrain.objects.get(name=strain)
     
-    to_test = 100
+    to_test = 10
     for chr in Chromosome.objects.exclude(name='chrM'):
         matches, discrepancies = 0,0
     
@@ -41,7 +41,9 @@ def main(strain='BALB'):
                 "genetics"."inbred_strain_variation_%d"."inbred_strain_id", 
                 "genetics"."inbred_strain_variation_%d"."inbred_variant_id", 
                 "genetics"."inbred_strain_variation_%d"."alternate", 
-                variant."reference", variant."start" 
+                "genetics"."inbred_strain_variation_%d"."start", 
+                "genetics"."inbred_strain_variation_%d"."end", 
+                variant."reference", variant."start" as ref_start
                 FROM "genetics"."inbred_strain_variation_%d" 
                 INNER JOIN (
                     -- Limit to variants that are not next to others
@@ -54,23 +56,20 @@ def main(strain='BALB'):
                 WHERE "genetics"."inbred_strain_variation_%d"."inbred_strain_id" = %d
                 ORDER BY RANDOM()
                 LIMIT %d''' % \
-                    tuple([chr.id]*10 + [strain_obj.id] + [to_test]))
+                    tuple([chr.id]*12 + [strain_obj.id] + [to_test]))
         
         for var in variants:
-            index = var.start - 1
+            index = var.ref_start
             
             # Get the region in the reference
-            ref_region = ref_n[index:index + len(var.reference) + (20 - len(var.reference))]
+            ref_region = ref_n[index:index + len(var.reference)]
             expected_match = ref_region.replace(var.reference, var.alternate, 1)
             
-            # Look in same general area, but with a wide margin,
-            # as indices get shifted every time we make a change
-            found_match = nucleotides.find(expected_match, int(index*.95), int(index*1.05))
-            if found_match > 0:
+            if expected_match == nucleotides[var.start:var.end + 1]:
                 matches += 1
             else: 
-                print 'Found discrepancy for variation at position %d on %s: %s != %s.' \
-                    % (var.start, chr.name, ref_region, expected_match)
+                print 'Found discrepancy for variation at reference position %d on %s: found %s vs. expected %s.' \
+                    % (var.ref_start, chr.name, nucleotides[var.start:var.end+1], expected_match)
                 discrepancies += 1
         
         f.close()

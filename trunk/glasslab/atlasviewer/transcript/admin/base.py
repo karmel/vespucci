@@ -154,12 +154,12 @@ class TranscriptBase(ReadOnlyAdmin):
     def ucsc_browser_link(self, obj):
         if obj.__class__.__name__.lower().find('glasstranscript') > -1: model_name = 'glasstranscript' 
         if obj.__class__.__name__.lower().find('glasstranscribedrna') > -1: model_name = 'glasstranscribedrna'
-        strand = ((not obj.strand and 'sense') or (obj.strand and 'antisense'))
-        stranded_session_file = model_name + '_%s_strands.txt' % strand
+        #strand = ((not obj.strand and 'sense') or (obj.strand and 'antisense'))
+        #stranded_session_file = model_name + '_%s_strands.txt' % strand
+        #stranded = self._ucsc_browser_link(obj, stranded_session_file, strand.capitalize())
         all_tracks_file = 'all_tracks.txt'
-        stranded = self._ucsc_browser_link(obj, stranded_session_file, strand.capitalize())
         all = self._ucsc_browser_link(obj, all_tracks_file, 'All')
-        return stranded + ' | ' + all
+        return all
                                        
     def _ucsc_browser_link(self, obj, session_file, text): 
                            
@@ -168,7 +168,7 @@ class TranscriptBase(ReadOnlyAdmin):
                            obj.transcription_start, obj.transcription_end) \
                 + '&amp;hgS_doLoadUrl=submit&amp;hgS_loadUrlName=' \
                 + obj.ucsc_session_url + session_file \
-                + '" target="_blank">' + text + '</a>'
+                + '" target="_blank">View</a>'
                      
     ucsc_browser_link.short_description = 'UCSC Browser' 
     ucsc_browser_link.allow_tags = True 
