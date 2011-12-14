@@ -19,7 +19,7 @@ class InbredStrain(GlassModel):
     def __unicode__(self): return self.name
     
 class InbredVariant(GlassModel):
-    type = models.CharField(max_length=10, choices=[(x,x) for x in ('SNP','insertion','deletion','CNV')])
+    type = models.CharField(max_length=10, choices=[(x,x) for x in ('SNP','indel','CNV')])
     chromosome = models.ForeignKey(Chromosome)
     start = models.IntegerField(max_length=12)
     end = models.IntegerField(max_length=12)
@@ -37,11 +37,11 @@ class InbredStrainVariation(GlassModel):
     chromosome = models.ForeignKey(Chromosome)
     inbred_strain = models.ForeignKey(InbredStrain)
     inbred_variant = models.ForeignKey(InbredVariant)
-    start = models.IntegerField(max_length=12)
-    end = models.IntegerField(max_length=12)
+    strain_start = models.IntegerField(max_length=12)
+    strain_end = models.IntegerField(max_length=12)
     alternate = models.CharField(max_length=255)
     
-    start_end = BoxField(null=True, default=None, help_text='This is a placeholder for the PostgreSQL box type.')
+    strain_start_end = BoxField(null=True, default=None, help_text='This is a placeholder for the PostgreSQL box type.')
     class Meta: 
         db_table    = 'genetics"."inbred_strain_variation'
         app_label   = 'Genetics'

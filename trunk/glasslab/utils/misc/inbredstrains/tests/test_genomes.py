@@ -10,7 +10,7 @@ from __future__ import division
 import os
 from glasslab.utils.datatypes.genetics import InbredStrainVariation,\
     InbredStrain
-import sys
+import sys, re
 from glasslab.utils.datatypes.genome_reference import Chromosome
 from glasslab.utils.misc.inbredstrains.generate_genomes_from_reference import get_nucleotides_and_header
 
@@ -20,8 +20,8 @@ def main(strain='BALB'):
     
     strain_obj = InbredStrain.objects.get(name=strain)
     
-    to_test = 10
-    for chr in Chromosome.objects.exclude(name='chrM'):
+    to_test = 100
+    for chr in Chromosome.objects.filter(id__lt='22'):
         matches, discrepancies = 0,0
     
         # Get file data
@@ -41,22 +41,16 @@ def main(strain='BALB'):
                 "genetics"."inbred_strain_variation_%d"."inbred_strain_id", 
                 "genetics"."inbred_strain_variation_%d"."inbred_variant_id", 
                 "genetics"."inbred_strain_variation_%d"."alternate", 
-                "genetics"."inbred_strain_variation_%d"."start", 
-                "genetics"."inbred_strain_variation_%d"."end", 
+                "genetics"."inbred_strain_variation_%d"."strain_start", 
+                "genetics"."inbred_strain_variation_%d"."strain_end", 
                 variant."reference", variant."start" as ref_start
                 FROM "genetics"."inbred_strain_variation_%d" 
-                INNER JOIN (
-                    -- Limit to variants that are not next to others
-                    SELECT var1.* FROM "genetics"."inbred_variant_%d" var1
-                    LEFT OUTER JOIN "genetics"."inbred_variant_%d" var2
-                    ON var1.start < var2.start
-                    AND var1.start + 20 > var2.start
-                    WHERE var2.id IS NULL) variant 
+                JOIN "genetics"."inbred_variant_%d" variant 
                 ON ("genetics"."inbred_strain_variation_%d"."inbred_variant_id" = variant."id") 
                 WHERE "genetics"."inbred_strain_variation_%d"."inbred_strain_id" = %d
                 ORDER BY RANDOM()
-                LIMIT %d''' % \
-                    tuple([chr.id]*12 + [strain_obj.id] + [to_test]))
+                LIMIT %d ''' % \
+                    tuple([chr.id]*11 + [strain_obj.id] + [to_test]))
         
         for var in variants:
             index = var.ref_start
@@ -65,11 +59,11 @@ def main(strain='BALB'):
             ref_region = ref_n[index:index + len(var.reference)]
             expected_match = ref_region.replace(var.reference, var.alternate, 1)
             
-            if expected_match == nucleotides[var.start:var.end + 1]:
+            if expected_match == nucleotides[var.strain_start:var.strain_end + 1]:
                 matches += 1
             else: 
                 print 'Found discrepancy for variation at reference position %d on %s: found %s vs. expected %s.' \
-                    % (var.ref_start, chr.name, nucleotides[var.start:var.end+1], expected_match)
+                    % (var.ref_start, chr.name, nucleotides[var.strain_start:var.strain_end+1], expected_match)
                 discrepancies += 1
         
         f.close()
