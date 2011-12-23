@@ -13,7 +13,7 @@ from glasslab.utils.datatypes.genetics import InbredStrainVariation,\
     InbredStrain
 import sys
 from glasslab.utils.database import execute_query
-from glasslab.utils.misc.inbredstrains.generate_genomes_from_reference import get_nucleotides_and_header,\
+from glasslab.inbredstrains.generate_genomes_from_reference import get_nucleotides_and_header,\
     sort_by_chr
 
     

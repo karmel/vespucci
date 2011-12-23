@@ -33,9 +33,9 @@ Changes made to original software:
 import os
 
 from glasslab.config import current_settings
-from sicer.src import remove_multiple_identical_tags, run_make_graph_file_by_chrom,\
+from sicer.src import remove_redundant_reads, run_make_graph_file_by_chrom,\
     find_islands_in_pr, associate_tags_with_chip_and_control_w_fc_q,\
-    find_significant_islands
+    filter_islands_by_significance
 
 THRESHOLD = 1
 FRAGMENT_SIZE = 150
@@ -81,7 +81,7 @@ class SicerHandler(object):
                 '-o','%s' % output_file,
                 '--output_dir','%s' % output_dir]
           
-        remove_multiple_identical_tags.main(args)
+        remove_redundant_reads.main(args)
         return output_file
         
     def run_make_graph_file_by_chrom(self, output_dir, file_name, input_file, window_size=200):
@@ -142,7 +142,7 @@ class SicerHandler(object):
                 '-p','%s' % str(p_value or -1),
                 '-o','%s' % output_file]
           
-        find_significant_islands.main(args)
+        filter_islands_by_significance.main(args)
         return output_file
     
 if __name__ == '__main__':

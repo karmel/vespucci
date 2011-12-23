@@ -306,155 +306,155 @@ ALTER TABLE ONLY "glass_atlas_%s_%s_staging"."glass_transcript_source" ADD CONST
 CREATE TABLE "glass_atlas_%s_%s_staging"."glass_transcript_source_1" (
     CHECK ( chromosome_id = 1 )
 ) INHERITS ("glass_atlas_%s_%s_staging"."glass_transcript_source");
-CREATE INDEX glass_transcript_source_1_transcript_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_source" USING btree (glass_transcript_id);
-CREATE INDEX glass_transcript_source_1_sequencing_run_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_source" USING btree (sequencing_run_id);
+CREATE INDEX glass_transcript_source_1_transcript_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_source_1" USING btree (glass_transcript_id);
+CREATE INDEX glass_transcript_source_1_sequencing_run_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_source_1" USING btree (sequencing_run_id);
 
 
 CREATE TABLE "glass_atlas_%s_%s_staging"."glass_transcript_source_2" (
     CHECK ( chromosome_id = 2 )
 ) INHERITS ("glass_atlas_%s_%s_staging"."glass_transcript_source");
-CREATE INDEX glass_transcript_source_2_transcript_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_source" USING btree (glass_transcript_id);
-CREATE INDEX glass_transcript_source_2_sequencing_run_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_source" USING btree (sequencing_run_id);
+CREATE INDEX glass_transcript_source_2_transcript_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_source_2" USING btree (glass_transcript_id);
+CREATE INDEX glass_transcript_source_2_sequencing_run_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_source_2" USING btree (sequencing_run_id);
 
 
 CREATE TABLE "glass_atlas_%s_%s_staging"."glass_transcript_source_3" (
     CHECK ( chromosome_id = 3 )
 ) INHERITS ("glass_atlas_%s_%s_staging"."glass_transcript_source");
-CREATE INDEX glass_transcript_source_3_transcript_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_source" USING btree (glass_transcript_id);
-CREATE INDEX glass_transcript_source_3_sequencing_run_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_source" USING btree (sequencing_run_id);
+CREATE INDEX glass_transcript_source_3_transcript_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_source_3" USING btree (glass_transcript_id);
+CREATE INDEX glass_transcript_source_3_sequencing_run_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_source_3" USING btree (sequencing_run_id);
 
 
 CREATE TABLE "glass_atlas_%s_%s_staging"."glass_transcript_source_4" (
     CHECK ( chromosome_id = 4 )
 ) INHERITS ("glass_atlas_%s_%s_staging"."glass_transcript_source");
-CREATE INDEX glass_transcript_source_4_transcript_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_source" USING btree (glass_transcript_id);
-CREATE INDEX glass_transcript_source_4_sequencing_run_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_source" USING btree (sequencing_run_id);
+CREATE INDEX glass_transcript_source_4_transcript_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_source_4" USING btree (glass_transcript_id);
+CREATE INDEX glass_transcript_source_4_sequencing_run_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_source_4" USING btree (sequencing_run_id);
 
 
 CREATE TABLE "glass_atlas_%s_%s_staging"."glass_transcript_source_5" (
     CHECK ( chromosome_id = 5 )
 ) INHERITS ("glass_atlas_%s_%s_staging"."glass_transcript_source");
-CREATE INDEX glass_transcript_source_5_transcript_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_source" USING btree (glass_transcript_id);
-CREATE INDEX glass_transcript_source_5_sequencing_run_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_source" USING btree (sequencing_run_id);
+CREATE INDEX glass_transcript_source_5_transcript_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_source_5" USING btree (glass_transcript_id);
+CREATE INDEX glass_transcript_source_5_sequencing_run_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_source_5" USING btree (sequencing_run_id);
 
 
 CREATE TABLE "glass_atlas_%s_%s_staging"."glass_transcript_source_6" (
     CHECK ( chromosome_id = 6 )
 ) INHERITS ("glass_atlas_%s_%s_staging"."glass_transcript_source");
-CREATE INDEX glass_transcript_source_6_transcript_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_source" USING btree (glass_transcript_id);
-CREATE INDEX glass_transcript_source_6_sequencing_run_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_source" USING btree (sequencing_run_id);
+CREATE INDEX glass_transcript_source_6_transcript_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_source_6" USING btree (glass_transcript_id);
+CREATE INDEX glass_transcript_source_6_sequencing_run_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_source_6" USING btree (sequencing_run_id);
 
 
 CREATE TABLE "glass_atlas_%s_%s_staging"."glass_transcript_source_7" (
     CHECK ( chromosome_id = 7 )
 ) INHERITS ("glass_atlas_%s_%s_staging"."glass_transcript_source");
-CREATE INDEX glass_transcript_source_7_transcript_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_source" USING btree (glass_transcript_id);
-CREATE INDEX glass_transcript_source_7_sequencing_run_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_source" USING btree (sequencing_run_id);
+CREATE INDEX glass_transcript_source_7_transcript_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_source_7" USING btree (glass_transcript_id);
+CREATE INDEX glass_transcript_source_7_sequencing_run_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_source_7" USING btree (sequencing_run_id);
 
 
 CREATE TABLE "glass_atlas_%s_%s_staging"."glass_transcript_source_8" (
     CHECK ( chromosome_id = 8 )
 ) INHERITS ("glass_atlas_%s_%s_staging"."glass_transcript_source");
-CREATE INDEX glass_transcript_source_8_transcript_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_source" USING btree (glass_transcript_id);
-CREATE INDEX glass_transcript_source_8_sequencing_run_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_source" USING btree (sequencing_run_id);
+CREATE INDEX glass_transcript_source_8_transcript_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_source_8" USING btree (glass_transcript_id);
+CREATE INDEX glass_transcript_source_8_sequencing_run_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_source_8" USING btree (sequencing_run_id);
 
 
 CREATE TABLE "glass_atlas_%s_%s_staging"."glass_transcript_source_9" (
     CHECK ( chromosome_id = 9 )
 ) INHERITS ("glass_atlas_%s_%s_staging"."glass_transcript_source");
-CREATE INDEX glass_transcript_source_9_transcript_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_source" USING btree (glass_transcript_id);
-CREATE INDEX glass_transcript_source_9_sequencing_run_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_source" USING btree (sequencing_run_id);
+CREATE INDEX glass_transcript_source_9_transcript_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_source_9" USING btree (glass_transcript_id);
+CREATE INDEX glass_transcript_source_9_sequencing_run_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_source_9" USING btree (sequencing_run_id);
 
 
 CREATE TABLE "glass_atlas_%s_%s_staging"."glass_transcript_source_10" (
     CHECK ( chromosome_id = 10 )
 ) INHERITS ("glass_atlas_%s_%s_staging"."glass_transcript_source");
-CREATE INDEX glass_transcript_source_10_transcript_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_source" USING btree (glass_transcript_id);
-CREATE INDEX glass_transcript_source_10_sequencing_run_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_source" USING btree (sequencing_run_id);
+CREATE INDEX glass_transcript_source_10_transcript_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_source_10" USING btree (glass_transcript_id);
+CREATE INDEX glass_transcript_source_10_sequencing_run_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_source_10" USING btree (sequencing_run_id);
 
 
 CREATE TABLE "glass_atlas_%s_%s_staging"."glass_transcript_source_11" (
     CHECK ( chromosome_id = 11 )
 ) INHERITS ("glass_atlas_%s_%s_staging"."glass_transcript_source");
-CREATE INDEX glass_transcript_source_11_transcript_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_source" USING btree (glass_transcript_id);
-CREATE INDEX glass_transcript_source_11_sequencing_run_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_source" USING btree (sequencing_run_id);
+CREATE INDEX glass_transcript_source_11_transcript_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_source_11" USING btree (glass_transcript_id);
+CREATE INDEX glass_transcript_source_11_sequencing_run_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_source_11" USING btree (sequencing_run_id);
 
 
 CREATE TABLE "glass_atlas_%s_%s_staging"."glass_transcript_source_12" (
     CHECK ( chromosome_id = 12 )
 ) INHERITS ("glass_atlas_%s_%s_staging"."glass_transcript_source");
-CREATE INDEX glass_transcript_source_12_transcript_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_source" USING btree (glass_transcript_id);
-CREATE INDEX glass_transcript_source_12_sequencing_run_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_source" USING btree (sequencing_run_id);
+CREATE INDEX glass_transcript_source_12_transcript_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_source_12" USING btree (glass_transcript_id);
+CREATE INDEX glass_transcript_source_12_sequencing_run_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_source_12" USING btree (sequencing_run_id);
 
 
 CREATE TABLE "glass_atlas_%s_%s_staging"."glass_transcript_source_13" (
     CHECK ( chromosome_id = 13 )
 ) INHERITS ("glass_atlas_%s_%s_staging"."glass_transcript_source");
-CREATE INDEX glass_transcript_source_13_transcript_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_source" USING btree (glass_transcript_id);
-CREATE INDEX glass_transcript_source_13_sequencing_run_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_source" USING btree (sequencing_run_id);
+CREATE INDEX glass_transcript_source_13_transcript_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_source_13" USING btree (glass_transcript_id);
+CREATE INDEX glass_transcript_source_13_sequencing_run_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_source_13" USING btree (sequencing_run_id);
 
 
 CREATE TABLE "glass_atlas_%s_%s_staging"."glass_transcript_source_14" (
     CHECK ( chromosome_id = 14 )
 ) INHERITS ("glass_atlas_%s_%s_staging"."glass_transcript_source");
-CREATE INDEX glass_transcript_source_14_transcript_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_source" USING btree (glass_transcript_id);
-CREATE INDEX glass_transcript_source_14_sequencing_run_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_source" USING btree (sequencing_run_id);
+CREATE INDEX glass_transcript_source_14_transcript_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_source_14" USING btree (glass_transcript_id);
+CREATE INDEX glass_transcript_source_14_sequencing_run_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_source_14" USING btree (sequencing_run_id);
 
 
 CREATE TABLE "glass_atlas_%s_%s_staging"."glass_transcript_source_15" (
     CHECK ( chromosome_id = 15 )
 ) INHERITS ("glass_atlas_%s_%s_staging"."glass_transcript_source");
-CREATE INDEX glass_transcript_source_15_transcript_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_source" USING btree (glass_transcript_id);
-CREATE INDEX glass_transcript_source_15_sequencing_run_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_source" USING btree (sequencing_run_id);
+CREATE INDEX glass_transcript_source_15_transcript_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_source_15" USING btree (glass_transcript_id);
+CREATE INDEX glass_transcript_source_15_sequencing_run_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_source_15" USING btree (sequencing_run_id);
 
 
 CREATE TABLE "glass_atlas_%s_%s_staging"."glass_transcript_source_16" (
     CHECK ( chromosome_id = 16 )
 ) INHERITS ("glass_atlas_%s_%s_staging"."glass_transcript_source");
-CREATE INDEX glass_transcript_source_16_transcript_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_source" USING btree (glass_transcript_id);
-CREATE INDEX glass_transcript_source_16_sequencing_run_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_source" USING btree (sequencing_run_id);
+CREATE INDEX glass_transcript_source_16_transcript_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_source_16" USING btree (glass_transcript_id);
+CREATE INDEX glass_transcript_source_16_sequencing_run_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_source_16" USING btree (sequencing_run_id);
 
 
 CREATE TABLE "glass_atlas_%s_%s_staging"."glass_transcript_source_17" (
     CHECK ( chromosome_id = 17 )
 ) INHERITS ("glass_atlas_%s_%s_staging"."glass_transcript_source");
-CREATE INDEX glass_transcript_source_17_transcript_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_source" USING btree (glass_transcript_id);
-CREATE INDEX glass_transcript_source_17_sequencing_run_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_source" USING btree (sequencing_run_id);
+CREATE INDEX glass_transcript_source_17_transcript_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_source_17" USING btree (glass_transcript_id);
+CREATE INDEX glass_transcript_source_17_sequencing_run_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_source_17" USING btree (sequencing_run_id);
 
 
 CREATE TABLE "glass_atlas_%s_%s_staging"."glass_transcript_source_18" (
     CHECK ( chromosome_id = 18 )
 ) INHERITS ("glass_atlas_%s_%s_staging"."glass_transcript_source");
-CREATE INDEX glass_transcript_source_18_transcript_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_source" USING btree (glass_transcript_id);
-CREATE INDEX glass_transcript_source_18_sequencing_run_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_source" USING btree (sequencing_run_id);
+CREATE INDEX glass_transcript_source_18_transcript_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_source_18" USING btree (glass_transcript_id);
+CREATE INDEX glass_transcript_source_18_sequencing_run_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_source_18" USING btree (sequencing_run_id);
 
 
 CREATE TABLE "glass_atlas_%s_%s_staging"."glass_transcript_source_19" (
     CHECK ( chromosome_id = 19 )
 ) INHERITS ("glass_atlas_%s_%s_staging"."glass_transcript_source");
-CREATE INDEX glass_transcript_source_19_transcript_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_source" USING btree (glass_transcript_id);
-CREATE INDEX glass_transcript_source_19_sequencing_run_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_source" USING btree (sequencing_run_id);
+CREATE INDEX glass_transcript_source_19_transcript_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_source_19" USING btree (glass_transcript_id);
+CREATE INDEX glass_transcript_source_19_sequencing_run_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_source_19" USING btree (sequencing_run_id);
 
 
 CREATE TABLE "glass_atlas_%s_%s_staging"."glass_transcript_source_20" (
     CHECK ( chromosome_id = 20 )
 ) INHERITS ("glass_atlas_%s_%s_staging"."glass_transcript_source");
-CREATE INDEX glass_transcript_source_20_transcript_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_source" USING btree (glass_transcript_id);
-CREATE INDEX glass_transcript_source_20_sequencing_run_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_source" USING btree (sequencing_run_id);
+CREATE INDEX glass_transcript_source_20_transcript_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_source_20" USING btree (glass_transcript_id);
+CREATE INDEX glass_transcript_source_20_sequencing_run_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_source_20" USING btree (sequencing_run_id);
 
 
 CREATE TABLE "glass_atlas_%s_%s_staging"."glass_transcript_source_21" (
     CHECK ( chromosome_id = 21 )
 ) INHERITS ("glass_atlas_%s_%s_staging"."glass_transcript_source");
-CREATE INDEX glass_transcript_source_21_transcript_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_source" USING btree (glass_transcript_id);
-CREATE INDEX glass_transcript_source_21_sequencing_run_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_source" USING btree (sequencing_run_id);
+CREATE INDEX glass_transcript_source_21_transcript_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_source_21" USING btree (glass_transcript_id);
+CREATE INDEX glass_transcript_source_21_sequencing_run_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_source_21" USING btree (sequencing_run_id);
 
 
 CREATE TABLE "glass_atlas_%s_%s_staging"."glass_transcript_source_22" (
     CHECK ( chromosome_id = 22 )
 ) INHERITS ("glass_atlas_%s_%s_staging"."glass_transcript_source");
-CREATE INDEX glass_transcript_source_22_transcript_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_source" USING btree (glass_transcript_id);
-CREATE INDEX glass_transcript_source_22_sequencing_run_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_source" USING btree (sequencing_run_id);
+CREATE INDEX glass_transcript_source_22_transcript_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_source_22" USING btree (glass_transcript_id);
+CREATE INDEX glass_transcript_source_22_sequencing_run_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_source_22" USING btree (sequencing_run_id);
 
 
 

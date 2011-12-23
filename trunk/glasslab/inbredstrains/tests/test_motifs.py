@@ -8,7 +8,7 @@ Test to make sure the motif mappings are accurate.
 Note that we don't try to match motifs to the reference when there
 are variants inside that motif.
 
-Alos, note that Homer is called by this script, and it does
+Also, note that Homer is called by this script, and it does
 not run more than instance well due to the way in which
 Homer creates and removes temp files.
 '''

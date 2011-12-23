@@ -38,7 +38,7 @@ class FastqOptionParser(GlassOptionParser):
                
                make_option('--peak_type',action='store', dest='peak_type',  
                            help='What type of peak are we looking for? H4K3me1, PU_1, etc.? Should match a type in PeakType table.'),
-               make_option('--homer',action='store_true', dest='homer', default=False, 
+               make_option('--not_homer',action='store_true', dest='not_homer', default=False, 
                            help='Is the input file a HOMER peaks file?'),
                            
                make_option('--skip_bowtie',action='store_true', dest='skip_bowtie', default=False, 
@@ -107,8 +107,9 @@ def import_peaks(options, file_name, peaks_file_path, peak_type):
     data = parser.get_array()
     if data[0][0] == 'chr':
         data = data[1:] # Header row
+    
     for row in data:
-        if options.homer:
+        if not options.not_homer:
             peak = GlassPeak.init_from_homer_row(row)
         elif not peak_type.diffuse:
             peak = GlassPeak.init_from_macs_row(row)
@@ -116,7 +117,7 @@ def import_peaks(options, file_name, peaks_file_path, peak_type):
             peak = GlassPeak.init_from_sicer_row(row)
         peak.save()
 
-    if not options.homer and peak_type.diffuse:
+    if options.not_homer and peak_type.diffuse:
         GlassPeak.score_sicer_peaks()
     
     GlassPeak.add_indices()

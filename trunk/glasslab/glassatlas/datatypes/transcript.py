@@ -29,7 +29,7 @@ TAG_EXTENSION = 50
 
 MAX_GAP = 0 # Max gap between transcripts from the same run
 MAX_STITCHING_GAP = MAX_GAP # Max gap between transcripts being stitched together
-MAX_EDGE = 100 # Max edge length of transcript graph subgraphs to be created
+MAX_EDGE = 0 # Max edge length of transcript graph subgraphs to be created
 EDGE_SCALING_FACTOR = 20 # Number of transcripts per DENSITY_MULTIPLIER bp required to get full allowed edge length
 DENSITY_MULTIPLIER = 1000 # Scaling factor on density-- think of as bps worth of tags to consider
 MIN_SCORE = 4 # Hide transcripts with scores below this threshold.
@@ -67,7 +67,8 @@ def multiprocess_all_chromosomes(func, cls, *args):
             chr_sets[i % processes].append(chr)
              
         current_settings.CHR_LISTS = chr_sets
-        
+        print 'Determined chromosome sets:\n%s' % str(current_settings.CHR_LISTS)
+    
     for chr_list in current_settings.CHR_LISTS:
         p.apply_async(func, args=[cls, chr_list,] + list(args))
     p.close()
@@ -582,8 +583,11 @@ class FilteredGlassTranscript(object):
         
         for trans in transcripts:
             # chrom start end name score strand thick_start thick_end colors? exon_count csv_exon_sizes csv_exon_starts
-            start = max(0,trans.transcription_start)
-            end = min(trans.chromosome.length - 1,trans.transcription_end)
+            # UCSC browser is 1-indexed; adjust starts and ends accordingly.
+            # Also, make sure we don't go beyond the length of the chromosome.
+            # Transcripts shouldn't due to previous processing, but just in case, we check here as well.
+            start = max(1,trans.transcription_start + 1)
+            end = min(trans.chromosome.length,trans.transcription_end + 1)
             row = [trans.chromosome.name, str(start), str(end), 
                    'Transcript_' + str(trans.id), str((float(trans.score)/max_score)*1000),
                    trans.strand and '-' or '+', str(start), str(end), 
@@ -600,7 +604,7 @@ class FilteredGlassTranscript(object):
                              [str(min(trans.transcription_end - ex.transcription_start,
                                 ex.transcription_end - ex.transcription_start)) for ex in exons] + ['1']),
                     ','.join(['0'] +
-                             [str(max(0, ex.transcription_start - trans.transcription_start)) for ex in exons] 
+                             [str(max(1, ex.transcription_start - trans.transcription_start)) for ex in exons] 
                                 + [str(end - start - 1)]),
                     ]
         

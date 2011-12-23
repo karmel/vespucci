@@ -18,7 +18,6 @@ location to where the motif begins to get the motif's start in the reference gen
 '''
 
 from __future__ import division
-import os
 from glasslab.utils.datatypes.genetics import InbredStrainVariation,\
     InbredStrain
 import sys
