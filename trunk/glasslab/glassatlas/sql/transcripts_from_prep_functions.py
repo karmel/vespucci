@@ -43,6 +43,31 @@ BEGIN
 END;
 $$ LANGUAGE 'plpgsql';
 
+CREATE OR REPLACE FUNCTION glass_atlas_%s_%s_staging.move_transcripts_over(chr_id integer)
+RETURNS VOID AS $$
+BEGIN
+    EXECUTE 'INSERT INTO glass_atlas_%s_%s_staging.glass_transcript_' || chr_id || ' 
+        (id, chromosome_id, strand, transcription_start, transcription_end, start_end, modified, created)
+        SELECT id, chromosome_id, strand, transcription_start, transcription_end, 
+               public.make_box(transcription_start, 0, transcription_end, 0), NOW(), NOW()
+            FROM 
+        (SELECT t.id, t.chromosome_id, t.strand, t.transcription_start, t.transcription_end 
+            FROM glass_atlas_%s_%s_prep.glass_transcript_' || chr_id || ' t
+            JOIN glass_atlas_%s_%s_prep.glass_transcript_source_' || chr_id || ' s
+                ON t.id = s.glass_transcript_id
+            GROUP BY t.id, t.chromosome_id, t.strand, t.transcription_start, t.transcription_end 
+            HAVING avg(s.tag_count) > 1 AND count(s.sequencing_run_id) > 1 -- Omit one-tag-wonders and one-run-transcripts
+        ) der';
+    EXECUTE 'INSERT INTO glass_atlas_%s_%s_staging.glass_transcript_source_' || chr_id || ' 
+        SELECT * FROM glass_atlas_%s_%s_prep.glass_transcript_source_' || chr_id || ' 
+        WHERE glass_transcript_id IN (SELECT id FROM glass_atlas_%s_%s_prep.glass_transcript_' || chr_id || ')';
+    
+    PERFORM glass_atlas_%s_%s_staging.insert_associated_transcript_regions(chr_id);
+    RETURN;
+END;
+$$ LANGUAGE 'plpgsql';
+
+
 CREATE OR REPLACE FUNCTION glass_atlas_%s_%s_staging.draw_transcript_edges(chr_id integer)
 RETURNS VOID AS $$
 DECLARE
@@ -104,7 +129,7 @@ BEGIN
                 JOIN glass_atlas_%s_%s_prep.glass_transcript_source_' || chr_id || ' s
                     ON t.id = s.glass_transcript_id
                 GROUP BY t.id
-                HAVING sum(s.tag_count)/count(s.sequencing_run_id)::numeric > 1 AND count(s.sequencing_run_id) > 1) -- Omit one-tag-wonders and one-run-transcripts
+                HAVING avg(s.tag_count) > 1 AND count(s.sequencing_run_id) > 1) -- Omit one-tag-wonders and one-run-transcripts
                 ) t2 
             ON t1.density_circle @> t2.start_density 
                 AND t1.strand = t2.strand 
@@ -326,28 +351,6 @@ BEGIN
 END;
 $$ LANGUAGE 'plpgsql';
 
-CREATE OR REPLACE FUNCTION glass_atlas_%s_%s_staging.calculate_scores_sample(chr_id integer)
-RETURNS VOID AS $$
-BEGIN 
-    -- Score = Ratio of max tag count for this transcript to
-    -- expected tag count given the length of the region.
-    -- NOTE: This assumes the expected_tag_count table is accurate and available.
-	EXECUTE 'UPDATE glass_atlas_%s_%s_staging.glass_transcript_' || chr_id || ' transcript'
-		|| ' SET score = source.max_tags::numeric/(exp.tag_count * ' 
-		    || ' ((transcript.transcription_end - transcript.transcription_start + 1)::numeric/exp.sample_size)) '
-		|| ' FROM (SELECT '
-				|| ' glass_transcript_id, MAX(tag_count) as max_tags '
-			|| ' FROM glass_atlas_%s_%s_staging.glass_transcript_source '
-			|| ' GROUP BY glass_transcript_id) source, '
-			|| ' glass_atlas_mm9.expected_tag_count exp'
-		|| ' WHERE transcript.id = source.glass_transcript_id'
-		    || ' AND transcript.chromosome_id = exp.chromosome_id'
-		    || ' AND transcript.strand = exp.strand';
-
-	RETURN;
-END;
-$$ LANGUAGE 'plpgsql';
-
 CREATE OR REPLACE FUNCTION glass_atlas_%s_%s_staging.set_density(chr_id integer, density_multiplier integer, null_only boolean)
 RETURNS VOID AS $$
 DECLARE
@@ -382,7 +385,8 @@ BEGIN
 END;
 $$ LANGUAGE 'plpgsql'; 
 
-""" % tuple([genome, cell_type]*69)
+
+""" % tuple([genome, cell_type]*74)
 
 if __name__ == '__main__':
     print sql(genome, cell_type)

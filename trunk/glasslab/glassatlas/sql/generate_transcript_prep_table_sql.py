@@ -316,6 +316,7 @@ CREATE TABLE "glass_atlas_%s_%s_prep"."glass_transcript_source_2" (
 CREATE INDEX glass_transcript_source_2_pkey_idx ON "glass_atlas_%s_%s_prep"."glass_transcript_source_2" USING btree (id);
 CREATE INDEX glass_transcript_source_2_transcript_idx ON "glass_atlas_%s_%s_prep"."glass_transcript_source_2" USING btree (glass_transcript_id);
 CREATE INDEX glass_transcript_source_2_sequencing_run_idx ON "glass_atlas_%s_%s_prep"."glass_transcript_source_2" USING btree (sequencing_run_id);
+CREATE INDEX glass_transcript_source_2_tag_count_idx ON "glass_atlas_%s_%s_prep"."glass_transcript_source_2" USING btree (tag_count);
 
 
 CREATE TABLE "glass_atlas_%s_%s_prep"."glass_transcript_source_3" (

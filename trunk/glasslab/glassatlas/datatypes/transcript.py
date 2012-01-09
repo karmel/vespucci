@@ -10,16 +10,15 @@ from glasslab.utils.datatypes.genome_reference import Chromosome,\
     SequenceTranscriptionRegion, PatternedTranscriptionRegion,\
     ConservedTranscriptionRegion, NonCodingTranscriptionRegion,\
     DupedTranscriptionRegion
-from glasslab.glassatlas.datatypes.metadata import SequencingRun,\
-    ExpectedTagCount
+from glasslab.glassatlas.datatypes.metadata import SequencingRun
 from glasslab.sequencing.datatypes.tag import multiprocess_glass_tags,\
     wrap_errors
 from glasslab.utils.datatypes.basic_model import BoxField, GlassModel
 from multiprocessing import Pool
 from glasslab.utils.database import execute_query,\
-    execute_query_without_transaction, fetch_rows
+    execute_query_without_transaction
 import os
-from random import randint, sample
+from random import randint
 from django.db.models.aggregates import Count, Max, Sum
 from datetime import datetime
 
@@ -32,7 +31,7 @@ MAX_STITCHING_GAP = MAX_GAP # Max gap between transcripts being stitched togethe
 MAX_EDGE = 0 # Max edge length of transcript graph subgraphs to be created
 EDGE_SCALING_FACTOR = 20 # Number of transcripts per DENSITY_MULTIPLIER bp required to get full allowed edge length
 DENSITY_MULTIPLIER = 1000 # Scaling factor on density-- think of as bps worth of tags to consider
-MIN_SCORE = 4 # Hide transcripts with scores below this threshold.
+MIN_SCORE = 5 # Hide transcripts with scores below this threshold.
 
 def multiprocess_all_chromosomes(func, cls, *args):
     ''' 
@@ -40,25 +39,19 @@ def multiprocess_all_chromosomes(func, cls, *args):
     '''
     processes = current_settings.ALLOWED_PROCESSES
     p = Pool(processes)
-        
+    
     if not current_settings.CHR_LISTS:
         connection.close()
         try:
-            all_chr = Chromosome.objects.values('id').annotate(row_count=Count(cls.__name__.lower())
-                                        ).order_by('-row_count').filter(row_count__gt=0)
+            all_chr = Chromosome.objects.values('id').annotate(
+                            row_count=Count(cls.cell_base.glass_transcript_prep.__name__.lower())
+                                    ).order_by('-row_count').filter(row_count__gt=0)
             all_chr = [chr['id'] for chr in all_chr]
             if not all_chr: raise Exception
         except Exception:
-            try:
-                all_chr = Chromosome.objects.values('id').annotate(
-                                row_count=Count(cls.cell_base.glass_transcript_prep.__name__.lower())
-                                        ).order_by('-row_count').filter(row_count__gt=0)
-                all_chr = [chr['id'] for chr in all_chr]
-                if not all_chr: raise Exception
-            except Exception:
-                # cls in question does not have explicit relation to chromosomes; get all
-                all_chr = Chromosome.objects.order_by('?').values_list('id', flat=True)
-            
+            # cls in question does not have explicit relation to chromosomes; get all
+            all_chr = Chromosome.objects.order_by('?').values_list('id', flat=True)
+
         # Chromosomes are sorted by count descending, so we want to snake them
         # back and forth to create even-ish groups
         chr_sets = [[] for _ in xrange(0, processes)]
@@ -306,21 +299,6 @@ class GlassTranscript(TranscriptBase):
                        MAX_EDGE, EDGE_SCALING_FACTOR, DENSITY_MULTIPLIER)
             execute_query(query)
 
-    @classmethod 
-    def remove_rogue_run(cls):
-        multiprocess_glass_tags(wrap_remove_rogue_run, cls)
-   
-    @classmethod
-    def _remove_rogue_run(cls, chr_list):
-        for chr_id in chr_list:
-            print 'Removing rogue transcripts for chromosome %d' % chr_id
-            query = """
-                SELECT glass_atlas_%s_%s_prep.remove_rogue_run(%d, %d, %d, %d, %d, %d);
-                """ % (current_settings.TRANSCRIPT_GENOME,
-                       current_settings.CURRENT_CELL_TYPE.lower(),
-                       chr_id, MAX_GAP, TAG_EXTENSION, 
-                       MAX_EDGE, EDGE_SCALING_FACTOR, DENSITY_MULTIPLIER)
-            execute_query(query)
     
     ################################################
     # Transcript cleanup and refinement
@@ -351,7 +329,7 @@ class GlassTranscript(TranscriptBase):
                            current_settings.CURRENT_CELL_TYPE.lower(),
                            chr_id, MAX_EDGE, EDGE_SCALING_FACTOR, 
                            DENSITY_MULTIPLIER, 
-                           allow_extended_gaps and 'true' or 'false', 'false')
+                           allow_extended_gaps and 'true' or 'false', 'true')
                 execute_query(query)
     
     @classmethod
@@ -371,7 +349,7 @@ class GlassTranscript(TranscriptBase):
                        current_settings.CURRENT_CELL_TYPE.lower(),
                        chr_id, MAX_EDGE, EDGE_SCALING_FACTOR, 
                        DENSITY_MULTIPLIER,
-                       allow_extended_gaps and 'true' or 'false', 'true')
+                       allow_extended_gaps and 'true' or 'false', 'false')
             execute_query(query)
             
     @classmethod
@@ -383,12 +361,22 @@ class GlassTranscript(TranscriptBase):
     def _draw_transcript_edges(cls, chr_list):
         for chr_id in chr_list:
             print 'Drawing edges for transcripts for chromosome %d' % chr_id
-            query = """
-                SELECT glass_atlas_%s_%s%s.draw_transcript_edges(%d);
-                """ % (current_settings.TRANSCRIPT_GENOME, 
-                       current_settings.CURRENT_CELL_TYPE.lower(),
-                       current_settings.STAGING,
-                       chr_id)
+            if MAX_EDGE > 0:
+                query = """
+                    SELECT glass_atlas_%s_%s%s.draw_transcript_edges(%d);
+                    """ % (current_settings.TRANSCRIPT_GENOME, 
+                           current_settings.CURRENT_CELL_TYPE.lower(),
+                           current_settings.STAGING,
+                           chr_id)
+            else:
+                # No point in drawing edges; we've already stitched everything.
+                # Just copy over what we have.
+                query = """
+                    SELECT glass_atlas_%s_%s%s.move_transcripts_over(%d);
+                    """ % (current_settings.TRANSCRIPT_GENOME, 
+                           current_settings.CURRENT_CELL_TYPE.lower(),
+                           current_settings.STAGING,
+                           chr_id)
             execute_query(query)
             #print 'Setting average tags for transcripts for chromosome %d' % chr_id
             query = """
@@ -400,64 +388,28 @@ class GlassTranscript(TranscriptBase):
             #execute_query(query)
             
     @classmethod
-    def set_score_thresholds(cls, sample_count=500, sample_size=100, allow_zero=False):
-        multiprocess_all_chromosomes(wrap_set_score_thresholds, cls, sample_count, sample_size, allow_zero)
+    def split_joined_genes(cls):
+        multiprocess_all_chromosomes(wrap_split_joined_genes, cls)
     
     @classmethod
-    def _set_score_thresholds(cls, chr_list, sample_count=500, sample_size=100, allow_zero=False):
+    def _split_joined_genes(cls, chr_list):
         '''
-        Randomly sample, for all standard tables, expected tag counts by chromosome and
-        strand. Store expected tag counts.
-        
-        If allow_zero = True, regions of zero tags are included in the sample average.
-        (By default, regions with zero tags are omitted.)
-        
-        sample_count # Number of samples to take from each run
-        sample_size # Sample size in bp
-        
-        Note that transcription start and end are inclusive, so length = end - start + 1.
-        
-        Note that sample_count + 2% samples are kept, with the bottom and top 1% thrown out. 
+        This should not need to be run often-- or even more than once. 
+        During initial building phases, some genes get grouped together when they shouldn't.
+
+        Here we split them out and re-add so that we can stitch with more stringent criteria.
         '''
         for chr_id in chr_list:
-            connection.close()
+            print 'Finding over-joined transcripts for chromosome %d' % chr_id
             
-            print 'Setting score threshold for chromosome %d' % chr_id
-            # First, set up regions in each chr to sample.
-            chr = Chromosome.objects.get(id=chr_id)
-            position_range = chr.length - 1
-            
-            runs_to_sample = 3
-            runs = list(SequencingRun.objects.filter(type='Gro-Seq', standard=True))
-            # Get all samples
-            for strand in (0,1):
-                tag_counts = []
-                for i, run in enumerate(sample(runs, runs_to_sample)):
-                    connection.close()
-                    acquired = 0
-                    while acquired < (sample_count + .02*sample_count):
-                        start = randint(0,position_range - sample_size + 1)
-                        query = """
-                            SELECT count(id) FROM "%s_%d" 
-                            WHERE strand = %d
-                            AND start_end <@ public.make_box(%d, 0, %d, 0);
-                            """ % (run.source_table.strip(), chr_id, strand, start, (start + sample_size - 1))
-                        count = fetch_rows(query)[0][0]
-                        if count > 0 or allow_zero:
-                            tag_counts.append(count)
-                            acquired += 1
-                            
-                # Cut out top and bottom 1%
-                total_counts = len(tag_counts)
-                tag_counts.sort()
-                tag_counts = tag_counts[int(.01*total_counts):(int(.01*total_counts) + total_counts)]
-                    
-                average = sum(tag_counts)/len(tag_counts)
-                record, created = ExpectedTagCount.objects.get_or_create(chromosome=chr, strand=strand)
-                record.sample_count = sample_count
-                record.sample_size = sample_size
-                record.tag_count = average
-                record.save()
+            # First, find transcripts with more than one gene.
+            query = """
+                SELECT glass_atlas_%s_%s_prep.split_joined_genes(%d, %d,'%s', %d, %d, %d, %d, %d, NULL, NULL);
+                """ % (current_settings.TRANSCRIPT_GENOME,
+                       current_settings.CURRENT_CELL_TYPE.lower(),
+                       chr_id, TAG_EXTENSION, 
+                       MAX_EDGE, EDGE_SCALING_FACTOR, DENSITY_MULTIPLIER)
+            execute_query(query)
             
     @classmethod
     def set_scores(cls):
@@ -583,11 +535,10 @@ class FilteredGlassTranscript(object):
         
         for trans in transcripts:
             # chrom start end name score strand thick_start thick_end colors? exon_count csv_exon_sizes csv_exon_starts
-            # UCSC browser is 1-indexed; adjust starts and ends accordingly.
-            # Also, make sure we don't go beyond the length of the chromosome.
+            # Make sure we don't go beyond the length of the chromosome.
             # Transcripts shouldn't due to previous processing, but just in case, we check here as well.
-            start = max(1,trans.transcription_start + 1)
-            end = min(trans.chromosome.length,trans.transcription_end + 1)
+            start = max(0,trans.transcription_start)
+            end = min(trans.chromosome.length,trans.transcription_end)
             row = [trans.chromosome.name, str(start), str(end), 
                    'Transcript_' + str(trans.id), str((float(trans.score)/max_score)*1000),
                    trans.strand and '-' or '+', str(start), str(end), 
