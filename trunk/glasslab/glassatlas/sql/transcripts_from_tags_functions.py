@@ -416,6 +416,7 @@ BEGIN
                 ON reg.sequence_identifier_id = det.sequence_identifier_id
             JOIN glass_atlas_mm9_thiomac_prep.glass_transcript_source_' || chr_id || ' s
                 ON t.id = s.glass_transcript_id
+            WHERE width(t.start_end) >= .5*width(reg.start_end)
             GROUP BY t.id, t.transcription_start, t.transcription_end, t.strand
             HAVING count(distinct det.gene_name) > 1'
     LOOP

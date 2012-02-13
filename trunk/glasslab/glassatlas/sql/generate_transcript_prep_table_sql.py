@@ -533,7 +533,7 @@ CREATE INDEX glass_transcript_label_glass_transcript_idx ON "glass_atlas_%s_%s_p
 CREATE INDEX glass_transcript_label_transcript_class_id_idx ON "glass_atlas_%s_%s_prep"."glass_transcript_label" USING btree (transcript_class_id);
 CREATE INDEX glass_transcript_label_manual_idx ON "glass_atlas_%s_%s_prep"."glass_transcript_label" USING btree (manual);
 
-""" % tuple([genome, cell_type]*321)
+""" % tuple([genome, cell_type]*322)
 
 if __name__ == '__main__':
     print sql(genome, cell_type)
