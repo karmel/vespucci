@@ -54,7 +54,7 @@ class GlassTranscriptThioMacAdmin(GlassTranscriptAdmin):
                        GlassTranscriptDupedThioMacInline,
                        GlassTranscriptSourceThioMacInline, 
                        GlassTranscribedRnaThioMacInline,
-                       PeakFeatureThioMacInline, 
+                       #PeakFeatureThioMacInline, 
                        ]
     
 class GlassTranscriptPrepThioMacAdmin(GlassTranscriptPrepAdmin):

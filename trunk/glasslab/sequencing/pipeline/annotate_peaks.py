@@ -183,38 +183,40 @@ if __name__ == '__main__':
     
     file_name = check_input(options)
     
-    
-    if not options.skip_bowtie:
-        _print('Processing FASTQ file using bowtie.')
-        if not options.skip_trim:
-            trim_sequences(options, file_name)
-        bowtie_file_path = call_bowtie(options, file_name, suppress_columns=False)
-    else:
-        _print('Skipping bowtie.')
-        bowtie_file_path = options.file_path
-        options.bowtie_stats_file = os.path.join(options.output_dir,'%s_bowtie_stats_summary.txt' % file_name)
-    
-    if not options.skip_peak_finding: 
-        peak_type = GlassPeak.peak_type(options.peak_type or options.project_name)
-        if not peak_type: 
-            raise Exception('Could not find appropriate PeakType record for peak type %s' % 
-                                          (options.peak_type or options.project_name))
-        if not peak_type.diffuse:
-            _print('Processing bowtie file using MACS')
-            if options.skip_bed:
-                # File is a bed file already, not a BOWTIE file
-                peaks_file_path = call_macs(options, file_name, bowtie_file_path, type='BED')
-            else: peaks_file_path = call_macs(options, file_name, bowtie_file_path)
+    if options.not_homer:
+        if not options.skip_bowtie:
+            _print('Processing FASTQ file using bowtie.')
+            if not options.skip_trim:
+                trim_sequences(options, file_name)
+            bowtie_file_path = call_bowtie(options, file_name, suppress_columns=False)
         else:
-            if not options.skip_bed:
-                _print('Converting bowtie file to BED')
-                bed_file_path = bowtie_to_bed(options, file_name, bowtie_file_path)
-            else: bed_file_path = bowtie_file_path
-            _print('Processing BED file using SICER')
-            peaks_file_path = call_sicer(options, file_name, bed_file_path)
-    else:
-        _print('Skipping peak finding.')
-        peaks_file_path = bowtie_file_path
+            _print('Skipping bowtie.')
+            bowtie_file_path = options.file_path
+            options.bowtie_stats_file = os.path.join(options.output_dir,'%s_bowtie_stats_summary.txt' % file_name)
+        
+        if not options.skip_peak_finding: 
+            peak_type = GlassPeak.peak_type(options.peak_type or options.project_name)
+            if not peak_type: 
+                raise Exception('Could not find appropriate PeakType record for peak type %s' % 
+                                              (options.peak_type or options.project_name))
+            if not peak_type.diffuse:
+                _print('Processing bowtie file using MACS')
+                if options.skip_bed:
+                    # File is a bed file already, not a BOWTIE file
+                    peaks_file_path = call_macs(options, file_name, bowtie_file_path, type='BED')
+                else: peaks_file_path = call_macs(options, file_name, bowtie_file_path)
+            else:
+                if not options.skip_bed:
+                    _print('Converting bowtie file to BED')
+                    bed_file_path = bowtie_to_bed(options, file_name, bowtie_file_path)
+                else: bed_file_path = bowtie_file_path
+                _print('Processing BED file using SICER')
+                peaks_file_path = call_sicer(options, file_name, bed_file_path)
+        else:
+            _print('Skipping peak finding.')
+            peaks_file_path = bowtie_file_path
+    
+    else: peaks_file_path = options.file_path
     
     if not options.skip_table_upload:
         peak_type = GlassPeak.peak_type(options.peak_type or options.project_name)

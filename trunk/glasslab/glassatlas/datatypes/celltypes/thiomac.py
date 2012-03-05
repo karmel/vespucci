@@ -57,7 +57,7 @@ class ThioMacBase(CellTypeBase):
 class GlassTranscriptThioMac(GlassTranscript):
     cell_base = ThioMacBase()
     
-    labels = models.ManyToManyField(TranscriptClass, through='GlassTranscriptLabelThioMac')
+    #labels = models.ManyToManyField(TranscriptClass, through='GlassTranscriptLabelThioMac')
     
     class Meta:
         db_table    = 'glass_atlas_%s_%s%s"."glass_transcript' % (current_settings.TRANSCRIPT_GENOME, CELL_TYPE.lower(), current_settings.STAGING)

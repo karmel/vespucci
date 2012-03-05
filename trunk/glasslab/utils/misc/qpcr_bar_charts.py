@@ -85,7 +85,7 @@ def get_stats(dataset, samples, remove_outliers=0):
 if __name__ == '__main__':
     if len(sys.argv) > 1: file_name = sys.argv[1]
     else:
-        file_name = '/Users/karmel/Desktop/Projects/GlassLab/Notes and Reports/Thyroid/qPCR/T3 treated cells/RAW cells 2011-10-08/T3_treated_RAW_2011_10_08_data.txt'
+        file_name = '/Users/karmel/Desktop/Projects/GlassLab/Notes and Reports/NOD_BALBc/ThioMacs/qPCR of Target Genes/NOD_BALBc_gene_exp_2012_02_25_data.txt'
 
     
     parser = DelimitedFileParser(file_name=file_name, header=True)
