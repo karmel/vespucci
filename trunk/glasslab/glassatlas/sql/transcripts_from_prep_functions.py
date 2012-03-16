@@ -128,11 +128,13 @@ BEGIN
                 FROM  glass_atlas_%s_%s_prep.glass_transcript_' || chr_id || ' t
                 JOIN glass_atlas_%s_%s_prep.glass_transcript_source_' || chr_id || ' s
                     ON t.id = s.glass_transcript_id
+                WHERE t.strand = ' || strand || '
                 GROUP BY t.id
                 HAVING avg(s.tag_count) > 1 AND count(s.sequencing_run_id) > 1) -- Omit one-tag-wonders and one-run-transcripts
                 ) t2 
             ON t1.density_circle @> t2.start_density 
                 AND t1.strand = t2.strand 
+                AND t1.transcription_start <= t2.transcription_start -- Omit upstream transcripts in the circle 
             JOIN glass_atlas_%s_%s_prep.glass_transcript_source_' || chr_id || ' s
                 ON t1.id = s.glass_transcript_id
             WHERE t1.strand = ' || strand || '
@@ -193,7 +195,7 @@ BEGIN
                     JOIN glass_atlas_%s_%s_prep.glass_transcript_source_' || chr_id || ' s
                     ON t.id = s.glass_transcript_id) source
                 ON source.strand = trans.strand
-            AND source.start_end <@ trans.start_end) der
+            AND source.start_end <@ trans.start_end) der -- Is contained by
         GROUP BY der.transcript_id, der.sequencing_run_id';
     RETURN;
 END;
