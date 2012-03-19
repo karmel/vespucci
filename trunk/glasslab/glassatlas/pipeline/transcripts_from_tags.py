@@ -21,16 +21,16 @@ class TranscriptsFromTagsParser(GlassOptionParser):
                            help='Output directory for bed file.'),
                make_option('--remove_rogue_run',action='store_true', dest='remove_rogue_run',  
                            help='Should the records from this run be removed?'),
-               make_option('--skip_stitching',action='store_true', dest='skip_stitching',  
-                           help='Should the stitching together of transcripts be skipped?'),
+               make_option('--stitch',action='store_true', dest='stitch',  
+                           help='Should transcripts be stitched together?'),
                make_option('--set_density',action='store_true', dest='set_density',  
                            help='Should the stitching together of transcripts be replaced with forcing reset of average tags?'),
                make_option('--draw_edges',action='store_true', dest='draw_edges',  
                            help='Should the edges between transcripts be created and saved?'),
                make_option('--reset_score_thresholds',action='store_true', dest='reset_score_thresholds',  
                            help='Should the expected score thresholds for each chromosome and strand be reset?'),
-               make_option('--skip_scoring',action='store_true', dest='skip_scoring',  
-                           help='Should the scoring of transcripts be skipped?'),
+               make_option('--score',action='store_true', dest='score',  
+                           help='Should transcripts be stored?'),
                make_option('--associate_nucleotides',action='store_true', dest='associate_nucleotides',  
                            help='Should obtaining nucleotide sequences to transcripts be attempted?'),
                make_option('--reassociate',action='store_true', dest='reassociate',  
@@ -68,11 +68,11 @@ if __name__ == '__main__':
         cell_base.glass_transcript.remove_rogue_run()
         cell_base.glass_transcript.force_vacuum_prep()
     
-    if not options.skip_stitching:
+    if options.stitch:
         cell_base.glass_transcript.stitch_together_transcripts(
                         allow_extended_gaps=allow_extended_gaps, set_density=True)
         cell_base.glass_transcript.force_vacuum_prep()
-    elif options.set_density:
+    if options.set_density:
         cell_base.glass_transcript.set_density(allow_extended_gaps=allow_extended_gaps)
         cell_base.glass_transcript.force_vacuum_prep()
     
@@ -86,7 +86,7 @@ if __name__ == '__main__':
     if options.reset_score_thresholds:
         cell_base.glass_transcript.set_score_thresholds()
         
-    if not options.skip_scoring:
+    if options.score:
         cell_base.glass_transcript.set_scores()
         
     if options.reassociate:
