@@ -5,28 +5,13 @@ Created on Mar 20, 2012
 
 Miscellaneous methods for graphing tag count plots.
 '''
-from pandas.io import parsers
 from matplotlib import pyplot
 from string import capwords
 from matplotlib.ticker import ScalarFormatter
 import os
+from glasslab.dataanalysis.base.datatypes import TranscriptAnalyzer
 
-class SeqGrapher(object):
-    
-    def import_file(self, filename, separator='\t', header=True):
-        if header: header_row = 0
-        else: header_row = None
-        data = parsers.read_csv(filename, sep=separator, header=header_row)
-        
-        return data
-    
-    def get_refseq(self, data, colname='has_refseq'):
-        return data[data[colname] != 0]
-    
-    def normalize(self, data, colname, normfactor):
-        data[colname + '_norm'] = data[colname]*normfactor
-        return data
-    
+class SeqGrapher(TranscriptAnalyzer):
     def scatterplot(self, data, xcolname, ycolname, log=False, color='blue',
                     master_dataset=None,
                     title='', xlabel=None, ylabel=None,
@@ -188,7 +173,7 @@ class SeqGrapher(object):
         if show_plot: self.show_plot()
     
         return ax
-        
+                
 if __name__ == '__main__':
     grapher = SeqGrapher()
     
@@ -214,22 +199,35 @@ if __name__ == '__main__':
     refseq_plated_diabetic = refseq_diabetic[abs(refseq_diabetic['diabetic_balb_nod_notx_1h_fc']) >= 1]
     refseq_nonplated_leftover = refseq_diabetic[abs(refseq_diabetic['diabetic_balb_nod_notx_1h_fc']) < 1]
     
+    refseq_nonplated_up = refseq[refseq['nonplated_diabetic_balb_nod_notx_fc'] >= 1]
+    #refseq_nonplated_up = refseq_nonplated_up[refseq_nonplated_up['balb_nod_notx_1h_fc'] < 1]
+    refseq_nonplated_down = refseq[refseq['nonplated_diabetic_balb_nod_notx_fc'] <= -1]
+    #refseq_nonplated_down = refseq_nonplated_down[refseq_nonplated_down['balb_nod_notx_1h_fc'] > -1]
     
-    ax = grapher.scatterplot(refseq_diabetic, xcolname, ycolname,
+    print grapher.get_gene_names(refseq_nonplated_up)
+    print grapher.get_gene_names(refseq_nonplated_down)
+    
+    ''' 
+    ax = grapher.scatterplot(refseq_nonplated_leftover, xcolname, ycolname,
                         log=True, color='blue', master_dataset=refseq,
-                        title='Nonplated Diabetic NOD vs. BALBc Refseq Transcripts',
                         xlabel='BALBc notx', ylabel='NOD notx', label='Different only with diabetes when not plated',
+                        show_2x_range=False, show_legend=False, 
+                        show_count=False, show_correlation=False, show_plot=False)
+    ax = grapher.scatterplot(refseq_plated_diabetic, xcolname, ycolname,
+                        log=True, color='green', master_dataset=refseq,
+                        label='Different in NOD with diabetes (plated),\nbut not without',
                         show_2x_range=False, show_legend=False, 
                         show_count=False, show_correlation=False, show_plot=False)
     ax = grapher.scatterplot(refseq_strain, xcolname, ycolname,
                         log=True, color='red', master_dataset=refseq,
+                        title='Nonplated Diabetic NOD vs. BALBc Refseq Transcripts',
                         label='Different in NOD without diabetes (plated)',
                         show_2x_range=True, show_legend=True,
                         show_count=True, show_correlation=True, show_plot=False)
-    grapher.save_plot(os.path.join(dirpath, 'nonplated_diabetic_nod_vs_balbc_scatterplot.png'))
+    grapher.save_plot(os.path.join(dirpath, 'nonplated_diabetic_nod_vs_balbc_three_groups_scatterplot.png'))
     grapher.show_plot()
     
-    '''
+    
     gene_row = refseq[refseq['gene_names'] == '{Sfpi1}']
     grapher.bargraph_for_transcript(gene_row, 
                                     ['balb_nod_notx_1h_fc', 'balb_nod_kla_1h_fc',
