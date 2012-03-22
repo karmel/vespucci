@@ -305,7 +305,7 @@ class GlassTranscript(TranscriptBase):
     ################################################
     @classmethod
     def stitch_together_transcripts(cls, allow_extended_gaps=True, set_density=False):
-        multiprocess_all_chromosomes(wrap_stitch_together_transcripts, cls, allow_extended_gaps)
+        multiprocess_all_chromosomes(wrap_stitch_together_transcripts, cls, allow_extended_gaps, set_density)
         #wrap_stitch_together_transcripts(cls,[21, 22])
     
     @classmethod

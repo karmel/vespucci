@@ -227,8 +227,8 @@ if __name__ == '__main__':
     grapher.save_plot(os.path.join(dirpath, 'nonplated_diabetic_nod_vs_balbc_three_groups_scatterplot.png'))
     grapher.show_plot()
     
-    
-    gene_row = refseq[refseq['gene_names'] == '{Sfpi1}']
+    '''
+    gene_row = refseq[refseq['gene_names'] == '{Insr}']
     grapher.bargraph_for_transcript(gene_row, 
                                     ['balb_nod_notx_1h_fc', 'balb_nod_kla_1h_fc',
                                      'diabetic_balb_nod_notx_1h_fc', 'diabetic_balb_nod_kla_1h_fc',
@@ -236,9 +236,9 @@ if __name__ == '__main__':
                                     bar_names=['Non-diabetic\nnotx 1h', 'Non-diabetic\nKLA 1h',
                                                'Diabetic\nnotx 1h', 'Diabetic\nKLA 1h',
                                                'Nonplated diabetic\nnotx 1h',],
-                                    title='PU.1 (Sfpi1) Fold Change in NOD vs. BALBc GRO-seq',
+                                    title='Insr Fold Change in NOD vs. BALBc GRO-seq',
                                     ylabel='Fold Change in NOD vs. BALBc',
                                     show_plot=False)
-    grapher.save_plot(os.path.join(dirpath, 'sfpi1_fold_change_bargraph.png'))
+    grapher.save_plot(os.path.join(dirpath, 'insr_fold_change_bargraph.png'))
     grapher.show_plot()
-    '''
+    
