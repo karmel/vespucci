@@ -61,8 +61,8 @@ backend      : MacOSX
 #lines.linestyle   : -       # solid line
 #lines.color       : blue
 #lines.marker      : None    # the default marker
-#lines.markeredgewidth  : 0.7     # the line width around the marker symbol
-#lines.markersize  : 6            # markersize, in points
+lines.markeredgewidth  : 0.8     # the line width around the marker symbol
+lines.markersize  : 7            # markersize, in points
 #lines.dash_joinstyle : miter        # miter|round|bevel
 #lines.dash_capstyle : butt          # butt|round|projecting
 #lines.solid_joinstyle : miter       # miter|round|bevel

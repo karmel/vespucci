@@ -28,6 +28,7 @@ class SeqGrapher(object):
         return data
     
     def scatterplot(self, data, xcolname, ycolname, log=False, color='blue',
+                    master_dataset=None,
                     title='', xlabel=None, ylabel=None,
                     label=None,
                     show_2x_range=True, show_count = True, show_correlation=True, 
@@ -42,24 +43,24 @@ class SeqGrapher(object):
         refseq_strain = refseq[abs(refseq['balb_nod_notx_1h_fc']) >= 1]
         
         ax = grapher.scatterplot(refseq_diabetic, xcolname, ycolname,
-                            log=True, color='blue',
+                            log=True, color='blue', master_dataset=refseq,
                             title='Nonplated Diabetic NOD vs. BALBc Refseq Transcripts',
-                            xlabel='BALBc notx', ylabel='NOD notx', label='Different only diabetes',
+                            xlabel='BALBc notx', ylabel='NOD notx', label='Different only with diabetes when not plated',
                             show_2x_range=False, show_legend=False, 
                             show_count=False, show_correlation=False, show_plot=False)
         ax = grapher.scatterplot(refseq_strain, xcolname, ycolname,
-                            log=True, color='red',
-                            title='Nonplated Diabetic NOD vs. BALBc Refseq Transcripts',
-                            xlabel='BALBc notx', ylabel='NOD notx', label='Different regardless of diabetes',
-                            show_count=False, show_correlation=False, show_plot=False)
-        grapher.show_count_scatterplot(refseq, ax)
-        grapher.show_correlation_scatterplot(refseq, xcolname, ycolname, ax)
-        #grapher.show_plot()
+                            log=True, color='red', master_dataset=refseq,
+                            label='Different in NOD without diabetes (plated)',
+                            show_2x_range=True, show_legend=True,
+                            show_count=True, show_correlation=True, show_plot=False)
         grapher.save_plot(os.path.join(dirpath, 'nonplated_diabetic_nod_vs_balbc_scatterplot.png'))
+        grapher.show_plot()
         '''
+        # Sometimes we want to use a superset of the data for plot setup.
+        master_dataset = master_dataset or data
+        
         # Set up plot
         ax = pyplot.subplot(111)
-        pyplot.axis([min(data[xcolname]), max(data[xcolname]), min(data[ycolname]), max(data[ycolname])])
         
         # Plot points
         pyplot.plot(data[xcolname], data[ycolname],
@@ -68,7 +69,7 @@ class SeqGrapher(object):
 
         # Log scaled?
         if log:
-            if log <= 1: log = 10
+            if log <= 1: log = 2
             pyplot.xscale('log', basex=log, nonposx='clip')
             pyplot.yscale('log', basey=log, nonposy='clip')
             ax.xaxis.set_major_formatter(ScalarFormatter())
@@ -78,20 +79,18 @@ class SeqGrapher(object):
         if xlabel is None: xlabel = capwords(xcolname.replace('_',' '))
         if ylabel is None: ylabel = capwords(ycolname.replace('_',' '))
                 
-        pyplot.xlabel(xlabel, labelpad=10)
-        pyplot.ylabel(ylabel)
+        self.add_axis_labels(xlabel, ylabel)
         
-        pyplot.title(title)
-        ax.title.set_y(1.02)
+        self.add_title(title, ax)
         
         # Show lines at two-fold change?
         if show_2x_range:
-            pyplot.plot([0, max(data[xcolname])], [0, 2*max(data[xcolname])], '--', color='black', label='Two-fold change')
-            pyplot.plot([0, max(data[xcolname])], [0, .5*max(data[xcolname])], '--', color='black')
+            pyplot.plot([1, .5*max(master_dataset[ycolname])], [2, max(master_dataset[ycolname])], '--', color='black', label='Two-fold change')
+            pyplot.plot([1, max(master_dataset[xcolname])], [.5, .5*max(master_dataset[xcolname])], '--', color='black')
         
         # Show Pearson correlation and count?
-        if show_count: self.show_count_scatterplot(data, ax)
-        if show_correlation: self.show_correlation_scatterplot(data, xcolname, ycolname, ax)
+        if show_count: self.show_count_scatterplot(master_dataset, ax)
+        if show_correlation: self.show_correlation_scatterplot(master_dataset, xcolname, ycolname, ax)
         
         if show_legend:
             pyplot.legend(loc='upper left')
@@ -113,26 +112,54 @@ class SeqGrapher(object):
             
     def show_plot(self): pyplot.show()
     def save_plot(self, filename): pyplot.savefig(filename)
-        
     
+    def add_title(self, title, ax):
+        pyplot.title(title)
+        ax.title.set_y(1.02)   
+        
+    def add_axis_labels(self, xlabel, ylabel):
+        pyplot.xlabel(xlabel, labelpad=10)
+        pyplot.ylabel(ylabel, labelpad=10)
+        
     def other_plot(self):
         return True
     
     
     def bargraph_for_transcript(self, transcript_row, cols,
-                                convert_log_to_fc=True, show_plot=True):
+                                bar_names=None, 
+                                title='', xlabel='', ylabel='',
+                                convert_log_to_fc=True, show_2x_range=True,
+                                show_plot=True):
         '''
         Designed to draw bar graphs for fold changes across many
         runs for a single transcript.
+        
+        Sample for creation of bar graph:
+        gene_row = refseq[refseq['gene_names'] == '{Clec4e}']
+        grapher.bargraph_for_transcript(gene_row, 
+                                        ['balb_nod_notx_1h_fc', 'balb_nod_kla_1h_fc',
+                                         'diabetic_balb_nod_notx_1h_fc', 'diabetic_balb_nod_kla_1h_fc',
+                                         'nonplated_diabetic_balb_nod_notx_fc',],
+                                        bar_names=['Non-diabetic\nnotx 1h', 'Non-diabetic\nKLA 1h',
+                                                   'Diabetic\nnotx 1h', 'Diabetic\nKLA 1h',
+                                                   'Nonplated diabetic\nnotx 1h',],
+                                        title='Mincle (Clec4e) Fold Change in NOD vs. BALBc GRO-seq',
+                                        ylabel='Fold Change in NOD vs. BALBc',
+                                        show_plot=False)
+        grapher.save_plot(os.path.join(dirpath, 'clec4e_fold_change_bargraph.png'))
+        grapher.show_plot()
         '''
         
         axis_spacer = .2
+        bar_width = .8
         xvals = [x + axis_spacer for x in xrange(0,len(cols))]
+        
+        default_ylabel = 'Fold Change'
         if convert_log_to_fc:
-            # Show 2**log_val for positive vals; -2**log_val for negative vals.
-            yvals = [cmp(transcript_row[col],0)*2**abs(transcript_row[col]) for col in cols]
+            yvals = [2**transcript_row[col] for col in cols]
         else:
             yvals = [transcript_row[col] for col in cols]
+            default_ylabel = 'Log(2) ' + default_ylabel
         
         # Set up plot
         ax = pyplot.subplot(111)
@@ -140,7 +167,20 @@ class SeqGrapher(object):
         # Show line at zero
         pyplot.plot([0,len(cols) + axis_spacer], [0,0], '-',color='black')
         
-        ax.bar(xvals, yvals, .8, color='#C9D9FB')
+        # And at two-fold change
+        if show_2x_range and max(yvals) >= 2:
+            pyplot.plot([0,len(cols) + axis_spacer], 
+                        [convert_log_to_fc and 2 or 1, convert_log_to_fc and 2 or 1, ], 
+                        '--',color='black')
+            
+        ax.bar(xvals, yvals, bar_width, color='#C9D9FB')
+        
+        ax.set_xticks([x + .5*bar_width for x in xvals])
+        ax.set_xticklabels(bar_names or cols)
+        
+        ylabel = ylabel or default_ylabel
+        self.add_axis_labels(xlabel or 'Experimental Conditions', ylabel)
+        self.add_title(title, ax)
         
         # Any other operations to tack on?
         self.other_plot()
@@ -170,27 +210,37 @@ if __name__ == '__main__':
     # Split into those that are also diff in non-diabetic NOD and those not
     refseq_diabetic = refseq[abs(refseq['balb_nod_notx_1h_fc']) < 1]
     refseq_strain = refseq[abs(refseq['balb_nod_notx_1h_fc']) >= 1]
-    '''
+    
+    refseq_plated_diabetic = refseq_diabetic[abs(refseq_diabetic['diabetic_balb_nod_notx_1h_fc']) >= 1]
+    refseq_nonplated_leftover = refseq_diabetic[abs(refseq_diabetic['diabetic_balb_nod_notx_1h_fc']) < 1]
+    
+    
     ax = grapher.scatterplot(refseq_diabetic, xcolname, ycolname,
-                        log=True, color='blue',
+                        log=True, color='blue', master_dataset=refseq,
                         title='Nonplated Diabetic NOD vs. BALBc Refseq Transcripts',
-                        xlabel='BALBc notx', ylabel='NOD notx', label='Different only with diabetes',
+                        xlabel='BALBc notx', ylabel='NOD notx', label='Different only with diabetes when not plated',
                         show_2x_range=False, show_legend=False, 
                         show_count=False, show_correlation=False, show_plot=False)
     ax = grapher.scatterplot(refseq_strain, xcolname, ycolname,
-                        log=True, color='red',
-                        title='Nonplated Diabetic NOD vs. BALBc Refseq Transcripts',
-                        xlabel='BALBc notx', ylabel='NOD notx', label='Different in NOD without diabetes',
-                        show_count=False, show_correlation=False, show_plot=False)
-    grapher.show_count_scatterplot(refseq, ax)
-    grapher.show_correlation_scatterplot(refseq, xcolname, ycolname, ax)
+                        log=True, color='red', master_dataset=refseq,
+                        label='Different in NOD without diabetes (plated)',
+                        show_2x_range=True, show_legend=True,
+                        show_count=True, show_correlation=True, show_plot=False)
     grapher.save_plot(os.path.join(dirpath, 'nonplated_diabetic_nod_vs_balbc_scatterplot.png'))
     grapher.show_plot()
     
     '''
-    mincle_row = refseq[refseq['gene_names'] == '{Clec4e}']
-    grapher.bargraph_for_transcript(mincle_row, 
+    gene_row = refseq[refseq['gene_names'] == '{Sfpi1}']
+    grapher.bargraph_for_transcript(gene_row, 
                                     ['balb_nod_notx_1h_fc', 'balb_nod_kla_1h_fc',
                                      'diabetic_balb_nod_notx_1h_fc', 'diabetic_balb_nod_kla_1h_fc',
-                                     'nonplated_diabetic_balb_nod_notx_fc',])
-    
+                                     'nonplated_diabetic_balb_nod_notx_fc',],
+                                    bar_names=['Non-diabetic\nnotx 1h', 'Non-diabetic\nKLA 1h',
+                                               'Diabetic\nnotx 1h', 'Diabetic\nKLA 1h',
+                                               'Nonplated diabetic\nnotx 1h',],
+                                    title='PU.1 (Sfpi1) Fold Change in NOD vs. BALBc GRO-seq',
+                                    ylabel='Fold Change in NOD vs. BALBc',
+                                    show_plot=False)
+    grapher.save_plot(os.path.join(dirpath, 'sfpi1_fold_change_bargraph.png'))
+    grapher.show_plot()
+    '''
