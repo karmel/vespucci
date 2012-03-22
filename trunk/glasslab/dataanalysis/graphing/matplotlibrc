@@ -1,14 +1,3 @@
-###################################################################
-# Custom config to make matplotlib prettier.
-###################################################################
-# 
-# Details on creating and placing a matplotlibrc file taken from:
-#
-#		http://matplotlib.sourceforge.net/users/customizing.html
-#
-#
-###################################################################
-
 ### MATPLOTLIBRC FORMAT
 
 # This is a sample matplotlib configuration file - you can find a copy
@@ -68,12 +57,12 @@ backend      : MacOSX
 ### LINES
 # See http://matplotlib.sourceforge.net/api/artist_api.html#module-matplotlib.lines for more
 # information on line properties.
-lines.linewidth   : .7     # line width in points
+#lines.linewidth   : 1.0     # line width in points
 #lines.linestyle   : -       # solid line
 #lines.color       : blue
 #lines.marker      : None    # the default marker
-lines.markeredgewidth  : 0.6     # the line width around the marker symbol
-lines.markersize  : 3            # markersize, in points
+#lines.markeredgewidth  : 0.7     # the line width around the marker symbol
+#lines.markersize  : 6            # markersize, in points
 #lines.dash_joinstyle : miter        # miter|round|bevel
 #lines.dash_capstyle : butt          # butt|round|projecting
 #lines.solid_joinstyle : miter       # miter|round|bevel
@@ -135,9 +124,9 @@ lines.markersize  : 3            # markersize, in points
 # settings for axes and ticks. Special text sizes can be defined
 # relative to font.size, using the following values: xx-small, x-small,
 # small, medium, large, x-large, xx-large, larger, or smaller
-font.size           : 6
+#font.size           : 12.0
 #font.serif          : Bitstream Vera Serif, New Century Schoolbook, Century Schoolbook L, Utopia, ITC Bookman, Bookman, Nimbus Roman No9 L, Times New Roman, Times, Palatino, Charter, serif
-#font.sans-serif     : Bitstream Vera Sans, Lucida Grande, Verdana, Geneva, Lucid, Arial, Helvetica, Avant Garde, sans-serif
+font.sans-serif     : Helvetica, Bitstream Vera Sans, Lucida Grande, Verdana, Geneva, Lucid, Arial, Helvetica, Avant Garde, sans-serif
 #font.cursive        : Apple Chancery, Textile, Zapf Chancery, Sand, cursive
 #font.fantasy        : Comic Sans MS, Chicago, Charcoal, Impact, Western, fantasy
 #font.monospace      : Bitstream Vera Sans Mono, Andale Mono, Nimbus Mono L, Courier New, Courier, Fixed, Terminal, monospace
@@ -212,10 +201,10 @@ font.size           : 6
 #axes.hold           : True    # whether to clear the axes by default on
 #axes.facecolor      : white   # axes background color
 #axes.edgecolor      : black   # axes edge color
-axes.linewidth      : .7     # edge linewidth
+#axes.linewidth      : 1.0     # edge linewidth
 #axes.grid           : False   # display grid or not
-axes.titlesize      : 9   # fontsize of the axes title
-axes.labelsize      : 7  # fontsize of the x any y labels
+axes.titlesize      : 20   # fontsize of the axes title
+#axes.labelsize      : medium  # fontsize of the x any y labels
 #axes.labelweight    : normal  # weight of the x and y labels
 #axes.labelcolor     : black
 #axes.axisbelow      : False   # whether axis gridlines and ticks are below
@@ -240,20 +229,20 @@ axes.labelsize      : 7  # fontsize of the x any y labels
 
 ### TICKS
 # see http://matplotlib.sourceforge.net/api/axis_api.html#matplotlib.axis.Tick
-xtick.major.size     : 3      # major tick size in points
-xtick.minor.size     : 1      # minor tick size in points
-xtick.major.pad      : 2      # distance to major tick label in points
-xtick.minor.pad      : 2      # distance to the minor tick label in points
+#xtick.major.size     : 4      # major tick size in points
+#xtick.minor.size     : 2      # minor tick size in points
+#xtick.major.pad      : 4      # distance to major tick label in points
+#xtick.minor.pad      : 4      # distance to the minor tick label in points
 #xtick.color          : k      # color of the tick labels
-xtick.labelsize      : 6 # fontsize of the tick labels
+#xtick.labelsize      : medium # fontsize of the tick labels
 #xtick.direction      : in     # direction: in or out
 
-ytick.major.size     : 3      # major tick size in points
-ytick.minor.size     : 1      # minor tick size in points
-ytick.major.pad      : 2      # distance to major tick label in points
-ytick.minor.pad      : 2      # distance to the minor tick label in points
+#ytick.major.size     : 4      # major tick size in points
+#ytick.minor.size     : 2      # minor tick size in points
+#ytick.major.pad      : 4      # distance to major tick label in points
+#ytick.minor.pad      : 4      # distance to the minor tick label in points
 #ytick.color          : k      # color of the tick labels
-ytick.labelsize      : 6 # fontsize of the tick labels
+#ytick.labelsize      : medium # fontsize of the tick labels
 #ytick.direction      : in     # direction: in or out
 
 
@@ -267,7 +256,7 @@ ytick.labelsize      : 6 # fontsize of the tick labels
                                # legend, else a rectangle
 #legend.isaxes        : True
 legend.numpoints     : 1      # the number of points in the legend line
-legend.fontsize      : 6
+legend.fontsize      : medium
 #legend.pad           : 0.0    # deprecated; the fractional whitespace inside the legend border
 #legend.borderpad     : 0.5    # border whitspace in fontsize units
 #legend.markerscale   : 1.0    # the relative size of legend markers vs. original
@@ -287,8 +276,8 @@ legend.fontsize      : 6
 
 ### FIGURE
 # See http://matplotlib.sourceforge.net/api/figure_api.html#matplotlib.figure.Figure
-figure.figsize   : 5, 5    # figure size in inches
-figure.dpi       : 160      # figure dots per inch
+figure.figsize   : 10, 10    # figure size in inches
+#figure.dpi       : 80      # figure dots per inch
 figure.facecolor : white    # figure facecolor; 0.75 is scalar gray
 #figure.edgecolor : white   # figure edgecolor
 
@@ -336,7 +325,7 @@ figure.facecolor : white    # figure facecolor; 0.75 is scalar gray
 # the default savefig params can be different from the display params
 # Eg, you may want a higher resolution, or to make the figure
 # background white
-savefig.dpi       : 300      # figure dots per inch
+savefig.dpi       : 80      # figure dots per inch
 #savefig.facecolor : white    # figure facecolor when saving
 #savefig.edgecolor : white    # figure edgecolor when saving
 #savefig.extension : auto     # what extension to use for savefig('foo'), or 'auto'

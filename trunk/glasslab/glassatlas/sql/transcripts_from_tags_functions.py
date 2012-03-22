@@ -449,6 +449,10 @@ BEGIN
     -- adjusting by deviation score in whatever direction _minimizes_ relative fold change.
     norm_ctl_tag_count := ctl_tag_count;
     norm_sample_tag_count := (SELECT sample_tag_count*total_norm_factor FROM glass_atlas_%s_%s.norm_sum WHERE name_1 = ctl_name AND name_2 = sample_name);
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'No norm_sum row was found for names % and %!', ctl_name, sample_name;
+        RETURN NULL;
+    END IF;
     norm_deviation_score := (SELECT deviation_score*total_tags_1 FROM glass_atlas_%s_%s.norm_sum WHERE name_1 = ctl_name AND name_2 = sample_name);
     IF (norm_sample_tag_count > norm_ctl_tag_count) THEN
         norm_sample_tag_count = (SELECT GREATEST(norm_ctl_tag_count, norm_sample_tag_count - norm_deviation_score));

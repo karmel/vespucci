@@ -78,10 +78,11 @@ class SeqGrapher(object):
         if xlabel is None: xlabel = capwords(xcolname.replace('_',' '))
         if ylabel is None: ylabel = capwords(ycolname.replace('_',' '))
                 
-        pyplot.xlabel(xlabel)
+        pyplot.xlabel(xlabel, labelpad=10)
         pyplot.ylabel(ylabel)
         
         pyplot.title(title)
+        ax.title.set_y(1.02)
         
         # Show lines at two-fold change?
         if show_2x_range:
@@ -119,17 +120,27 @@ class SeqGrapher(object):
     
     
     def bargraph_for_transcript(self, transcript_row, cols,
-                                show_plot=True):
+                                convert_log_to_fc=True, show_plot=True):
         '''
         Designed to draw bar graphs for fold changes across many
         runs for a single transcript.
         '''
-        print transcript_row
+        
+        axis_spacer = .2
+        xvals = [x + axis_spacer for x in xrange(0,len(cols))]
+        if convert_log_to_fc:
+            # Show 2**log_val for positive vals; -2**log_val for negative vals.
+            yvals = [cmp(transcript_row[col],0)*2**abs(transcript_row[col]) for col in cols]
+        else:
+            yvals = [transcript_row[col] for col in cols]
+        
         # Set up plot
         ax = pyplot.subplot(111)
-        xvals = list(xrange(1,len(cols) + 1))
-        yvals = [transcript_row[col] for col in cols]
-        ax.bar(xvals, yvals, .8, color='blue')
+        ax.set_xlim([0,len(cols) + axis_spacer])
+        # Show line at zero
+        pyplot.plot([0,len(cols) + axis_spacer], [0,0], '-',color='black')
+        
+        ax.bar(xvals, yvals, .8, color='#C9D9FB')
         
         # Any other operations to tack on?
         self.other_plot()
@@ -159,26 +170,27 @@ if __name__ == '__main__':
     # Split into those that are also diff in non-diabetic NOD and those not
     refseq_diabetic = refseq[abs(refseq['balb_nod_notx_1h_fc']) < 1]
     refseq_strain = refseq[abs(refseq['balb_nod_notx_1h_fc']) >= 1]
-    
+    '''
     ax = grapher.scatterplot(refseq_diabetic, xcolname, ycolname,
                         log=True, color='blue',
                         title='Nonplated Diabetic NOD vs. BALBc Refseq Transcripts',
-                        xlabel='BALBc notx', ylabel='NOD notx', label='Different only diabetes',
+                        xlabel='BALBc notx', ylabel='NOD notx', label='Different only with diabetes',
                         show_2x_range=False, show_legend=False, 
                         show_count=False, show_correlation=False, show_plot=False)
     ax = grapher.scatterplot(refseq_strain, xcolname, ycolname,
                         log=True, color='red',
                         title='Nonplated Diabetic NOD vs. BALBc Refseq Transcripts',
-                        xlabel='BALBc notx', ylabel='NOD notx', label='Different regardless of diabetes',
+                        xlabel='BALBc notx', ylabel='NOD notx', label='Different in NOD without diabetes',
                         show_count=False, show_correlation=False, show_plot=False)
     grapher.show_count_scatterplot(refseq, ax)
     grapher.show_correlation_scatterplot(refseq, xcolname, ycolname, ax)
-    #grapher.show_plot()
     grapher.save_plot(os.path.join(dirpath, 'nonplated_diabetic_nod_vs_balbc_scatterplot.png'))
-    '''
+    grapher.show_plot()
     
-    grapher.bargraph_for_transcript(refseq[refseq['gene_names'] == '{Clec4e}'], 
+    '''
+    mincle_row = refseq[refseq['gene_names'] == '{Clec4e}']
+    grapher.bargraph_for_transcript(mincle_row, 
                                     ['balb_nod_notx_1h_fc', 'balb_nod_kla_1h_fc',
                                      'diabetic_balb_nod_notx_1h_fc', 'diabetic_balb_nod_kla_1h_fc',
-                                     'nonplated_diabetic_balb_notx_fc',])
-    '''
+                                     'nonplated_diabetic_balb_nod_notx_fc',])
+    
