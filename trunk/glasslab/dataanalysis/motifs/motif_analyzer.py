@@ -40,7 +40,7 @@ class MotifAnalyzer(TranscriptAnalyzer):
                                                     self.sanitize_filename(homer_filename)),
                                                     shell=True)
         
-        self.run_homer_with_pos_file(homer_filename, dirpath, center, size, 
+        self.run_homer_with_pos_file(homer_filename, fullpath, center, size, 
                                      length, number_of_motifs, bg, genome, cpus)
         
         
@@ -60,7 +60,7 @@ class MotifAnalyzer(TranscriptAnalyzer):
         else: bg = ''
         
         fullpath = os.path.join(dirpath,'homer_motifs_size_%s_len_%s' % (
-                                        size, length.replace(',','-'))
+                                        size.replace(',','-'), length.replace(',','-'))
                                 )
         self.make_directory(fullpath)
         

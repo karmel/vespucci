@@ -208,7 +208,7 @@ class LinearGrapher(object):
         return transcripts
     
 if __name__ == '__main__':
-    output_dir = len(sys.argv) > 1 and sys.argv[1] or '/Users/karmel/Desktop/Projects/GlassLab/Notes and Reports/Syntenic regions/Linear Graphs Shifted/'
+    output_dir = len(sys.argv) > 1 and sys.argv[1] or '/Users/karmel/Desktop/Projects/GlassLab/Notes_and_Reports/Syntenic regions/Linear Graphs Shifted/'
     grapher = LinearGrapher(output_dir)
     grapher.graph_regions()
     
