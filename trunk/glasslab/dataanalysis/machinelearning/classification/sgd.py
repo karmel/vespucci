@@ -19,8 +19,8 @@ class GlassSGDClassifier(BaseClassifier):
 
 if __name__ == '__main__':
     setup = MLSetup()
-    data, fields = setup.get_data_from_file(file_name='/Users/karmel/Desktop/Projects/GlassLab/Notes and Reports/Classification of fold change/feature_vectors_7.txt',header=True)
-    #data, fields = setup.get_data_from_file(file_name='/Users/karmel/Desktop/Projects/GlassLab/Notes and Reports/Classification of fold change/erna/erna_vectors_3.txt',header=True)
+    data, fields = setup.get_data_from_file(file_name='/Users/karmel/Desktop/Projects/GlassLab/Notes_and_Reports/Classification of fold change/feature_vectors_7.txt',header=True)
+    #data, fields = setup.get_data_from_file(file_name='/Users/karmel/Desktop/Projects/GlassLab/Notes_and_Reports/Classification of fold change/erna/erna_vectors_3.txt',header=True)
     
     data = setup.filter_data_no_infrastructure(data,fields)
     #data = setup.filter_data_dmso_upreg(data,fields)

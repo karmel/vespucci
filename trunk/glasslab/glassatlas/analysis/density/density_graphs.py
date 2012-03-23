@@ -56,7 +56,7 @@ class DensityAnalyzer(object):
 
                 connection.close()
                 
-            pyplot.savefig('/Users/karmel/Desktop/Projects/GlassLab/Notes and Reports/Glass Atlas/density_analysis/pyplot3/density_graph_%d.png' % chr_id)
+            pyplot.savefig('/Users/karmel/Desktop/Projects/GlassLab/Notes_and_Reports/Glass Atlas/density_analysis/pyplot3/density_graph_%d.png' % chr_id)
 
     def density_csv(self):
         for chr_id in (22,):
@@ -71,7 +71,7 @@ class DensityAnalyzer(object):
                     y = [str(density)]*2
                     output += ','.join(x) + ',' + ','.join(y) + '\n'
                 connection.close()
-                f = open('/Users/karmel/Desktop/Projects/GlassLab/Notes and Reports/Glass Atlas/density_analysis/transcript_data/transcript_data_chr_%d_strand_%d.csv' % (chr_id, strand), 'w')
+                f = open('/Users/karmel/Desktop/Projects/GlassLab/Notes_and_Reports/Glass Atlas/density_analysis/transcript_data/transcript_data_chr_%d_strand_%d.csv' % (chr_id, strand), 'w')
                 f.write(output)
 
 if __name__ == '__main__':

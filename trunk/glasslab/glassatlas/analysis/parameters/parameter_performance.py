@@ -185,7 +185,7 @@ class ParameterPerformance(models.Model):
             pyplot.plot(fp_rate, tp_rate, choice(['-','--','-.',':']), label=label)
         pyplot.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=1, ncol=4, mode="expand", borderaxespad=0.,
                       prop=font_manager.FontProperties(size=7))
-        pyplot.savefig('/Users/karmel/Desktop/Projects/GlassLab/Notes and Reports/Glass Atlas/parameter_determination_2011_01_28/pyplot/roc_comparison.png')
+        pyplot.savefig('/Users/karmel/Desktop/Projects/GlassLab/Notes_and_Reports/Glass Atlas/parameter_determination_2011_01_28/pyplot/roc_comparison.png')
 
     @classmethod
     def trapezoid_area(cls, x1, x2, y1, y2):

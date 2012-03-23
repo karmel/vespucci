@@ -131,7 +131,7 @@ def for_ligands(data, fields, erna):
     clusterer = GlassKMeansClusterer()
     clusters = clusterer.cluster_rows(feat_data)
     
-    output_dir = '/Users/karmel/Desktop/Projects/GlassLab/Notes and Reports/Classification of fold change/clustering/kmeans/ligands/'
+    output_dir = '/Users/karmel/Desktop/Projects/GlassLab/Notes_and_Reports/Classification of fold change/clustering/kmeans/ligands/'
     clusterer.draw_heat_map(output_dir, 'ligands%s' % (erna and '_erna' or ''), setup.text_data, setup.text_fields, clusters, selected)
     
 def for_dex(data, fields, erna):
@@ -152,16 +152,16 @@ def for_dex(data, fields, erna):
     clusterer = GlassKMeansClusterer()
     clusters = clusterer.cluster_rows(feat_data, k=6)
     
-    output_dir = '/Users/karmel/Desktop/Projects/GlassLab/Notes and Reports/Classification of fold change/clustering/kmeans/dex/'
+    output_dir = '/Users/karmel/Desktop/Projects/GlassLab/Notes_and_Reports/Classification of fold change/clustering/kmeans/dex/'
     clusterer.draw_heat_map(output_dir, 'dex%s' % (erna and '_erna' or ''), setup.text_data, setup.text_fields, clusters, selected, include_pos=True)
     
 if __name__ == '__main__':
     erna = False
     
     setup = MLSetup()
-    text_fields_file = '/Users/karmel/Desktop/Projects/GlassLab/Notes and Reports/Classification of fold change/%sgene_names.txt' \
+    text_fields_file = '/Users/karmel/Desktop/Projects/GlassLab/Notes_and_Reports/Classification of fold change/%sgene_names.txt' \
                         % (erna and 'erna/' or '')
-    data, fields = setup.get_data_from_file(file_name='/Users/karmel/Desktop/Projects/GlassLab/Notes and Reports/Classification of fold change/%sfold_change_vectors.txt' \
+    data, fields = setup.get_data_from_file(file_name='/Users/karmel/Desktop/Projects/GlassLab/Notes_and_Reports/Classification of fold change/%sfold_change_vectors.txt' \
                                             % (erna and 'erna/' or ''),
                                             text_file_name=text_fields_file, header=True)
     for_dex(data, fields, erna)

@@ -177,7 +177,7 @@ class SeqGrapher(TranscriptAnalyzer):
 if __name__ == '__main__':
     grapher = SeqGrapher()
     
-    dirpath = '/Users/karmel/GlassLab/Notes and Reports/NOD_BALBc/ThioMacs/Diabetic/Nonplated/Analysis/'
+    dirpath = '/Users/karmel/GlassLab/Notes_and_Reports/NOD_BALBc/ThioMacs/Diabetic/Nonplated/Analysis/'
     filename = os.path.join(dirpath, 'balbc_nod_vectors.txt')
     data = grapher.import_file(filename)
     
