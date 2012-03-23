@@ -10,13 +10,15 @@ from string import capwords
 from matplotlib.ticker import ScalarFormatter
 import os
 from glasslab.dataanalysis.base.datatypes import TranscriptAnalyzer
+from random import uniform, normalvariate
 
 class SeqGrapher(TranscriptAnalyzer):
     def scatterplot(self, data, xcolname, ycolname, log=False, color='blue',
                     master_dataset=None,
                     title='', xlabel=None, ylabel=None,
-                    label=None,
-                    show_2x_range=True, show_count = True, show_correlation=True, 
+                    label=None, add_noise=False,
+                    show_2x_range=True, show_count = True, show_correlation=True,
+                    text_shift=False, text_color=False, 
                     show_legend=True, show_plot=True):
         
         '''
@@ -47,8 +49,14 @@ class SeqGrapher(TranscriptAnalyzer):
         # Set up plot
         ax = pyplot.subplot(111)
         
+        # Add some noise to prevent overlap?
+        if add_noise:
+            xcol = normalvariate(data[xcolname], .01*data[xcolname])
+            ycol = normalvariate(data[ycolname], .01*data[ycolname])
+        else: xcol, ycol = data[xcolname], data[ycolname]
+        
         # Plot points
-        pyplot.plot(data[xcolname], data[ycolname],
+        pyplot.plot(xcol, ycol,
                     'o', markerfacecolor='None',
                     markeredgecolor=color, label=label)
 
@@ -74,8 +82,10 @@ class SeqGrapher(TranscriptAnalyzer):
             pyplot.plot([1, max(master_dataset[xcolname])], [.5, .5*max(master_dataset[xcolname])], '--', color='black')
         
         # Show Pearson correlation and count?
-        if show_count: self.show_count_scatterplot(master_dataset, ax)
-        if show_correlation: self.show_correlation_scatterplot(master_dataset, xcolname, ycolname, ax)
+        if text_shift is True: text_shift=.1
+        if text_color is True: text_color=color
+        if show_count: self.show_count_scatterplot(master_dataset, ax, text_shift, text_color)
+        if show_correlation: self.show_correlation_scatterplot(master_dataset, xcolname, ycolname, ax, text_shift, text_color)
         
         if show_legend:
             pyplot.legend(loc='upper left')
@@ -87,12 +97,14 @@ class SeqGrapher(TranscriptAnalyzer):
     
         return ax
     
-    def show_count_scatterplot(self, data, ax):
-        pyplot.text(.75, .125, 'Total count: %d' % len(data),
+    def show_count_scatterplot(self, data, ax, text_shift=0, text_color='black'):
+        pyplot.text(.75, .125+text_shift, 'Total count: %d' % len(data),
+                        color=text_color,
                         transform=ax.transAxes)
         
-    def show_correlation_scatterplot(self, data, xcolname, ycolname, ax):
-        pyplot.text(.75, .1, 'r = %.4f' % data[xcolname].corr(data[ycolname]),
+    def show_correlation_scatterplot(self, data, xcolname, ycolname, ax, text_shift=0, text_color='black'):
+        pyplot.text(.75, .1+text_shift, 'r = %.4f' % data[xcolname].corr(data[ycolname]),
+                    color=text_color,
                     transform=ax.transAxes)
             
     def show_plot(self): pyplot.show()
