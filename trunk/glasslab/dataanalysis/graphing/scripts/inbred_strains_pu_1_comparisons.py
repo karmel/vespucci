@@ -11,7 +11,7 @@ if __name__ == '__main__':
     grapher = SeqGrapher()
     
     dirpath = '/Users/karmel/GlassLab/Notes_and_Reports/Inbred strains/Peak comparisons/Compared with NOD/'
-    filename = os.path.join(dirpath, 'bl6_gt_balb_with_nod_pu_1_snps_no_balb_motif.txt')
+    filename = os.path.join(dirpath, 'bl6_gt_balb_with_nod_pu_1_unique.txt')
     data = grapher.import_file(filename)
     
     data = data.fillna(.1) # For easy log graphing
@@ -51,6 +51,6 @@ if __name__ == '__main__':
                         show_2x_range=False, show_legend=True, text_color=True, 
                         show_count=True, show_correlation=True, show_plot=False, ax=ax)
     #ax.set_ylim(4,128)
-    grapher.save_plot(os.path.join(dirpath, 'bl6_vs_nod_pu_1_peak_tag_counts_bl6_gt_balb_no_balb_motif_nod_eq_balb.png'))
+    grapher.save_plot(os.path.join(dirpath, 'bl6_vs_nod_pu_1_peak_tag_counts_bl6_gt_balb_unique.png'))
     grapher.show_plot()
     
