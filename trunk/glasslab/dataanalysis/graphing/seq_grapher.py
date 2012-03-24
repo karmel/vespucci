@@ -10,7 +10,7 @@ from string import capwords
 from matplotlib.ticker import ScalarFormatter
 import os
 from glasslab.dataanalysis.base.datatypes import TranscriptAnalyzer
-from random import uniform, normalvariate
+from random import normalvariate
 import numpy
 
 class SeqGrapher(TranscriptAnalyzer):
@@ -49,10 +49,7 @@ class SeqGrapher(TranscriptAnalyzer):
         # Sometimes we want to use a superset of the data for plot setup.
         master_dataset = master_dataset or data
         
-        # Set up plot
-        if not ax: pyplot.figure(figsize=[10*int(str(subplot)[1]),10*int(str(subplot)[2])])
-        ax = pyplot.subplot(subplot)
-        
+        ax = self.set_up_plot(ax, subplot)
         # Add some noise to prevent overlap?
         if add_noise:
             xcol = normalvariate(data[xcolname], .01*data[xcolname])
@@ -109,6 +106,12 @@ class SeqGrapher(TranscriptAnalyzer):
     
         return ax
     
+    def set_up_plot(self, ax=None, subplot=111):
+        # Set up plot
+        if not ax: pyplot.figure(figsize=[10*int(str(subplot)[1]),10*int(str(subplot)[2])])
+        ax = pyplot.subplot(subplot)
+        return ax
+        
     def show_count_scatterplot(self, data, ax, text_shift=0, text_color='black'):
         pyplot.text(.75, .125+text_shift, 'Total count: %d' % len(data),
                         color=text_color,
@@ -197,7 +200,29 @@ class SeqGrapher(TranscriptAnalyzer):
         if show_plot: self.show_plot()
     
         return ax
-                
+    
+    def boxplot(self, data,
+                    bar_names=None, subplot=111,
+                    title='', xlabel=None, ylabel=None,
+                    show_outliers=True, show_plot=True, ax=None):
+        ax = self.set_up_plot(ax, subplot)
+        
+        if show_outliers: symbol = '+'
+        else: symbol = ''
+        bp = pyplot.boxplot(data, sym=symbol)
+        
+        if bar_names: ax.set_xticklabels(bar_names)
+        
+        self.add_axis_labels(xlabel, ylabel)
+        self.add_title(title, ax)
+        
+        # Any other operations to tack on?
+        self.other_plot()
+        
+        if show_plot: self.show_plot()
+        
+        return ax
+         
 if __name__ == '__main__':
     grapher = SeqGrapher()
     
