@@ -11,13 +11,15 @@ from matplotlib.ticker import ScalarFormatter
 import os
 from glasslab.dataanalysis.base.datatypes import TranscriptAnalyzer
 from random import uniform, normalvariate
+import numpy
 
 class SeqGrapher(TranscriptAnalyzer):
     def scatterplot(self, data, xcolname, ycolname, log=False, color='blue',
                     master_dataset=None,
                     title='', xlabel=None, ylabel=None,
                     label=None, add_noise=False,
-                    show_2x_range=True, show_count = True, show_correlation=True,
+                    show_2x_range=True, plot_regression=True,
+                    show_count = True, show_correlation=True,
                     text_shift=False, text_color=False, 
                     show_legend=True, show_plot=True):
         
@@ -81,6 +83,16 @@ class SeqGrapher(TranscriptAnalyzer):
             pyplot.plot([1, .5*max(master_dataset[ycolname])], [2, max(master_dataset[ycolname])], '--', color='black', label='Two-fold change')
             pyplot.plot([1, max(master_dataset[xcolname])], [.5, .5*max(master_dataset[xcolname])], '--', color='black')
         
+        # Plot a least squares linear regression?
+        if plot_regression:
+            x, y = data[xcolname].copy(), data[ycolname].copy()
+            x.sort()
+            y = y[data[xcolname].argsort()]
+            #A = numpy.vstack([x, numpy.ones(len(x))]).T
+            #m, c = numpy.linalg.lstsq(A, y)[0]
+            m, c = numpy.polyfit(x, y, 1)
+            pyplot.plot(x, m*x + c, color=color, label='Least Sqs Regression')
+            
         # Show Pearson correlation and count?
         if text_shift is True: text_shift=.1
         if text_color is True: text_color=color
