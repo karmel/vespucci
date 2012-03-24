@@ -14,14 +14,15 @@ from random import uniform, normalvariate
 import numpy
 
 class SeqGrapher(TranscriptAnalyzer):
-    def scatterplot(self, data, xcolname, ycolname, log=False, color='blue',
+    def scatterplot(self, data, xcolname, ycolname, 
+                    subplot=111, log=False, color='blue',
                     master_dataset=None,
                     title='', xlabel=None, ylabel=None,
                     label=None, add_noise=False,
                     show_2x_range=True, plot_regression=True,
                     show_count = True, show_correlation=True,
                     text_shift=False, text_color=False, 
-                    show_legend=True, show_plot=True):
+                    show_legend=True, show_plot=True, ax=None):
         
         '''
         Designed to show scatterplots of tags by tags for a given run
@@ -49,7 +50,8 @@ class SeqGrapher(TranscriptAnalyzer):
         master_dataset = master_dataset or data
         
         # Set up plot
-        ax = pyplot.subplot(111)
+        if not ax: pyplot.figure(figsize=[10*int(str(subplot)[1]),10*int(str(subplot)[2])])
+        ax = pyplot.subplot(subplot)
         
         # Add some noise to prevent overlap?
         if add_noise:
@@ -61,7 +63,7 @@ class SeqGrapher(TranscriptAnalyzer):
         pyplot.plot(xcol, ycol,
                     'o', markerfacecolor='None',
                     markeredgecolor=color, label=label)
-
+        
         # Log scaled?
         if log:
             if log <= 1: log = 2
@@ -88,10 +90,8 @@ class SeqGrapher(TranscriptAnalyzer):
             x, y = data[xcolname].copy(), data[ycolname].copy()
             x.sort()
             y = y[data[xcolname].argsort()]
-            #A = numpy.vstack([x, numpy.ones(len(x))]).T
-            #m, c = numpy.linalg.lstsq(A, y)[0]
             m, c = numpy.polyfit(x, y, 1)
-            pyplot.plot(x, m*x + c, color=color, label='Least Sqs Regression')
+            pyplot.plot(x, x*m + c, color=color, label='Linear fit')
             
         # Show Pearson correlation and count?
         if text_shift is True: text_shift=.1
