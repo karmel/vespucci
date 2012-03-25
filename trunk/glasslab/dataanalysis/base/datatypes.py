@@ -20,8 +20,8 @@ class TranscriptAnalyzer(object):
     def get_refseq(self, data, colname='has_refseq'):
         return data[data[colname] != 0]
     
-    def normalize(self, data, colname, normfactor):
-        data[colname + '_norm'] = data[colname]*normfactor
+    def normalize(self, data, colname, normfactor, suffix='_norm'):
+        data[colname + suffix] = data[colname]*normfactor
         return data
     
     def get_gene_names(self, data, colname='gene_names'):
