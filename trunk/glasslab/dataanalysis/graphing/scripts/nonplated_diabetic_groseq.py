@@ -30,6 +30,10 @@ if __name__ == '__main__':
     # Remove the strangely large last entry
     refseq = refseq[refseq[xcolname] < max(refseq[xcolname])]
     
+    # Filter out those that are diff because of plating for BALBc, since there appears to be
+    # some contamination there
+    refseq = refseq[abs(refseq['balb_plating_notx_fc'] <= 1)]
+    
     # Split into those that are also diff in non-diabetic NOD and those not
     refseq_diabetic = refseq[abs(refseq['balb_nod_notx_1h_fc']) < 1]
     refseq_strain = refseq[abs(refseq['balb_nod_notx_1h_fc']) >= 1]
@@ -46,10 +50,10 @@ if __name__ == '__main__':
     #print grapher.get_gene_names(refseq_nonplated_down)
     
     # Those different because of plating
-    print grapher.get_gene_names(refseq[refseq['balb_plating_notx_fc'] >= 1])
-    print grapher.get_gene_names(refseq[refseq['balb_plating_notx_fc'] <= -1])
+    #print grapher.get_gene_names(refseq[refseq['balb_plating_notx_fc'] >= 1])
+    #print grapher.get_gene_names(refseq[refseq['balb_plating_notx_fc'] <= -1])
     
-    if False:
+    if True:
         ax = grapher.scatterplot(refseq_nonplated_leftover, xcolname, ycolname,
                             log=True, color='blue', master_dataset=refseq,
                             xlabel='BALBc notx', ylabel='NOD notx', label='Different only with diabetes when not plated',
@@ -67,10 +71,10 @@ if __name__ == '__main__':
                             label='Different in NOD without diabetes (plated)',
                             show_2x_range=True, show_legend=True,
                             show_count=True, show_correlation=True,show_plot=False, ax=ax)
-        grapher.save_plot(os.path.join(dirpath, 'nonplated_diabetic_nod_vs_balbc_three_groups_scatterplot.png'))
+        grapher.save_plot(os.path.join(dirpath, 'nonplated_diabetic_nod_vs_balbc_three_groups_scatterplot_filtered.png'))
         grapher.show_plot()
     
-    if False:
+    if True:
         ax = grapher.scatterplot(refseq_diabetic, xcolname, ycolname,
                             log=True, color='blue', master_dataset=refseq,
                             xlabel='BALBc notx', ylabel='NOD notx', label='Different only with diabetes',
@@ -83,7 +87,7 @@ if __name__ == '__main__':
                             label='Different in NOD without diabetes (plated)',
                             show_2x_range=True, show_legend=True,
                             show_count=True, show_correlation=True, show_plot=False, ax=ax)
-        grapher.save_plot(os.path.join(dirpath, 'nonplated_diabetic_nod_vs_balbc_scatterplot.png'))
+        grapher.save_plot(os.path.join(dirpath, 'nonplated_diabetic_nod_vs_balbc_scatterplot_filtered.png'))
         grapher.show_plot()
     
     if False:
@@ -110,7 +114,7 @@ if __name__ == '__main__':
         # Plated diabetic Balb vs. non-diabetic balb
         ax = grapher.scatterplot(refseq, 'diabetic_balb_notx_1h_tag_count', 'balb_notx_1h_tag_count_norm',
                             log=True, color='blue', master_dataset=refseq,
-                            title='Plated Diabetic BALBc vs. Plated Non=Diabetic BALBc Refseq Transcripts',
+                            title='Plated Diabetic BALBc vs. Plated Non-Diabetic BALBc Refseq Transcripts',
                             #label='Different in NOD without diabetes (plated)',
                             show_2x_range=True, show_legend=True,
                             show_count=True, show_correlation=True, show_plot=False)
@@ -118,7 +122,7 @@ if __name__ == '__main__':
         grapher.show_plot()
     
     if False:
-        gene = 'Slc2a1'
+        gene = 'Akt2'
         gene_row = refseq[refseq['gene_names'] == ('{%s}' % gene)]
         grapher.bargraph_for_transcript(gene_row, 
                                         ['balb_nod_notx_1h_fc', 'balb_nod_kla_1h_fc',
