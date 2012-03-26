@@ -53,6 +53,7 @@ if __name__ == '__main__':
         grapher.save_plot(os.path.join(dirpath, 'bl6_vs_nod_pu_1_peak_tag_counts_bl6_gt_balb_unique.png'))
         grapher.show_plot()
     
+    if True:
         # Boxplots: avg PU.1 in Bl6 for whole set; avg PU.1 in BALB for whole set; 
         # avg PU.1 for NOD in whole set; avg PU.1 in NOD set with Bl6; avg PU.1 in NOD set with BALB
         
