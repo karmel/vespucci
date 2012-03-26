@@ -19,9 +19,9 @@ class SeqGrapher(TranscriptAnalyzer):
                     master_dataset=None,
                     title='', xlabel=None, ylabel=None,
                     label=None, add_noise=False,
-                    show_2x_range=True, plot_regression=True,
+                    show_2x_range=True, plot_regression=False,
                     show_count = True, show_correlation=True,
-                    text_shift=False, text_color=False, 
+                    text_shift=0, text_color='black', 
                     show_legend=True, show_plot=True, ax=None):
         
         '''
@@ -91,8 +91,10 @@ class SeqGrapher(TranscriptAnalyzer):
             pyplot.plot(x, x*m + c, color=color, label='Linear fit')
             
         # Show Pearson correlation and count?
-        if text_shift is True: text_shift=.1
+        if text_shift is True: text_shift = .1
+        elif text_shift is False: text_shift = 0
         if text_color is True: text_color=color
+        elif text_color is False: text_color = 'black'
         if show_count: self.show_count_scatterplot(master_dataset, ax, text_shift, text_color)
         if show_correlation: self.show_correlation_scatterplot(master_dataset, xcolname, ycolname, ax, text_shift, text_color)
         
