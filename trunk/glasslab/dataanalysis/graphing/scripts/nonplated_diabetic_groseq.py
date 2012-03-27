@@ -77,7 +77,7 @@ if __name__ == '__main__':
     if False:
         ax = grapher.scatterplot(refseq_diabetic, xcolname, ycolname,
                             log=True, color='blue', master_dataset=refseq,
-                            xlabel='BALBc notx', ylabel='NOD notx', label='Different only with diabetes',
+                            xlabel='BALBc notx', ylabel='NOD notx', label='Nonplated BALBc vs. NOD',
                             show_2x_range=False, show_legend=False, 
                             show_count=False, show_correlation=False,
                             show_plot=False)
@@ -90,6 +90,28 @@ if __name__ == '__main__':
         grapher.save_plot(os.path.join(dirpath, 'nonplated_diabetic_nod_vs_balbc_scatterplot_filtered.png'))
         grapher.show_plot()
     
+    if False:
+        ax = grapher.scatterplot(refseq_diabetic[abs(refseq_diabetic['nonplated_diabetic_balb_nod_notx_fc']) >= 1], 
+                                 xcolname, ycolname,
+                            log=True, color='blue', master_dataset=refseq[abs(refseq['nonplated_diabetic_balb_nod_notx_fc']) >= 1],
+                            xlabel='BALBc notx', ylabel='NOD notx', label='Nonplated BALBc vs. NOD',
+                            show_2x_range=False, show_legend=False, 
+                            show_count=False, show_correlation=False,
+                            show_plot=False)
+        ax = grapher.scatterplot(refseq_strain[abs(refseq_strain['nonplated_diabetic_balb_nod_notx_fc']) >= 1], 
+                                 xcolname, ycolname,
+                            log=True, color='red', master_dataset=refseq[abs(refseq['nonplated_diabetic_balb_nod_notx_fc']) >= 1],
+                            title='Differential Nonplated Diabetic NOD vs. BALBc Refseq Transcripts',
+                            label='Different in NOD without diabetes (plated)',
+                            show_2x_range=True, show_legend=True,
+                            show_count=True, show_correlation=True, show_plot=False, ax=ax)
+        grapher.save_plot(os.path.join(dirpath, 'nonplated_diabetic_nod_vs_balbc_scatterplot_up_down.png'))
+        grapher.show_plot()
+        
+        print len(refseq_nonplated_up)
+        print len(refseq_nonplated_down)
+        print len(refseq_nonplated_up[abs(refseq_nonplated_up['balb_nod_notx_1h_fc']) >= 1])
+        print len(refseq_nonplated_down[abs(refseq_nonplated_down['balb_nod_notx_1h_fc']) >= 1])
     if False:
         # Plated Balb vs. non-plated balb
         ax = grapher.scatterplot(refseq, 'diabetic_balb_notx_1h_tag_count', 'nonplated_diabetic_balb_notx_tag_count_norm',
