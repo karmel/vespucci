@@ -139,14 +139,14 @@ if __name__ == '__main__':
     
     bg = os.path.join(dirpath, 'h3k4me2_all/h3k4me2_all_regions_for_homer.txt')
     
-    #data = data[data['transcript_score'] >= 10]
-    #data = data[data['has_refseq'] != 0]
-    data = data[data['has_refseq'] == 0]
-    data = data[data['h3k4me2_notx_score'] > 0]
-    data = data[data['balb_plating_notx_fc'] < 1]
-    data = data[data['balb_nod_notx_1h_fc'] < 1]
-    data = data[data['nonplated_diabetic_balb_nod_notx_fc'] >= 1]
+    data = data[data['transcript_score'] >= 10]
+    data = data[data['has_refseq'] != 0]
+    #data = data[data['has_refseq'] == 0]
+    #data = data[data['h3k4me2_notx_score'] > 0]
+    data = data[data['balb_plating_notx_fc'] > -1]
+    #data = data[data['balb_nod_notx_1h_fc'] < 1]
+    data = data[data['nonplated_diabetic_balb_nod_notx_fc'] <= -1]
     
     data = yzer.collapse_strands(data)
     
-    yzer.run_homer(data, 'nonplated_nod_up_h3k4me2', dirpath, cpus=5, bg=bg)#center=False, size=500)
+    yzer.run_homer(data, 'nonplated_nod_down_inclusive_refseq', dirpath, cpus=5, center=False, size=500)
