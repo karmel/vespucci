@@ -20,7 +20,7 @@ class MotifAnalyzer(TranscriptAnalyzer):
     
     
     def run_homer(self, data, project_name, dirpath,
-                  center=True, size=None, length=None, number_of_motifs=10,
+                  center=True, reverse=False, size=None, length=None, number_of_motifs=10,
                   bg='', genome='mm9', cpus=1):
         '''
         Run HOMER on passed set of transcripts, assuming a transcription_start,
@@ -35,8 +35,12 @@ class MotifAnalyzer(TranscriptAnalyzer):
         
         if not size: size = self.default_size
         if not center:
-            data['transcription_end_alt'] = data[data['strand'] == 0]['transcription_start'] + size 
-            data['transcription_start_alt'] = data[data['strand'] == 1]['transcription_end'] - size
+            first_strand, second_strand = 0, 1
+            if reverse:
+                # Take the end of the transcript, rather than the beginning. 
+                first_strand, second_strand = 1, 0
+            data['transcription_end_alt'] = data[data['strand'] == first_strand]['transcription_start'] + size 
+            data['transcription_start_alt'] = data[data['strand'] == second_strand]['transcription_end'] - size
             data['transcription_start'] = data['transcription_start_alt'].fillna(data['transcription_start']).apply(int)
             data['transcription_end'] = data['transcription_end_alt'].fillna(data['transcription_end']).apply(int)
             
@@ -137,16 +141,17 @@ if __name__ == '__main__':
     filename = os.path.join(os.path.dirname(dirpath), 'balbc_nod_vectors.txt')
     data = yzer.import_file(filename)
     
-    bg = os.path.join(dirpath, 'h3k4me2_all/h3k4me2_all_regions_for_homer.txt')
+    bg = os.path.join(dirpath, 'h3k4me2_all_stranded/h3k4me2_all_stranded_regions_for_homer.txt')
     
-    data = data[data['transcript_score'] >= 10]
-    data = data[data['has_refseq'] != 0]
-    #data = data[data['has_refseq'] == 0]
-    #data = data[data['h3k4me2_notx_score'] > 0]
-    data = data[data['balb_plating_notx_fc'] > -1]
-    #data = data[data['balb_nod_notx_1h_fc'] < 1]
-    data = data[data['nonplated_diabetic_balb_nod_notx_fc'] <= -1]
+    #data = data[data['transcript_score'] >= 10]
+    #data = data[data['has_refseq'] != 0]
+    data = data[data['has_refseq'] == 0]
+    data = data[data['h3k4me2_notx_score'] > 0]
+    #data = data[data['balb_plating_notx_fc'] < 1]
+    #data = data[data['balb_nod_notx_1h_fc'] > -1]
+    #data = data[data['nonplated_diabetic_balb_nod_notx_fc'] >= 1]
     
-    data = yzer.collapse_strands(data)
+    #data = yzer.collapse_strands(data)
     
-    yzer.run_homer(data, 'nonplated_nod_down_inclusive_refseq', dirpath, cpus=5, center=False, size=500)
+    yzer.run_homer(data, 'h3k4me2_all_stranded_reverse', dirpath, 
+                   cpus=5, center=False, reverse=True, size=200, number_of_motifs=25)
