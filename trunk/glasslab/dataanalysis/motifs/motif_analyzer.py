@@ -112,10 +112,10 @@ if __name__ == '__main__':
     data = data[data['has_refseq'] == 0]
     data = data[data['h3k4me2_notx_score'] > 0]
     #data = data[abs(data['balb_plating_notx_fc']) < 1]
-    #data = data[data['balb_nod_notx_1h_fc'] <= -1]
-    data = data[data['nonplated_diabetic_balb_nod_notx_fc'] <= -1]
+    data = data[data['balb_nod_notx_1h_fc'] <= -1]
+    #data = data[data['nonplated_diabetic_balb_nod_notx_fc'] <= -1]
     
     #data = yzer.collapse_strands(data)
     
-    yzer.run_homer(data, 'nonplated_nod_notx_down_inclusive_h3k4me2_long_motifs', dirpath, 
+    yzer.run_homer(data, 'nondiabetic_nod_notx_down_h3k4me2_long_motifs', dirpath, 
                    cpus=5, center=False, reverse=False, size=200, bg=bg, length=[20])
