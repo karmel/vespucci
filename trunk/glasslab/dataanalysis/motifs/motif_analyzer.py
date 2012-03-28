@@ -7,7 +7,6 @@ from glasslab.dataanalysis.base.datatypes import TranscriptAnalyzer
 import os
 import subprocess
 import math
-from pandas.core.frame import DataFrame
 
 class MotifAnalyzer(TranscriptAnalyzer):
     '''
@@ -96,42 +95,7 @@ class MotifAnalyzer(TranscriptAnalyzer):
     def sanitize_filename(self, filename):
         return filename.replace(' ','\ ')
     
-    def collapse_strands(self, data):
-        '''
-        If the data is strand specific, we may want to collapse
-        overlapping sense and antisense transcripts for motif finding.
-        
-        This is relevant in the case of eRNA, where transcription is 
-        bidirectional, and we want the center of transcription.
-        
-        Testing:
-        data = DataFrame({'chr_name': ['chr1', 'chr1', 'chr1','chr2','chr2',], 
-                       'transcription_start': [0, 10, 21, 0, 5],
-                       'transcription_end': [10, 20, 30, 10, 7], 
-                       'strand': [0, 1, 0, 1, 0]},
-                     )
-        should yield
-              chr_name strand transcription_end transcription_start
-                0     chr1      0                20                   0
-                2     chr1      0                30                  21
-                3     chr2      1                10                   0
 
-        '''
-        compressed = []
-        ordered = data.sort_index(by=['chr_name','transcription_start'])
-        last = None
-        for _, trans in ordered.iterrows():
-            try:
-                if trans['chr_name'] <= last['chr_name']\
-                    and trans['transcription_start'] <= last['transcription_end']:
-                        last['transcription_end'] = max(trans['transcription_end'],last['transcription_end'])
-                else: 
-                    compressed.append((last.name, last))
-                    last = trans
-            except TypeError: last = trans
-        compressed.append((last.name, last))
-            
-        return DataFrame(dict(compressed)).transpose()
     
     
 if __name__ == '__main__':
@@ -147,11 +111,11 @@ if __name__ == '__main__':
     #data = data[data['has_refseq'] != 0]
     data = data[data['has_refseq'] == 0]
     data = data[data['h3k4me2_notx_score'] > 0]
-    data = data[abs(data['balb_plating_notx_fc']) < 1]
-    #data = data[data['balb_nod_notx_1h_fc'] >= 1]
-    data = data[data['nonplated_diabetic_balb_nod_notx_fc'] >= 1]
+    #data = data[abs(data['balb_plating_notx_fc']) < 1]
+    #data = data[data['balb_nod_notx_1h_fc'] <= -1]
+    data = data[data['nonplated_diabetic_balb_nod_notx_fc'] <= -1]
     
     #data = yzer.collapse_strands(data)
     
-    yzer.run_homer(data, 'nonplated_nod_notx_up_inclusive_h3k4me2', dirpath, 
-                   cpus=5, center=False, reverse=False, size=200, bg=bg)
+    yzer.run_homer(data, 'nonplated_nod_notx_down_inclusive_h3k4me2_long_motifs', dirpath, 
+                   cpus=5, center=False, reverse=False, size=200, bg=bg, length=[20])
