@@ -11,7 +11,7 @@ from scipy.stats.stats import ttest_ind
 if __name__ == '__main__':
     grapher = SeqGrapher()
     
-    dirpath = '/Users/karmel/Desktop/Projects/GlassLab/Notes_and_Reports/Inbred strains/Groseq comparisons/'
+    dirpath = '/Volumes/karmel/Desktop/Projects/GlassLab/Notes_and_Reports/Inbred strains/Groseq comparisons/'
     filename = os.path.join(dirpath, 'groseq_with_h3k4me2.txt')
     data = grapher.import_file(filename)
     
@@ -24,14 +24,17 @@ if __name__ == '__main__':
     data = grapher.normalize(data, 'nod_tag_count', balb_norm)
     
     
-    data = data[data['wt_peak_tag_count'] > 2*data['balb_peak_tag_count']]
-    
     print len(data)
     
     data['nod_with_bl6'] = data['nod_sv_id'] <= .1
     
     nod_with_bl6 = data[data['nod_with_bl6'] == True]
     nod_with_balb = data[data['nod_with_bl6'] == False]
+    
+    nod_with_bl6 = grapher.collapse_strands(nod_with_bl6)
+    nod_with_balb = grapher.collapse_strands(nod_with_balb)
+    nod_with_bl6 = nod_with_bl6[nod_with_bl6['wt_peak_tag_count'] > 2*nod_with_bl6['balb_peak_tag_count']]
+    nod_with_balb = nod_with_balb[nod_with_balb['wt_peak_tag_count'] > 2*nod_with_balb['balb_peak_tag_count']]
     
     if False:
         ax = grapher.scatterplot(nod_with_bl6, 'balb_tag_count', 'nod_tag_count_norm',
@@ -67,7 +70,7 @@ if __name__ == '__main__':
                                   title='GRO-seq tags where BALBc has a SNP and half H3K4me2', 
                                   xlabel='', ylabel='Tags in transcript at H3K4me2 peak', 
                                   show_outliers=False, show_plot=False)
-        grapher.save_plot(os.path.join(dirpath, 'peak_boxplots_all_h3k4me2.png'))
+        grapher.save_plot(os.path.join(dirpath, 'peak_boxplots_all_h3k4me2_collapsed.png'))
         grapher.show_plot()
     
     
