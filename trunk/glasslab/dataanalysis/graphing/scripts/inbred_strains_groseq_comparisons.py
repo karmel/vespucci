@@ -11,7 +11,12 @@ from scipy.stats.stats import ttest_ind
 if __name__ == '__main__':
     grapher = SeqGrapher()
     
-    dirpath = '/Volumes/karmel/Desktop/Projects/GlassLab/Notes_and_Reports/Inbred strains/Groseq comparisons/'
+    loc = '/Users'
+    dirpath = '/karmel/Desktop/Projects/GlassLab/Notes_and_Reports/Inbred strains/Groseq comparisons/'
+    if not os.path.exists(loc + dirpath):
+        loc = '/Volumes'
+    dirpath = loc + dirpath
+    
     filename = os.path.join(dirpath, 'groseq_with_h3k4me2.txt')
     data = grapher.import_file(filename)
     

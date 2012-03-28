@@ -50,16 +50,20 @@ class TranscriptAnalyzer(object):
 
         '''
         compressed = []
-        try: ordered = data.sort_index(by=['chr_name','transcription_start'])
-        except KeyError: ordered = data.sort_index(by=['chromosome_id','transcription_start'])
+        try: 
+            chr_key = 'chr_name'
+            ordered = data.sort_index(by=[chr_key,'transcription_start'])
+        except KeyError: 
+            chr_key = 'chromosome_id'
+            ordered = data.sort_index(by=[chr_key,'transcription_start'])
         last = None
         for _, trans in ordered.iterrows():
             try:
-                if trans['chr_name'] <= last['chr_name']\
+                if trans[chr_key] <= last[chr_key]\
                     and trans['transcription_start'] <= last['transcription_end']:
                         last['transcription_end'] = max(trans['transcription_end'],last['transcription_end'])
                         for key in last:
-                            if key.find('tag_count') >= 0: last[key] += trans[key]
+                            if str(key).find('tag_count') >= 0: last[key] += trans[key]
                 else: 
                     compressed.append((last.name, last))
                     last = trans
