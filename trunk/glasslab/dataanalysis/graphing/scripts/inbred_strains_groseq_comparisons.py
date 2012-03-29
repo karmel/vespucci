@@ -40,7 +40,7 @@ if __name__ == '__main__':
     nod_with_balb = grapher.collapse_strands(nod_with_balb)
     nod_with_bl6 = nod_with_bl6[nod_with_bl6['wt_peak_tag_count'] > 2*nod_with_bl6['balb_peak_tag_count']]
     nod_with_balb = nod_with_balb[nod_with_balb['wt_peak_tag_count'] > 2*nod_with_balb['balb_peak_tag_count']]
-    
+    print len(nod_with_bl6), len(nod_with_balb)
     if False:
         ax = grapher.scatterplot(nod_with_bl6, 'balb_tag_count', 'nod_tag_count_norm',
                             subplot=121, log=True, color='blue', 

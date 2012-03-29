@@ -62,8 +62,9 @@ class TranscriptAnalyzer(object):
                 if trans[chr_key] <= last[chr_key]\
                     and trans['transcription_start'] <= last['transcription_end']:
                         last['transcription_end'] = max(trans['transcription_end'],last['transcription_end'])
-                        for key in last:
-                            if str(key).find('tag_count') >= 0: last[key] += trans[key]
+                        for key in last.index:
+                            if str(key).find('tag_count') >= 0: 
+                                last[key] += trans[key]
                 else: 
                     compressed.append((last.name, last))
                     last = trans
