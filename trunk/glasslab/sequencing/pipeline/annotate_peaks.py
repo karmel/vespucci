@@ -19,7 +19,6 @@ from glasslab.sequencing.datatypes.peak import GlassPeak
 from glasslab.utils.parsing.delimited import DelimitedFileParser
 from glasslab.sequencing.pipeline.annotate_base import check_input, call_bowtie,\
     create_schema, _print, trim_sequences
-from glasslab.sequencing.analysis.peakfinding.sicer_handler import SicerHandler
 
 class FastqOptionParser(GlassOptionParser):
     options = [
@@ -81,6 +80,8 @@ def call_macs(options, file_name, bowtie_file_path, type='BOWTIE'):
     return os.path.join(options.output_dir, '%s_peaks.xls' % file_name)
 
 def call_sicer(options, file_name, bed_file_path):
+    raise Exception('SICER no longer supported!')
+    '''
     output_dir = os.path.join(options.output_dir, 'sicer')
     if not os.path.exists(output_dir): os.mkdir(output_dir)
     try: 
@@ -94,7 +95,8 @@ def call_sicer(options, file_name, bed_file_path):
         raise Exception('Exception encountered while trying to process BED file with SICER. Traceback:\n%s'
                                 % traceback.format_exc())
     return sicer_output
-
+    '''
+    
 def import_peaks(options, file_name, peaks_file_path, peak_type):
     '''
     Given a MACS peak file, save a temp table and store peak data.
