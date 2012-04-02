@@ -5,12 +5,19 @@ Created on Mar 22, 2012
 '''
 from pandas.io import parsers
 from pandas.core.frame import DataFrame
+import os
 
 class TranscriptAnalyzer(object):
     '''
     Using pandas, does some basic importing and filtering of transcript vectors.
     '''    
-    
+    def get_path(self, dirpath=''):
+        loc = '/Users'
+        if not os.path.exists(loc + dirpath):
+            loc = '/Volumes'
+        dirpath = loc + dirpath
+        return dirpath
+            
     def import_file(self, filename, separator='\t', header=True):
         if header: header_row = 0
         else: header_row = None

@@ -101,7 +101,7 @@ class MotifAnalyzer(TranscriptAnalyzer):
 if __name__ == '__main__':
     yzer = MotifAnalyzer()
     
-    dirpath = '/Users/karmel/GlassLab/Notes_and_Reports/NOD_BALBc/ThioMacs/Diabetic/Nonplated/Analysis/motifs/'
+    dirpath = yzer.get_path('/Users/karmel/GlassLab/Notes_and_Reports/NOD_BALBc/ThioMacs/Diabetic/Nonplated/Analysis/motifs/')
     filename = os.path.join(os.path.dirname(dirpath), 'balbc_nod_vectors.txt')
     data = yzer.import_file(filename)
     
