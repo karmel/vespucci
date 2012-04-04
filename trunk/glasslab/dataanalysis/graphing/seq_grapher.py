@@ -110,7 +110,8 @@ class SeqGrapher(TranscriptAnalyzer):
     
     def set_up_plot(self, ax=None, subplot=111):
         # Set up plot
-        if not ax: pyplot.figure(figsize=[10*int(str(subplot)[1]),10*int(str(subplot)[2])])
+        if not ax: pyplot.figure(figsize=[20*int(str(subplot)[1]), # Width
+                                          10*int(str(subplot)[2])]) # Height
         ax = pyplot.subplot(subplot)
         return ax
         
@@ -217,7 +218,7 @@ class SeqGrapher(TranscriptAnalyzer):
         
         self.add_axis_labels(xlabel, ylabel)
         self.add_title(title, ax)
-        
+        #pyplot.ylim(0,100)
         # Any other operations to tack on?
         self.other_plot()
         
