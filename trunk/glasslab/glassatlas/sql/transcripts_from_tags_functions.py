@@ -407,21 +407,21 @@ BEGIN
     FOR joined IN 
         EXECUTE 'SELECT t.id, t.transcription_start, t.transcription_end, t.strand,
                 array_agg(run.source_table) as runs, array_agg(s.sequencing_run_id) as run_ids
-            FROM glass_atlas_mm9_thiomac_prep.glass_transcript_' || chr_id || ' t
+            FROM glass_atlas_%s_%s_prep.glass_transcript_' || chr_id || ' t
             JOIN genome_reference_mm9.sequence_transcription_region reg
                 ON t.chromosome_id = reg.chromosome_id
                 AND t.start_end && reg.start_end
                 AND t.strand = reg.strand
             JOIN genome_reference_mm9.sequence_detail det
                 ON reg.sequence_identifier_id = det.sequence_identifier_id
-            JOIN glass_atlas_mm9_thiomac_prep.glass_transcript_source_' || chr_id || ' s
+            JOIN glass_atlas_%s_%s_prep.glass_transcript_source_' || chr_id || ' s
                 ON t.id = s.glass_transcript_id
             WHERE width(t.start_end) >= .5*width(reg.start_end)
             GROUP BY t.id, t.transcription_start, t.transcription_end, t.strand
             HAVING count(distinct det.gene_name) > 1'
     LOOP
         -- Delete original transcript.
-        EXECUTE 'DELETE FROM glass_atlas_mm9_thiomac_prep.glass_transcript_' || chr_id || ' WHERE id = ' || joined.id;
+        EXECUTE 'DELETE FROM glass_atlas_%s_%s_prep.glass_transcript_' || chr_id || ' WHERE id = ' || joined.id;
         
         -- Add from each source table for region only.
         FOR i IN 1..array_upper(joined.run_ids, 1)
@@ -465,7 +465,7 @@ BEGIN
 END;
 $$ LANGUAGE 'plpgsql';
 
-""" % tuple([genome, cell_type]*52)
+""" % tuple([genome, cell_type]*55)
 
 if __name__ == '__main__':
     print sql(genome, cell_type)
