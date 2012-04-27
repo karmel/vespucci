@@ -86,7 +86,7 @@ BEGIN
                         WHERE reg.chromosome_id = trans.chromosome_id
                             AND reg.strand = trans.strand
                             AND reg.start_end @>
-                                public.make_box(trans.transcription_start, 0, trans.transcription_end, 0)
+                                point(trans.transcription_end, 0)
                         ORDER BY LEAST(reg.transcription_end - trans.transcription_end,
                                     (reg.transcription_end - reg.transcription_start)*.2) DESC
                         LIMIT 1);

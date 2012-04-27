@@ -6,7 +6,7 @@ Created on Nov 12, 2010
 Convenience script for feature association functions.
 '''
 genome = 'mm9'
-cell_type='thiomac'
+cell_type='bmdc'
 def sql(genome, cell_type):
     return """
 -- Not run from within the codebase, but kept here in case functions need to be recreated.

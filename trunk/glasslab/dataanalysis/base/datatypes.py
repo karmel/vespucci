@@ -32,6 +32,9 @@ class TranscriptAnalyzer(object):
         data[colname + suffix] = data[colname]*normfactor
         return data
     
+    def get_gene_list(self, data, colname='gene_names'):
+        return map(lambda x: x.replace('{','').replace('}',''), data[colname].values)
+    
     def get_gene_names(self, data, colname='gene_names'):
         return ','.join(data[colname].values).replace('{','').replace('}','')
 

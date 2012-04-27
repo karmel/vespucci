@@ -46,12 +46,24 @@ if __name__ == '__main__':
     refseq_nonplated_down = refseq[refseq['nonplated_diabetic_balb_nod_notx_fc'] <= -1]
     #refseq_nonplated_down = refseq_nonplated_down[refseq_nonplated_down['balb_nod_notx_1h_fc'] > -1]
     
-    #print grapher.get_gene_names(refseq_nonplated_up)
-    #print grapher.get_gene_names(refseq_nonplated_down)
+    refseq_up_nond = refseq[refseq['balb_nod_notx_1h_fc'] >= 1]
+    refseq_down_nond = refseq[refseq['balb_nod_notx_1h_fc'] <= -1]
     
-    # Those different because of plating
-    #print grapher.get_gene_names(refseq[refseq['balb_plating_notx_fc'] >= 1])
-    #print grapher.get_gene_names(refseq[refseq['balb_plating_notx_fc'] <= -1])
+    refseq_up_d = refseq[refseq['diabetic_balb_nod_notx_1h_fc'] >= 1]
+    refseq_down_d = refseq[refseq['diabetic_balb_nod_notx_1h_fc'] <= -1]
+    
+    if False:
+        print grapher.get_gene_names(refseq_nonplated_up)
+        print grapher.get_gene_names(refseq_nonplated_down)
+        
+        # Those different because of plating
+        print grapher.get_gene_names(refseq[refseq['balb_plating_notx_fc'] >= 1])
+        print grapher.get_gene_names(refseq[refseq['balb_plating_notx_fc'] <= -1])
+        
+    if True:
+        
+        print set(grapher.get_gene_list(refseq_up_nond)) & set(grapher.get_gene_list(refseq_up_d))
+        print set(grapher.get_gene_list(refseq_down_nond)) & set(grapher.get_gene_list(refseq_down_d))
     
     if False:
         ax = grapher.scatterplot(refseq_nonplated_leftover, xcolname, ycolname,
@@ -143,8 +155,8 @@ if __name__ == '__main__':
         grapher.save_plot(os.path.join(dirpath, 'plated_diabetic_balbc_vs_plated_nondiabetic_balbc_scatterplot.png'))
         grapher.show_plot()
     
-    if True:
-        gene = 'Clec9a'
+    if False:
+        gene = 'H2-M2'
         gene_row = refseq[refseq['gene_names'] == ('{%s}' % gene)]
         grapher.bargraph_for_transcript(gene_row, 
                                         ['balb_nod_notx_1h_fc', 'balb_nod_kla_1h_fc',
