@@ -187,6 +187,13 @@ class SeqGrapher(TranscriptAnalyzer):
             pyplot.plot([0,len(cols) + axis_spacer], 
                         [convert_log_to_fc and 2 or 1, convert_log_to_fc and 2 or 1, ], 
                         '--',color='black')
+        if show_2x_range:
+            pyplot.plot([0,len(cols) + axis_spacer], 
+                        [convert_log_to_fc and 1 or 0, convert_log_to_fc and 1 or 0, ], 
+                        '-',color='#CCCCCC')
+            pyplot.plot([0,len(cols) + axis_spacer], 
+                        [convert_log_to_fc and .5 or -1, convert_log_to_fc and .5 or -1, ], 
+                        '--',color='black')
             
         ax.bar(xvals, yvals, bar_width, color='#C9D9FB')
         

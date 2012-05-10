@@ -12,11 +12,11 @@ class TranscriptAnalyzer(object):
     Using pandas, does some basic importing and filtering of transcript vectors.
     '''    
     def get_path(self, dirpath=''):
-        loc = '/Users'
-        if not os.path.exists(loc + dirpath):
-            loc = '/Volumes'
-        dirpath = loc + dirpath
-        return dirpath
+        locs = ('','/Users','/Volumes')
+        for loc in locs:
+            path = os.path.join(loc,dirpath)
+            if os.path.exists(path): return path
+        raise IOError('Could not find file %s.' % dirpath)
             
     def import_file(self, filename, separator='\t', header=True):
         if header: header_row = 0

@@ -52,15 +52,11 @@ if __name__ == '__main__':
     refseq_up_d = refseq[refseq['diabetic_balb_nod_notx_1h_fc'] >= 1]
     refseq_down_d = refseq[refseq['diabetic_balb_nod_notx_1h_fc'] <= -1]
     
-    if False:
-        print grapher.get_gene_names(refseq_nonplated_up)
-        print grapher.get_gene_names(refseq_nonplated_down)
-        
-        # Those different because of plating
-        print grapher.get_gene_names(refseq[refseq['balb_plating_notx_fc'] >= 1])
-        print grapher.get_gene_names(refseq[refseq['balb_plating_notx_fc'] <= -1])
-        
     if True:
+        print grapher.get_gene_names(refseq_up_nond)
+        print grapher.get_gene_names(refseq_down_nond)
+        
+    if False:
         
         print set(grapher.get_gene_list(refseq_up_nond)) & set(grapher.get_gene_list(refseq_up_d))
         print set(grapher.get_gene_list(refseq_down_nond)) & set(grapher.get_gene_list(refseq_down_d))
@@ -156,17 +152,18 @@ if __name__ == '__main__':
         grapher.show_plot()
     
     if False:
-        gene = 'H2-M2'
-        gene_row = refseq[refseq['gene_names'] == ('{%s}' % gene)]
-        grapher.bargraph_for_transcript(gene_row, 
-                                        ['balb_nod_notx_1h_fc', 'balb_nod_kla_1h_fc',
-                                         'diabetic_balb_nod_notx_1h_fc', 'diabetic_balb_nod_kla_1h_fc',
-                                         'nonplated_diabetic_balb_nod_notx_fc',],
-                                        bar_names=['Non-diabetic\nnotx 1h', 'Non-diabetic\nKLA 1h',
-                                                   'Diabetic\nnotx 1h', 'Diabetic\nKLA 1h',
-                                                   'Nonplated diabetic\nnotx 1h',],
-                                        title='%s Fold Change in NOD vs. BALBc GRO-seq' % gene,
-                                        ylabel='Fold Change in NOD vs. BALBc',
-                                        show_plot=False)
-        grapher.save_plot(os.path.join(dirpath, '%s_fold_change_bargraph.png' % gene.lower()))
-        grapher.show_plot()
+        genes = ['Abca1','Abcg1','S1pr1','S1pr2','S1pr3','S1pr4','S1pr5']
+        for gene in genes:
+            gene_row = refseq[refseq['gene_names'] == ('{%s}' % gene)]
+            grapher.bargraph_for_transcript(gene_row, 
+                                            ['balb_nod_notx_1h_fc', 'balb_nod_kla_1h_fc',
+                                             'diabetic_balb_nod_notx_1h_fc', 'diabetic_balb_nod_kla_1h_fc',
+                                             'nonplated_diabetic_balb_nod_notx_fc',],
+                                            bar_names=['Non-diabetic\nnotx 1h', 'Non-diabetic\nKLA 1h',
+                                                       'Diabetic\nnotx 1h', 'Diabetic\nKLA 1h',
+                                                       'Nonplated diabetic\nnotx 1h',],
+                                            title='%s Fold Change in NOD vs. BALBc GRO-seq' % gene,
+                                            ylabel='Fold Change in NOD vs. BALBc',
+                                            show_plot=False)
+            grapher.save_plot(os.path.join(dirpath, '%s_fold_change_bargraph.png' % gene.lower()))
+            grapher.show_plot()

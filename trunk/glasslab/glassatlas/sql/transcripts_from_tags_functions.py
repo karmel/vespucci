@@ -6,7 +6,7 @@ Created on Nov 12, 2010
 Convenience script for transcript functions.
 '''
 genome = 'mm9'
-cell_type='thiomac'
+cell_type='bmdc'
 def sql(genome, cell_type):
     return """
 -- Not run from within the codebase, but kept here in case functions need to be recreated.
@@ -448,7 +448,7 @@ BEGIN
     -- Calculate the log-relative-fold change, 
     -- adjusting by deviation score in whatever direction _minimizes_ relative fold change.
     norm_ctl_tag_count := ctl_tag_count;
-    norm_sample_tag_count := (SELECT coalesce(sample_tag_count,0)*total_norm_factor FROM glass_atlas_%s_%s.norm_sum WHERE name_1 = ctl_name AND name_2 = sample_name);
+    norm_sample_tag_count := (SELECT coalesce(sample_tag_count,0)*norm_factor FROM glass_atlas_%s_%s.norm_sum WHERE name_1 = ctl_name AND name_2 = sample_name);
     IF norm_sample_tag_count IS NULL THEN
         RAISE EXCEPTION 'No norm_sum row was found for names %% and %%!', ctl_name, sample_name;
         RETURN NULL;

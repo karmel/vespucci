@@ -14,13 +14,13 @@ if __name__ == '__main__':
     data = grapher.import_file(filename)
     
     # vs balbc counterpart
-    data = grapher.normalize(data, 'nod_notx_0h_tag_count', 2.418341)
-    data = grapher.normalize(data, 'diabetic_nod_notx_0h_tag_count', 1.065332)
-    data = grapher.normalize(data, 'slow_diabetic_nod_notx_0h_tag_count', 0.345331)
+    data = grapher.normalize(data, 'nod_notx_0h_tag_count', 2.790489)
+    data = grapher.normalize(data, 'diabetic_nod_notx_0h_tag_count', 1.083990)
+    data = grapher.normalize(data, 'slow_diabetic_nod_notx_0h_tag_count', 0.349747)
     
     # Vs nod notx
-    data = grapher.normalize(data, 'diabetic_nod_notx_0h_tag_count', 0.470096, suffix='_norm_2')
-    data = grapher.normalize(data, 'slow_diabetic_nod_notx_0h_tag_count', 0.289154, suffix='_norm_2')
+    data = grapher.normalize(data, 'diabetic_nod_notx_0h_tag_count', 0.483232, suffix='_norm_2')
+    data = grapher.normalize(data, 'slow_diabetic_nod_notx_0h_tag_count', 0.276080, suffix='_norm_2')
     
     refseq = grapher.get_refseq(data)
     
@@ -44,19 +44,19 @@ if __name__ == '__main__':
     refseq_up_slowd = refseq[refseq['slow_diabetic_balb_nod_notx_0h_fc'] >= 1]
     refseq_down_slowd = refseq[refseq['slow_diabetic_balb_nod_notx_0h_fc'] <= -1]
     
-    if True:
-        print set(grapher.get_gene_list(refseq_up_nond)) & set(grapher.get_gene_list(refseq_up_d))
-        print set(grapher.get_gene_list(refseq_down_nond)) & set(grapher.get_gene_list(refseq_down_d))
-    
-    
     if False:
+        #print set(grapher.get_gene_list(refseq_up_nond)) & set(grapher.get_gene_list(refseq_up_d))
+        #print set(grapher.get_gene_list(refseq_down_nond)) & set(grapher.get_gene_list(refseq_down_d))
+        print grapher.get_gene_names(refseq_up_nond)
+    
+    if True:
         # non-d
-        ax = grapher.scatterplot(refseq, 'balb_notx_0h_tag_count', 'nod_notx_0h_tag_count_norm',
+        ax = grapher.scatterplot(refseq_up_nond, 'balb_notx_0h_tag_count', 'nod_notx_0h_tag_count_norm',
                             log=True, color='blue', master_dataset=refseq,
                             title='BALBc vs. NOD BMDC Refseq Transcripts',
                             show_2x_range=True, show_legend=False,
                             show_count=True, show_correlation=True, show_plot=False)
-        grapher.save_plot(os.path.join(dirpath, 'nondiabetic_balbc_v_nod_scatterplot.png'))
+        grapher.save_plot(os.path.join(dirpath, 'nondiabetic_balbc_v_nod_up_scatterplot.png'))
         grapher.show_plot()
     
     if False:
@@ -81,18 +81,19 @@ if __name__ == '__main__':
     
     
     if False:
-        gene = 'H2-M2'
-        gene_row = refseq[refseq['gene_names'] == ('{%s}' % gene)]
-        grapher.bargraph_for_transcript(gene_row, 
-                                        ['balb_nod_notx_0h_fc', 'diabetic_balb_nod_notx_0h_fc',
-                                         #'slow_diabetic_balb_nod_notx_0h_fc', 
-                                         ],
-                                        bar_names=['Non-diabetic\nnotx 0h', 
-                                                   'Diabetic\nnotx 0h', 
-                                                   #'Slow-diabetic\nnotx 0h',
-                                                   ],
-                                        title='%s Fold Change in NOD vs. BALBc GRO-seq' % gene,
-                                        ylabel='Fold Change in NOD vs. BALBc',
-                                        show_plot=False)
-        grapher.save_plot(os.path.join(dirpath, '%s_fold_change_bargraph.png' % gene.lower()))
-        grapher.show_plot()
+        genes = ['Abca1']
+        for gene in genes:
+            gene_row = refseq[refseq['gene_names'] == ('{%s}' % gene)]
+            grapher.bargraph_for_transcript(gene_row, 
+                                            ['balb_nod_notx_0h_fc', 'diabetic_balb_nod_notx_0h_fc',
+                                             #'slow_diabetic_balb_nod_notx_0h_fc', 
+                                             ],
+                                            bar_names=['Non-diabetic\nnotx 0h', 
+                                                       'Diabetic\nnotx 0h', 
+                                                       #'Slow-diabetic\nnotx 0h',
+                                                       ],
+                                            title='%s Fold Change in NOD vs. BALBc GRO-seq' % gene,
+                                            ylabel='Fold Change in NOD vs. BALBc',
+                                            show_plot=False)
+            grapher.save_plot(os.path.join(dirpath, '%s_fold_change_bargraph.png' % gene.lower()))
+            grapher.show_plot()
