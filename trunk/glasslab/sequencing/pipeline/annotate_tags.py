@@ -151,23 +151,23 @@ if __name__ == '__main__':
         options.output_dir = '/Volumes/Unknowme/kallison/Sequencing/GroSeq/Nathan_NCoR_KO_2010_10_08/tags/ncor_ko_kla_1h'
         options.project_name = 'ncor_ko_kla_1h_2'
         
-    file_name = options.file_path#check_input(options)
-    
-    if options.clean_bowtie:
-        _print('Cleaning existing bowtie file.')
-        bowtie_file_path = clean_bowtie_file(options, file_name)
-    elif not options.skip_bowtie and not options.bowtie_table:
-        if not options.skip_trim:
-            trim_sequences(options, file_name)
-            
-        _print('Processing FASTQ file using bowtie.')
-        bowtie_file_path = call_bowtie(options, file_name, suppress_columns=True)
-    else:
-        _print('Skipping bowtie.')
-        bowtie_file_path = options.file_path
-        options.bowtie_stats_file = os.path.join(options.output_dir,'%s_bowtie_stats_summary.txt' % file_name)
+    file_name = check_input(options)
     
     if not options.skip_tag_table:
+        if options.clean_bowtie:
+            _print('Cleaning existing bowtie file.')
+            bowtie_file_path = clean_bowtie_file(options, file_name)
+        elif not options.skip_bowtie and not options.bowtie_table:
+            if not options.skip_trim:
+                trim_sequences(options, file_name)
+                
+            _print('Processing FASTQ file using bowtie.')
+            bowtie_file_path = call_bowtie(options, file_name, suppress_columns=True)
+        else:
+            _print('Skipping bowtie.')
+            bowtie_file_path = options.file_path
+            options.bowtie_stats_file = os.path.join(options.output_dir,'%s_bowtie_stats_summary.txt' % file_name)
+        
         
         if not options.bowtie_table:
             _print('Creating schema if necessary.')
