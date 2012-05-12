@@ -182,7 +182,13 @@ BEGIN
             -- Include this tag if it doesn't violate a refseq boundary,
             -- and it overlaps or has < max_gap bp gap
             -- Else, this is a new transcript; close off the current and restart.
-            IF (current_refseq = rec.refseq) THEN
+            -- We have a special case for the refseq boundary in which, if the
+            -- two records differ, but the latter record is entirely contained
+            -- within the first, we allow it to be joined in. This can happen
+            -- if the transcripts are of differing length, but should
+            -- be limited to the regions within one tag of the start of a
+            -- refseq region.
+            IF ((current_refseq = rec.refseq) OR (last_end >= rec.transcription_end)) THEN
                 IF ((last_end + max_gap) >= rec.transcription_start) THEN should_merge := true;
                 ELSE
                     IF span_repeats = true THEN
@@ -204,7 +210,12 @@ BEGIN
                 IF (rec.transcription_start > last_end) THEN
                     gaps := gaps + 1;
                 END IF;
-                last_start := (SELECT LEAST(last_start, rec.transcription_start));
+                -- We don't force last_start to be the least here,
+                -- in case we had to reset it to not overlap with the previous row.
+                -- Instead, use last_start as set, which, in most cases,
+                -- will be the least of the two in any case.
+                -- last_start := (SELECT LEAST(last_start, rec.transcription_start));
+                
                 last_end := (SELECT GREATEST(last_end, rec.transcription_end));
                 ids = ids || rec.ids::integer[];
             ELSE
