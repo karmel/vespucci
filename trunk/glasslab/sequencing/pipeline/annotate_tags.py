@@ -19,16 +19,13 @@ import subprocess
 import traceback
 
 from django.db import connection, transaction
-from glasslab.sequencing.datatypes.tag import GlassTag, GlassTagSequence,\
-    GlassTagNonCoding, GlassTagPatterned, GlassTagConserved
+from glasslab.sequencing.datatypes.tag import GlassTag
 from multiprocessing import Pool
 from glasslab.config import current_settings
 import shutil
 from glasslab.sequencing.pipeline.annotate_base import check_input, _print,\
     call_bowtie, create_schema, trim_sequences, clean_bowtie_file
-from glasslab.glassatlas.datatypes.metadata import SequencingRun
 from glasslab.utils.database import execute_query_without_transaction
-from glasslab.utils.parsing.delimited import DelimitedFileParser
 
 class FastqOptionParser(GlassOptionParser):
     options = [
@@ -126,7 +123,7 @@ def add_indices():
     # as otherwise the insertion of ends takes far too long.
     GlassTag.add_indices()
     execute_query_without_transaction('VACUUM ANALYZE "%s";' % (GlassTag._meta.db_table))
-    #GlassTag.set_polya()
+    GlassTag.set_refseq()
     
 def fix_tags(bowtie_file, file_name):
     GlassTag.set_table_name('tag_' + file_name)
@@ -135,16 +132,6 @@ def fix_tags(bowtie_file, file_name):
     for line in f.readlines():
         line = line.strip('\n')
         GlassTag.fix_tags(line.split('\t'))
-
-def associate_sequences(options, file_name):
-    #GlassTagSequence.set_table_name('tag_sequence_' + file_name)
-    GlassTagSequence.create_table(file_name)
-    GlassTagSequence.insert_matching_tags()
-    GlassTagSequence.add_indices()
-    _print('Updating start sites.')
-    GlassTagSequence.update_start_site_tags()
-    _print('Updating exons.')
-    GlassTagSequence.update_exon_tags()
     
 def associate_region_table(options, file_name, table_class):
     table_class.create_table(file_name)
@@ -200,4 +187,4 @@ if __name__ == '__main__':
     else:
         _print('Skipping creation of tag table')
         GlassTag.set_table_name('tag_' + file_name)
-    
+        GlassTag.set_refseq()

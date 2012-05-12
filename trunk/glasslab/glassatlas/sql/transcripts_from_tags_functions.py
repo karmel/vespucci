@@ -12,7 +12,7 @@ def sql(genome, cell_type):
 -- Not run from within the codebase, but kept here in case functions need to be recreated.
 
 CREATE TYPE glass_atlas_%s_%s_prep.glass_transcript_row AS ("chromosome_id" integer, "strand" smallint, 
-    transcription_start bigint, transcription_end bigint, tag_count integer, gaps integer, polya_count integer, ids integer[]);
+    transcription_start bigint, transcription_end bigint, tag_count integer, gaps integer, ids integer[]);
 
 CREATE OR REPLACE FUNCTION glass_atlas_%s_%s_prep.update_transcript_source_records(trans glass_atlas_%s_%s_prep.glass_transcript, old_id integer)
 RETURNS VOID AS $$
@@ -20,8 +20,7 @@ BEGIN
     -- Update redundant records: those that already exist for the merge
     EXECUTE 'UPDATE glass_atlas_%s_%s_prep.glass_transcript_source_' || trans.chromosome_id || ' merged_assoc
         SET tag_count = (merged_assoc.tag_count + trans_assoc.tag_count),
-            gaps = (merged_assoc.gaps + trans_assoc.gaps),
-            polya_count = (merged_assoc.polya_count + trans_assoc.polya_count)
+            gaps = (merged_assoc.gaps + trans_assoc.gaps)
         FROM glass_atlas_%s_%s_prep.glass_transcript_source_' || trans.chromosome_id || ' trans_assoc
         WHERE merged_assoc.glass_transcript_id = ' || trans.id || '
             AND trans_assoc.glass_transcript_id = ' || old_id || '
@@ -58,7 +57,7 @@ DECLARE
     sum integer;
     count integer;
 BEGIN 
-    EXECUTE 'SELECT SUM(tag_count) - SUM(polya_count) FROM glass_atlas_%s_%s_prep.glass_transcript_source_' || trans.chromosome_id || ' source
+    EXECUTE 'SELECT SUM(tag_count) FROM glass_atlas_%s_%s_prep.glass_transcript_source_' || trans.chromosome_id || ' source
             JOIN glass_atlas_mm9.sequencing_run run
                 ON source.sequencing_run_id = run.id
             WHERE glass_transcript_id = ' || trans.id || ' 
@@ -125,12 +124,11 @@ RETURNS SETOF glass_atlas_%s_%s_prep.glass_transcript_row AS $$
     max_chrom_pos bigint;
     rec record;
     start_end_clause text := '';
-    polya_string text := '';
     row glass_atlas_%s_%s_prep.glass_transcript_row;
     last_start bigint := 0;
     last_end bigint := 0;
+    current_refseq boolean;
     tag_count integer := 0;
-    polya_count integer := 0;
     gaps integer := 0;
     ids integer[];
     should_merge boolean := false;
@@ -146,21 +144,17 @@ BEGIN
         start_end_clause := ' and start_end && public.make_box(' || (start_end[0])[0] || ',0,' || (start_end[1])[0] || ',0) ';
     END IF;
     
-    IF field_prefix = '' THEN
-        polya_string = ', polya';
-    END IF; 
-    
-    -- Select each tag set, grouped by start and polya, if that is a field.
+    -- Select each tag set, grouped by start and refseq, if that is a field.
     -- We group here to speed up processing on tables where many tags start at the same location.
     FOR rec IN 
         EXECUTE 'SELECT array_agg(id) as ids, ' || chr_id || ' as chromosome_id, ' || strand ||' as strand,
         "' || field_prefix || 'start" as transcription_start, max("' || field_prefix || 'end") as transcription_end, 
-         count(id) as tag_count ' || polya_string || '
+         count(id) as tag_count, bool_or(refseq) as refseq
          FROM "' || source_t || '_' || chr_id
         || '" WHERE strand = ' || strand 
         || start_end_clause
-        || ' GROUP BY "' || field_prefix || 'start"' || polya_string || '
-        ORDER BY ' || field_prefix || 'start ASC;'
+        || ' GROUP BY "' || field_prefix || 'start"
+        ORDER BY "' || field_prefix || 'start" ASC, "' || field_prefix || 'end" ASC;'
         LOOP
             -- The tags returned from the sequencing run are shorter than we know them to be biologically
             -- We can therefore extend the mapped tag region by a set number of bp if an extension is passed in
@@ -181,32 +175,32 @@ BEGIN
             IF (last_end = 0) THEN 
                 last_end := rec.transcription_end;
             END IF;
+            IF (current_refseq IS NULL) THEN
+                current_refseq := rec.refseq;
+            END IF;
 
-            -- Include this tag if it overlaps or has < max_gap bp gap
+            -- Include this tag if it doesn't violate a refseq boundary,
+            -- and it overlaps or has < max_gap bp gap
             -- Else, this is a new transcript; close off the current and restart.
-            IF ((last_end + max_gap) >= rec.transcription_start) THEN should_merge := true;
-            ELSE
-                IF span_repeats = true THEN
-                    -- Should this gap be considered in light of an overlapping repeat region?
-                    -- Note: not strand specific!
-                    EXECUTE 'SELECT reg.id ' 
-                        || ' FROM genome_reference_mm9.patterned_transcription_region_' || chr_id || ' reg '
-                            || ' WHERE reg.start_end @> '
-                                    || ' ''((' || last_end || ', 0), (' || rec.transcription_start || ', 0))''::box '
-                            || ' LIMIT 1' INTO repeat_region;
-                    IF repeat_region IS NOT NULL THEN should_merge := true;
+            IF (current_refseq == rec.refseq) THEN
+                IF ((last_end + max_gap) >= rec.transcription_start) THEN should_merge := true;
+                ELSE
+                    IF span_repeats = true THEN
+                        -- Should this gap be considered in light of an overlapping repeat region?
+                        -- Note: not strand specific!
+                        EXECUTE 'SELECT reg.id ' 
+                            || ' FROM genome_reference_mm9.patterned_transcription_region_' || chr_id || ' reg '
+                                || ' WHERE reg.start_end @> '
+                                        || ' ''((' || last_end || ', 0), (' || rec.transcription_start || ', 0))''::box '
+                                || ' LIMIT 1' INTO repeat_region;
+                        IF repeat_region IS NOT NULL THEN should_merge := true;
+                        END IF;
                     END IF;
                 END IF;
             END IF;
             
             IF should_merge = true THEN
                 tag_count := tag_count + rec.tag_count;
-                IF field_prefix = '' THEN
-                    -- This is a tag row, with the polya t/f 
-                    IF (rec.polya = true) THEN
-                        polya_count := polya_count + rec.tag_count;
-                    END IF;
-                END IF;
                 IF (rec.transcription_start > last_end) THEN
                     gaps := gaps + 1;
                 END IF;
@@ -226,7 +220,7 @@ BEGIN
             row.transcription_start := last_start;
             row.transcription_end := last_end;
             row.tag_count := tag_count;
-            row.polya_count := polya_count;
+            row.refseq := current_refseq;
             row.gaps := gaps;
             row.ids := ids;
             
@@ -237,10 +231,7 @@ BEGIN
                 last_start := rec.transcription_start;
                 last_end := rec.transcription_end;
                 tag_count := rec.tag_count;
-                IF field_prefix = '' THEN
-                    polya_count := (SELECT CASE WHEN rec.polya = true THEN rec.tag_count ELSE 0 END);
-                ELSE polya_count := 0;
-                END IF;
+                current_refseq = rec.refseq;
                 gaps := 0;
                 ids := rec.ids::integer[];
                 finish_row := false;
@@ -251,7 +242,7 @@ BEGIN
                 row.transcription_start := last_start;
                 row.transcription_end := last_end;
                 row.tag_count := tag_count;
-                row.polya_count := polya_count;
+                row.refseq := current_refseq;
                 row.gaps := gaps;
                 row.ids := ids;
                 
@@ -391,50 +382,6 @@ BEGIN
 END;
 $$ LANGUAGE 'plpgsql';
 
-CREATE OR REPLACE FUNCTION glass_atlas_%s_%s_staging.split_joined_genes(chr_id integer, tag_extension integer, allowed_edge integer, edge_scaling_factor integer, density_multiplier integer)
-RETURNS VOID AS $$
-DECLARE
-    joined record;
-    run_id integer;
-    i integer;
-BEGIN
-    -- This should not need to be run often-- or even more than once. 
-    -- During initial building phases, some genes get grouped together when they shouldn't.
-    -- Here we split them out and re-add so that we can stitch with more stringent criteria.
-
-    -- First, find transcripts with more than one gene, along with relevant source tables.
-    
-    FOR joined IN 
-        EXECUTE 'SELECT t.id, t.transcription_start, t.transcription_end, t.strand,
-                array_agg(run.source_table) as runs, array_agg(s.sequencing_run_id) as run_ids
-            FROM glass_atlas_%s_%s_prep.glass_transcript_' || chr_id || ' t
-            JOIN genome_reference_mm9.sequence_transcription_region reg
-                ON t.chromosome_id = reg.chromosome_id
-                AND t.start_end && reg.start_end
-                AND t.strand = reg.strand
-            JOIN genome_reference_mm9.sequence_detail det
-                ON reg.sequence_identifier_id = det.sequence_identifier_id
-            JOIN glass_atlas_%s_%s_prep.glass_transcript_source_' || chr_id || ' s
-                ON t.id = s.glass_transcript_id
-            WHERE width(t.start_end) >= .5*width(reg.start_end)
-            GROUP BY t.id, t.transcription_start, t.transcription_end, t.strand
-            HAVING count(distinct det.gene_name) > 1'
-    LOOP
-        -- Delete original transcript.
-        EXECUTE 'DELETE FROM glass_atlas_%s_%s_prep.glass_transcript_' || chr_id || ' WHERE id = ' || joined.id;
-        
-        -- Add from each source table for region only.
-        FOR i IN 1..array_upper(joined.run_ids, 1)
-        LOOP
-            SELECT glass_atlas_%s_%s_prep.save_transcripts_from_sequencing_run(
-            joined.run_ids[i], chr_id, joined.runs[i], 0, 
-            tag_extension, allowed_edge, edge_scaling_factor, density_multiplier, 
-            public.make_box(joined.transcription_start, 0, joined.transcription_end,0), joined.strand);
-        END LOOP;
-    END LOOP;
-    RETURN;
-END;
-$$ LANGUAGE 'plpgsql';
 
 -- This function operates on the post-prep table, but we keep it here to avoid having to recreate it every time.
 -- This is used in manually generated queries to determine adjusted fold changes

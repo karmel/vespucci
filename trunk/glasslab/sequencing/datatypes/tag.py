@@ -14,8 +14,6 @@ from glasslab.config import current_settings
 from glasslab.utils.datatypes.basic_model import DynamicTable, BoxField
 from glasslab.glassatlas.datatypes.metadata import SequencingRun
 from glasslab.utils.database import execute_query, fetch_rows
-from datetime import datetime
-import os
 import re
 
 def multiprocess_glass_tags(func, cls, *args):
@@ -48,7 +46,7 @@ def wrap_partition_tables(cls, chr_list): wrap_errors(cls._create_partition_tabl
 def wrap_translate_from_bowtie(cls, chr_list): wrap_errors(cls._translate_from_bowtie, chr_list)
 def wrap_delete_tags(cls, chr_list): wrap_errors(cls._delete_tags, chr_list)
 def wrap_set_start_end_box(cls, chr_list): wrap_errors(cls._set_start_end_box, chr_list)
-def wrap_set_polya(cls, chr_list): wrap_errors(cls._set_polya, chr_list)
+def wrap_set_refseq(cls, chr_list): wrap_errors(cls._set_refseq, chr_list)
 def wrap_insert_matching_tags(cls, chr_list): wrap_errors(cls._insert_matching_tags, chr_list)
 def wrap_update_start_site_tags(cls, chr_list): wrap_errors(cls._update_start_site_tags, chr_list)
 def wrap_update_exon_tags(cls, chr_list): wrap_errors(cls._update_exon_tags, chr_list)
@@ -176,7 +174,7 @@ class GlassTag(GlassSequencingOutput):
     
     start_end               = BoxField(max_length=255, help_text='This is a placeholder for the PostgreSQL box type.', null=True)
     
-    polya                   = models.NullBooleanField(default=None)
+    refseq                  = models.NullBooleanField(default=None)
     
     @classmethod        
     def create_bowtie_table(cls, name):
@@ -215,7 +213,7 @@ class GlassTag(GlassSequencingOutput):
             "start" bigint,
             "end" bigint,
             start_end box,
-            polya boolean default false
+            refseq boolean default false
         );
         CREATE SEQUENCE "%s_id_seq"
             START WITH 1
@@ -254,13 +252,13 @@ class GlassTag(GlassSequencingOutput):
             CREATE OR REPLACE FUNCTION %s.glass_tag_insert_trigger()
             RETURNS TRIGGER AS $$
             DECLARE
-                polya_string text;
+                refseq_string text;
                 start_end_string text;
             BEGIN
-                IF NEW.polya IS NULL THEN
-                    polya_string := 'NULL';
+                IF NEW.refseq IS NULL THEN
+                    refseq_string := 'NULL';
                 ELSE
-                    polya_string := NEW.polya::text;
+                    refseq_string := NEW.refseq::text;
                 END IF;
                 
                 IF NEW.start_end IS NULL THEN
@@ -276,7 +274,7 @@ class GlassTag(GlassSequencingOutput):
                 || quote_literal(NEW.start) || ','
                 || quote_literal(NEW."end") || ','
                 || start_end_string || ','
-                || polya_string || ')';
+                || refseq_string || ')';
                 RETURN NULL;
             END;
             $$
@@ -314,7 +312,7 @@ class GlassTag(GlassSequencingOutput):
         '''
         for chr_id in chr_list:
             update_query = """
-            INSERT INTO "%s_%d" (chromosome_id, strand, "start", "end", start_end, polya)
+            INSERT INTO "%s_%d" (chromosome_id, strand, "start", "end", start_end, refseq)
             SELECT * FROM (
                 SELECT %d, (CASE WHEN bowtie.strand_char = '-' THEN 1 ELSE 0 END), 
                 bowtie."start", (bowtie."start" + char_length(bowtie.sequence_matched)),
@@ -380,11 +378,11 @@ class GlassTag(GlassSequencingOutput):
             execute_query(update_query)
     
     @classmethod
-    def set_polya(cls):
-        multiprocess_glass_tags(wrap_set_polya, cls)
+    def set_refseq(cls):
+        multiprocess_glass_tags(wrap_set_refseq, cls)
         
     @classmethod
-    def _set_polya(cls, chr_list):
+    def _set_refseq(cls, chr_list):
         '''
         Create type box field for faster interval searching with the PostgreSQL box.
         '''
@@ -392,14 +390,15 @@ class GlassTag(GlassSequencingOutput):
             update_query = """
             -- IGNORE strand, since either side match is a match
             UPDATE "%s_%d" tag 
-            SET polya = true 
-            FROM glass_atlas_mm9_polya.glass_transcript_%d pol
-            WHERE pol.start_end && tag.start_end
-            AND tag.polya IS NULL;
+            SET refseq = true 
+            FROM glass_atlas_mm9_refseq.glass_transcript_%d ref
+            WHERE ref.start_end && tag.start_end
+            AND ref.strand = tag.strand
+            AND tag.refseq IS NULL;
 
             UPDATE "%s_%d" tag 
-            SET polya = false 
-            WHERE polya IS NULL;
+            SET refseq = false 
+            WHERE refseq IS NULL;
             """ % (cls._meta.db_table, chr_id, chr_id,
                    cls._meta.db_table, chr_id)
             execute_query(update_query)
