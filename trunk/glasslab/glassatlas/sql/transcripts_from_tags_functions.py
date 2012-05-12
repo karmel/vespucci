@@ -182,7 +182,7 @@ BEGIN
             -- Include this tag if it doesn't violate a refseq boundary,
             -- and it overlaps or has < max_gap bp gap
             -- Else, this is a new transcript; close off the current and restart.
-            IF (current_refseq == rec.refseq) THEN
+            IF (current_refseq = rec.refseq) THEN
                 IF ((last_end + max_gap) >= rec.transcription_start) THEN should_merge := true;
                 ELSE
                     IF span_repeats = true THEN
@@ -228,7 +228,12 @@ BEGIN
                 RETURN NEXT row;
                 
                 -- Restart vars for next loop
-                last_start := rec.transcription_start;
+                
+                -- If we have to finish the row because of a refseq discrepancy,
+                -- we want to make sure the next row won't overlap with 
+                -- the one we just finished. So, we reset the start of the 
+                -- record to the end of the last one if neccessary.
+                last_start := (SELECT GREATEST(last_end + 1, rec.transcription_start));
                 last_end := rec.transcription_end;
                 tag_count := rec.tag_count;
                 current_refseq = rec.refseq;
@@ -292,7 +297,7 @@ RETURNS VOID AS $$
             IF rec IS NOT NULL THEN
                 -- Save the transcript.
                 IF use_for_scoring = true THEN
-                    density := (density_multiplier*(rec.tag_count - rec.polya_count)::numeric)/
+                    density := (density_multiplier*(rec.tag_count)::numeric)/
                                     (rec.transcription_end - rec.transcription_start)::numeric;
                 ELSE density := 0;
                 END IF;
@@ -300,18 +305,19 @@ RETURNS VOID AS $$
                 EXECUTE 'INSERT INTO glass_atlas_%s_%s_prep.glass_transcript_' || rec.chromosome_id
                     || ' ("chromosome_id", "strand", 
                     "transcription_start", "transcription_end", 
-                    "start_end", "start_density")
+                    "start_end", "start_density", "refseq")
                     VALUES (' || rec.chromosome_id || ' , ' || rec.strand || ' , '
                     || rec.transcription_start || ' , ' || rec.transcription_end || ' , 
                     public.make_box(' || rec.transcription_start || ', 0, ' || rec.transcription_end || ', 0),
-                    point(' || rec.transcription_start || ',' || density || ') 
+                    point(' || rec.transcription_start || ',' || density || '),
+                    ' || rec.refseq || '
                         ) RETURNING *' INTO transcript;
                 
                 -- Save the record of the sequencing run source
                 EXECUTE 'INSERT INTO glass_atlas_%s_%s_prep.glass_transcript_source_' || rec.chromosome_id || '
-                    (chromosome_id, "glass_transcript_id", "sequencing_run_id", "tag_count", "gaps", "polya_count") 
+                    (chromosome_id, "glass_transcript_id", "sequencing_run_id", "tag_count", "gaps", "refseq") 
                     VALUES (' || transcript.chromosome_id || ', ' || transcript.id || ', ' || seq_run_id || ', 
-                    ' || rec.tag_count || ', ' || rec.gaps || ', ' || rec.polya_count || ')';
+                    ' || rec.tag_count || ', ' || rec.gaps || ')';
 
             END IF;
         END LOOP;
@@ -338,12 +344,13 @@ RETURNS VOID AS $$
                 EXECUTE 'INSERT INTO glass_atlas_%s_%s_prep.glass_transcript_' || rec.chromosome_id
                     || ' ("chromosome_id", "strand", '
                     || ' "transcription_start", "transcription_end",' 
-                    || ' "start_end")'
+                    || ' "start_end", "refseq")'
                     || ' VALUES (' || rec.chromosome_id || ' , ' || rec.strand || ' , '
                     || rec.transcription_start || ' , ' || rec.transcription_end || ' , '
                     || ' public.make_box(' || rec.transcription_start || ', 0' 
-                        || ',' ||  rec.transcription_end || ', 0)'
-                    || ' ) RETURNING *' INTO transcript;
+                        || ',' ||  rec.transcription_end || ', 0), '
+                    || rec.refseq || ' 
+                    ) RETURNING *' INTO transcript;
                 
                 -- Remove existing records
                 FOR old_id IN 

@@ -69,7 +69,7 @@ class GlassSequencingOutput(DynamicTable):
     _chromosomes = None
     @classmethod 
     def chromosomes(cls): 
-        return list(xrange(1,23))
+        #return list(xrange(1,23))
         if not cls._chromosomes:
             if cls._meta.db_table:
                 chr_sql = """
@@ -101,7 +101,7 @@ class GlassSequencingOutput(DynamicTable):
                 """ % (Chromosome._meta.db_table)
                 rows = fetch_rows(chr_sql)
                 cls._chromosomes = zip(*rows)[0]
-            
+        print cls._chromosomes
         return cls._chromosomes
     
     class Meta: abstract = True
