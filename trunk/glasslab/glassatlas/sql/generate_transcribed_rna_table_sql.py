@@ -11,6 +11,12 @@ genome = 'mm9'
 cell_type = 'thiomac'
 def sql(genome, cell_type):
     return """
+    
+CREATE SCHEMA "glass_atlas_%s_%s_rna" AUTHORIZATION "postgres";
+
+GRANT Create,Usage ON SCHEMA "glass_atlas_%s_%s_prep" TO  "glass";
+GRANT Usage ON SCHEMA "glass_atlas_%s_%s_prep" TO  "glass_read_only";
+
 CREATE TABLE "glass_atlas_%s_%s_rna"."glass_transcribed_rna" (
     "id" int4 NOT NULL,
     "glass_transcript_id" int4 DEFAULT NULL,
@@ -276,7 +282,7 @@ CREATE INDEX glass_transcribed_rna_source_transcribed_rna_idx ON "glass_atlas_%s
 CREATE INDEX glass_transcribed_rna_source_sequencing_run_idx ON "glass_atlas_%s_%s_rna"."glass_transcribed_rna_source" USING btree (sequencing_run_id);
 
 
-""" % tuple([genome, cell_type]*176)
+""" % tuple([genome, cell_type]*179)
 
 if __name__ == '__main__':
     print sql(genome, cell_type)

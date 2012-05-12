@@ -430,7 +430,7 @@ BEGIN
 END;
 $$ LANGUAGE 'plpgsql';
 
-""" % tuple([genome, cell_type]*55)
+""" % tuple([genome, cell_type]*50)
 
 if __name__ == '__main__':
     print sql(genome, cell_type)

@@ -372,7 +372,7 @@ END;
 $$ LANGUAGE 'plpgsql'; 
 
 
-""" % tuple([genome, cell_type]*74)
+""" % tuple([genome, cell_type]*70)
 
 if __name__ == '__main__':
     print sql(genome, cell_type)
