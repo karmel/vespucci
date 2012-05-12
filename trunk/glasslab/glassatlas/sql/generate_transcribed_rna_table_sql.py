@@ -3,7 +3,8 @@ Created on Nov 12, 2010
 
 @author: karmel
 
-Convenience script for generated create table statements for transcribed_rna tables.
+** DEPRECATED **
+
 '''
 
 genome = 'mm9'

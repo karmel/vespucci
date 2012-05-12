@@ -20,7 +20,7 @@ CREATE TABLE "glass_atlas_%s_%s_staging"."glass_transcript" (
     "start_end_density" box DEFAULT NULL,
     "density" float DEFAULT NULL,
     "spliced" boolean DEFAULT NULL,
-    "polya" boolean DEFAULT NULL,
+    "refseq" boolean DEFAULT NULL,
     "score" numeric DEFAULT NULL,
     "deviation_score" numeric DEFAULT NULL,
     "modified" timestamp(6) NULL DEFAULT NULL,
@@ -251,6 +251,7 @@ BEGIN
     || coalesce(quote_literal(NEW.start_end_density),'NULL') || ','
     || coalesce(quote_literal(NEW.density),'NULL') || ','
     || coalesce(quote_literal(NEW.spliced),'NULL') || ','
+    || coalesce(quote_literal(NEW.refseq),'NULL') || ','
     || coalesce(quote_literal(NEW.score),'NULL') || ','
     || quote_literal(NEW.modified) || ','
     || quote_literal(NEW.created) || ')';
@@ -289,8 +290,7 @@ CREATE TABLE "glass_atlas_%s_%s_staging"."glass_transcript_source" (
     "glass_transcript_id" int4 DEFAULT NULL,
     "sequencing_run_id" int4 DEFAULT NULL,
     "tag_count" int4 DEFAULT NULL,
-    "gaps" int4 DEFAULT NULL,
-    "polya_count" int4 DEFAULT NULL
+    "gaps" int4 DEFAULT NULL
 );
 GRANT ALL ON TABLE "glass_atlas_%s_%s_staging"."glass_transcript_source" TO  "glass";
 CREATE SEQUENCE "glass_atlas_%s_%s_staging"."glass_transcript_source_id_seq"
@@ -489,8 +489,7 @@ BEGIN
     || quote_literal(NEW.glass_transcript_id) || ','
     || quote_literal(NEW.sequencing_run_id) || ','
     || quote_literal(NEW.tag_count) || ','
-    || quote_literal(NEW.gaps) || ','
-    || quote_literal(NEW.polya_count)
+    || quote_literal(NEW.gaps)
     || ')'
     ;
     RETURN NULL;
@@ -658,7 +657,7 @@ ALTER TABLE ONLY "glass_atlas_%s_%s_staging"."norm_sum" ADD CONSTRAINT norm_sum_
 CREATE UNIQUE INDEX "norm_sum_name_idx" ON "glass_atlas_%s_%s_staging"."norm_sum" USING btree(name_1,name_2 ASC NULLS LAST);
 
 
-""" % tuple([genome, cell_type]*373)
+""" % tuple([genome, cell_type] * 373)
 
 if __name__ == '__main__':
     print sql(genome, cell_type)

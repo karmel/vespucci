@@ -18,7 +18,8 @@ CREATE TABLE "glass_atlas_%s_%s_prep"."glass_transcript" (
     "transcription_end" int8 DEFAULT NULL,
     "start_end" box DEFAULT NULL,
     "start_density" point DEFAULT NULL,
-    "density_circle" circle DEFAULT NULL
+    "density_circle" circle DEFAULT NULL,
+    "refseq" boolean DEFAULT NULL
 );
 GRANT ALL ON TABLE "glass_atlas_%s_%s_prep"."glass_transcript" TO  "glass";
 CREATE SEQUENCE "glass_atlas_%s_%s_prep"."glass_transcript_id_seq"
@@ -267,7 +268,8 @@ BEGIN
     || 'public.make_box(' || quote_literal((NEW.start_density[1])[0]) || ', ' || quote_literal((NEW.start_density[1])[1]) || ', ' 
         || quote_literal((NEW.start_density[0])[0]) || ', ' || quote_literal((NEW.start_density[0])[1]) || '),'
     || 'circle(' || quote_literal(center(NEW.density_circle)) || ', ' || quote_literal(radius(NEW.density_circle)) || ')'
-    || ')'
+    || '),'
+    || quote_literal(NEW.refseq)
     ;
     RETURN NULL;
 END;

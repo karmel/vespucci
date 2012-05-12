@@ -3,7 +3,8 @@ Created on Nov 12, 2010
 
 @author: karmel
 
-Convenience script for transcribed_rna functions.
+** DEPRECATED **
+
 '''
 genome = 'mm9'
 cell_type='thiomac'
