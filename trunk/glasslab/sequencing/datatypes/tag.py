@@ -27,7 +27,7 @@ def multiprocess_glass_tags(func, cls, *args):
     # in order to create even-ish groups.
     chr_lists = [[GlassTag.chromosomes()[x] for x in xrange(i,total_count,processes)] 
                                 for i in xrange(0,processes)]
-    
+    print chr_lists
     for chr_list in chr_lists:
         p.apply_async(func, args=[cls, chr_list,] + list(args))
     p.close()
@@ -101,7 +101,6 @@ class GlassSequencingOutput(DynamicTable):
                 """ % (Chromosome._meta.db_table)
                 rows = fetch_rows(chr_sql)
                 cls._chromosomes = zip(*rows)[0]
-        print cls._chromosomes
         return cls._chromosomes
     
     class Meta: abstract = True

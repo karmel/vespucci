@@ -17,7 +17,7 @@ DECLARE
     sum integer;
     count integer;
 BEGIN 
-	EXECUTE 'SELECT SUM(tag_count) - COALESCE(SUM(polya_count),0) FROM glass_atlas_%s_%s_staging.glass_transcript_source_' || trans.chromosome_id || '  source
+	EXECUTE 'SELECT SUM(tag_count) FROM glass_atlas_%s_%s_staging.glass_transcript_source_' || trans.chromosome_id || '  source
 	        JOIN glass_atlas_mm9.sequencing_run run
                 ON source.sequencing_run_id = run.id
             WHERE glass_transcript_id = ' || trans.id || ' AND run.use_for_scoring = true' INTO sum;
@@ -29,33 +29,19 @@ BEGIN
 END;
 $$ LANGUAGE 'plpgsql';
 
-CREATE OR REPLACE FUNCTION glass_atlas_%s_%s_staging.get_polya(trans glass_atlas_%s_%s_staging.glass_transcript)
-RETURNS boolean AS $$
-DECLARE
-	polya boolean;
-BEGIN 
-	EXECUTE 'SELECT COALESCE(SUM(polya_count),0)::numeric/SUM(tag_count)::numeric >= .5
-	        FROM glass_atlas_%s_%s_staging.glass_transcript_source_' || trans.chromosome_id || ' source
-	        JOIN glass_atlas_mm9.sequencing_run run
-                ON source.sequencing_run_id = run.id
-            WHERE glass_transcript_id = ' || trans.id || ' AND run.use_for_scoring = true' INTO polya; 
-	RETURN polya;
-END;
-$$ LANGUAGE 'plpgsql';
-
 CREATE OR REPLACE FUNCTION glass_atlas_%s_%s_staging.move_transcripts_over(chr_id integer)
 RETURNS VOID AS $$
 BEGIN
     EXECUTE 'INSERT INTO glass_atlas_%s_%s_staging.glass_transcript_' || chr_id || ' 
-        (id, chromosome_id, strand, transcription_start, transcription_end, start_end, modified, created)
+        (id, chromosome_id, strand, transcription_start, transcription_end, start_end, refseq, modified, created)
         SELECT id, chromosome_id, strand, transcription_start, transcription_end, 
-               public.make_box(transcription_start, 0, transcription_end, 0), NOW(), NOW()
+               public.make_box(transcription_start, 0, transcription_end, 0), refseq, NOW(), NOW()
             FROM 
-        (SELECT t.id, t.chromosome_id, t.strand, t.transcription_start, t.transcription_end 
+        (SELECT t.id, t.chromosome_id, t.strand, t.transcription_start, t.transcription_end, t.refseq 
             FROM glass_atlas_%s_%s_prep.glass_transcript_' || chr_id || ' t
             JOIN glass_atlas_%s_%s_prep.glass_transcript_source_' || chr_id || ' s
                 ON t.id = s.glass_transcript_id
-            GROUP BY t.id, t.chromosome_id, t.strand, t.transcription_start, t.transcription_end 
+            GROUP BY t.id, t.chromosome_id, t.strand, t.transcription_start, t.transcription_end, t.refseq 
             HAVING avg(s.tag_count) > 1 AND count(s.sequencing_run_id) > 1 -- Omit one-tag-wonders and one-run-transcripts
         ) der';
     EXECUTE 'INSERT INTO glass_atlas_%s_%s_staging.glass_transcript_source_' || chr_id || ' 
@@ -184,10 +170,9 @@ CREATE OR REPLACE FUNCTION glass_atlas_%s_%s_staging.insert_transcript_source_re
 RETURNS VOID AS $$
 BEGIN 
     EXECUTE 'INSERT INTO glass_atlas_%s_%s_staging.glass_transcript_source_' || chr_id || '
-            (chromosome_id, glass_transcript_id, sequencing_run_id, tag_count, gaps, polya_count)
+            (chromosome_id, glass_transcript_id, sequencing_run_id, tag_count, gaps)
             SELECT ' || chr_id || ', der.transcript_id, der.sequencing_run_id, 
-                SUM(der.tag_count), COUNT(der.glass_transcript_id) - 1,
-                SUM(der.polya_count)
+                SUM(der.tag_count), COUNT(der.glass_transcript_id) - 1
             FROM (
                 SELECT trans.id as transcript_id,* 
                 FROM glass_atlas_%s_%s_staging.glass_transcript_' || chr_id || ' trans
@@ -272,8 +257,8 @@ BEGIN
 		    FROM (SELECT 
 				    transcript.id,
 				    GREATEST(0,
-                        SQRT((SUM(source.tag_count - COALESCE(source.polya_count,0))::numeric/' || total_runs || ')
-                        *MAX(source.tag_count - COALESCE(source.polya_count,0))::numeric)
+                        SQRT((SUM(source.tag_count)::numeric/' || total_runs || ')
+                        *MAX(source.tag_count)::numeric)
                         /LEAST(
                             GREATEST(1000, transcript.transcription_end - transcript.transcription_start)::numeric/1000,
                             2*LOG(transcript.transcription_end - transcript.transcription_start)
@@ -367,8 +352,7 @@ BEGIN
                 glass_atlas_%s_%s_staging.get_density(t.*, ' || density_multiplier || ')::numeric,
                 transcription_end,
                 glass_atlas_%s_%s_staging.get_density(t.*, ' || density_multiplier || ')::numeric), 
-                density = glass_atlas_%s_%s_staging.get_density(t.*, ' || density_multiplier || ')::numeric,
-                polya = glass_atlas_%s_%s_staging.get_polya(t.*)
+                density = glass_atlas_%s_%s_staging.get_density(t.*, ' || density_multiplier || ')::numeric
             WHERE ' || where_clause;
 END;
 $$ LANGUAGE 'plpgsql';
