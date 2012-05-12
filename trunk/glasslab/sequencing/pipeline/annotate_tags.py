@@ -151,7 +151,7 @@ if __name__ == '__main__':
         options.output_dir = '/Volumes/Unknowme/kallison/Sequencing/GroSeq/Nathan_NCoR_KO_2010_10_08/tags/ncor_ko_kla_1h'
         options.project_name = 'ncor_ko_kla_1h_2'
         
-    file_name = check_input(options)
+    file_name = options.file_path#check_input(options)
     
     if options.clean_bowtie:
         _print('Cleaning existing bowtie file.')
