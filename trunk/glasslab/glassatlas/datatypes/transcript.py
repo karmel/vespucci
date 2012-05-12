@@ -46,7 +46,7 @@ def multiprocess_all_chromosomes(func, cls, *args):
             all_chr = Chromosome.objects.values('id').annotate(
                             row_count=Count(cls.cell_base.glass_transcript_prep.__name__.lower())
                                     ).order_by('-row_count').filter(row_count__gt=0)
-            all_chr = [chr['id'] for chr in all_chr]
+            all_chr = [c['id'] for c in all_chr]
             if not all_chr: raise Exception
         except Exception:
             # cls in question does not have explicit relation to chromosomes; get all
@@ -55,9 +55,9 @@ def multiprocess_all_chromosomes(func, cls, *args):
         # Chromosomes are sorted by count descending, so we want to snake them
         # back and forth to create even-ish groups
         chr_sets = [[] for _ in xrange(0, processes)]
-        for i,chr in enumerate(all_chr):
+        for i,chrom in enumerate(all_chr):
             if i and not i % processes: chr_sets.reverse()
-            chr_sets[i % processes].append(chr)
+            chr_sets[i % processes].append(chrom)
              
         current_settings.CHR_LISTS = chr_sets
         print 'Determined chromosome sets:\n%s' % str(current_settings.CHR_LISTS)
@@ -163,6 +163,7 @@ class TranscriptionRegionBase(TranscriptModelBase):
     strand                  = models.IntegerField(max_length=1, help_text='0 for +, 1 for -')
     transcription_start     = models.IntegerField(max_length=12)
     transcription_end       = models.IntegerField(max_length=12, help_text='<span id="length-message"></span>')
+    refseq                  = models.NullBooleanField(default=None)
     
     start_end               = BoxField(null=True, default=None, help_text='This is a placeholder for the PostgreSQL box type.')
     
@@ -356,8 +357,7 @@ class GlassTranscript(TranscriptBase):
     @classmethod
     def draw_transcript_edges(cls):
         multiprocess_all_chromosomes(wrap_draw_transcript_edges, cls)
-        #wrap_stitch_together_transcripts(cls,[21, 22])
-    
+        
     @classmethod
     def _draw_transcript_edges(cls, chr_list):
         for chr_id in chr_list:
@@ -386,31 +386,7 @@ class GlassTranscript(TranscriptBase):
                        current_settings.CURRENT_CELL_TYPE.lower(),
                        current_settings.STAGING,
                        chr_id, DENSITY_MULTIPLIER, 'true')
-            #execute_query(query)
-            
-    @classmethod
-    def split_joined_genes(cls):
-        multiprocess_all_chromosomes(wrap_split_joined_genes, cls)
-    
-    @classmethod
-    def _split_joined_genes(cls, chr_list):
-        '''
-        This should not need to be run often-- or even more than once. 
-        During initial building phases, some genes get grouped together when they shouldn't.
-
-        Here we split them out and re-add so that we can stitch with more stringent criteria.
-        '''
-        for chr_id in chr_list:
-            print 'Finding over-joined transcripts for chromosome %d' % chr_id
-            
-            # First, find transcripts with more than one gene.
-            query = """
-                SELECT glass_atlas_%s_%s_prep.split_joined_genes(%d, %d,'%s', %d, %d, %d, %d, %d, NULL, NULL);
-                """ % (current_settings.TRANSCRIPT_GENOME,
-                       current_settings.CURRENT_CELL_TYPE.lower(),
-                       chr_id, TAG_EXTENSION, 
-                       MAX_EDGE, EDGE_SCALING_FACTOR, DENSITY_MULTIPLIER)
-            execute_query(query)
+            #execute_query(query)            
             
     @classmethod
     def set_scores(cls):
@@ -581,7 +557,6 @@ class GlassTranscriptNucleotides(TranscriptModelBase):
 class TranscriptSourceBase(TranscriptModelBase):
     sequencing_run          = models.ForeignKey(SequencingRun)
     tag_count               = models.IntegerField(max_length=12)
-    polya_count             = models.IntegerField(max_length=12)
     gaps                    = models.IntegerField(max_length=12)
     
     class Meta:
