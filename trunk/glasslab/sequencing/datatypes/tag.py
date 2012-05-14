@@ -425,11 +425,13 @@ class GlassTag(GlassSequencingOutput):
     def _add_indices(cls, chr_list):
         for chr_id in chr_list:
             update_query = """
+            CREATE INDEX %s_%d_pkey_idx ON "%s_%d" USING btree (id);
             CREATE INDEX %s_%d_chr_idx ON "%s_%d" USING btree (chromosome_id);
             CREATE INDEX %s_%d_strand_idx ON "%s_%d" USING btree (strand);
             CREATE INDEX %s_%d_start_end_idx ON "%s_%d" USING gist (start_end);
             ANALYZE "%s_%d";
             """ % (cls.name, chr_id, cls._meta.db_table, chr_id,
+                   cls.name, chr_id, cls._meta.db_table, chr_id,
                    cls.name, chr_id, cls._meta.db_table, chr_id,
                    cls.name, chr_id, cls._meta.db_table, chr_id,
                    cls._meta.db_table, chr_id)

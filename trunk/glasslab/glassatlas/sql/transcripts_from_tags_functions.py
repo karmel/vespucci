@@ -111,7 +111,7 @@ $$ LANGUAGE 'plpgsql';
 CREATE OR REPLACE FUNCTION glass_atlas_%s_%s_prep.determine_transcripts_from_existing(chr_id integer, strand integer, max_gap integer)
 RETURNS SETOF glass_atlas_%s_%s_prep.glass_transcript_row AS $$
 BEGIN 
-    RETURN QUERY SELECT * FROM glass_atlas_%s_%s_prep.determine_transcripts_from_table(chr_id, strand, 'glass_atlas_%s_%s_prep"."glass_transcript', max_gap, 0,'transcription_', true, NULL);
+    RETURN QUERY SELECT * FROM glass_atlas_%s_%s_prep.determine_transcripts_from_table(chr_id, strand, 'glass_atlas_%s_%s_prep"."glass_transcript', max_gap, 0,'transcription_', false, NULL);
 END;
 $$ LANGUAGE 'plpgsql';
 
@@ -191,6 +191,8 @@ BEGIN
             IF ((current_refseq = rec.refseq) OR (last_end >= rec.transcription_end)) THEN
                 IF ((last_end + max_gap) >= rec.transcription_start) THEN should_merge := true;
                 ELSE
+                    -- Note that none of the default implementations use span_repeats = True right now,
+                    -- but we would like to maintain the option.
                     IF span_repeats = true THEN
                         -- Should this gap be considered in light of an overlapping repeat region?
                         -- Note: not strand specific!
