@@ -13,7 +13,7 @@ class SequencingRunAnnotationInline(admin.TabularInline):
     model       = SequencingRunAnnotation
     
 class SequencingRunAdmin(admin.ModelAdmin):
-    list_display    = ('type', 'cell_type','description', 'source_table', 'total_tags','percent_mapped')
+    list_display    = ('type', 'cell_type','source_table', 'total_tags',)
     list_filter     = ('type','cell_type','standard','requires_reload','timepoint','wt','notx','kla','other_conditions')
     ordering        = ('-modified',)
     search_fields   = ('description','source_table')

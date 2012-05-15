@@ -23,7 +23,7 @@ class DensityAnalyzer(object):
         and number of runs present.
         '''
         trans = self.cell_base.glass_transcript_prep.objects.filter(chromosome__id=chr_id, strand=strand)
-        trans = trans.extra(select={'length': '(transcription_end - transcription_start)'})
+        trans = trans.extra(select={'length': '(transcription_end - transcription_start + 1)'})
         trans = trans.annotate(tag_count=Sum('glasstranscriptsource__tag_count'))
         trans = trans.annotate(run_count=Count('glasstranscriptsource__sequencing_run'))
         trans = trans.order_by('transcription_start')

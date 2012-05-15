@@ -53,12 +53,16 @@ def multiprocess_all_chromosomes(func, cls, *args):
             all_chr = Chromosome.objects.order_by('?').values_list('id', flat=True)
 
         # Chromosomes are sorted by count descending, so we want to snake them
-        # back and forth to create even-ish groups
+        # back and forth to create even-ish groups. 
         chr_sets = [[] for _ in xrange(0, processes)]
         for i,chrom in enumerate(all_chr):
             if i and not i % processes: chr_sets.reverse()
             chr_sets[i % processes].append(chrom)
-             
+        
+        # Reverse every other group to even out memory requirements.
+        for i, chr_set in enumerate(chr_sets):
+            if i % 2 == 1: chr_set.reverse()
+            
         current_settings.CHR_LISTS = chr_sets
         print 'Determined chromosome sets:\n%s' % str(current_settings.CHR_LISTS)
     
@@ -326,12 +330,12 @@ class GlassTranscript(TranscriptBase):
             if set_density:
                 print 'Setting average tags for preparatory transcripts for chromosome %d' % chr_id
                 query = """
-                    SELECT glass_atlas_%s_%s_prep.set_density(%d, %d, %d, %d, %s, %s);
+                    SELECT glass_atlas_%s_%s_prep.set_density(%d, %d, %d, %d, %s);
                     """ % (current_settings.TRANSCRIPT_GENOME, 
                            current_settings.CURRENT_CELL_TYPE.lower(),
                            chr_id, MAX_EDGE, EDGE_SCALING_FACTOR, 
                            DENSITY_MULTIPLIER, 
-                           allow_extended_gaps and 'true' or 'false', 'true')
+                           allow_extended_gaps and 'true' or 'false')
                 execute_query(query)
     
     @classmethod
@@ -346,12 +350,12 @@ class GlassTranscript(TranscriptBase):
         for chr_id  in chr_list:
             print 'Setting average tags for preparatory transcripts for chromosome %d' % chr_id
             query = """
-                SELECT glass_atlas_%s_%s_prep.set_density(%d, %d, %d, %d, %s, %s);
+                SELECT glass_atlas_%s_%s_prep.set_density(%d, %d, %d, %d, %s);
                 """ % (current_settings.TRANSCRIPT_GENOME, 
                        current_settings.CURRENT_CELL_TYPE.lower(),
                        chr_id, MAX_EDGE, EDGE_SCALING_FACTOR, 
                        DENSITY_MULTIPLIER,
-                       allow_extended_gaps and 'true' or 'false', 'false')
+                       allow_extended_gaps and 'true' or 'false')
             execute_query(query)
             
     @classmethod
@@ -362,22 +366,12 @@ class GlassTranscript(TranscriptBase):
     def _draw_transcript_edges(cls, chr_list):
         for chr_id in chr_list:
             print 'Drawing edges for transcripts for chromosome %d' % chr_id
-            if MAX_EDGE > 0:
-                query = """
-                    SELECT glass_atlas_%s_%s%s.draw_transcript_edges(%d);
-                    """ % (current_settings.TRANSCRIPT_GENOME, 
-                           current_settings.CURRENT_CELL_TYPE.lower(),
-                           current_settings.STAGING,
-                           chr_id)
-            else:
-                # No point in drawing edges; we've already stitched everything.
-                # Just copy over what we have.
-                query = """
-                    SELECT glass_atlas_%s_%s%s.move_transcripts_over(%d);
-                    """ % (current_settings.TRANSCRIPT_GENOME, 
-                           current_settings.CURRENT_CELL_TYPE.lower(),
-                           current_settings.STAGING,
-                           chr_id)
+            query = """
+                SELECT glass_atlas_%s_%s%s.draw_transcript_edges(%d);
+                """ % (current_settings.TRANSCRIPT_GENOME, 
+                       current_settings.CURRENT_CELL_TYPE.lower(),
+                       current_settings.STAGING,
+                       chr_id)
             execute_query(query)
             #print 'Setting average tags for transcripts for chromosome %d' % chr_id
             query = """

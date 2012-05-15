@@ -17,6 +17,8 @@ CREATE TABLE "glass_atlas_%s_%s_prep"."glass_transcript" (
     "transcription_start" int8 DEFAULT NULL,
     "transcription_end" int8 DEFAULT NULL,
     "start_end" box DEFAULT NULL,
+    "density" float DEFAULT NULL, -- RPKM per run, essentially. But number of bp is configurable.
+    "edge" float DEFAULT NULL, -- Length of the allowed edge for joining transcripts.
     "start_density" point DEFAULT NULL,
     "density_circle" circle DEFAULT NULL,
     "refseq" boolean DEFAULT NULL

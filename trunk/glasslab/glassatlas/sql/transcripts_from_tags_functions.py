@@ -6,13 +6,13 @@ Created on Nov 12, 2010
 Convenience script for transcript functions.
 '''
 genome = 'mm9'
-cell_type='bmdc'
+cell_type='thiomac'
 def sql(genome, cell_type):
     return """
 -- Not run from within the codebase, but kept here in case functions need to be recreated.
 
 CREATE TYPE glass_atlas_%s_%s_prep.glass_transcript_row AS ("chromosome_id" integer, "strand" smallint, 
-    transcription_start bigint, transcription_end bigint, tag_count integer, gaps integer, ids integer[]);
+    transcription_start bigint, transcription_end bigint, refseq boolean, tag_count integer, gaps integer, ids integer[]);
 
 CREATE OR REPLACE FUNCTION glass_atlas_%s_%s_prep.update_transcript_source_records(trans glass_atlas_%s_%s_prep.glass_transcript, old_id integer)
 RETURNS VOID AS $$
@@ -51,26 +51,8 @@ BEGIN
 END;
 $$ LANGUAGE 'plpgsql';
 
-CREATE OR REPLACE FUNCTION glass_atlas_%s_%s_prep.get_density(trans glass_atlas_%s_%s_prep.glass_transcript, density_multiplier integer)
-RETURNS float AS $$
-DECLARE
-    sum integer;
-    count integer;
-BEGIN 
-    EXECUTE 'SELECT SUM(tag_count) FROM glass_atlas_%s_%s_prep.glass_transcript_source_' || trans.chromosome_id || ' source
-            JOIN glass_atlas_mm9.sequencing_run run
-                ON source.sequencing_run_id = run.id
-            WHERE glass_transcript_id = ' || trans.id || ' 
-                AND run.use_for_scoring = true' INTO sum;
-    EXECUTE 'SELECT COUNT(sequencing_run_id) FROM glass_atlas_%s_%s_prep.glass_transcript_source_' || trans.chromosome_id || ' source
-            JOIN glass_atlas_mm9.sequencing_run run
-                ON source.sequencing_run_id = run.id
-            WHERE glass_transcript_id = ' || trans.id || ' AND run.use_for_scoring = true' INTO count;
-    RETURN GREATEST(0,(density_multiplier*sum::numeric)/(count*(trans.transcription_end - trans.transcription_start)::numeric)); 
-END;
-$$ LANGUAGE 'plpgsql';
-
-CREATE OR REPLACE FUNCTION glass_atlas_%s_%s_prep.get_allowed_edge(trans glass_atlas_%s_%s_prep.glass_transcript, density float, allowed_edge integer, scaling_factor integer, allow_extended_gaps boolean)
+CREATE OR REPLACE FUNCTION glass_atlas_%s_%s_prep.get_allowed_edge(trans glass_atlas_%s_%s_prep.glass_transcript, 
+                                            allowed_edge integer, scaling_factor integer, allow_extended_gaps boolean)
 RETURNS float AS $$
 DECLARE
     overlapping_edge float := NULL;
@@ -79,21 +61,21 @@ BEGIN
     edge := allowed_edge;
     IF allow_extended_gaps = true THEN
         -- Allow longer edge (up to 20 percent of seq) if this sequence is contained in a RefSeq region
-        overlapping_edge := (SELECT LEAST(reg.transcription_end - trans.transcription_end,
-                                    (reg.transcription_end - reg.transcription_start)*.2) 
+        overlapping_edge := (SELECT LEAST(reg.transcription_end - trans.transcription_end + 1,
+                                    (reg.transcription_end - reg.transcription_start + 1)*.2) 
                         FROM genome_reference_mm9.sequence_transcription_region reg
                         WHERE reg.chromosome_id = trans.chromosome_id
                             AND reg.strand = trans.strand
                             AND reg.start_end @>
                                 point(trans.transcription_end, 0)
-                        ORDER BY LEAST(reg.transcription_end - trans.transcription_end,
-                                    (reg.transcription_end - reg.transcription_start)*.2) DESC
+                        ORDER BY LEAST(reg.transcription_end - trans.transcription_end + 1,
+                                    (reg.transcription_end - reg.transcription_start + 1)*.2) DESC
                         LIMIT 1);
         edge := (SELECT GREATEST(allowed_edge, overlapping_edge));
     END IF;
     
     IF overlapping_edge IS NULL THEN
-        edge := (SELECT allowed_edge*LEAST(density/scaling_factor::numeric, 1));
+        edge := (SELECT allowed_edge*LEAST(trans.density/scaling_factor::numeric, 1));
     END IF;
     
     RETURN edge;
@@ -153,7 +135,7 @@ BEGIN
          FROM "' || source_t || '_' || chr_id
         || '" WHERE strand = ' || strand 
         || start_end_clause
-        || ' GROUP BY "' || field_prefix || 'start"
+        || ' GROUP BY "' || field_prefix || 'start", "' || field_prefix || 'end"
         ORDER BY "' || field_prefix || 'start" ASC, "' || field_prefix || 'end" ASC;'
         LOOP
             -- The tags returned from the sequencing run are shorter than we know them to be biologically
@@ -184,11 +166,12 @@ BEGIN
             -- Else, this is a new transcript; close off the current and restart.
             -- We have a special case for the refseq boundary in which, if the
             -- two records differ, but the latter record is entirely contained
-            -- within the first, we allow it to be joined in. This can happen
-            -- if the transcripts are of differing length, but should
-            -- be limited to the regions within one tag of the start of a
-            -- refseq region.
-            IF ((current_refseq = rec.refseq) OR (last_end >= rec.transcription_end)) THEN
+            -- within the first, we allow it to be joined in. 
+            -- We add a 1bp margin to avoid scenarios where last_end = 10, 
+            -- rec.transcription_end = 11, and rec.transcription_start gets set to 
+            -- last_end + 1, rendering a 0-bp transcript. Checking for last_end + 1
+            -- means that any clipped transcript is at least 1bp long.
+            IF ((current_refseq = rec.refseq) OR (last_end + 1 >= rec.transcription_end)) THEN
                 IF ((last_end + max_gap) >= rec.transcription_start) THEN should_merge := true;
                 ELSE
                     -- Note that none of the default implementations use span_repeats = True right now,
@@ -237,6 +220,13 @@ BEGIN
             row.gaps := gaps;
             row.ids := ids;
             
+            IF (row.transcription_end <= row.transcription_start) THEN
+                RAISE EXCEPTION 'Transcript end is less than transcript start for row ids %%!', row.ids;
+            END IF;
+            IF (row.tag_count <= 0) THEN
+                RAISE EXCEPTION 'Tag count is less than zero for row ids %%!', row.ids;
+            END IF;
+                
             IF finish_row THEN
                 RETURN NEXT row;
                 
@@ -309,9 +299,12 @@ RETURNS VOID AS $$
         LOOP
             IF rec IS NOT NULL THEN
                 -- Save the transcript.
+                
+                -- This transcript has been added for a single run, so we can set density
+                -- as simple tag_count/length.
                 IF use_for_scoring = true THEN
                     density := (density_multiplier*(rec.tag_count)::numeric)/
-                                    (rec.transcription_end - rec.transcription_start)::numeric;
+                                    (rec.transcription_end - rec.transcription_start + 1)::numeric;
                 ELSE density := 0;
                 END IF;
                 
@@ -328,7 +321,7 @@ RETURNS VOID AS $$
                 
                 -- Save the record of the sequencing run source
                 EXECUTE 'INSERT INTO glass_atlas_%s_%s_prep.glass_transcript_source_' || rec.chromosome_id || '
-                    (chromosome_id, "glass_transcript_id", "sequencing_run_id", "tag_count", "gaps", "refseq") 
+                    (chromosome_id, "glass_transcript_id", "sequencing_run_id", "tag_count", "gaps") 
                     VALUES (' || transcript.chromosome_id || ', ' || transcript.id || ', ' || seq_run_id || ', 
                     ' || rec.tag_count || ', ' || rec.gaps || ')';
 
@@ -381,24 +374,46 @@ RETURNS VOID AS $$
 END;
 $$ LANGUAGE 'plpgsql';
 
-CREATE OR REPLACE FUNCTION glass_atlas_%s_%s_prep.set_density(chr_id integer, allowed_edge integer, edge_scaling_factor integer, density_multiplier integer, allow_extended_gaps boolean, null_only boolean)
+CREATE OR REPLACE FUNCTION glass_atlas_%s_%s_prep.set_density(chr_id integer, 
+                                        allowed_edge integer, edge_scaling_factor integer, 
+                                        density_multiplier integer, allow_extended_gaps boolean)
 RETURNS VOID AS $$
 DECLARE
-    where_clause text;
+    table_name text;
 BEGIN
-    IF null_only = true THEN where_clause := 'density_circle IS NULL';
-    ELSE where_clause := '1=1';
-    END IF;
+    -- Use temp tables to speed up processing.
+    table_name := 'set_density_' || chr_id || '_' || (1000*RANDOM())::int;
+    
+    EXECUTE 'CREATE TEMP TABLE ' || table_name || '
+        as SELECT t.id, GREATEST(0,(' || density_multiplier || '*sum(source.tag_count)::numeric)
+                                        /(count(source.sequencing_run_id)*
+                                        (t.transcription_end - t.transcription_start + 1)::numeric)) as density
+        FROM glass_atlas_%s_%s_prep.glass_transcript_' || chr_id || ' t,
+            glass_atlas_%s_%s_prep.glass_transcript_source_' || chr_id || ' source
+        WHERE t.id = source.glass_transcript_id
+        GROUP BY t.id, t.transcription_start, t.transcription_end';
+        
+    EXECUTE 'UPDATE glass_atlas_%s_%s_prep.glass_transcript_' || chr_id || ' t
+        SET density = temp.density
+            FROM ' || table_name || ' temp
+        WHERE t.id = temp.id';
+
+    
+    -- Ditto for overlapping edge.
+    EXECUTE 'CREATE TEMP TABLE ' || table_name || '_2
+        as SELECT t.id,
+                glass_atlas_%s_%s_prep.get_allowed_edge(t.*,
+                    ' || allowed_edge || ',' || edge_scaling_factor || ', ' || allow_extended_gaps || ') as edge
+        FROM glass_atlas_%s_%s_prep.glass_transcript_' || chr_id || ' t';
+
+    EXECUTE 'UPDATE glass_atlas_%s_%s_prep.glass_transcript_' || chr_id || ' t
+        SET edge = temp.edge
+            FROM ' || table_name || '_2 temp
+        WHERE t.id = temp.id';
     
     EXECUTE 'UPDATE glass_atlas_%s_%s_prep.glass_transcript_' || chr_id || ' t 
-             SET density_circle = circle(point(transcription_end,  
-                glass_atlas_%s_%s_prep.get_density(t.*, ' || density_multiplier || ')::numeric), 
-                glass_atlas_%s_%s_prep.get_allowed_edge(t.*,
-                    glass_atlas_%s_%s_prep.get_density(t.*, ' || density_multiplier || ')::numeric,
-                    ' || allowed_edge || ',' || edge_scaling_factor || ', ' || allow_extended_gaps || ')),
-             start_density = point(transcription_start,glass_atlas_%s_%s_prep.get_density(t.*, '  
-            || density_multiplier || ')::numeric) 
-             WHERE ' || where_clause;
+             SET density_circle = circle(point(t.transcription_end, t.density), t.edge),
+                 start_density = point(t.transcription_start,t.density)';
 END;
 $$ LANGUAGE 'plpgsql';
 
@@ -432,7 +447,7 @@ BEGIN
 END;
 $$ LANGUAGE 'plpgsql';
 
-""" % tuple([genome, cell_type]*50)
+""" % tuple([genome, cell_type]*48)
 
 if __name__ == '__main__':
     print sql(genome, cell_type)

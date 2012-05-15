@@ -8,6 +8,7 @@ from glasslab.sequencing.datatypes.tag import GlassTag
 from glasslab.utils.scripting import GlassOptionParser
 from optparse import make_option
 from glasslab.config import current_settings
+from glasslab.utils.database import restart_server
 
 class TranscriptsFromTagsParser(GlassOptionParser):
     options = [
@@ -19,12 +20,17 @@ class TranscriptsFromTagsParser(GlassOptionParser):
                            help='Optional name to be used as schema for created DB tables.'),
                make_option('-o', '--output_dir',action='store', type='string', dest='output_dir',  
                            help='Output directory for bed file.'),
+               make_option('-p','--processes',action='store', dest='processes', default=None,  
+                           help='How many processes can be used?'),
+               make_option('--stitch_processes',action='store', dest='stitch_processes', default=None,  
+                           help='How many processes can be used during stitching, which is memory-intensive?'),
+               
                make_option('--remove_rogue_run',action='store_true', dest='remove_rogue_run',  
                            help='Should the records from this run be removed?'),
                make_option('--stitch',action='store_true', dest='stitch',  
                            help='Should transcripts be stitched together?'),
                make_option('--set_density',action='store_true', dest='set_density',  
-                           help='Should the stitching together of transcripts be replaced with forcing reset of average tags?'),
+                           help='Set density? Performed with tag stitching, or separately if --stitch=False.'),
                make_option('--draw_edges',action='store_true', dest='draw_edges',  
                            help='Should the edges between transcripts be created and saved?'),
                make_option('--reset_score_thresholds',action='store_true', dest='reset_score_thresholds',  
@@ -46,9 +52,13 @@ if __name__ == '__main__':
     options, args = parser.parse_args()
     
     run_from_cammand_line = True 
+    
     if not run_from_cammand_line:
         options.schema_name = 'thiomac_groseq_nathan_2010_10'
         options.tag_table = 'tag_ncor_ko_kla_1h'
+    
+    if options.processes:
+        current_settings.ALLOWED_PROCESSES = int(options.processes)
     
     if options.cell_type: current_settings.CURRENT_CELL_TYPE = options.cell_type
     cell_base = CellTypeBase().get_cell_type_base(current_settings.CURRENT_CELL_TYPE)()
@@ -69,10 +79,20 @@ if __name__ == '__main__':
         cell_base.glass_transcript.force_vacuum_prep()
     
     if options.stitch:
+        if options.stitch_processes:
+            curr_processes = current_settings.ALLOWED_PROCESSES 
+            current_settings.ALLOWED_PROCESSES = int(options.stitch_processes)
+    
         cell_base.glass_transcript.stitch_together_transcripts(
-                        allow_extended_gaps=allow_extended_gaps, set_density=True)
+                        allow_extended_gaps=allow_extended_gaps, set_density=options.set_density)
         cell_base.glass_transcript.force_vacuum_prep()
-    if options.set_density:
+    
+        if options.stitch_processes:
+            current_settings.ALLOWED_PROCESSES = curr_processes
+    
+        print 'Restarting server...'
+        restart_server()
+    elif options.set_density:
         cell_base.glass_transcript.set_density(allow_extended_gaps=allow_extended_gaps)
         cell_base.glass_transcript.force_vacuum_prep()
     

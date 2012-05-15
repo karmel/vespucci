@@ -149,13 +149,13 @@ BEGIN
             -- Conditionally allow extended gaps in sequence regions
             IF allow_extended_gaps = true THEN
                 -- Should this gap be considered in light of an overlapping sequence?
-                overlapping_length := (SELECT (reg.transcription_end - reg.transcription_start) 
+                overlapping_length := (SELECT (reg.transcription_end - reg.transcription_start + 1) 
                                     FROM genome_reference_mm9.sequence_transcription_region reg
                                     WHERE reg.chromosome_id = chr_id
                                         AND reg.strand = rec.strand
                                         AND reg.start_end @>
                                             public.make_box(last_end, 0, rec.transcription_start, 0)
-                                    ORDER BY (reg.transcription_end - reg.transcription_start) DESC
+                                    ORDER BY (reg.transcription_end - reg.transcription_start + 1) DESC
                                     LIMIT 1);
                 -- Allow up to a fifth of the sequence as a gap
                 length_gap := (overlapping_length::float*.2)::integer;
@@ -355,8 +355,8 @@ BEGIN
                         SQRT((SUM(source.tag_count - source.polya_count)::numeric/' || total_runs || ')
                         *MAX(source.tag_count - source.polya_count)::numeric)
                         /LEAST(
-                            GREATEST(1000, transcribed_rna.transcription_end - transcribed_rna.transcription_start)::numeric/1000,
-                            2*LOG(transcribed_rna.transcription_end - transcribed_rna.transcription_start)
+                            GREATEST(1000, transcribed_rna.transcription_end - transcribed_rna.transcription_start + 1)::numeric/1000,
+                            2*LOG(transcribed_rna.transcription_end - transcribed_rna.transcription_start + 1)
                             )
                     ) as score
                 FROM glass_atlas_%s_%s_rna.glass_transcribed_rna_' || chr_id || ' transcribed_rna 

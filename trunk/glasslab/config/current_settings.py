@@ -31,3 +31,10 @@ CURRENT_CELL_TYPE = 'ThioMac'
 #####################################
 ALLOWED_PROCESSES = 6
 CHR_LISTS = None # Dynamically set during processing
+
+#####################################
+# Compute resources
+#####################################
+# Used to log in as postgres user. Note that authorized keys must be set up!
+PG_ACCESS_CMD = 'ssh postgres@glass.bioinforma.tc' 
+PG_HOME = '/Library/PostgreSQL/9.1'
