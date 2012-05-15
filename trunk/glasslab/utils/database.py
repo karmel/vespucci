@@ -7,6 +7,7 @@ from django.db import transaction, connections
 from subprocess import check_call, check_output
 from glasslab.config import current_settings
 import subprocess
+import datetime
 
 def execute_query(query, using='default'):
     connection = connections[using]
@@ -54,11 +55,19 @@ def restart_server():
                                             current_settings.PG_ACCESS_CMD, 
                                             current_settings.PG_HOME), shell=True)
     
-    '''
-    @todo: why doesn't this work? Can't see the pid for some reason?
-    status = check_output('{0} "{1}/bin/pg_ctl status -D {1}/data/"'.format(
+    
+    server_is_starting = datetime.datetime.now()
+    while server_is_starting:
+        try:
+            status = check_output('{0} "{1}/bin/pg_ctl status -D {1}/data/"'.format(
                                             current_settings.PG_ACCESS_CMD, 
                                             current_settings.PG_HOME), shell=True)
+            server_is_starting = False
+        except subprocess.CalledProcessError:
+            if (datetime.datetime.now() - server_is_starting).seconds > 5*60:
+                server_is_starting = False
+                raise Exception('Could not restart server after 5 minutes. Please investigate.')
+            
     if status.find('server is running') < 0: 
         raise Exception('Could not restart server! Status of server:\n{0}'.format(status))
-    '''
+    
