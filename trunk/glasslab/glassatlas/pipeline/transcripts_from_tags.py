@@ -79,6 +79,9 @@ if __name__ == '__main__':
         cell_base.glass_transcript.force_vacuum_prep()
     
     if options.stitch:
+        print 'Restarting server...'
+        restart_server()
+
         if options.stitch_processes:
             curr_processes = current_settings.ALLOWED_PROCESSES 
             current_settings.ALLOWED_PROCESSES = int(options.stitch_processes)
