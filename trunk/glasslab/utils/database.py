@@ -34,8 +34,10 @@ def fetch_rows(query, return_cursor=False, using='default'):
     connection.close()
     cursor = connection.cursor()
     cursor.execute(query)
-    if return_cursor: return cursor.fetchall(), cursor
-    return cursor.fetchall()
+    result = cursor.fetchall()
+    if return_cursor: return result, cursor
+    connection.close()
+    return result
 
 def restart_server():
     '''

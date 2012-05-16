@@ -5,7 +5,7 @@ Created on Nov 8, 2010
 '''
 from __future__ import division
 from glasslab.config import current_settings
-from django.db import models, connection
+from django.db import models, connection, utils
 from glasslab.utils.datatypes.genome_reference import Chromosome,\
     SequenceTranscriptionRegion, PatternedTranscriptionRegion,\
     ConservedTranscriptionRegion, NonCodingTranscriptionRegion,\
@@ -16,10 +16,10 @@ from glasslab.sequencing.datatypes.tag import multiprocess_glass_tags,\
 from glasslab.utils.datatypes.basic_model import BoxField, GlassModel
 from multiprocessing import Pool
 from glasslab.utils.database import execute_query,\
-    execute_query_without_transaction
+    execute_query_without_transaction, fetch_rows
 import os
 from random import randint
-from django.db.models.aggregates import Count, Max, Sum
+from django.db.models.aggregates import Max, Sum
 from datetime import datetime
 
 # The tags returned from the sequencing run are shorter than we know them to be biologically
@@ -41,16 +41,31 @@ def multiprocess_all_chromosomes(func, cls, *args):
     p = Pool(processes)
     
     if not current_settings.CHR_LISTS:
-        connection.close()
         try:
-            all_chr = Chromosome.objects.values('id').annotate(
-                            row_count=Count(cls.cell_base.glass_transcript_prep.__name__.lower())
-                                    ).order_by('-row_count').filter(row_count__gt=0)
-            all_chr = [c['id'] for c in all_chr]
+            try:
+                all_chr = fetch_rows('''
+                    SELECT chromosome_id as id
+                    FROM "%s" 
+                    GROUP BY chromosome_id ORDER BY COUNT(id) DESC;''' % cls._meta.db_table)
+            except utils.DatabaseError:
+                # Prep table instead?
+                all_chr = fetch_rows('''
+                    SELECT chromosome_id as id
+                    FROM "%s" 
+                    GROUP BY chromosome_id ORDER BY COUNT(id) DESC;''' % cls.cell_base.glass_transcript_prep._meta.db_table)
+            
+            print all_chr
+            
+            all_chr = zip(*all_chr)[0]
             if not all_chr: raise Exception
+        
         except Exception:
+            raise
             # cls in question does not have explicit relation to chromosomes; get all
-            all_chr = Chromosome.objects.order_by('?').values_list('id', flat=True)
+            all_chr = fetch_rows('''
+                SELECT DISTINCT id
+                FROM "%s" ;''' % Chromosome._meta.db_table)
+            all_chr = zip(*all_chr)[0]
 
         # Chromosomes are sorted by count descending, so we want to snake them
         # back and forth to create even-ish groups. 
@@ -61,7 +76,7 @@ def multiprocess_all_chromosomes(func, cls, *args):
         
         # Reverse every other group to even out memory requirements.
         for i, chr_set in enumerate(chr_sets):
-            if i % 2 == 1: chr_set.reverse()
+            if i % 2 == 0: chr_set.reverse()
             
         current_settings.CHR_LISTS = chr_sets
         print 'Determined chromosome sets:\n%s' % str(current_settings.CHR_LISTS)
@@ -221,14 +236,12 @@ class TranscriptionRegionBase(TranscriptModelBase):
         print 'Vacuum analyzing prep tables.'
         for model in [cls.cell_base.glass_transcript_prep, cls.cell_base.glass_transcript_source_prep]:
             execute_query_without_transaction('VACUUM ANALYZE "%s";' % (model._meta.db_table))
+        multiprocess_all_chromosomes(wrap_force_vacuum, cls)
         
     @classmethod        
     def _force_vacuum(cls, chr_list):
         for chr_id in chr_list:
-            execute_query_without_transaction('VACUUM ANALYZE "%s_%d";' % (
-                                                                    cls.cell_base.glass_transcript._meta.db_table, 
-                                                                    chr_id))
-            
+            print 'Vacuum analyzing chromosome partitions for chr %d' % chr_id
             execute_query_without_transaction('VACUUM ANALYZE "%s_%d";' % (
                                                                     cls.cell_base.glass_transcript_prep._meta.db_table, 
                                                                     chr_id))
