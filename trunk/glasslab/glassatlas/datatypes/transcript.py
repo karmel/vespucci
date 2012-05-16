@@ -11,8 +11,7 @@ from glasslab.utils.datatypes.genome_reference import Chromosome,\
     ConservedTranscriptionRegion, NonCodingTranscriptionRegion,\
     DupedTranscriptionRegion
 from glasslab.glassatlas.datatypes.metadata import SequencingRun
-from glasslab.sequencing.datatypes.tag import multiprocess_glass_tags,\
-    wrap_errors
+from glasslab.sequencing.datatypes.tag import wrap_errors
 from glasslab.utils.datatypes.basic_model import BoxField, GlassModel
 from multiprocessing import Pool
 from glasslab.utils.database import execute_query,\
@@ -33,7 +32,7 @@ EDGE_SCALING_FACTOR = 20 # Number of transcripts per DENSITY_MULTIPLIER bp requi
 DENSITY_MULTIPLIER = 1000 # Scaling factor on density-- think of as bps worth of tags to consider
 MIN_SCORE = 4 # Hide transcripts with scores below this threshold.
 
-def multiprocess_all_chromosomes(func, cls, *args):
+def multiprocess_all_chromosomes(func, cls, *args, **kwargs):
     ''' 
     Convenience method for splitting up queries based on glass tag id.
     '''
@@ -43,11 +42,12 @@ def multiprocess_all_chromosomes(func, cls, *args):
     if not current_settings.CHR_LISTS:
         try:
             try:
+                # Note that we accept a kwarg use_table
                 all_chr = fetch_rows('''
                     SELECT chromosome_id as id
                     FROM "%s" 
                     GROUP BY chromosome_id ORDER BY COUNT(chromosome_id) DESC;''' 
-                                    % cls._meta.db_table)
+                                    % kwargs.get('use_table',None) or cls._meta.db_table)
             except utils.DatabaseError:
                 # Prep table instead?
                 all_chr = fetch_rows('''
@@ -303,7 +303,8 @@ class GlassTranscript(TranscriptBase):
     ################################################
     @classmethod 
     def add_transcripts_from_groseq(cls,  tag_table, sequencing_run):
-        multiprocess_glass_tags(wrap_add_transcripts_from_groseq, cls, sequencing_run)
+        multiprocess_all_chromosomes(wrap_add_transcripts_from_groseq, cls, 
+                                     sequencing_run, use_table=tag_table)
          
     @classmethod
     def _add_transcripts_from_groseq(cls, chr_list, sequencing_run):
