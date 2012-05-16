@@ -8,30 +8,13 @@ from django.db import models, utils, connection
 from glasslab.utils.datatypes.genome_reference import SequenceTranscriptionRegion,\
     NonCodingTranscriptionRegion, PatternedTranscriptionRegion, SequenceExon,\
     ConservedTranscriptionRegion, Chromosome
-from multiprocessing import Pool
 import traceback
 from glasslab.config import current_settings
 from glasslab.utils.datatypes.basic_model import DynamicTable, BoxField
 from glasslab.glassatlas.datatypes.metadata import SequencingRun
-from glasslab.utils.database import execute_query, fetch_rows
+from glasslab.utils.database import execute_query
 import re
-
-def multiprocess_glass_tags(func, cls, *args):
-    ''' 
-    Convenience method for splitting up queries based on glass tag id.
-    '''
-    total_count = len(GlassTag.chromosomes())
-    processes = current_settings.ALLOWED_PROCESSES
-    p = Pool(processes)
-    # Chromosomes are sorted by count descending, so we want to interleave them
-    # in order to create even-ish groups.
-    chr_lists = [[GlassTag.chromosomes()[x] for x in xrange(i,total_count,processes)] 
-                                for i in xrange(0,processes)]
-    print chr_lists
-    for chr_list in chr_lists:
-        p.apply_async(func, args=[cls, chr_list,] + list(args))
-    p.close()
-    p.join()
+from glasslab.glassatlas.datatypes.transcript import multiprocess_all_chromosomes
 
 # The following methods wrap bound methods. This is necessary
 # for use with multiprocessing. Note that getattr with dynamic function names
@@ -65,44 +48,7 @@ def set_all_tag_table_names(base_table_name):
 class GlassSequencingOutput(DynamicTable):
     '''
     Parent class for tags and peaks.
-    '''
-    _chromosomes = None
-    @classmethod 
-    def chromosomes(cls): 
-        #return list(xrange(1,23))
-        if not cls._chromosomes:
-            if cls._meta.db_table:
-                chr_sql = """
-                    SELECT chromosome_id FROM "%s" tag
-                    GROUP BY chromosome_id
-                    ORDER BY count(chromosome_id) DESC;
-                    """ % (cls._meta.db_table)
-                rows = fetch_rows(chr_sql)
-                if rows:
-                    cls._chromosomes = zip(*rows)[0]
-            
-            if not cls._chromosomes and cls.bowtie_table:
-                # Tag table doesn't exist yet
-                chr_sql = """
-                SELECT chr.id FROM "%s" chr
-                JOIN (
-                    SELECT chromosome, count(chromosome) 
-                    FROM "%s" 
-                    GROUP BY chromosome
-                ) derived
-                ON chr.name = derived.chromosome
-                ORDER BY derived.count DESC;
-                """ % (Chromosome._meta.db_table, cls.bowtie_table)
-                rows = fetch_rows(chr_sql)
-                cls._chromosomes = zip(*rows)[0]
-            elif not cls._chromosomes:
-                chr_sql = """
-                SELECT id FROM "%s";
-                """ % (Chromosome._meta.db_table)
-                rows = fetch_rows(chr_sql)
-                cls._chromosomes = zip(*rows)[0]
-        return cls._chromosomes
-    
+    '''    
     class Meta: abstract = True
     
     @classmethod
@@ -165,7 +111,8 @@ class GlassTag(GlassSequencingOutput):
     
     '''
     bowtie_table = None
-
+    prep_table = None # For queries for chromosomes
+    
     chromosome              = models.ForeignKey(Chromosome)
     strand                  = models.IntegerField(max_length=1)
     start                   = models.IntegerField(max_length=12)
@@ -175,6 +122,7 @@ class GlassTag(GlassSequencingOutput):
     
     refseq                  = models.NullBooleanField(default=None)
     
+     
     @classmethod        
     def create_bowtie_table(cls, name):
         '''
@@ -195,7 +143,8 @@ class GlassTag(GlassSequencingOutput):
     @classmethod 
     def set_bowtie_table(cls, name): 
         cls.bowtie_table = '%s"."%s' % (current_settings.CURRENT_SCHEMA, name)
-
+        cls.prep_table = cls.bowtie_table
+        
     @classmethod                
     def create_parent_table(cls, name):
         '''
@@ -302,7 +251,7 @@ class GlassTag(GlassSequencingOutput):
     
     @classmethod
     def translate_from_bowtie(cls):
-        multiprocess_glass_tags(wrap_translate_from_bowtie, cls)
+        multiprocess_all_chromosomes(wrap_translate_from_bowtie, cls)
         
     @classmethod
     def _translate_from_bowtie(cls, chr_list):
@@ -327,7 +276,7 @@ class GlassTag(GlassSequencingOutput):
             execute_query(update_query)
     @classmethod
     def delete_tags(cls):
-        multiprocess_glass_tags(wrap_delete_tags, cls)
+        multiprocess_all_chromosomes(wrap_delete_tags, cls)
         
     @classmethod
     def _delete_tags(cls, chr_list):
@@ -363,7 +312,7 @@ class GlassTag(GlassSequencingOutput):
                     
     @classmethod
     def set_start_end_box(cls):
-        multiprocess_glass_tags(wrap_set_start_end_box, cls)
+        multiprocess_all_chromosomes(wrap_set_start_end_box, cls)
         
     @classmethod
     def _set_start_end_box(cls, chr_list):
@@ -378,7 +327,7 @@ class GlassTag(GlassSequencingOutput):
     
     @classmethod
     def set_refseq(cls):
-        multiprocess_glass_tags(wrap_set_refseq, cls)
+        multiprocess_all_chromosomes(wrap_set_refseq, cls)
         
     @classmethod
     def _set_refseq(cls, chr_list):
@@ -419,7 +368,7 @@ class GlassTag(GlassSequencingOutput):
 
     @classmethod
     def add_indices(cls):
-        multiprocess_glass_tags(wrap_add_indices, cls)
+        multiprocess_all_chromosomes(wrap_add_indices, cls)
         
     @classmethod
     def _add_indices(cls, chr_list):
@@ -538,7 +487,7 @@ class GlassTagTranscriptionRegionTable(DynamicTable):
     
     @classmethod
     def insert_matching_tags(cls):
-        multiprocess_glass_tags(wrap_insert_matching_tags, cls)
+        multiprocess_all_chromosomes(wrap_insert_matching_tags, cls)
     
     @classmethod 
     def _insert_matching_tags(cls, chr_list):
@@ -659,7 +608,7 @@ class GlassTagSequence(GlassTagTranscriptionRegionTable):
           
     @classmethod  
     def update_start_site_tags(cls):
-        multiprocess_glass_tags(wrap_update_start_site_tags, cls)
+        multiprocess_all_chromosomes(wrap_update_start_site_tags, cls)
         
     @classmethod  
     def _update_start_site_tags(cls, chr_list):
@@ -688,7 +637,7 @@ class GlassTagSequence(GlassTagTranscriptionRegionTable):
         
     @classmethod  
     def update_exon_tags(cls):
-        multiprocess_glass_tags(wrap_update_exon_tags, cls)
+        multiprocess_all_chromosomes(wrap_update_exon_tags, cls)
 
     @classmethod  
     def _update_exon_tags(cls, chr_list):

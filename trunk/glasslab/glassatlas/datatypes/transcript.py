@@ -46,15 +46,16 @@ def multiprocess_all_chromosomes(func, cls, *args):
                 all_chr = fetch_rows('''
                     SELECT chromosome_id as id
                     FROM "%s" 
-                    GROUP BY chromosome_id ORDER BY COUNT(id) DESC;''' % cls._meta.db_table)
+                    GROUP BY chromosome_id ORDER BY COUNT(chromosome_id) DESC;''' 
+                                    % cls._meta.db_table)
             except utils.DatabaseError:
                 # Prep table instead?
                 all_chr = fetch_rows('''
                     SELECT chromosome_id as id
                     FROM "%s" 
-                    GROUP BY chromosome_id ORDER BY COUNT(id) DESC;''' % cls.cell_base.glass_transcript_prep._meta.db_table)
-            
-            print all_chr
+                    GROUP BY chromosome_id ORDER BY COUNT(chromosome_id) DESC;''' 
+                                    % getattr(cls,'prep_table',None)
+                                        or cls.cell_base.glass_transcript_prep._meta.db_table)
             
             all_chr = zip(*all_chr)[0]
             if not all_chr: raise Exception
