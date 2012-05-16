@@ -8,6 +8,7 @@ from subprocess import check_call, check_output
 from glasslab.config import current_settings
 import subprocess
 import datetime
+from psycopg2 import OperationalError
 
 def execute_query(query, using='default'):
     connection = connections[using]
@@ -50,12 +51,16 @@ def restart_server():
     
     Notably, because we are restarting a daemon process, we have to 
     redirect all output into dev/null, or else the cursor doesn't return.
+    
+    We want to check first that the server knows it has restarted, and
+    then that it can actually accept incoming queries.
     '''
     check_call('{0} "{1}/bin/pg_ctl restart -D {1}/data/ </dev/null >/dev/null 2>&1 &"'.format(
                                             current_settings.PG_ACCESS_CMD, 
                                             current_settings.PG_HOME), shell=True)
     
-    
+    # Make sure everything went as planned
+    time_to_wait = 5*60
     server_is_starting = datetime.datetime.now()
     while server_is_starting:
         try:
@@ -64,10 +69,22 @@ def restart_server():
                                             current_settings.PG_HOME), shell=True)
             server_is_starting = False
         except subprocess.CalledProcessError:
-            if (datetime.datetime.now() - server_is_starting).seconds > 5*60:
+            if (datetime.datetime.now() - server_is_starting).seconds > time_to_wait:
                 server_is_starting = False
-                raise Exception('Could not restart server after 5 minutes. Please investigate.')
-            
+                raise Exception('Could not restart server after {0} seconds. Please investigate.'.format(time_to_wait))
+    
     if status.find('server is running') < 0: 
         raise Exception('Could not restart server! Status of server:\n{0}'.format(status))
+    
+    # And we have to wait for the server to actually be up and running!
+    server_is_starting = datetime.datetime.now()
+    while server_is_starting:
+        try:
+            fetch_rows('SELECT * FROM pg_stat_activity;')
+            server_is_starting = False
+        except OperationalError:
+            if (datetime.datetime.now() - server_is_starting).seconds > time_to_wait:
+                server_is_starting = False
+                raise Exception('Could not run query on server after {0} seconds. Please investigate.'.format(time_to_wait))
+            
     

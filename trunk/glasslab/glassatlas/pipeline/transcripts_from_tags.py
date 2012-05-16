@@ -52,7 +52,7 @@ if __name__ == '__main__':
     options, args = parser.parse_args()
     
     run_from_cammand_line = True 
-    
+    restart_server()
     if not run_from_cammand_line:
         options.schema_name = 'thiomac_groseq_nathan_2010_10'
         options.tag_table = 'tag_ncor_ko_kla_1h'
