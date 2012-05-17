@@ -11,7 +11,6 @@ from glasslab.utils.datatypes.genome_reference import Chromosome,\
     ConservedTranscriptionRegion, NonCodingTranscriptionRegion,\
     DupedTranscriptionRegion
 from glasslab.glassatlas.datatypes.metadata import SequencingRun
-from glasslab.sequencing.datatypes.tag import wrap_errors
 from glasslab.utils.datatypes.basic_model import BoxField, GlassModel
 from multiprocessing import Pool
 from glasslab.utils.database import execute_query,\
@@ -20,6 +19,7 @@ import os
 from random import randint
 from django.db.models.aggregates import Max, Sum
 from datetime import datetime
+import traceback
 
 # The tags returned from the sequencing run are shorter than we know them to be biologically
 # We can therefore extend the mapped tag region by a set number of bp if an extension is passed in
@@ -47,15 +47,15 @@ def multiprocess_all_chromosomes(func, cls, *args, **kwargs):
                     SELECT chromosome_id as id
                     FROM "%s" 
                     GROUP BY chromosome_id ORDER BY COUNT(chromosome_id) DESC;''' 
-                                    % kwargs.get('use_table',None) or cls._meta.db_table)
+                                    % (kwargs.get('use_table',None) or cls._meta.db_table))
             except utils.DatabaseError:
                 # Prep table instead?
                 all_chr = fetch_rows('''
                     SELECT chromosome_id as id
                     FROM "%s" 
                     GROUP BY chromosome_id ORDER BY COUNT(chromosome_id) DESC;''' 
-                                    % getattr(cls,'prep_table',None)
-                                        or cls.cell_base.glass_transcript_prep._meta.db_table)
+                                    % (getattr(cls,'prep_table',None)
+                                        or cls.cell_base.glass_transcript_prep._meta.db_table))
             
             all_chr = zip(*all_chr)[0]
             if not all_chr: raise Exception
@@ -86,7 +86,16 @@ def multiprocess_all_chromosomes(func, cls, *args, **kwargs):
         p.apply_async(func, args=[cls, chr_list,] + list(args))
     p.close()
     p.join()
-    
+
+# The following methods wrap bound methods. This is necessary
+# for use with multiprocessing. Note that getattr with dynamic function names
+# doesn't seem to work either.
+def wrap_errors(func, *args):
+    try: func(*args)
+    except Exception:
+        print 'Encountered exception in wrapped function:\n%s' % traceback.format_exc()
+        raise
+   
 def wrap_add_transcripts_from_groseq(cls, chr_list, *args): wrap_errors(cls._add_transcripts_from_groseq, chr_list, *args)
 def wrap_remove_rogue_run(cls, chr_list): wrap_errors(cls._remove_rogue_run, chr_list)
 

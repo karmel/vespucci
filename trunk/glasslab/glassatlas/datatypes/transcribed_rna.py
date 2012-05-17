@@ -5,9 +5,7 @@ Created on Dec 16, 2010
 '''
 from glasslab.config import current_settings
 from glasslab.glassatlas.datatypes.transcript import TranscriptionRegionBase, \
-    multiprocess_all_chromosomes, TranscriptSourceBase, MAX_GAP, TAG_EXTENSION
-    
-from glasslab.sequencing.datatypes.tag import multiprocess_glass_tags,\
+    multiprocess_all_chromosomes, TranscriptSourceBase, MAX_GAP, TAG_EXTENSION,\
     wrap_errors
 from glasslab.utils.database import execute_query
 from django.db import models
@@ -36,7 +34,8 @@ class GlassTranscribedRna(TranscriptionRegionBase):
     ################################################            
     @classmethod 
     def add_transcribed_rna_from_rnaseq(cls,  tag_table, sequencing_run):
-        multiprocess_glass_tags(wrap_add_transcribed_rna_from_rnaseq, cls, sequencing_run)
+        multiprocess_all_chromosomes(wrap_add_transcribed_rna_from_rnaseq, cls, sequencing_run,
+                                     use_table=tag_table)
         
     @classmethod
     def _add_transcribed_rna_from_rnaseq(cls, chr_list, sequencing_run):

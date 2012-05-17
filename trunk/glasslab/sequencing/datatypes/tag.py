@@ -8,22 +8,14 @@ from django.db import models, utils, connection
 from glasslab.utils.datatypes.genome_reference import SequenceTranscriptionRegion,\
     NonCodingTranscriptionRegion, PatternedTranscriptionRegion, SequenceExon,\
     ConservedTranscriptionRegion, Chromosome
-import traceback
 from glasslab.config import current_settings
 from glasslab.utils.datatypes.basic_model import DynamicTable, BoxField
 from glasslab.glassatlas.datatypes.metadata import SequencingRun
 from glasslab.utils.database import execute_query
 import re
-from glasslab.glassatlas.datatypes.transcript import multiprocess_all_chromosomes
+from glasslab.glassatlas.datatypes.transcript import multiprocess_all_chromosomes,\
+    wrap_errors
 
-# The following methods wrap bound methods. This is necessary
-# for use with multiprocessing. Note that getattr with dynamic function names
-# doesn't seem to work either.
-def wrap_errors(func, *args):
-    try: func(*args)
-    except Exception:
-        print 'Encountered exception in wrapped function:\n%s' % traceback.format_exc()
-        raise
     
 def wrap_partition_tables(cls, chr_list): wrap_errors(cls._create_partition_tables, chr_list)
 def wrap_translate_from_bowtie(cls, chr_list): wrap_errors(cls._translate_from_bowtie, chr_list)
