@@ -61,37 +61,36 @@ DECLARE
     transcript glass_atlas_%s_%s_staging.glass_transcript;    
 BEGIN
         -- From prep tables, get close-enough transcripts
-    above_thresh_table = 'above_thresh_table_' || chr_id || '_' || (1000*RANDOM())::int;
+    above_thresh_table = 'above_thresh_table_' || chr_id || '_' || strand || '_' || (1000*RANDOM())::int;
         
     EXECUTE 'CREATE TEMP TABLE ' || above_thresh_table  || ' 
-        as SELECT t.id, t.strand, t.transcription_start, t.transcription_end, NULL as start_density
+        as SELECT t.id, t.strand, t.transcription_start, t.transcription_end, 
+                ''0,0,0''::circle as density_circle, point(0,0) as start_density
                 FROM  glass_atlas_%s_%s_prep.glass_transcript_' || chr_id || ' t
                 JOIN glass_atlas_%s_%s_prep.glass_transcript_source_' || chr_id || ' s
                     ON t.id = s.glass_transcript_id
                 WHERE t.strand = ' || strand || '
                 GROUP BY t.id, t.strand, t.transcription_start, t.transcription_end
-                -- Omit one-tag-wonders and one-run-transcripts
-                HAVING avg(s.tag_count) > 1 AND count(s.sequencing_run_id) > 1 
+                -- Omit one-tag-wonders and one-run wonders unless they have at least 5 tags
+                HAVING avg(s.tag_count) > 1 AND (count(s.sequencing_run_id) > 1 OR avg(s.tag_count) > 5)
             ';
-    EXECUTE 'UPDATE ' || above_thresh_table  || ' temp
-        SET start_density = t.start_density
+    EXECUTE 'UPDATE ' || above_thresh_table  || ' temp_t
+        SET density_circle = t.density_circle, 
+            start_density = t.start_density
         FROM glass_atlas_%s_%s_prep.glass_transcript_' || chr_id || ' t
-        WHERE t.id = temp.id';
+        WHERE t.id = temp_t.id';
+    EXECUTE 'CREATE INDEX ' || above_thresh_table || '_density_circle_idx ON ' || above_thresh_table || ' USING gist(density_circle)';
+    EXECUTE 'CREATE INDEX ' || above_thresh_table || '_start_density_idx ON ' || above_thresh_table || ' USING gist(start_density)';
         
     FOR trans IN 
-        EXECUTE 'SELECT t1.id, t1.strand, t1.transcription_start, t1.transcription_end, 
-                    GREATEST(max(t2.transcription_end), t1.transcription_end) as max_end,
-                    count(s.sequencing_run_id) as run_count
-            FROM glass_atlas_%s_%s_prep.glass_transcript_' || chr_id || ' t1
+        EXECUTE 'SELECT t1.id, t1.strand, t1.transcription_start, t1.transcription_end,
+                    GREATEST(max(t2.transcription_end), t1.transcription_end) as max_end
+            FROM ' || above_thresh_table  || ' t1
             LEFT OUTER JOIN ' || above_thresh_table  || ' t2 
             ON t1.density_circle @> t2.start_density 
                 AND t1.strand = t2.strand 
                 AND t1.transcription_start <= t2.transcription_start -- Omit upstream transcripts in the circle 
-            JOIN glass_atlas_%s_%s_prep.glass_transcript_source_' || chr_id || ' s
-                ON t1.id = s.glass_transcript_id
-            WHERE t1.strand = ' || strand || '
             GROUP by t1.id, t1.strand, t1.transcription_start, t1.transcription_end
-            HAVING sum(s.tag_count) > 1  -- Omit one-tag-wonders
             ORDER by t1.transcription_start ASC'
     LOOP
         IF trans.id IS NOT NULL THEN
@@ -100,12 +99,7 @@ BEGIN
             transcript.chromosome_id = chr_id;
             transcript.strand = trans.strand;
             transcript.transcription_start = trans.transcription_start;
-            -- Take max end unless this transcript only belongs to one run;
-            -- In that case, leave it as is.
-            IF trans.run_count > 1 THEN
-                transcript.transcription_end = trans.max_end;
-            ELSE transcript.transcription_end = trans.transcription_end;
-            END IF;
+            transcript.transcription_end = trans.max_end;
             
             RETURN NEXT transcript;
         END IF;
@@ -304,31 +298,6 @@ BEGIN
 END;
 $$ LANGUAGE 'plpgsql';
 
-CREATE OR REPLACE FUNCTION glass_atlas_%s_%s_staging.set_density(chr_id integer, density_multiplier integer)
-RETURNS VOID AS $$
-DECLARE
-    table_name text;
-BEGIN
-    -- Use temp tables to speed up processing.
-    table_name := 'set_density_' || chr_id || '_' || (1000*RANDOM())::int;
-    
-    EXECUTE 'CREATE TEMP TABLE ' || table_name || '
-        as SELECT t.id, GREATEST(0,(' || density_multiplier || '*sum(source.tag_count)::numeric)
-                                        /(count(source.sequencing_run_id)*
-                                        (t.transcription_end - t.transcription_start + 1)::numeric)) as density
-        FROM glass_atlas_%s_%s_staging.glass_transcript_' || chr_id || ' t,
-            glass_atlas_%s_%s_staging.glass_transcript_source_' || chr_id || ' source
-        WHERE t.id = source.glass_transcript_id
-        GROUP BY t.id, t.transcription_start, t.transcription_end';
-        
-    EXECUTE 'UPDATE glass_atlas_%s_%s_staging.glass_transcript_' || chr_id || ' t
-        SET density = temp.density
-            FROM ' || table_name || ' temp
-        WHERE t.id = temp.id';
-END;
-$$ LANGUAGE 'plpgsql';
-
-
 CREATE OR REPLACE FUNCTION glass_atlas_%s_%s_staging.mark_transcripts_spliced(chr_id integer, score_threshold numeric)
 RETURNS VOID AS $$
 BEGIN
@@ -343,7 +312,7 @@ END;
 $$ LANGUAGE 'plpgsql'; 
 
 
-""" % tuple([genome, cell_type]*57)
+""" % tuple([genome, cell_type]*51)
 
 if __name__ == '__main__':
     print sql(genome, cell_type)

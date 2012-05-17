@@ -396,15 +396,7 @@ class GlassTranscript(TranscriptBase):
                        current_settings.CURRENT_CELL_TYPE.lower(),
                        current_settings.STAGING,
                        chr_id)
-            execute_query(query)
-            #print 'Setting average tags for transcripts for chromosome %d' % chr_id
-            query = """
-                SELECT glass_atlas_%s_%s%s.set_density(%d, %d, %s);
-                """ % (current_settings.TRANSCRIPT_GENOME, 
-                       current_settings.CURRENT_CELL_TYPE.lower(),
-                       current_settings.STAGING,
-                       chr_id, DENSITY_MULTIPLIER, 'true')
-            #execute_query(query)            
+            execute_query(query)           
             
     @classmethod
     def set_scores(cls):
