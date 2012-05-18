@@ -298,7 +298,7 @@ class GlassTranscript(TranscriptBase):
     start_end_density   = BoxField(null=True, default=None, help_text='This is a placeholder for the PostgreSQL box type.')
     
     spliced             = models.NullBooleanField(default=None, help_text='Do we have RNA-Seq confirmation?')
-    deviation_score     = models.FloatField(null=True, default=None)
+    standard_error      = models.FloatField(null=True, default=None)
     score               = models.FloatField(null=True, default=None)
     
     modified        = models.DateTimeField(auto_now=True)
@@ -409,7 +409,7 @@ class GlassTranscript(TranscriptBase):
             print 'Scoring transcripts for chromosome %d' % chr_id
             query = """
                 SELECT glass_atlas_%s_%s%s.calculate_scores(%d);
-                SELECT glass_atlas_%s_%s%s.calculate_deviation_scores(%d);
+                SELECT glass_atlas_%s_%s%s.calculate_standard_error(%d);
                 """ % (current_settings.TRANSCRIPT_GENOME,
                        current_settings.CURRENT_CELL_TYPE.lower(),
                        current_settings.STAGING, chr_id,

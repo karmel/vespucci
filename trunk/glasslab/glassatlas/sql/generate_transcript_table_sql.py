@@ -19,7 +19,7 @@ CREATE TABLE "glass_atlas_%s_%s_staging"."glass_transcript" (
     "start_end" box DEFAULT NULL,
     "spliced" boolean DEFAULT NULL,
     "score" numeric DEFAULT NULL,
-    "deviation_score" numeric DEFAULT NULL,
+    "standard_error" numeric DEFAULT NULL,
     "modified" timestamp(6) NULL DEFAULT NULL,
     "created" timestamp(6) NULL DEFAULT NULL
 );
