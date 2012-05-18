@@ -12,38 +12,38 @@ def sql(genome, cell_type):
     return """
 -- Not run from within the codebase, but kept here in case functions need to be recreated.
 
-CREATE TYPE glass_atlas_%s_%s_rna.glass_transcribed_rna_row AS ("chromosome_id" integer, "strand" smallint, 
+CREATE TYPE glass_atlas_{0}_{1}_rna.glass_transcribed_rna_row AS ("chromosome_id" integer, "strand" smallint, 
     transcription_start bigint, transcription_end bigint, tag_count integer, gaps integer, polya_count integer, ids integer[]);
 
-CREATE OR REPLACE FUNCTION glass_atlas_%s_%s_rna.update_transcribed_rna_source_records(trans glass_atlas_%s_%s_rna.glass_transcribed_rna, old_id integer)
+CREATE OR REPLACE FUNCTION glass_atlas_{0}_{1}_rna.update_transcribed_rna_source_records(trans glass_atlas_{0}_{1}_rna.glass_transcribed_rna, old_id integer)
 RETURNS VOID AS $$
 BEGIN 
 	-- Update redundant records: those that already exist for the merge
-	UPDATE glass_atlas_%s_%s_rna.glass_transcribed_rna_source merged_assoc
+	UPDATE glass_atlas_{0}_{1}_rna.glass_transcribed_rna_source merged_assoc
 		SET tag_count = (merged_assoc.tag_count + trans_assoc.tag_count),
 			gaps = (merged_assoc.gaps + trans_assoc.gaps),
 			polya_count = (merged_assoc.polya_count + trans_assoc.polya_count)
-		FROM glass_atlas_%s_%s_rna.glass_transcribed_rna_source trans_assoc
+		FROM glass_atlas_{0}_{1}_rna.glass_transcribed_rna_source trans_assoc
 		WHERE merged_assoc.glass_transcribed_rna_id = trans.id
 			AND trans_assoc.glass_transcribed_rna_id = old_id
 			AND merged_assoc.sequencing_run_id = trans_assoc.sequencing_run_id;
 	-- UPDATE redundant records: those that don't exist for the merge
-	UPDATE glass_atlas_%s_%s_rna.glass_transcribed_rna_source
+	UPDATE glass_atlas_{0}_{1}_rna.glass_transcribed_rna_source
 		SET glass_transcribed_rna_id = trans.id
 		WHERE glass_transcribed_rna_id = old_id
 		AND sequencing_run_id 
 		NOT IN (SELECT sequencing_run_id 
-				FROM glass_atlas_%s_%s_rna.glass_transcribed_rna_source
+				FROM glass_atlas_{0}_{1}_rna.glass_transcribed_rna_source
 			WHERE glass_transcribed_rna_id = trans.id);
 	-- Delete those that remain for the removed transcribed_rna.
-	DELETE FROM glass_atlas_%s_%s_rna.glass_transcribed_rna_source
+	DELETE FROM glass_atlas_{0}_{1}_rna.glass_transcribed_rna_source
 		WHERE glass_transcribed_rna_id = old_id;
 	RETURN;
 END;
 $$ LANGUAGE 'plpgsql';
 			
-CREATE OR REPLACE FUNCTION glass_atlas_%s_%s_rna.merge_transcribed_rnas(merged_trans glass_atlas_%s_%s_rna.glass_transcribed_rna, trans glass_atlas_%s_%s_rna.glass_transcribed_rna)
-RETURNS glass_atlas_%s_%s_rna.glass_transcribed_rna AS $$
+CREATE OR REPLACE FUNCTION glass_atlas_{0}_{1}_rna.merge_transcribed_rnas(merged_trans glass_atlas_{0}_{1}_rna.glass_transcribed_rna, trans glass_atlas_{0}_{1}_rna.glass_transcribed_rna)
+RETURNS glass_atlas_{0}_{1}_rna.glass_transcribed_rna AS $$
 BEGIN 
 	-- Update the merged transcribed_rna
 	merged_trans.transcription_start := (SELECT LEAST(merged_trans.transcription_start, trans.transcription_start));
@@ -53,11 +53,11 @@ BEGIN
 END;
 $$ LANGUAGE 'plpgsql';
 
-CREATE OR REPLACE FUNCTION glass_atlas_%s_%s_rna.save_transcribed_rna(rec glass_atlas_%s_%s_rna.glass_transcribed_rna, density_multiplier integer)
+CREATE OR REPLACE FUNCTION glass_atlas_{0}_{1}_rna.save_transcribed_rna(rec glass_atlas_{0}_{1}_rna.glass_transcribed_rna, density_multiplier integer)
 RETURNS VOID AS $$
 BEGIN 	
 	-- Update record
-	EXECUTE 'UPDATE glass_atlas_%s_%s_rna.glass_transcribed_rna_' || rec.chromosome_id 
+	EXECUTE 'UPDATE glass_atlas_{0}_{1}_rna.glass_transcribed_rna_' || rec.chromosome_id 
 	|| ' SET'
 		|| ' strand = ' || rec.strand || ','
 		|| ' transcription_start = ' || rec.transcription_start || ','
@@ -71,31 +71,31 @@ BEGIN
 END;
 $$ LANGUAGE 'plpgsql';
 
-CREATE OR REPLACE FUNCTION glass_atlas_%s_%s_rna.determine_transcribed_rnas_from_sequencing_run(chr_id integer, strand integer, source_t text, max_gap integer, tag_extension integer, start_end box)
-RETURNS SETOF glass_atlas_%s_%s_rna.glass_transcribed_rna_row AS $$
+CREATE OR REPLACE FUNCTION glass_atlas_{0}_{1}_rna.determine_transcribed_rnas_from_sequencing_run(chr_id integer, strand integer, source_t text, max_gap integer, tag_extension integer, start_end box)
+RETURNS SETOF glass_atlas_{0}_{1}_rna.glass_transcribed_rna_row AS $$
 BEGIN 
 
-    RETURN QUERY SELECT * FROM glass_atlas_%s_%s_rna.determine_transcribed_rnas_from_table(chr_id, strand, source_t, max_gap, tag_extension,'', false, false, start_end);
+    RETURN QUERY SELECT * FROM glass_atlas_{0}_{1}_rna.determine_transcribed_rnas_from_table(chr_id, strand, source_t, max_gap, tag_extension,'', false, false, start_end);
 END;
 $$ LANGUAGE 'plpgsql';
 
-CREATE OR REPLACE FUNCTION glass_atlas_%s_%s_rna.determine_transcribed_rnas_from_existing(chr_id integer, strand integer, max_gap integer, allow_extended_gaps boolean)
-RETURNS SETOF glass_atlas_%s_%s_rna.glass_transcribed_rna_row AS $$
+CREATE OR REPLACE FUNCTION glass_atlas_{0}_{1}_rna.determine_transcribed_rnas_from_existing(chr_id integer, strand integer, max_gap integer, allow_extended_gaps boolean)
+RETURNS SETOF glass_atlas_{0}_{1}_rna.glass_transcribed_rna_row AS $$
 BEGIN 
-    RETURN QUERY SELECT * FROM glass_atlas_%s_%s_rna.determine_transcribed_rnas_from_table(chr_id, strand, 'glass_atlas_%s_%s_rna"."glass_transcribed_rna', max_gap, 0,'transcription_', true, allow_extended_gaps, NULL);
+    RETURN QUERY SELECT * FROM glass_atlas_{0}_{1}_rna.determine_transcribed_rnas_from_table(chr_id, strand, 'glass_atlas_{0}_{1}_rna"."glass_transcribed_rna', max_gap, 0,'transcription_', true, allow_extended_gaps, NULL);
 END;
 $$ LANGUAGE 'plpgsql';
 
-CREATE OR REPLACE FUNCTION glass_atlas_%s_%s_rna.determine_transcribed_rnas_from_table(
+CREATE OR REPLACE FUNCTION glass_atlas_{0}_{1}_rna.determine_transcribed_rnas_from_table(
         chr_id integer, strand integer, source_t text, max_gap integer, 
         tag_extension integer, field_prefix text, span_repeats boolean, allow_extended_gaps boolean,
         start_end box)
-RETURNS SETOF glass_atlas_%s_%s_rna.glass_transcribed_rna_row AS $$
+RETURNS SETOF glass_atlas_{0}_{1}_rna.glass_transcribed_rna_row AS $$
  DECLARE
     max_chrom_pos bigint;
     rec record;
     start_end_clause text := '';
-    row glass_atlas_%s_%s_rna.glass_transcribed_rna_row;
+    row glass_atlas_{0}_{1}_rna.glass_transcribed_rna_row;
     overlapping_length integer;
     length_gap integer;
     limit_gap integer := 1000;
@@ -111,7 +111,7 @@ RETURNS SETOF glass_atlas_%s_%s_rna.glass_transcribed_rna_row AS $$
 BEGIN 
     -- Tag extension can exceed the boundaries of the chromosome if we are not careful.
     -- Make sure to keep lengths in range.
-    max_chrom_pos := (SELECT (length - 1) FROM genome_reference_mm9.chromosome WHERE id = chr_id);
+    max_chrom_pos := (SELECT (length - 1) FROM genome_reference_{0}.chromosome WHERE id = chr_id);
     
     -- IF a start_end is passed, use that to limit transcribed_rnas
     IF start_end IS NOT NULL THEN
@@ -150,7 +150,7 @@ BEGIN
             IF allow_extended_gaps = true THEN
                 -- Should this gap be considered in light of an overlapping sequence?
                 overlapping_length := (SELECT (reg.transcription_end - reg.transcription_start + 1) 
-                                    FROM genome_reference_mm9.sequence_transcription_region reg
+                                    FROM genome_reference_{0}.sequence_transcription_region reg
                                     WHERE reg.chromosome_id = chr_id
                                         AND reg.strand = rec.strand
                                         AND reg.start_end @>
@@ -170,7 +170,7 @@ BEGIN
 			    IF span_repeats = true THEN
     			    -- Should this gap be considered in light of an overlapping repeat region?
                     EXECUTE 'SELECT reg.id ' 
-                        || ' FROM genome_reference_mm9.patterned_transcription_region_' || chr_id || ' reg '
+                        || ' FROM genome_reference_{0}.patterned_transcription_region_' || chr_id || ' reg '
                             || ' WHERE reg.strand = ' || strand
                                 || ' AND reg.start_end @> '
                                     || ' ''((' || last_end || ', 0), (' || rec.transcription_start || ', 0))''::box '
@@ -247,13 +247,13 @@ BEGIN
 END;
 $$ LANGUAGE 'plpgsql';
 
-CREATE OR REPLACE FUNCTION glass_atlas_%s_%s_rna.save_transcribed_rnas_from_sequencing_run(
+CREATE OR REPLACE FUNCTION glass_atlas_{0}_{1}_rna.save_transcribed_rnas_from_sequencing_run(
     seq_run_id integer, chr_id integer, source_t text, max_gap integer, 
     tag_extension integer, one_strand integer)
 RETURNS VOID AS $$
  DECLARE
-	rec glass_atlas_%s_%s_rna.glass_transcribed_rna_row;
-	transcribed_rna glass_atlas_%s_%s_rna.glass_transcribed_rna;
+	rec glass_atlas_{0}_{1}_rna.glass_transcribed_rna_row;
+	transcribed_rna glass_atlas_{0}_{1}_rna.glass_transcribed_rna;
 	scaling_factor text;
 	strand_start integer := 0;
 	strand_end integer := 1;
@@ -267,15 +267,15 @@ RETURNS VOID AS $$
     END IF; 
     
     -- Should this run have tags counted for density?
-    use_for_scoring := (SELECT r.use_for_scoring FROM glass_atlas_mm9.sequencing_run r WHERE id = seq_run_id);
+    use_for_scoring := (SELECT r.use_for_scoring FROM glass_atlas_{0}.sequencing_run r WHERE id = seq_run_id);
     
  	FOR strand IN strand_start..strand_end 
  	LOOP
 		FOR rec IN 
-			SELECT * FROM glass_atlas_%s_%s_rna.determine_transcribed_rnas_from_sequencing_run(chr_id, strand, source_t, max_gap, tag_extension, start_end)
+			SELECT * FROM glass_atlas_{0}_{1}_rna.determine_transcribed_rnas_from_sequencing_run(chr_id, strand, source_t, max_gap, tag_extension, start_end)
 		LOOP
 			IF rec IS NOT NULL THEN
-				EXECUTE 'INSERT INTO glass_atlas_%s_%s_rna.glass_transcribed_rna_' || rec.chromosome_id
+				EXECUTE 'INSERT INTO glass_atlas_{0}_{1}_rna.glass_transcribed_rna_' || rec.chromosome_id
 					|| ' ("chromosome_id", "strand", 
 					"transcription_start", "transcription_end", 
 					"start_end")
@@ -285,7 +285,7 @@ RETURNS VOID AS $$
                     ) RETURNING *' INTO transcribed_rna;
 	
 				-- Save the record of the sequencing run source
-				INSERT INTO glass_atlas_%s_%s_rna.glass_transcribed_rna_source 
+				INSERT INTO glass_atlas_{0}_{1}_rna.glass_transcribed_rna_source 
 					("glass_transcribed_rna_id", "sequencing_run_id", "tag_count", "gaps", "polya_count") 
 					VALUES (transcribed_rna.id, seq_run_id, rec.tag_count, rec.gaps, rec.polya_count);
 
@@ -297,21 +297,21 @@ RETURNS VOID AS $$
 END;
 $$ LANGUAGE 'plpgsql';
 
-CREATE OR REPLACE FUNCTION glass_atlas_%s_%s_rna.save_transcribed_rnas_from_existing(chr_id integer, max_gap integer, allow_extended_gaps boolean)
+CREATE OR REPLACE FUNCTION glass_atlas_{0}_{1}_rna.save_transcribed_rnas_from_existing(chr_id integer, max_gap integer, allow_extended_gaps boolean)
 RETURNS VOID AS $$
  DECLARE
-	rec glass_atlas_%s_%s_rna.glass_transcribed_rna_row;
-	transcribed_rna glass_atlas_%s_%s_rna.glass_transcribed_rna;
+	rec glass_atlas_{0}_{1}_rna.glass_transcribed_rna_row;
+	transcribed_rna glass_atlas_{0}_{1}_rna.glass_transcribed_rna;
 	old_id integer;
  BEGIN
  	FOR strand IN 0..1 
  	LOOP
 		FOR rec IN 
-			SELECT * FROM glass_atlas_%s_%s_rna.determine_transcribed_rnas_from_existing(chr_id, strand, max_gap, allow_extended_gaps)
+			SELECT * FROM glass_atlas_{0}_{1}_rna.determine_transcribed_rnas_from_existing(chr_id, strand, max_gap, allow_extended_gaps)
 		LOOP
 			IF rec IS NOT NULL AND rec.tag_count > 1 THEN		    
 		        -- Save the transcribed_rna. 
-				EXECUTE 'INSERT INTO glass_atlas_%s_%s_rna.glass_transcribed_rna_' || rec.chromosome_id
+				EXECUTE 'INSERT INTO glass_atlas_{0}_{1}_rna.glass_transcribed_rna_' || rec.chromosome_id
 					|| ' ("chromosome_id", "strand", '
 					|| ' "transcription_start", "transcription_end",' 
 					|| ' "start_end")'
@@ -325,9 +325,9 @@ RETURNS VOID AS $$
                 FOR old_id IN 
                     SELECT * FROM unnest(rec.ids)
                 LOOP
-                    PERFORM glass_atlas_%s_%s_rna.update_transcribed_rna_source_records(transcribed_rna, old_id);
+                    PERFORM glass_atlas_{0}_{1}_rna.update_transcribed_rna_source_records(transcribed_rna, old_id);
                 END LOOP;
-                EXECUTE 'DELETE FROM glass_atlas_%s_%s_rna.glass_transcribed_rna_' || rec.chromosome_id
+                EXECUTE 'DELETE FROM glass_atlas_{0}_{1}_rna.glass_transcribed_rna_' || rec.chromosome_id
                     || ' WHERE id IN (' || array_to_string(rec.ids,',') || ')';
             END IF; 
 		END LOOP;
@@ -337,7 +337,7 @@ RETURNS VOID AS $$
 END;
 $$ LANGUAGE 'plpgsql';
 
-CREATE OR REPLACE FUNCTION glass_atlas_%s_%s_rna.calculate_scores_transcribed_rna(chr_id integer)
+CREATE OR REPLACE FUNCTION glass_atlas_{0}_{1}_rna.calculate_scores_transcribed_rna(chr_id integer)
 RETURNS VOID AS $$
 DECLARE
     total_runs integer;
@@ -346,8 +346,8 @@ BEGIN
     -- Score is tag count divided by the lesser of length/1000 and 2*log(length),
     -- which allows lower tag counts per bp for longer transcribed_rnas.
     
-    total_runs := (SELECT count(DISTINCT sequencing_run_id) FROM glass_atlas_%s_%s_rna.glass_transcribed_rna_source);
-    EXECUTE 'UPDATE glass_atlas_%s_%s_rna.glass_transcribed_rna_' || chr_id || ' transcribed_rna
+    total_runs := (SELECT count(DISTINCT sequencing_run_id) FROM glass_atlas_{0}_{1}_rna.glass_transcribed_rna_source);
+    EXECUTE 'UPDATE glass_atlas_{0}_{1}_rna.glass_transcribed_rna_' || chr_id || ' transcribed_rna
             SET score = derived.score 
             FROM (SELECT 
                     transcribed_rna.id,
@@ -359,10 +359,10 @@ BEGIN
                             2*LOG(transcribed_rna.transcription_end - transcribed_rna.transcription_start + 1)
                             )
                     ) as score
-                FROM glass_atlas_%s_%s_rna.glass_transcribed_rna_' || chr_id || ' transcribed_rna 
-                JOIN glass_atlas_%s_%s_rna.glass_transcribed_rna_source source
+                FROM glass_atlas_{0}_{1}_rna.glass_transcribed_rna_' || chr_id || ' transcribed_rna 
+                JOIN glass_atlas_{0}_{1}_rna.glass_transcribed_rna_source source
                 ON source.glass_transcribed_rna_id = transcribed_rna.id
-                JOIN glass_atlas_mm9.sequencing_run run
+                JOIN glass_atlas_{0}.sequencing_run run
                 ON source.sequencing_run_id = run.id
                 WHERE run.use_for_scoring = true
                     AND transcribed_rna.chromosome_id = ' || chr_id || ' 
@@ -370,22 +370,22 @@ BEGIN
                 GROUP BY transcribed_rna.id, transcribed_rna.transcription_end, transcribed_rna.transcription_start
             ) derived
             WHERE transcribed_rna.id = derived.id';
-    EXECUTE 'UPDATE glass_atlas_%s_%s_rna.glass_transcribed_rna_' || chr_id || ' transcribed_rna
+    EXECUTE 'UPDATE glass_atlas_{0}_{1}_rna.glass_transcribed_rna_' || chr_id || ' transcribed_rna
             SET score = 0 WHERE transcribed_rna.score IS NULL';
     RETURN;
 END;
 $$ LANGUAGE 'plpgsql';
 
-CREATE OR REPLACE FUNCTION glass_atlas_%s_%s_rna.associate_transcribed_rna(chr_id integer)
+CREATE OR REPLACE FUNCTION glass_atlas_{0}_{1}_rna.associate_transcribed_rna(chr_id integer)
 RETURNS VOID AS $$
 BEGIN
     -- Associate transcribed_rna with containing transcript, if it exists
-    EXECUTE 'UPDATE glass_atlas_%s_%s_rna.glass_transcribed_rna_' || chr_id || ' transcribed_rna 
+    EXECUTE 'UPDATE glass_atlas_{0}_{1}_rna.glass_transcribed_rna_' || chr_id || ' transcribed_rna 
         SET glass_transcript_id = transcript.t_id
         FROM (
             SELECT tr.id as tr_id, t.id as t_id, row_number() OVER (PARTITION BY tr.id ORDER BY width(tr.start_end # t1.start_end) DESC) 
-                FROM glass_atlas_%s_%s_rna.glass_transcribed_rna_' || chr_id || ' tr
-            JOIN glass_atlas_%s_%s.glass_transcript_' || chr_id || ' t
+                FROM glass_atlas_{0}_{1}_rna.glass_transcribed_rna_' || chr_id || ' tr
+            JOIN glass_atlas_{0}_{1}.glass_transcript_' || chr_id || ' t
             ON tr.start_end && t.start_end
                 AND tr.strand = t.strand) transcript
         WHERE transcribed_rna.id = transcript.tr_id
@@ -394,7 +394,7 @@ BEGIN
 END;
 $$ LANGUAGE 'plpgsql'; 
 
-""" % tuple([genome, cell_type]*48)
+""".format(genome, cell_type)
 
 if __name__ == '__main__':
     print sql(genome, cell_type)

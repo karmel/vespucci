@@ -192,7 +192,6 @@ class TranscriptionRegionBase(TranscriptModelBase):
     strand                  = models.IntegerField(max_length=1, help_text='0 for +, 1 for -')
     transcription_start     = models.IntegerField(max_length=12)
     transcription_end       = models.IntegerField(max_length=12, help_text='<span id="length-message"></span>')
-    refseq                  = models.NullBooleanField(default=None)
     
     start_end               = BoxField(null=True, default=None, help_text='This is a placeholder for the PostgreSQL box type.')
     
@@ -294,9 +293,6 @@ class GlassTranscriptPrep(TranscriptBase):
         abstract    = True
 
 class GlassTranscript(TranscriptBase):
-    density             = models.FloatField(null=True)
-    start_end_density   = BoxField(null=True, default=None, help_text='This is a placeholder for the PostgreSQL box type.')
-    
     spliced             = models.NullBooleanField(default=None, help_text='Do we have RNA-Seq confirmation?')
     standard_error      = models.FloatField(null=True, default=None)
     score               = models.FloatField(null=True, default=None)
