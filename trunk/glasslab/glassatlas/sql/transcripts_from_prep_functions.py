@@ -317,8 +317,9 @@ BEGIN
     EXECUTE 'UPDATE glass_atlas_{0}_{1}_staging.glass_transcript_' || chr_id || ' transcript
         SET standard_error = der2.standard_error
         
-        FROM (SELECT id, stddev(tags)/sqrt(count(tags)) as standard_error 
-            FROM (select id, unnest(norm_tags) as tags from ' || temp_table || ') der
+        FROM (SELECT der.id, stddev(der.tags)/sqrt(count(der.tags)) as standard_error 
+            FROM (select temp_t.id, unnest(temp_t.norm_tags) as tags from ' || temp_table || ' temp_t) der
+            GROUP BY der.id
         ) der2
         WHERE transcript.id = der2.id';
         
