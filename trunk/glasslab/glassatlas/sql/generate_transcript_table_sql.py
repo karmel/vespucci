@@ -17,9 +17,7 @@ CREATE TABLE "glass_atlas_%s_%s_staging"."glass_transcript" (
     "transcription_start" int8 DEFAULT NULL,
     "transcription_end" int8 DEFAULT NULL,
     "start_end" box DEFAULT NULL,
-    "density" float DEFAULT NULL,
     "spliced" boolean DEFAULT NULL,
-    "refseq" boolean DEFAULT NULL,
     "score" numeric DEFAULT NULL,
     "deviation_score" numeric DEFAULT NULL,
     "modified" timestamp(6) NULL DEFAULT NULL,
@@ -248,9 +246,7 @@ BEGIN
     || 'public.make_box(' || quote_literal(NEW.transcription_start) || ', 0, ' 
         || quote_literal(NEW.transcription_end) || ', 0),'
     || coalesce(quote_literal(NEW.start_end_density),'NULL') || ','
-    || coalesce(quote_literal(NEW.density),'NULL') || ','
     || coalesce(quote_literal(NEW.spliced),'NULL') || ','
-    || coalesce(quote_literal(NEW.refseq),'NULL') || ','
     || coalesce(quote_literal(NEW.score),'NULL') || ','
     || quote_literal(NEW.modified) || ','
     || quote_literal(NEW.created) || ')';
@@ -547,7 +543,60 @@ ALTER TABLE ONLY "glass_atlas_%s_%s_staging"."glass_transcript_non_coding" ADD C
 CREATE INDEX glass_transcript_non_coding_transcript_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_non_coding" USING btree (glass_transcript_id);
 CREATE INDEX glass_transcript_non_coding_major_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_non_coding" USING btree (major);
 
-CREATE TABLE "glass_atlas_%s_%s_staging"."glass_transcript_conserved" (
+
+CREATE TABLE "glass_atlas_%s_%s_staging"."glass_transcript_infrastructure" (
+    id integer NOT NULL,
+    glass_transcript_id integer,
+    infrastructure_transcription_region_id integer,
+    relationship "glass_atlas_%s_%s_staging"."glass_transcript_transcription_region_relationship",
+    major boolean
+);
+GRANT ALL ON TABLE "glass_atlas_%s_%s_staging"."glass_transcript_infrastructure" TO  "glass";
+CREATE SEQUENCE "glass_atlas_%s_%s_staging"."glass_transcript_infrastructure_id_seq"
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+ALTER SEQUENCE "glass_atlas_%s_%s_staging"."glass_transcript_infrastructure_id_seq" OWNED BY "glass_atlas_%s_%s_staging"."glass_transcript_infrastructure".id;
+ALTER TABLE "glass_atlas_%s_%s_staging"."glass_transcript_infrastructure" ALTER COLUMN id SET DEFAULT nextval('"glass_atlas_%s_%s_staging"."glass_transcript_infrastructure_id_seq"'::regclass);
+ALTER TABLE ONLY "glass_atlas_%s_%s_staging"."glass_transcript_infrastructure" ADD CONSTRAINT glass_transcript_infrastructure_pkey PRIMARY KEY (id);
+CREATE INDEX glass_transcript_infrastructure_transcript_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_infrastructure" USING btree (glass_transcript_id);
+CREATE INDEX glass_transcript_infrastructure_major_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_infrastructure" USING btree (major);
+
+
+
+CREATE TABLE "glass_atlas_%s_%s_staging"."norm_sum" (
+    "id" int4 NOT NULL,
+    "name_1" varchar(100) DEFAULT NULL,
+    "name_2" varchar(100) DEFAULT NULL,
+    "total_runs_1" int4 DEFAULT NULL,
+    "total_runs_2" int4 DEFAULT NULL,
+    "total_tags_1" int4 DEFAULT NULL,
+    "total_tags_2" int4 DEFAULT NULL,
+    "transcript_count" int4 DEFAULT NULL,
+    "norm_tags_1" int4 DEFAULT NULL,
+    "norm_tags_2" int4 DEFAULT NULL,
+    "total_norm_factor" decimal(10,6) DEFAULT NULL,
+    "norm_factor" decimal(10,6) DEFAULT NULL,
+    "modified" timestamp(6) DEFAULT NULL
+);
+GRANT ALL ON TABLE "glass_atlas_%s_%s_staging"."norm_sum" TO  "glass";
+CREATE SEQUENCE "glass_atlas_%s_%s_staging"."norm_sum_id_seq"
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+ALTER SEQUENCE "glass_atlas_%s_%s_staging"."norm_sum_id_seq" OWNED BY "glass_atlas_%s_%s_staging"."norm_sum".id;
+ALTER TABLE "glass_atlas_%s_%s_staging"."norm_sum" ALTER COLUMN id SET DEFAULT nextval('"glass_atlas_%s_%s_staging"."norm_sum_id_seq"'::regclass);
+ALTER TABLE ONLY "glass_atlas_%s_%s_staging"."norm_sum" ADD CONSTRAINT norm_sum_pkey PRIMARY KEY (id);
+CREATE UNIQUE INDEX "norm_sum_name_idx" ON "glass_atlas_%s_%s_staging"."norm_sum" USING btree(name_1,name_2 ASC NULLS LAST);
+
+
+""" % tuple([genome, cell_type] * 340)
+
+deprecated = """CREATE TABLE "glass_atlas_%s_%s_staging"."glass_transcript_conserved" (
     id integer NOT NULL,
     glass_transcript_id integer,
     conserved_transcription_region_id integer,
@@ -587,26 +636,6 @@ ALTER TABLE ONLY "glass_atlas_%s_%s_staging"."glass_transcript_patterned" ADD CO
 CREATE INDEX glass_transcript_patterned_transcript_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_patterned" USING btree (glass_transcript_id);
 CREATE INDEX glass_transcript_patterned_major_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_patterned" USING btree (major);
 
-CREATE TABLE "glass_atlas_%s_%s_staging"."glass_transcript_infrastructure" (
-    id integer NOT NULL,
-    glass_transcript_id integer,
-    infrastructure_transcription_region_id integer,
-    relationship "glass_atlas_%s_%s_staging"."glass_transcript_transcription_region_relationship",
-    major boolean
-);
-GRANT ALL ON TABLE "glass_atlas_%s_%s_staging"."glass_transcript_infrastructure" TO  "glass";
-CREATE SEQUENCE "glass_atlas_%s_%s_staging"."glass_transcript_infrastructure_id_seq"
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-ALTER SEQUENCE "glass_atlas_%s_%s_staging"."glass_transcript_infrastructure_id_seq" OWNED BY "glass_atlas_%s_%s_staging"."glass_transcript_infrastructure".id;
-ALTER TABLE "glass_atlas_%s_%s_staging"."glass_transcript_infrastructure" ALTER COLUMN id SET DEFAULT nextval('"glass_atlas_%s_%s_staging"."glass_transcript_infrastructure_id_seq"'::regclass);
-ALTER TABLE ONLY "glass_atlas_%s_%s_staging"."glass_transcript_infrastructure" ADD CONSTRAINT glass_transcript_infrastructure_pkey PRIMARY KEY (id);
-CREATE INDEX glass_transcript_infrastructure_transcript_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_infrastructure" USING btree (glass_transcript_id);
-CREATE INDEX glass_transcript_infrastructure_major_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_infrastructure" USING btree (major);
-
 CREATE TABLE "glass_atlas_%s_%s_staging"."glass_transcript_duped" (
     id integer NOT NULL,
     glass_transcript_id integer,
@@ -626,37 +655,7 @@ ALTER TABLE "glass_atlas_%s_%s_staging"."glass_transcript_duped" ALTER COLUMN id
 ALTER TABLE ONLY "glass_atlas_%s_%s_staging"."glass_transcript_duped" ADD CONSTRAINT glass_transcript_duped_pkey PRIMARY KEY (id);
 CREATE INDEX glass_transcript_duped_transcript_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_duped" USING btree (glass_transcript_id);
 CREATE INDEX glass_transcript_duped_major_idx ON "glass_atlas_%s_%s_staging"."glass_transcript_duped" USING btree (major);
-
-
-CREATE TABLE "glass_atlas_%s_%s_staging"."norm_sum" (
-    "id" int4 NOT NULL,
-    "name_1" varchar(100) DEFAULT NULL,
-    "name_2" varchar(100) DEFAULT NULL,
-    "total_runs_1" int4 DEFAULT NULL,
-    "total_runs_2" int4 DEFAULT NULL,
-    "total_tags_1" int4 DEFAULT NULL,
-    "total_tags_2" int4 DEFAULT NULL,
-    "transcript_count" int4 DEFAULT NULL,
-    "norm_tags_1" int4 DEFAULT NULL,
-    "norm_tags_2" int4 DEFAULT NULL,
-    "total_norm_factor" decimal(10,6) DEFAULT NULL,
-    "norm_factor" decimal(10,6) DEFAULT NULL,
-    "modified" timestamp(6) DEFAULT NULL
-);
-GRANT ALL ON TABLE "glass_atlas_%s_%s_staging"."norm_sum" TO  "glass";
-CREATE SEQUENCE "glass_atlas_%s_%s_staging"."norm_sum_id_seq"
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-ALTER SEQUENCE "glass_atlas_%s_%s_staging"."norm_sum_id_seq" OWNED BY "glass_atlas_%s_%s_staging"."norm_sum".id;
-ALTER TABLE "glass_atlas_%s_%s_staging"."norm_sum" ALTER COLUMN id SET DEFAULT nextval('"glass_atlas_%s_%s_staging"."norm_sum_id_seq"'::regclass);
-ALTER TABLE ONLY "glass_atlas_%s_%s_staging"."norm_sum" ADD CONSTRAINT norm_sum_pkey PRIMARY KEY (id);
-CREATE UNIQUE INDEX "norm_sum_name_idx" ON "glass_atlas_%s_%s_staging"."norm_sum" USING btree(name_1,name_2 ASC NULLS LAST);
-
-
-""" % tuple([genome, cell_type] * 373)
-
+"""
 if __name__ == '__main__':
     print sql(genome, cell_type)
+

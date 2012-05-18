@@ -128,20 +128,26 @@ $$ LANGUAGE 'plpgsql';
 
 CREATE OR REPLACE FUNCTION glass_atlas_%s_%s_staging.insert_transcript_source_records(chr_id integer)
 RETURNS VOID AS $$
+DECLARE
+    temp_table text;
 BEGIN 
+    temp_table = 'source_table_' || chr_id || '_' || (1000*RANDOM())::int;
+    EXECUTE 'CREATE TEMP TABLE ' || temp_table || ' AS
+        SELECT trans.id as transcript_id, prep.id as prep_id
+                FROM glass_atlas_%s_%s_staging.glass_transcript_' || chr_id || ' trans
+                JOIN glass_atlas_%s_%s_prep.glass_transcript_' || chr_id || ' prep
+                ON trans.start_end @> prep.start_end
+                AND trans.strand = prep.strand';
+    EXECUTE 'CREATE INDEX ' || temp_table || '_prep_idx ON ' || temp_table || ' USING btree(prep_id)';
+            
     EXECUTE 'INSERT INTO glass_atlas_%s_%s_staging.glass_transcript_source_' || chr_id || '
             (chromosome_id, glass_transcript_id, sequencing_run_id, tag_count, gaps)
-            SELECT ' || chr_id || ', der.transcript_id, der.sequencing_run_id, 
-                SUM(der.tag_count), COUNT(der.glass_transcript_id) - 1
-            FROM (
-                SELECT trans.id as transcript_id,* 
-                FROM glass_atlas_%s_%s_staging.glass_transcript_' || chr_id || ' trans
-                JOIN (SELECT * FROM glass_atlas_%s_%s_prep.glass_transcript_' || chr_id || ' t
-                    JOIN glass_atlas_%s_%s_prep.glass_transcript_source_' || chr_id || ' s
-                    ON t.id = s.glass_transcript_id) source
-                ON source.strand = trans.strand
-            AND source.start_end <@ trans.start_end) der -- Is contained by
-        GROUP BY der.transcript_id, der.sequencing_run_id';
+            SELECT ' || chr_id || ', temp_t.transcript_id, source.sequencing_run_id, 
+                SUM(source.tag_count), COUNT(source.glass_transcript_id) - 1
+            FROM glass_atlas_%s_%s_prep.glass_transcript_source_' || chr_id || ' source 
+            JOIN ' || temp_table || ' temp_t
+            ON source.glass_transcript_id = temp_t.prep_id
+        GROUP BY temp_t.transcript_id, source.sequencing_run_id';
     RETURN;
 END;
 $$ LANGUAGE 'plpgsql';
@@ -210,37 +216,38 @@ CREATE OR REPLACE FUNCTION glass_atlas_%s_%s_staging.calculate_scores(chr_id int
 RETURNS VOID AS $$
 DECLARE
     total_runs integer;
+    temp_table text;
 BEGIN 
     -- Tag count is scaled avg and max tags: sqrt(avg_tags * max_tags)
     -- Score is tag count divided by the lesser of length/1000 and 2*log(length),
     -- which allows lower tag counts per bp for longer transcripts.
     
     total_runs := (SELECT count(DISTINCT sequencing_run_id) FROM glass_atlas_%s_%s_staging.glass_transcript_source);
+    
+    temp_table = 'score_table_' || chr_id || '_' || (1000*RANDOM())::int;
+    EXECUTE 'CREATE TEMP TABLE ' || temp_table || ' AS
+        SELECT 
+            transcript.id,
+            SUM(source.tag_count) as sum_tags, MAX(source.tag_count) as max_tags,
+            (transcript.transcription_end - transcript.transcription_start + 1) as width
+        FROM glass_atlas_%s_%s_staging.glass_transcript_' || chr_id || ' transcript 
+        JOIN glass_atlas_%s_%s_staging.glass_transcript_source_' || chr_id || ' source
+        ON transcript.id = source.glass_transcript_id
+        JOIN glass_atlas_mm9.sequencing_run run
+        ON source.sequencing_run_id = run.id
+        WHERE run.use_for_scoring = true
+            AND transcript.score IS NULL
+        GROUP BY transcript.id, transcript.transcription_end, transcript.transcription_start';
+    EXECUTE 'CREATE INDEX ' || temp_table || '_idx ON ' || temp_table || ' USING btree(id)';
+    
 	EXECUTE 'UPDATE glass_atlas_%s_%s_staging.glass_transcript_' || chr_id || ' transcript
-		    SET score = derived.score 
-		    FROM (SELECT 
-				    transcript.id,
-				    GREATEST(0,
-                        SQRT((SUM(source.tag_count)::numeric/' || total_runs || ')
-                        *MAX(source.tag_count)::numeric)
-                        /LEAST(
-                            GREATEST(1000, transcript.transcription_end - transcript.transcription_start + 1)::numeric/1000,
-                            2*LOG(transcript.transcription_end - transcript.transcription_start + 1)
-                            )
-                    ) as score
-			    FROM glass_atlas_%s_%s_staging.glass_transcript_' || chr_id || ' transcript 
-				JOIN glass_atlas_%s_%s_staging.glass_transcript_source source
-			    ON source.glass_transcript_id = transcript.id
-			    JOIN glass_atlas_mm9.sequencing_run run
-			    ON source.sequencing_run_id = run.id
-			    WHERE run.use_for_scoring = true
-				    AND transcript.chromosome_id = ' || chr_id || ' 
-				    --AND transcript.score IS NULL
-			    GROUP BY transcript.id, transcript.transcription_end, transcript.transcription_start
-		    ) derived
-		    WHERE transcript.id = derived.id';
-    EXECUTE 'UPDATE glass_atlas_%s_%s_staging.glass_transcript_' || chr_id || ' transcript
-            SET score = 0 WHERE transcript.score IS NULL';
+	    SET score = GREATEST(0,
+                SQRT((temp_t.sum_tags::numeric/' || total_runs || ')*temp_t.max_tags)
+                /LEAST(GREATEST(1000, temp_t.width)::numeric/1000, 2*LOG(temp_t.width))
+            )
+	    FROM ' || temp_table || ' temp_t
+	    WHERE transcript.id = temp_t.id';
+
 	RETURN;
 END;
 $$ LANGUAGE 'plpgsql';
@@ -316,7 +323,7 @@ END;
 $$ LANGUAGE 'plpgsql'; 
 
 
-""" % tuple([genome, cell_type]*51)
+""" % tuple([genome, cell_type]*50)
 
 if __name__ == '__main__':
     print sql(genome, cell_type)
