@@ -265,12 +265,15 @@ BEGIN
     -- Then we take the sample standard deviation over the square root of the number of samples to get 
     -- standard error of the mean (SEM).
     
-    -- This value should be multiplied by total tags in the target run for it to be meaningful!
+    -- This value should be scaled by total tags in the target run for it to be meaningful
+    -- for a particular run!
     
-    -- Note that we nest the standard deviation query here three times-- once to ensure that we are using
-    -- an array padded out to the desired number of runs (filled with 0),
-    -- again to unnest the array so that we can use the Postgresql stddev(expression) function over it,
-    -- and again so that we can assign the stddev aggregate to a single update row.
+    -- Note that we do lots of aggregating and unnesting here before taking the stddev_samp.
+    -- This is so that we can pad out the number of samples to the total_runs for
+    -- each transcript to get an accurate calculation using stddev_samp.
+    
+    -- For transcripts that don't show up at all in the notx runs, we default to zero.
+    -- This is not theoretically perfect, but will suffice for our purposes.
     
     total_runs := (SELECT count(*) FROM glass_atlas_{0}.sequencing_run run
         WHERE run.standard = true
@@ -304,16 +307,20 @@ BEGIN
             AND run.kla = false
             AND run.other_conditions = false
             AND run.use_for_scoring = true';
-    EXECUTE 'CREATE INDEX ' || temp_table || '_idx ON ' || temp_table || ' USING btree(id)';
 
+    -- Set all scores to zero at first, since some we will not have data on,
+    -- and want those to be zero
+    EXECUTE 'UPDATE glass_atlas_{0}_{1}_staging.glass_transcript_' || chr_id || ' 
+        SET standard_error = 0';
+        
     EXECUTE 'UPDATE glass_atlas_{0}_{1}_staging.glass_transcript_' || chr_id || ' transcript
-            SET standard_error = der2.standard_error
-            
-            FROM (SELECT id, stddev(tags)/sqrt(count(tags)) as standard_error 
-                FROM (select id, unnest(norm_tags) as tags from ' || temp_table || '') der
-            ) der2
-            WHERE transcript.id = der2.id';
-            
+        SET standard_error = der2.standard_error
+        
+        FROM (SELECT id, stddev(tags)/sqrt(count(tags)) as standard_error 
+            FROM (select id, unnest(norm_tags) as tags from ' || temp_table || ') der
+        ) der2
+        WHERE transcript.id = der2.id';
+        
     RETURN;
 END;
 $$ LANGUAGE 'plpgsql';
