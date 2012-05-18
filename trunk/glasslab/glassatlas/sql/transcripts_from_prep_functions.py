@@ -149,7 +149,11 @@ $$ LANGUAGE 'plpgsql';
 CREATE OR REPLACE FUNCTION glass_atlas_%s_%s_staging.insert_associated_transcript_regions(chr_id integer)
 RETURNS VOID AS $$
 DECLARE
-    region_types text[] := ARRAY['sequence','non_coding','conserved','patterned','duped'];
+    region_types text[] := ARRAY['sequence','non_coding'];
+        -- ,'conserved','patterned','duped'];
+        -- As of May 2012, we are excluding some of the region types,
+        -- because they are rarely used yet time-intensive to add.
+        -- Duplicate regions are less necessary now that tags are uniquely mapped.
     counter integer;
     table_type text;
 BEGIN
