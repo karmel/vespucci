@@ -301,12 +301,13 @@ BEGIN
         JOIN glass_atlas_{0}.sequencing_run run
             ON s.sequencing_run_id = run.id
         WHERE run.standard = true
-            AND run.type = 'Gro-Seq'
+            AND run.type = ''Gro-Seq''
             AND run.wt = true
             AND run.notx = true
             AND run.kla = false
             AND run.other_conditions = false
-            AND run.use_for_scoring = true';
+            AND run.use_for_scoring = true
+        GROUP BY t.id';
 
     -- Set all scores to zero at first, since some we will not have data on,
     -- and want those to be zero
