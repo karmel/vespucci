@@ -17,6 +17,7 @@ CREATE TABLE "glass_atlas_{0}_{1}_staging"."glass_transcript" (
     "transcription_start" int8 DEFAULT NULL,
     "transcription_end" int8 DEFAULT NULL,
     "start_end" box DEFAULT NULL,
+    "distal" boolean DEFAULT NULL,
     "spliced" boolean DEFAULT NULL,
     "score" numeric DEFAULT NULL,
     "standard_error" numeric DEFAULT NULL,
@@ -42,6 +43,8 @@ CREATE INDEX glass_transcript_1_pkey_idx ON "glass_atlas_{0}_{1}_staging"."glass
 CREATE INDEX glass_transcript_1_chr_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_1" USING btree (chromosome_id);
 CREATE INDEX glass_transcript_1_strand_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_1" USING btree (strand);
 CREATE INDEX glass_transcript_1_score_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_1" USING btree (score);
+CREATE INDEX glass_transcript_1_distal_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_1" USING btree (distal);
+
 CREATE INDEX glass_transcript_1_start_end_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_1" USING gist (start_end);
 
 CREATE TABLE "glass_atlas_{0}_{1}_staging"."glass_transcript_2" (
@@ -51,6 +54,8 @@ CREATE INDEX glass_transcript_2_pkey_idx ON "glass_atlas_{0}_{1}_staging"."glass
 CREATE INDEX glass_transcript_2_chr_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_2" USING btree (chromosome_id);
 CREATE INDEX glass_transcript_2_strand_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_2" USING btree (strand);
 CREATE INDEX glass_transcript_2_score_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_2" USING btree (score);
+CREATE INDEX glass_transcript_2_distal_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_2" USING btree (distal);
+
 CREATE INDEX glass_transcript_2_start_end_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_2" USING gist (start_end);
 
 CREATE TABLE "glass_atlas_{0}_{1}_staging"."glass_transcript_3" (
@@ -60,6 +65,8 @@ CREATE INDEX glass_transcript_3_pkey_idx ON "glass_atlas_{0}_{1}_staging"."glass
 CREATE INDEX glass_transcript_3_chr_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_3" USING btree (chromosome_id);
 CREATE INDEX glass_transcript_3_strand_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_3" USING btree (strand);
 CREATE INDEX glass_transcript_3_score_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_3" USING btree (score);
+CREATE INDEX glass_transcript_3_distal_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_3" USING btree (distal);
+
 CREATE INDEX glass_transcript_3_start_end_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_3" USING gist (start_end);
 
 CREATE TABLE "glass_atlas_{0}_{1}_staging"."glass_transcript_4" (
@@ -69,6 +76,8 @@ CREATE INDEX glass_transcript_4_pkey_idx ON "glass_atlas_{0}_{1}_staging"."glass
 CREATE INDEX glass_transcript_4_chr_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_4" USING btree (chromosome_id);
 CREATE INDEX glass_transcript_4_strand_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_4" USING btree (strand);
 CREATE INDEX glass_transcript_4_score_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_4" USING btree (score);
+CREATE INDEX glass_transcript_4_distal_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_4" USING btree (distal);
+
 CREATE INDEX glass_transcript_4_start_end_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_4" USING gist (start_end);
 
 CREATE TABLE "glass_atlas_{0}_{1}_staging"."glass_transcript_5" (
@@ -78,6 +87,8 @@ CREATE INDEX glass_transcript_5_pkey_idx ON "glass_atlas_{0}_{1}_staging"."glass
 CREATE INDEX glass_transcript_5_chr_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_5" USING btree (chromosome_id);
 CREATE INDEX glass_transcript_5_strand_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_5" USING btree (strand);
 CREATE INDEX glass_transcript_5_score_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_5" USING btree (score);
+CREATE INDEX glass_transcript_5_distal_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_5" USING btree (distal);
+
 CREATE INDEX glass_transcript_5_start_end_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_5" USING gist (start_end);
 
 CREATE TABLE "glass_atlas_{0}_{1}_staging"."glass_transcript_6" (
@@ -87,6 +98,8 @@ CREATE INDEX glass_transcript_6_pkey_idx ON "glass_atlas_{0}_{1}_staging"."glass
 CREATE INDEX glass_transcript_6_chr_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_6" USING btree (chromosome_id);
 CREATE INDEX glass_transcript_6_strand_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_6" USING btree (strand);
 CREATE INDEX glass_transcript_6_score_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_6" USING btree (score);
+CREATE INDEX glass_transcript_6_distal_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_6" USING btree (distal);
+
 CREATE INDEX glass_transcript_6_start_end_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_6" USING gist (start_end);
 
 CREATE TABLE "glass_atlas_{0}_{1}_staging"."glass_transcript_7" (
@@ -96,6 +109,8 @@ CREATE INDEX glass_transcript_7_pkey_idx ON "glass_atlas_{0}_{1}_staging"."glass
 CREATE INDEX glass_transcript_7_chr_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_7" USING btree (chromosome_id);
 CREATE INDEX glass_transcript_7_strand_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_7" USING btree (strand);
 CREATE INDEX glass_transcript_7_score_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_7" USING btree (score);
+CREATE INDEX glass_transcript_7_distal_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_7" USING btree (distal);
+
 CREATE INDEX glass_transcript_7_start_end_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_7" USING gist (start_end);
 
 CREATE TABLE "glass_atlas_{0}_{1}_staging"."glass_transcript_8" (
@@ -105,6 +120,8 @@ CREATE INDEX glass_transcript_8_pkey_idx ON "glass_atlas_{0}_{1}_staging"."glass
 CREATE INDEX glass_transcript_8_chr_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_8" USING btree (chromosome_id);
 CREATE INDEX glass_transcript_8_strand_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_8" USING btree (strand);
 CREATE INDEX glass_transcript_8_score_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_8" USING btree (score);
+CREATE INDEX glass_transcript_8_distal_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_8" USING btree (distal);
+
 CREATE INDEX glass_transcript_8_start_end_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_8" USING gist (start_end);
 
 CREATE TABLE "glass_atlas_{0}_{1}_staging"."glass_transcript_9" (
@@ -114,6 +131,8 @@ CREATE INDEX glass_transcript_9_pkey_idx ON "glass_atlas_{0}_{1}_staging"."glass
 CREATE INDEX glass_transcript_9_chr_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_9" USING btree (chromosome_id);
 CREATE INDEX glass_transcript_9_strand_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_9" USING btree (strand);
 CREATE INDEX glass_transcript_9_score_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_9" USING btree (score);
+CREATE INDEX glass_transcript_9_distal_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_9" USING btree (distal);
+
 CREATE INDEX glass_transcript_9_start_end_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_9" USING gist (start_end);
 
 CREATE TABLE "glass_atlas_{0}_{1}_staging"."glass_transcript_10" (
@@ -123,6 +142,8 @@ CREATE INDEX glass_transcript_10_pkey_idx ON "glass_atlas_{0}_{1}_staging"."glas
 CREATE INDEX glass_transcript_10_chr_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_10" USING btree (chromosome_id);
 CREATE INDEX glass_transcript_10_strand_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_10" USING btree (strand);
 CREATE INDEX glass_transcript_10_score_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_10" USING btree (score);
+CREATE INDEX glass_transcript_10_distal_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_10" USING btree (distal);
+
 CREATE INDEX glass_transcript_10_start_end_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_10" USING gist (start_end);
 
 CREATE TABLE "glass_atlas_{0}_{1}_staging"."glass_transcript_11" (
@@ -132,6 +153,8 @@ CREATE INDEX glass_transcript_11_pkey_idx ON "glass_atlas_{0}_{1}_staging"."glas
 CREATE INDEX glass_transcript_11_chr_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_11" USING btree (chromosome_id);
 CREATE INDEX glass_transcript_11_strand_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_11" USING btree (strand);
 CREATE INDEX glass_transcript_11_score_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_11" USING btree (score);
+CREATE INDEX glass_transcript_11_distal_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_11" USING btree (distal);
+
 CREATE INDEX glass_transcript_11_start_end_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_11" USING gist (start_end);
 
 CREATE TABLE "glass_atlas_{0}_{1}_staging"."glass_transcript_12" (
@@ -141,6 +164,8 @@ CREATE INDEX glass_transcript_12_pkey_idx ON "glass_atlas_{0}_{1}_staging"."glas
 CREATE INDEX glass_transcript_12_chr_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_12" USING btree (chromosome_id);
 CREATE INDEX glass_transcript_12_strand_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_12" USING btree (strand);
 CREATE INDEX glass_transcript_12_score_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_12" USING btree (score);
+CREATE INDEX glass_transcript_12_distal_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_12" USING btree (distal);
+
 CREATE INDEX glass_transcript_12_start_end_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_12" USING gist (start_end);
 
 CREATE TABLE "glass_atlas_{0}_{1}_staging"."glass_transcript_13" (
@@ -150,6 +175,8 @@ CREATE INDEX glass_transcript_13_pkey_idx ON "glass_atlas_{0}_{1}_staging"."glas
 CREATE INDEX glass_transcript_13_chr_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_13" USING btree (chromosome_id);
 CREATE INDEX glass_transcript_13_strand_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_13" USING btree (strand);
 CREATE INDEX glass_transcript_13_score_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_13" USING btree (score);
+CREATE INDEX glass_transcript_13_distal_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_13" USING btree (distal);
+
 CREATE INDEX glass_transcript_13_start_end_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_13" USING gist (start_end);
 
 CREATE TABLE "glass_atlas_{0}_{1}_staging"."glass_transcript_14" (
@@ -159,6 +186,8 @@ CREATE INDEX glass_transcript_14_pkey_idx ON "glass_atlas_{0}_{1}_staging"."glas
 CREATE INDEX glass_transcript_14_chr_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_14" USING btree (chromosome_id);
 CREATE INDEX glass_transcript_14_strand_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_14" USING btree (strand);
 CREATE INDEX glass_transcript_14_score_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_14" USING btree (score);
+CREATE INDEX glass_transcript_14_distal_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_14" USING btree (distal);
+
 CREATE INDEX glass_transcript_14_start_end_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_14" USING gist (start_end);
 
 CREATE TABLE "glass_atlas_{0}_{1}_staging"."glass_transcript_15" (
@@ -168,6 +197,8 @@ CREATE INDEX glass_transcript_15_pkey_idx ON "glass_atlas_{0}_{1}_staging"."glas
 CREATE INDEX glass_transcript_15_chr_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_15" USING btree (chromosome_id);
 CREATE INDEX glass_transcript_15_strand_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_15" USING btree (strand);
 CREATE INDEX glass_transcript_15_score_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_15" USING btree (score);
+CREATE INDEX glass_transcript_15_distal_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_15" USING btree (distal);
+
 CREATE INDEX glass_transcript_15_start_end_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_15" USING gist (start_end);
 
 CREATE TABLE "glass_atlas_{0}_{1}_staging"."glass_transcript_16" (
@@ -177,6 +208,8 @@ CREATE INDEX glass_transcript_16_pkey_idx ON "glass_atlas_{0}_{1}_staging"."glas
 CREATE INDEX glass_transcript_16_chr_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_16" USING btree (chromosome_id);
 CREATE INDEX glass_transcript_16_strand_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_16" USING btree (strand);
 CREATE INDEX glass_transcript_16_score_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_16" USING btree (score);
+CREATE INDEX glass_transcript_16_distal_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_16" USING btree (distal);
+
 CREATE INDEX glass_transcript_16_start_end_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_16" USING gist (start_end);
 
 CREATE TABLE "glass_atlas_{0}_{1}_staging"."glass_transcript_17" (
@@ -186,6 +219,8 @@ CREATE INDEX glass_transcript_17_pkey_idx ON "glass_atlas_{0}_{1}_staging"."glas
 CREATE INDEX glass_transcript_17_chr_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_17" USING btree (chromosome_id);
 CREATE INDEX glass_transcript_17_strand_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_17" USING btree (strand);
 CREATE INDEX glass_transcript_17_score_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_17" USING btree (score);
+CREATE INDEX glass_transcript_17_distal_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_17" USING btree (distal);
+
 CREATE INDEX glass_transcript_17_start_end_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_17" USING gist (start_end);
 
 CREATE TABLE "glass_atlas_{0}_{1}_staging"."glass_transcript_18" (
@@ -195,6 +230,8 @@ CREATE INDEX glass_transcript_18_pkey_idx ON "glass_atlas_{0}_{1}_staging"."glas
 CREATE INDEX glass_transcript_18_chr_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_18" USING btree (chromosome_id);
 CREATE INDEX glass_transcript_18_strand_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_18" USING btree (strand);
 CREATE INDEX glass_transcript_18_score_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_18" USING btree (score);
+CREATE INDEX glass_transcript_18_distal_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_18" USING btree (distal);
+
 CREATE INDEX glass_transcript_18_start_end_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_18" USING gist (start_end);
 
 CREATE TABLE "glass_atlas_{0}_{1}_staging"."glass_transcript_19" (
@@ -204,6 +241,8 @@ CREATE INDEX glass_transcript_19_pkey_idx ON "glass_atlas_{0}_{1}_staging"."glas
 CREATE INDEX glass_transcript_19_chr_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_19" USING btree (chromosome_id);
 CREATE INDEX glass_transcript_19_strand_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_19" USING btree (strand);
 CREATE INDEX glass_transcript_19_score_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_19" USING btree (score);
+CREATE INDEX glass_transcript_19_distal_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_19" USING btree (distal);
+
 CREATE INDEX glass_transcript_19_start_end_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_19" USING gist (start_end);
 
 CREATE TABLE "glass_atlas_{0}_{1}_staging"."glass_transcript_20" (
@@ -213,6 +252,8 @@ CREATE INDEX glass_transcript_20_pkey_idx ON "glass_atlas_{0}_{1}_staging"."glas
 CREATE INDEX glass_transcript_20_chr_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_20" USING btree (chromosome_id);
 CREATE INDEX glass_transcript_20_strand_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_20" USING btree (strand);
 CREATE INDEX glass_transcript_20_score_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_20" USING btree (score);
+CREATE INDEX glass_transcript_20_distal_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_20" USING btree (distal);
+
 CREATE INDEX glass_transcript_20_start_end_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_20" USING gist (start_end);
 
 CREATE TABLE "glass_atlas_{0}_{1}_staging"."glass_transcript_21" (
@@ -222,6 +263,8 @@ CREATE INDEX glass_transcript_21_pkey_idx ON "glass_atlas_{0}_{1}_staging"."glas
 CREATE INDEX glass_transcript_21_chr_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_21" USING btree (chromosome_id);
 CREATE INDEX glass_transcript_21_strand_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_21" USING btree (strand);
 CREATE INDEX glass_transcript_21_score_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_21" USING btree (score);
+CREATE INDEX glass_transcript_21_distal_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_21" USING btree (distal);
+
 CREATE INDEX glass_transcript_21_start_end_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_21" USING gist (start_end);
 
 CREATE TABLE "glass_atlas_{0}_{1}_staging"."glass_transcript_22" (
@@ -231,6 +274,8 @@ CREATE INDEX glass_transcript_22_pkey_idx ON "glass_atlas_{0}_{1}_staging"."glas
 CREATE INDEX glass_transcript_22_chr_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_22" USING btree (chromosome_id);
 CREATE INDEX glass_transcript_22_strand_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_22" USING btree (strand);
 CREATE INDEX glass_transcript_22_score_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_22" USING btree (score);
+CREATE INDEX glass_transcript_22_distal_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_22" USING btree (distal);
+
 CREATE INDEX glass_transcript_22_start_end_idx ON "glass_atlas_{0}_{1}_staging"."glass_transcript_22" USING gist (start_end);
 
 

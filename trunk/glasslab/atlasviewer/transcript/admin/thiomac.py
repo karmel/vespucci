@@ -9,7 +9,8 @@ from glasslab.atlasviewer.transcript.admin.base import GlassTranscriptAdmin,\
     GlassTranscribedRnaInline, GlassTranscriptNucleotidesInline,\
     PeakFeatureInline, PeakFeatureAdmin,\
     GlassTranscriptPrepAdmin, GlassTranscriptSourcePrepInline,\
-    GlassTranscriptDupedInline, GlassTranscriptLabelInline
+    GlassTranscriptDupedInline, GlassTranscriptLabelInline,\
+    GlassTranscriptInfrastructureInline
 from glasslab.glassatlas.datatypes.celltypes.thiomac import FilteredGlassTranscriptThioMac,\
     GlassTranscriptThioMac, GlassTranscribedRnaThioMac,\
     GlassTranscriptSequenceThioMac, GlassTranscriptSourceThioMac,\
@@ -25,6 +26,8 @@ class GlassTranscriptSequenceThioMacInline(GlassTranscriptSequenceInline):
 class GlassTranscriptNonCodingThioMacInline(GlassTranscriptNonCodingInline):
     model = GlassTranscriptNonCodingThioMac
 class GlassTranscriptDupedThioMacInline(GlassTranscriptDupedInline):
+    model = GlassTranscriptDupedThioMac
+class GlassTranscriptInfrastructureThioMacInline(GlassTranscriptInfrastructureInline):
     model = GlassTranscriptDupedThioMac
 class GlassTranscriptSourceThioMacInline(GlassTranscriptSourceInline):
     model = GlassTranscriptSourceThioMac
@@ -51,10 +54,10 @@ class GlassTranscriptThioMacAdmin(GlassTranscriptAdmin):
     inlines         = [GlassTranscriptLabelThioMacInline, 
                        GlassTranscriptSequenceThioMacInline,
                        GlassTranscriptNonCodingThioMacInline,
-                       GlassTranscriptDupedThioMacInline,
+                       GlassTranscriptInfrastructureThioMacInline,
                        GlassTranscriptSourceThioMacInline, 
-                       GlassTranscribedRnaThioMacInline,
-                       #PeakFeatureThioMacInline, 
+                       #GlassTranscribedRnaThioMacInline,
+                       PeakFeatureThioMacInline, 
                        ]
     
 class GlassTranscriptPrepThioMacAdmin(GlassTranscriptPrepAdmin):
@@ -70,6 +73,6 @@ class PeakFeatureThioMacAdmin(PeakFeatureAdmin):
 admin.site.register(FilteredGlassTranscriptThioMac, GlassTranscriptThioMacAdmin)
 admin.site.register(GlassTranscriptThioMac, GlassTranscriptThioMacAdmin)
 admin.site.register(GlassTranscriptPrepThioMac, GlassTranscriptPrepThioMacAdmin)
-admin.site.register(GlassTranscribedRnaThioMac, GlassTranscribedRnaThioMacAdmin)
+#admin.site.register(GlassTranscribedRnaThioMac, GlassTranscribedRnaThioMacAdmin)
 admin.site.register(PeakFeatureThioMac, PeakFeatureThioMacAdmin)
 

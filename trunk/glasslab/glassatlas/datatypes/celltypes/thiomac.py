@@ -169,17 +169,19 @@ class GlassTranscriptConservedThioMac(GlassTranscriptConserved):
 class GlassTranscribedRnaThioMac(GlassTranscribedRna):
     glass_transcript = models.ForeignKey(GlassTranscriptThioMac, blank=True, null=True)
     cell_base = ThioMacBase()
-    class Meta: 
-        db_table    = 'glass_atlas_%s_%s_rna%s"."glass_transcribed_rna' % (current_settings.TRANSCRIPT_GENOME, CELL_TYPE.lower(), current_settings.STAGING)
+    class Meta:
+        abstract = True 
+        #db_table    = 'glass_atlas_%s_%s_rna%s"."glass_transcribed_rna' % (current_settings.TRANSCRIPT_GENOME, CELL_TYPE.lower(), current_settings.STAGING)
         app_label   = 'Transcription_%s' % CELL_TYPE
         verbose_name = 'Glass transcribed RNA (%s)' % CELL_TYPE
         verbose_name_plural = 'Glass transcribed RNAs (%s)' % CELL_TYPE
         
 class GlassTranscribedRnaSourceThioMac(GlassTranscribedRnaSource):
-    glass_transcribed_rna = models.ForeignKey(GlassTranscribedRnaThioMac, related_name='glasstranscribedrnasource')
+    #glass_transcribed_rna = models.ForeignKey(GlassTranscribedRnaThioMac, related_name='glasstranscribedrnasource')
     cell_base = ThioMacBase()
-    class Meta: 
-        db_table    = 'glass_atlas_%s_%s_rna%s"."glass_transcribed_rna_source' % (current_settings.TRANSCRIPT_GENOME, CELL_TYPE.lower(), current_settings.STAGING)
+    class Meta:
+        abstract = True 
+        #db_table    = 'glass_atlas_%s_%s_rna%s"."glass_transcribed_rna_source' % (current_settings.TRANSCRIPT_GENOME, CELL_TYPE.lower(), current_settings.STAGING)
         app_label   = 'Transcription_%s' % CELL_TYPE
         verbose_name = 'Glass transcribed RNA Source (%s)' % CELL_TYPE
         verbose_name_plural = 'Glass transcribed RNA Sources (%s)' % CELL_TYPE

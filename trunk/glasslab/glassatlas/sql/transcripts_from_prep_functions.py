@@ -208,6 +208,17 @@ BEGIN
             ON reg.start_end && trans.start_end
             WHERE reg.type IN (''tRNA'',''rRNA'',''snRNA'',''srpRNA'',''scRNA'',''RNA'') 
             AND (reg.strand IS NULL OR reg.strand = trans.strand))';
+            
+    -- We also want to mark whether a transcript is gene distal.
+    -- This means it does not overlap with the region of any refseq transcripts
+    -- plus 1000bp on either side. NOT strand specific.
+    EXECUTE 'UPDATE glass_atlas_{0}_{1}_staging.glass_transcript_' || chr_id || ' t
+        SET distal = true';
+    EXECUTE 'UPDATE glass_atlas_{0}_{1}_staging.glass_transcript_' || chr_id || ' t
+        SET distal = false
+        FROM genome_reference_{0}.sequence_transcription_region seq
+        WHERE t.start_end && seq.start_end_1000
+            AND seq.chromosome_id = ' || chr_id;
     RETURN;
 END;
 $$ LANGUAGE 'plpgsql';

@@ -6,7 +6,8 @@ Created on Nov 8, 2010
 from glasslab.glassatlas.datatypes.transcript import GlassTranscriptSource,\
     GlassTranscriptSequence, GlassTranscriptNonCoding,\
     GlassTranscriptConserved, GlassTranscriptPatterned,\
-    GlassTranscriptNucleotides, GlassTranscriptSourcePrep, GlassTranscriptDuped
+    GlassTranscriptNucleotides, GlassTranscriptSourcePrep, GlassTranscriptDuped,\
+    GlassTranscriptInfrastructure
 from glasslab.config import current_settings
 from glasslab.atlasviewer.shared.admin import make_all_fields_readonly,\
     ReadOnlyInline, ReadOnlyAdmin, ReadOnlyInput
@@ -132,6 +133,9 @@ class GlassTranscriptPatternedInline(ReadOnlyInline):
 class GlassTranscriptDupedInline(ReadOnlyInline):
     model = GlassTranscriptDuped
     readonly_fields = make_all_fields_readonly(model)
+class GlassTranscriptInfrastructureInline(ReadOnlyInline):
+    model = GlassTranscriptInfrastructure
+    readonly_fields = make_all_fields_readonly(model)
 
 class PeakFeatureInline(ReadOnlyInline):
     model = PeakFeature
@@ -152,14 +156,9 @@ class TranscriptBase(ReadOnlyAdmin):
     transcript_length.short_description = 'Length'
     
     def ucsc_browser_link(self, obj):
-        if obj.__class__.__name__.lower().find('glasstranscript') > -1: model_name = 'glasstranscript' 
-        if obj.__class__.__name__.lower().find('glasstranscribedrna') > -1: model_name = 'glasstranscribedrna'
-        #strand = ((not obj.strand and 'sense') or (obj.strand and 'antisense'))
-        #stranded_session_file = model_name + '_%s_strands.txt' % strand
-        #stranded = self._ucsc_browser_link(obj, stranded_session_file, strand.capitalize())
         all_tracks_file = 'all_tracks.txt'
-        all = self._ucsc_browser_link(obj, all_tracks_file, 'All')
-        return all
+        all_link = self._ucsc_browser_link(obj, all_tracks_file, 'All')
+        return all_link
                                        
     def _ucsc_browser_link(self, obj, session_file, text): 
                            
@@ -182,22 +181,6 @@ class TranscriptBase(ReadOnlyAdmin):
     truncated_density.short_description = 'Density'
 
 class GlassTranscriptAdmin(TranscriptBase):
-    def render_change_form(self, request, context, *args, **kwargs):
-        '''
-        Add in variables to display in custom template. 
-        Added to model._meta because that gets passed in to the form context.
-        '''
-        cell_base = context['original'].cell_base
-        extra = {
-            'patterned_region_count': cell_base.glass_transcript_patterned.objects.filter(
-                                                    glass_transcript__id=context['object_id']).count(),
-            'conserved_region_count': cell_base.glass_transcript_conserved.objects.filter(
-                                                    glass_transcript__id=context['object_id']).count()
-        }
-
-        context.update(extra) 
-        return super(GlassTranscriptAdmin, self).render_change_form(request, context, *args, **kwargs)
-    
     list_display    = ('chromosome','transcription_start','transcription_end','strand',
                        'transcript_length', 'truncated_score', 'spliced', 'ucsc_browser_link', 'modified')
     list_filter     = ('chromosome','strand','spliced')

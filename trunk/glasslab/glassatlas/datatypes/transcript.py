@@ -138,14 +138,6 @@ class CellTypeBase(object):
     @property
     def glass_transcript_conserved(self): return GlassTranscriptConserved
     @property
-    def glass_transcribed_rna(self): 
-        from glasslab.glassatlas.datatypes.transcribed_rna import GlassTranscribedRna
-        return GlassTranscribedRna
-    @property
-    def glass_transcribed_rna_source(self): 
-        from glasslab.glassatlas.datatypes.transcribed_rna import GlassTranscribedRnaSource
-        return GlassTranscribedRnaSource
-    @property
     def peak_feature(self): 
         from glasslab.glassatlas.datatypes.feature import PeakFeature
         return PeakFeature
@@ -156,7 +148,6 @@ class CellTypeBase(object):
                 self.glass_transcript_nucleotides,
                 self.glass_transcript_sequence, self.glass_transcript_non_coding,
                 self.glass_transcript_patterned, self.glass_transcript_conserved,
-                self.glass_transcribed_rna, self.glass_transcribed_rna_source,
                 self.peak_feature]
 
     def get_cell_type_base(self, cell_type):
@@ -293,6 +284,7 @@ class GlassTranscriptPrep(TranscriptBase):
         abstract    = True
 
 class GlassTranscript(TranscriptBase):
+    distal             = models.BooleanField(help_text='Is this transcript at least 1000 bp away from RefSeq transcripts?')
     spliced             = models.NullBooleanField(default=None, help_text='Do we have RNA-Seq confirmation?')
     standard_error      = models.FloatField(null=True, default=None)
     score               = models.FloatField(null=True, default=None)
@@ -387,7 +379,7 @@ class GlassTranscript(TranscriptBase):
         for chr_id in chr_list:
             print 'Drawing edges for transcripts for chromosome %d' % chr_id
             query = """
-                SELECT glass_atlas_%s_%s%s.draw_transcript_edges(%d);
+                SELECT glass_atlas_%s_%s%s.insert_associated_transcript_regions(%d);
                 """ % (current_settings.TRANSCRIPT_GENOME, 
                        current_settings.CURRENT_CELL_TYPE.lower(),
                        current_settings.STAGING,
@@ -527,6 +519,7 @@ class FilteredGlassTranscript(object):
                    trans.strand and '-' or '+', str(start), str(end), 
                    trans.strand and '0,255,0' or '0,0,255']
             
+            '''
             # Add in exons
             # Note: 1 bp start and end exons added because UCSC checks that start and end of 
             # whole transcript match the start and end of the first and last blocks, respectively
@@ -541,7 +534,7 @@ class FilteredGlassTranscript(object):
                              [str(max(1, ex.transcription_start - trans.transcription_start)) for ex in exons] 
                                 + [str(end - start - 1)]),
                     ]
-        
+            '''
             output += '\t'.join(row) + '\n'
         
         f = open(file_path, 'w')
