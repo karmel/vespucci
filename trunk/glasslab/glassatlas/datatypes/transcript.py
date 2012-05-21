@@ -491,9 +491,9 @@ class FilteredGlassTranscript(object):
         Generates a BED file (http://genome.ucsc.edu/FAQ/FAQformat.html#format1)
         of all the transcripts and their exons for viewing in the UCSC Genome Browser.
         '''
-        
         max_score = cls.objects.aggregate(max=Max('score'))['max']
         transcripts = cls.objects.order_by('chromosome__id','transcription_start')
+        
         cls._generate_bed_file(output_dir, transcripts, max_score, strand=0)
         cls._generate_bed_file(output_dir,transcripts, max_score, strand=1)
         
@@ -505,8 +505,8 @@ class FilteredGlassTranscript(object):
         transcripts = transcripts.filter(strand=strand)
         
         strand_char = strand and '-' or '+'
-        output = 'track name=glass_transcripts_%d description="Glass Atlas Transcripts %s strand" useScore=1 itemRgb=On\n' \
-                        % (strand, strand_char)
+        output = 'track name=glass_transcripts_{0} description=' \
+                    + '"Glass Atlas Transcripts {1} strand" useScore=1 itemRgb=On\n'.format(strand, strand_char)
         
         for trans in transcripts:
             # chrom start end name score strand thick_start thick_end colors? exon_count csv_exon_sizes csv_exon_starts

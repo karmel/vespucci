@@ -7,7 +7,8 @@ from glasslab.glassatlas.datatypes.transcript import GlassTranscript,\
     FilteredGlassTranscript, GlassTranscriptNucleotides, GlassTranscriptSource,\
     GlassTranscriptSequence, GlassTranscriptConserved, GlassTranscriptPatterned,\
     GlassTranscriptNonCoding, CellTypeBase, GlassTranscriptSourcePrep,\
-    GlassTranscriptPrep, GlassTranscriptInfrastructure, GlassTranscriptDuped
+    GlassTranscriptPrep, GlassTranscriptInfrastructure, GlassTranscriptDuped,\
+    FilteredGlassTranscriptManager
 from glasslab.config import current_settings
 from glasslab.glassatlas.datatypes.transcribed_rna import GlassTranscribedRna,\
     GlassTranscribedRnaSource
@@ -75,7 +76,7 @@ class GlassTranscriptPrepBMDC(GlassTranscriptPrep):
 
 class FilteredGlassTranscriptBMDC(GlassTranscriptBMDC, FilteredGlassTranscript):
     cell_base = BMDCBase()
-    objects = FilteredGlassTranscript.objects
+    objects = FilteredGlassTranscriptManager()
     class Meta:
         proxy = True
         app_label   = 'Transcription_%s' % CELL_TYPE
