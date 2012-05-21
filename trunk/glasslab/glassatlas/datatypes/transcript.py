@@ -620,7 +620,7 @@ class GlassTranscriptInfrastructure(GlassTranscriptTranscriptionRegionTable):
     '''
     Relationship between GlassTranscript and the infrastructural ncRNA it maps to.
     '''
-    patterned_transcription_region  = models.ForeignKey(PatternedTranscriptionRegion)
+    infrastructure_transcription_region  = models.ForeignKey(PatternedTranscriptionRegion)
     
     table_type      = 'infrastructure'
     related_class   = PatternedTranscriptionRegion

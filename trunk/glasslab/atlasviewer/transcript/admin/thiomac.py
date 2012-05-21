@@ -17,7 +17,8 @@ from glasslab.glassatlas.datatypes.celltypes.thiomac import FilteredGlassTranscr
     GlassTranscriptNonCodingThioMac, GlassTranscriptNucleotidesThioMac,\
     GlassTranscribedRnaSourceThioMac, PeakFeatureThioMac,\
     GlassTranscriptSourcePrepThioMac, GlassTranscriptPrepThioMac,\
-    GlassTranscriptDupedThioMac, GlassTranscriptLabelThioMac
+    GlassTranscriptDupedThioMac, GlassTranscriptLabelThioMac,\
+    GlassTranscriptInfrastructureThioMac
 from django.contrib import admin
 
 
@@ -28,7 +29,7 @@ class GlassTranscriptNonCodingThioMacInline(GlassTranscriptNonCodingInline):
 class GlassTranscriptDupedThioMacInline(GlassTranscriptDupedInline):
     model = GlassTranscriptDupedThioMac
 class GlassTranscriptInfrastructureThioMacInline(GlassTranscriptInfrastructureInline):
-    model = GlassTranscriptDupedThioMac
+    model = GlassTranscriptInfrastructureThioMac
 class GlassTranscriptSourceThioMacInline(GlassTranscriptSourceInline):
     model = GlassTranscriptSourceThioMac
 
