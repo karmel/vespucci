@@ -64,13 +64,13 @@ BEGIN
     above_thresh_table = 'above_thresh_table_' || chr_id || '_' || strand || '_' || (1000*RANDOM())::int;
         
     EXECUTE 'CREATE TEMP TABLE ' || above_thresh_table  || ' 
-        as SELECT t.id, t.strand, t.transcription_start, t.transcription_end, 
+        as SELECT t.id, t.strand, t.transcription_start, t.transcription_end, t.refseq,
                 ''0,0,0''::circle as density_circle, point(0,0) as start_density
                 FROM  glass_atlas_{0}_{1}_prep.glass_transcript_' || chr_id || ' t
                 JOIN glass_atlas_{0}_{1}_prep.glass_transcript_source_' || chr_id || ' s
                     ON t.id = s.glass_transcript_id
                 WHERE t.strand = ' || strand || '
-                GROUP BY t.id, t.strand, t.transcription_start, t.transcription_end
+                GROUP BY t.id, t.strand, t.transcription_start, t.transcription_end, t.refseq
                 -- Omit one-tag-wonders and one-run wonders unless they have at least 5 tags
                 HAVING avg(s.tag_count) > 1 AND (count(s.sequencing_run_id) > 1 OR avg(s.tag_count) > 5)
             ';
@@ -83,16 +83,18 @@ BEGIN
     EXECUTE 'CREATE INDEX ' || above_thresh_table || '_start_density_idx ON ' || above_thresh_table || ' USING gist(start_density)';
         
     FOR trans IN 
-        EXECUTE 'SELECT t1.id, t1.strand, t1.transcription_start, t1.transcription_end,
+        EXECUTE 'SELECT t1.id, t1.strand, t1.transcription_start, t1.transcription_end, t1.refseq,
                     GREATEST(max(t2.transcription_end), t1.transcription_end) as max_end
             FROM ' || above_thresh_table  || ' t1
             LEFT OUTER JOIN ' || above_thresh_table  || ' t2 
             ON t1.density_circle @> t2.start_density 
                 AND t1.strand = t2.strand 
+                AND t1.refseq = t2.refseq
                 AND t1.transcription_start <= t2.transcription_start -- Omit upstream transcripts in the circle 
-            GROUP by t1.id, t1.strand, t1.transcription_start, t1.transcription_end
+            GROUP by t1.id, t1.strand, t1.transcription_start, t1.transcription_end, t1.refseq
             ORDER by t1.transcription_start ASC'
     LOOP
+        -- @todo: Prevent two refseq transcripts being joined if there is an intervening non-refseq?
         IF trans.id IS NOT NULL THEN
             -- Reset transcript record.
             transcript := NULL;
@@ -100,7 +102,7 @@ BEGIN
             transcript.strand = trans.strand;
             transcript.transcription_start = trans.transcription_start;
             transcript.transcription_end = trans.max_end;
-            
+            transcript.refseq = trans.refseq;
             RETURN NEXT transcript;
         END IF;
     END LOOP;
@@ -115,13 +117,13 @@ DECLARE
 BEGIN
     -- Update record
     EXECUTE 'INSERT INTO glass_atlas_{0}_{1}_staging.glass_transcript_' || rec.chromosome_id 
-    || ' (chromosome_id, strand, transcription_start, transcription_end, '
-        || ' start_end, modified, created) '
-    || 'VALUES (' || rec.chromosome_id || ',' || rec.strand || ','
-        || rec.transcription_start || ',' || rec.transcription_end || ','
+    || ' (chromosome_id, strand, transcription_start, transcription_end,
+            start_end, refseq, modified, created) 
+        VALUES (' || rec.chromosome_id || ',' || rec.strand || ','
+        || rec.transcription_start || ',' || rec.transcription_end || ',' 
         || ' public.make_box(' || rec.transcription_start || ', 0' 
             || ',' ||  rec.transcription_end || ', 0),'
-        || ' NOW(), NOW()) RETURNING *' INTO transcript;
+         || rec.refseq || ', NOW(), NOW()) RETURNING *' INTO transcript;
     RETURN transcript;
 END;
 $$ LANGUAGE 'plpgsql';

@@ -275,6 +275,8 @@ class TranscriptBase(TranscriptionRegionBase):
     '''
     Unique transcribed regions in the genome, as determined via GRO-Seq.
     '''   
+    refseq              = models.BooleanField(help_text='Does this transcript overlap with RefSeq transcripts (strand-specific)?')
+    
     class Meta:
         abstract = True
         
@@ -284,7 +286,7 @@ class GlassTranscriptPrep(TranscriptBase):
         abstract    = True
 
 class GlassTranscript(TranscriptBase):
-    distal             = models.BooleanField(help_text='Is this transcript at least 1000 bp away from RefSeq transcripts?')
+    distal              = models.BooleanField(help_text='Is this transcript at least 1000 bp away from RefSeq transcripts (not strand-specific)?')
     spliced             = models.NullBooleanField(default=None, help_text='Do we have RNA-Seq confirmation?')
     standard_error      = models.FloatField(null=True, default=None)
     score               = models.FloatField(null=True, default=None)

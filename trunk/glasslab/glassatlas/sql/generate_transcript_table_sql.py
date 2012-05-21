@@ -17,6 +17,7 @@ CREATE TABLE "glass_atlas_{0}_{1}_staging"."glass_transcript" (
     "transcription_start" int8 DEFAULT NULL,
     "transcription_end" int8 DEFAULT NULL,
     "start_end" box DEFAULT NULL,
+    "refseq" boolean DEFAULT NULL,
     "distal" boolean DEFAULT NULL,
     "spliced" boolean DEFAULT NULL,
     "score" numeric DEFAULT NULL,
