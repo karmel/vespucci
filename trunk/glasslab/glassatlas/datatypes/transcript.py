@@ -381,7 +381,7 @@ class GlassTranscript(TranscriptBase):
         for chr_id in chr_list:
             print 'Drawing edges for transcripts for chromosome %d' % chr_id
             query = """
-                SELECT glass_atlas_%s_%s%s.insert_associated_transcript_regions(%d);
+                SELECT glass_atlas_%s_%s%s.draw_transcript_edges(%d);
                 """ % (current_settings.TRANSCRIPT_GENOME, 
                        current_settings.CURRENT_CELL_TYPE.lower(),
                        current_settings.STAGING,
