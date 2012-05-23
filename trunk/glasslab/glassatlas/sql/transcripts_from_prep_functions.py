@@ -65,20 +65,16 @@ BEGIN
         
     EXECUTE 'CREATE TEMP TABLE ' || above_thresh_table  || ' 
         as SELECT t.id, t.strand, t.transcription_start, t.transcription_end, t.refseq,
-                ''0,0,0''::circle as density_circle, point(0,0) as start_density
+                circle(point(t.transcription_end, t.density), t.edge) as density_circle, 
+                point(t.transcription_start,t.density) as start_density
                 FROM  glass_atlas_{0}_{1}_prep.glass_transcript_' || chr_id || ' t
                 JOIN glass_atlas_{0}_{1}_prep.glass_transcript_source_' || chr_id || ' s
                     ON t.id = s.glass_transcript_id
                 WHERE t.strand = ' || strand || '
-                GROUP BY t.id, t.strand, t.transcription_start, t.transcription_end, t.refseq
+                GROUP BY t.id, t.strand, t.transcription_start, t.transcription_end, t.refseq, t.density, t.edge  
                 -- Omit one-tag-wonders and one-run wonders unless they have at least 5 tags
                 HAVING avg(s.tag_count) > 1 AND (count(s.sequencing_run_id) > 1 OR avg(s.tag_count) > 5)
             ';
-    EXECUTE 'UPDATE ' || above_thresh_table  || ' temp_t
-        SET density_circle = t.density_circle, 
-            start_density = t.start_density
-        FROM glass_atlas_{0}_{1}_prep.glass_transcript_' || chr_id || ' t
-        WHERE t.id = temp_t.id';
     EXECUTE 'CREATE INDEX ' || above_thresh_table || '_density_circle_idx ON ' || above_thresh_table || ' USING gist(density_circle)';
     EXECUTE 'CREATE INDEX ' || above_thresh_table || '_start_density_idx ON ' || above_thresh_table || ' USING gist(start_density)';
         

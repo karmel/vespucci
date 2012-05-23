@@ -507,8 +507,8 @@ class FilteredGlassTranscript(object):
         transcripts = transcripts.filter(strand=strand)
         
         strand_char = strand and '-' or '+'
-        output = 'track name=glass_transcripts_{0} description=' \
-                    + '"Glass Atlas Transcripts {1} strand" useScore=1 itemRgb=On\n'.format(strand, strand_char)
+        output = ('track name=glass_transcripts_{0} description=' \
+                    + '"Glass Atlas Transcripts {1} strand" useScore=1 itemRgb=On\n').format(strand, strand_char)
         
         for trans in transcripts:
             # chrom start end name score strand thick_start thick_end colors? exon_count csv_exon_sizes csv_exon_starts

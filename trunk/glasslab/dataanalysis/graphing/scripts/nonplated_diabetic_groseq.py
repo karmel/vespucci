@@ -151,8 +151,8 @@ if __name__ == '__main__':
         grapher.save_plot(os.path.join(dirpath, 'plated_diabetic_balbc_vs_plated_nondiabetic_balbc_scatterplot.png'))
         grapher.show_plot()
     
-    if False:
-        genes = ['Abca1','Abcg1','S1pr1','S1pr2','S1pr3','S1pr4','S1pr5']
+    if True:
+        genes = ['Clec4e', 'Tlr2', 'Cxcl1','Cxcl2','Siglec1','Tnf','Il1b','Il12b']
         for gene in genes:
             gene_row = refseq[refseq['gene_names'] == ('{%s}' % gene)]
             grapher.bargraph_for_transcript(gene_row, 
