@@ -111,7 +111,6 @@ if __name__ == '__main__':
     #data = data[data['transcript_score'] >= 15]
     #data = data[data['has_refseq'] != 0]
     data = data[data['distal'] == 't']
-    print len(data)
     data = data[data['h3k4me2_notx_score'] > 0]
     data = data[data['length'] > 200]
     #data = data[abs(data['balb_plating_notx_fc']) < 1]
