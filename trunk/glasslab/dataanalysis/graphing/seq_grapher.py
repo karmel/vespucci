@@ -234,6 +234,11 @@ class SeqGrapher(TranscriptAnalyzer):
         return ax
          
 if __name__ == '__main__':
+    import locale
+    locale.getdefaultlocale()
+    import numpy
+    numpy.core.multiarray.datetime_delta 
+    """
     grapher = SeqGrapher()
     
     dirpath = '/Users/karmel/GlassLab/Notes_and_Reports/NOD_BALBc/ThioMacs/Diabetic/Nonplated/Analysis/'
@@ -300,4 +305,4 @@ if __name__ == '__main__':
                                     show_plot=False)
     grapher.save_plot(os.path.join(dirpath, 'insr_fold_change_bargraph.png'))
     grapher.show_plot()
-    
+    """

@@ -6,15 +6,13 @@ Created on Jan 17, 2011
 Features and annotations relevant to transcripts.
 '''
 from django.db import models, connection
-from glasslab.sequencing.datatypes.peak import GlassPeak,\
-    multiprocess_glass_peaks
 from glasslab.glassatlas.datatypes.metadata import SequencingRun, PeakType
 from glasslab.sequencing.datatypes.tag import wrap_errors
 from glasslab.config import current_settings
 from glasslab.utils.database import execute_query
 from glasslab.glassatlas.datatypes.transcript import multiprocess_all_chromosomes
 from glasslab.utils.datatypes.basic_model import GlassModel
-from django.db.models.aggregates import Avg
+from glasslab.sequencing.datatypes.peak import GlassPeak
 
 
 def wrap_add_features_from_chipseq(cls, chr_list, *args): wrap_errors(cls._add_features_from_chipseq, chr_list, *args)
@@ -31,6 +29,8 @@ class PeakFeature(GlassModel):
     tag_count       = models.IntegerField(max_length=12)
     distance_to_tss = models.IntegerField(max_length=12)
     
+    prep_table = GlassPeak._meta.db_table
+    
     class Meta:
         abstract    = True
           
@@ -39,7 +39,8 @@ class PeakFeature(GlassModel):
                              self.relationship.strip(),
                              str(self.peak_type),
                              self.distance_to_tss)
-        
+    
+    
     @classmethod 
     def add_from_peaks(cls,  tag_table):
         connection.close()
@@ -52,7 +53,7 @@ class PeakFeature(GlassModel):
     ################################################
     @classmethod 
     def add_features_from_chipseq(cls,  tag_table, sequencing_run):
-        multiprocess_glass_peaks(wrap_add_features_from_chipseq, cls, sequencing_run)
+        multiprocess_all_chromosomes(wrap_add_features_from_chipseq, cls, sequencing_run)
         
     @classmethod
     def _add_features_from_chipseq(cls, chr_list, sequencing_run):
