@@ -61,6 +61,7 @@ def multiprocess_all_chromosomes(func, cls, *args, **kwargs):
             if not all_chr: raise Exception
         
         except Exception:
+            raise
             # cls in question does not have explicit relation to chromosomes; get all
             all_chr = fetch_rows('''
                 SELECT DISTINCT id
