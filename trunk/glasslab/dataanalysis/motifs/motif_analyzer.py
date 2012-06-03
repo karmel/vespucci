@@ -108,16 +108,16 @@ if __name__ == '__main__':
     
     bg = os.path.join(dirpath, 'refseq_all_stranded/refseq_all_stranded_regions_for_homer.txt')
     
-    data = data[data['transcript_score'] >= 15]
-    data = data[data['has_refseq'] != 0]
-    #data = data[data['has_refseq'] == 0]
+    data = data[data['transcript_score'] >= 8]
+    #data = data[data['has_refseq'] != 0]
+    data = data[data['has_refseq'] == 0]
     #data = data[data['distal'] == 't']
-    #data = data[data['h3k4me2_notx_score'] > 0]
-    #data = data[data['length'] > 200]
+    data = data[data['h3k4me2_notx_score'] > 0]
+    data = data[data['length'] > 200]
     #data = data[abs(data['balb_plating_notx_fc']) < 1]
-    data = data[data['balb_nod_notx_1h_fc'] <= -1]
+    #data = data[data['balb_nod_notx_1h_fc'] <= -1]
     
     #data = yzer.collapse_strands(data)
     
-    yzer.run_homer(data, 'nondiabetic_nod_notx_down_refseq', dirpath, 
-                   cpus=6, center=False, reverse=False, size=200, length=[8,10,12], bg=bg)
+    yzer.run_homer(data, 'h3k4me2_all', dirpath, 
+                   cpus=6, center=False, reverse=False, size=200, length=[8,10,12,15])
