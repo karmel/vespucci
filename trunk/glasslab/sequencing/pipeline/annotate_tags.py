@@ -25,7 +25,8 @@ from glasslab.config import current_settings
 import shutil
 from glasslab.sequencing.pipeline.annotate_base import check_input, _print,\
     call_bowtie, create_schema, trim_sequences, clean_bowtie_file
-from glasslab.utils.database import execute_query_without_transaction
+from glasslab.utils.database import execute_query_without_transaction,\
+    restart_server
 
 class FastqOptionParser(GlassOptionParser):
     options = [
@@ -188,3 +189,4 @@ if __name__ == '__main__':
         _print('Skipping creation of tag table')
         GlassTag.set_table_name('tag_' + file_name)
         GlassTag.set_refseq()
+        restart_server()
