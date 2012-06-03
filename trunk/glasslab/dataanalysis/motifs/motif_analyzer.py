@@ -106,9 +106,9 @@ if __name__ == '__main__':
     filename = os.path.join(os.path.dirname(base_dirpath), 'balbc_nod_vectors.txt')
     data = yzer.import_file(filename)
     
-    bg = os.path.join(dirpath, 'refseq_all_stranded/refseq_all_stranded_regions_for_homer.txt')
+    bg = os.path.join(dirpath, 'h3k4me2_all/h3k4me2_all_regions_for_homer.txt')
     
-    data = data[data['transcript_score'] >= 8]
+    #data = data[data['transcript_score'] >= 15]
     #data = data[data['has_refseq'] != 0]
     data = data[data['has_refseq'] == 0]
     #data = data[data['distal'] == 't']
