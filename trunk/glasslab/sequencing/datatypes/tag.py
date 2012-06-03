@@ -328,19 +328,20 @@ class GlassTag(GlassSequencingOutput):
         '''
         for chr_id in chr_list:
             update_query = """
-            -- IGNORE strand, since either side match is a match
-            UPDATE "%s_%d" tag 
+            UPDATE "{0}_{1}" tag 
+            SET refseq = NULL; 
+
+            UPDATE "{0}_{1}" tag 
             SET refseq = true 
-            FROM glass_atlas_mm9_refseq.glass_transcript_%d ref
+            FROM genome_reference_{3}.sequence_transcription_region ref
             WHERE ref.start_end && tag.start_end
             AND ref.strand = tag.strand
             AND tag.refseq IS NULL;
 
-            UPDATE "%s_%d" tag 
+            UPDATE "{0}_{1}" tag 
             SET refseq = false 
             WHERE refseq IS NULL;
-            """ % (cls._meta.db_table, chr_id, chr_id,
-                   cls._meta.db_table, chr_id)
+            """.format(cls._meta.db_table, chr_id, current_settings.GENOME)
             execute_query(update_query)
             
     @classmethod

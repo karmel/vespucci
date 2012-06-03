@@ -126,7 +126,7 @@ BEGIN
         start_end_clause := ' and start_end && public.make_box(' || (start_end[0])[0] || ',0,' || (start_end[1])[0] || ',0) ';
     END IF;
     
-    -- Select each tag set, grouped by start and refseq, if that is a field.
+    -- Select each tag set, grouped by start.
     -- We group here to speed up processing on tables where many tags start at the same location.
     FOR rec IN 
         EXECUTE 'SELECT array_agg(id) as ids, ' || chr_id || ' as chromosome_id, ' || strand ||' as strand,
@@ -135,7 +135,7 @@ BEGIN
          FROM "' || source_t || '_' || chr_id
         || '" WHERE strand = ' || strand 
         || start_end_clause
-        || ' GROUP BY "' || field_prefix || 'start", "' || field_prefix || 'end"
+        || ' GROUP BY "' || field_prefix || 'start"
         ORDER BY "' || field_prefix || 'start" ASC, "' || field_prefix || 'end" ASC;'
         LOOP
             -- The tags returned from the sequencing run are shorter than we know them to be biologically
