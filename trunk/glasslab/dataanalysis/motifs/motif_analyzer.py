@@ -120,4 +120,4 @@ if __name__ == '__main__':
     #data = yzer.collapse_strands(data)
     
     yzer.run_homer(data, 'nondiabetic_nod_notx_down_h3k4me2', dirpath, 
-                   cpus=6, center=False, reverse=False, size=200, length=[8,10,12])
+                   cpus=6, center=False, reverse=False, size=200, length=[8,10,12], bg=bg)
