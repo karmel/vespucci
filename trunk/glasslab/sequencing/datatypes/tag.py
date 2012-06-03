@@ -333,7 +333,7 @@ class GlassTag(GlassSequencingOutput):
 
             UPDATE "{0}_{1}" tag 
             SET refseq = true 
-            FROM genome_reference_{3}.sequence_transcription_region ref
+            FROM genome_reference_{2}.sequence_transcription_region ref
             WHERE ref.start_end && tag.start_end
             AND ref.strand = tag.strand
             AND tag.refseq IS NULL;
