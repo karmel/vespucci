@@ -186,6 +186,7 @@ if __name__ == '__main__':
         GlassTag.set_table_name('tag_' + file_name)
         add_indices()
     else:
+        raise Exception
         _print('Skipping creation of tag table')
         GlassTag.set_table_name('tag_' + file_name)
         GlassTag.set_refseq()
