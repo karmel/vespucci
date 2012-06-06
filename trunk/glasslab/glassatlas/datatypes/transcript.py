@@ -56,12 +56,11 @@ def multiprocess_all_chromosomes(func, cls, *args, **kwargs):
                     GROUP BY chromosome_id ORDER BY COUNT(chromosome_id) DESC;''' 
                                     % (getattr(cls,'prep_table',None)
                                         or cls.cell_base.glass_transcript_prep._meta.db_table))
-            
+                
             all_chr = zip(*all_chr)[0]
             if not all_chr: raise Exception
-        
+            
         except Exception:
-            raise
             # cls in question does not have explicit relation to chromosomes; get all
             all_chr = fetch_rows('''
                 SELECT DISTINCT id

@@ -10,15 +10,16 @@ import subprocess
 import datetime
 from psycopg2 import OperationalError
 
-def execute_query(query, using='default'):
+def execute_query(query, using='default', return_cursor=False):
     connection = connections[using]
     connection.close()
     cursor = connection.cursor()
     cursor.execute(query)
     transaction.commit_unless_managed()
-    return cursor
+    if return_cursor: return cursor
+    connection.close()
 
-def execute_query_without_transaction(query, using='default'):
+def execute_query_without_transaction(query, using='default', return_cursor=False):
     connection = connections[using]
     isolation_level = connection.isolation_level
     connection.close()
@@ -27,7 +28,8 @@ def execute_query_without_transaction(query, using='default'):
     cursor.execute(query)
     transaction.commit_unless_managed()
     connection.isolation_level = isolation_level
-    return cursor
+    if return_cursor: return cursor
+    connection.close()
 
 def fetch_rows(query, return_cursor=False, using='default'):
     connection = connections[using]
@@ -57,7 +59,7 @@ def restart_server():
     We want to check first that the server knows it has restarted, and
     then that it can actually accept incoming queries.
     '''
-    check_call('{0} "{1}/bin/pg_ctl restart -D {1}/data/ </dev/null >/dev/null 2>&1 &"'.format(
+    check_call('{0} "{1}/bin/pg_ctl restart -D {1}/data/ -m immediate </dev/null >/dev/null 2>&1 &"'.format(
                                             current_settings.PG_ACCESS_CMD, 
                                             current_settings.PG_HOME), shell=True)
     

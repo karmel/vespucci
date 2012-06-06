@@ -73,8 +73,8 @@ if __name__ == '__main__':
                                     or options.tag_table
         cell_base.glass_transcript.add_from_tags(GlassTag._meta.db_table)
         #cell_base.glass_transcript.force_vacuum_prep()
-        print 'Restarting server...'
-        restart_server()
+        #print 'Restarting server...'
+        #restart_server()
     elif options.remove_rogue_run:
         cell_base.glass_transcript.remove_rogue_run()
         cell_base.glass_transcript.force_vacuum_prep()

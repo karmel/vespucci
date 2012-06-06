@@ -232,13 +232,72 @@ class SeqGrapher(TranscriptAnalyzer):
         if show_plot: self.show_plot()
         
         return ax
-         
+    
+    def timeseries(self, dates, data, subplot=111,
+                   show_average=False, show_median=True, 
+                   colors=None, labels=None,
+                   title='', xlabel=None, ylabel=None,
+                   show_legend=True, show_plot=True, ax=None):
+        
+        '''
+        Data expected as a list of lists::
+        
+            [[group 1 member 1 val 1, group 1 member 1 val 2, group 1 member 1 val 3 ...],
+                [group 1 member 2 val 1, group 2 member 1 val 2, group 1 member 2 val 3 ...]],
+            [[group 2 member 1 val 1, group 2 member 1 val 2, group 2 member 1 val 3 ...] ...
+            
+        '''
+        ax = self.set_up_plot(ax, subplot)
+        
+        
+        for i, group in enumerate(data):
+            color = colors and colors[i] or None
+            
+            for j, member in enumerate(group):
+                # Only include label with first member
+                if j == 0: label = labels and labels[i] or None
+                else: label = None
+            
+                ax.plot(dates, member, 'o', markerfacecolor='None',
+                        markeredgecolor=color, label=label)
+        
+        # Go through loops again to group by type (point, avg, median) in legend 
+        if show_average:
+            for i, group in enumerate(data):
+                avg = numpy.array(group).mean(axis=0)
+                ax.plot(dates, avg, '-', color=colors[i], label='Avg {0}'.format(labels[i]))
+     
+        store_median = None
+        if show_median:
+            for i, group in enumerate(data):
+                med = numpy.median(group, axis=0)
+                if store_median is None: store_median = med
+                ax.plot(dates, med, '-', color=colors[i], label='Median {0}'.format(labels[i]))
+        
+        ax.plot(dates, (store_median - med) + 100, '-', color='green', linewidth=3, label="Karmel's level of excitement")
+    
+        from datetime import datetime, timedelta
+        ax.plot([datetime(2012,4,3)]*2, [0,600], '--', color='black', label='IP injection')
+        ax.plot([dates[0] - timedelta(days=1),dates[-1:][0] + timedelta(days=1)], 
+                [200,200], '-', color='#CCCCCC', label='Threshold for diabetes')
+        
+        ax.figure.autofmt_xdate()
+        self.add_axis_labels(xlabel, ylabel)
+        self.add_title(title, ax)
+        
+        if show_legend:
+            pyplot.legend(loc='upper left')
+        
+        # Any other operations to tack on?
+        self.other_plot()
+        
+        if show_plot: self.show_plot()
+        
+        return ax
+    
+    
 if __name__ == '__main__':
-    import locale
-    locale.getdefaultlocale()
-    import numpy
-    numpy.core.multiarray.datetime_delta 
-    """
+    
     grapher = SeqGrapher()
     
     dirpath = '/Users/karmel/GlassLab/Notes_and_Reports/NOD_BALBc/ThioMacs/Diabetic/Nonplated/Analysis/'
@@ -305,4 +364,4 @@ if __name__ == '__main__':
                                     show_plot=False)
     grapher.save_plot(os.path.join(dirpath, 'insr_fold_change_bargraph.png'))
     grapher.show_plot()
-    """
+    

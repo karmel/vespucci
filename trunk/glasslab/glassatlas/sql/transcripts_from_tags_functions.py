@@ -6,7 +6,7 @@ Created on Nov 12, 2010
 Convenience script for transcript functions.
 '''
 genome = 'mm9'
-cell_type='thiomac'
+cell_type='bmdc'
 def sql(genome, cell_type):
     return """
 -- Not run from within the codebase, but kept here in case functions need to be recreated.
@@ -135,7 +135,7 @@ BEGIN
          FROM "' || source_t || '_' || chr_id
         || '" WHERE strand = ' || strand 
         || start_end_clause
-        || ' GROUP BY "' || field_prefix || 'start"
+        || ' GROUP BY "' || field_prefix || 'start", "' || field_prefix || 'end"
         ORDER BY "' || field_prefix || 'start" ASC, "' || field_prefix || 'end" ASC;'
         LOOP
             -- The tags returned from the sequencing run are shorter than we know them to be biologically
