@@ -8,4 +8,4 @@ export PYTHONPATH=$CURRENT_PATH:$PYTHONPATH
 
 export DJANGO_SETTINGS_MODULE=glasslab.config.django_settings
 
-python $CURRENT_PATH/glasslab/utils/misc/inbredstrains/locate_motifs.py $@
+python $CURRENT_PATH/glasslab/inbredstrains/locate_motifs.py $@

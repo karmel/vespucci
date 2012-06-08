@@ -8,4 +8,4 @@ export PYTHONPATH=$CURRENT_PATH:$PYTHONPATH
 
 export DJANGO_SETTINGS_MODULE=glasslab.config.django_settings
 
-python $CURRENT_PATH/glasslab/utils/misc/inbredstrains/generate_genomes_from_reference.py $@
+python $CURRENT_PATH/glasslab/inbredstrains/generate_genomes_from_reference.py $@

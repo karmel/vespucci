@@ -8,4 +8,4 @@ export PYTHONPATH=$CURRENT_PATH:$PYTHONPATH
 
 export DJANGO_SETTINGS_MODULE=glasslab.config.django_settings
 
-python $CURRENT_PATH/glasslab/inbredstrains/locate_variants.py $@
+python $CURRENT_PATH/glasslab/inbredstrains/compete/compete_tf_graphs.py $@

@@ -110,8 +110,8 @@ class SeqGrapher(TranscriptAnalyzer):
     
     def set_up_plot(self, ax=None, subplot=111):
         # Set up plot
-        if not ax: pyplot.figure(figsize=[10*int(str(subplot)[1]), # Width
-                                          10*int(str(subplot)[2])]) # Height
+        if not ax: pyplot.figure(figsize=[10*int(str(subplot)[1]), # Width for cols
+                                          10*int(str(subplot)[0])]) # Height for rows
         ax = pyplot.subplot(subplot)
         return ax
         
