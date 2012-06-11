@@ -3,7 +3,7 @@ Created on Nov 15, 2010
 
 @author: karmel
 '''
-from django.db import transaction, connections
+from django.db import transaction, connections, connection
 from subprocess import check_call, check_output
 from glasslab.config import current_settings
 import subprocess
@@ -65,26 +65,12 @@ def restart_server():
     
     # Make sure everything went as planned
     time_to_wait = 5*60
+    # We have to wait for the server to actually be up and running!
     server_is_starting = datetime.datetime.now()
     while server_is_starting:
         try:
-            status = check_output('{0} "{1}/bin/pg_ctl status -D {1}/data/"'.format(
-                                            current_settings.PG_ACCESS_CMD, 
-                                            current_settings.PG_HOME), shell=True)
-            server_is_starting = False
-        except subprocess.CalledProcessError:
-            if (datetime.datetime.now() - server_is_starting).seconds > time_to_wait:
-                server_is_starting = False
-                raise Exception('Could not restart server after {0} seconds. Please investigate.'.format(time_to_wait))
-    
-    if status.find('server is running') < 0: 
-        raise Exception('Could not restart server! Status of server:\n{0}'.format(status))
-    
-    # And we have to wait for the server to actually be up and running!
-    server_is_starting = datetime.datetime.now()
-    while server_is_starting:
-        try:
-            fetch_rows('SELECT * FROM pg_stat_activity;')
+            fetch_rows('SELECT NOW();')
+            connection.close()
             server_is_starting = False
         except OperationalError:
             if (datetime.datetime.now() - server_is_starting).seconds > time_to_wait:
