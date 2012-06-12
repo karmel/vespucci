@@ -4,11 +4,10 @@ Created on Nov 15, 2010
 @author: karmel
 '''
 from django.db import transaction, connections, connection
-from subprocess import check_call, check_output
+from subprocess import check_call
 from glasslab.config import current_settings
-import subprocess
 import datetime
-from psycopg2 import OperationalError
+from psycopg2 import OperationalError, Error as psycoError
 
 def execute_query(query, using='default', return_cursor=False):
     connection = connections[using]
@@ -72,7 +71,7 @@ def restart_server():
             fetch_rows('SELECT NOW();')
             connection.close()
             server_is_starting = False
-        except OperationalError:
+        except OperationalError, psycoError:
             if (datetime.datetime.now() - server_is_starting).seconds > time_to_wait:
                 server_is_starting = False
                 raise Exception('Could not run query on server after {0} seconds. Please investigate.'.format(time_to_wait))

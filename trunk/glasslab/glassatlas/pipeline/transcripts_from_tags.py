@@ -59,6 +59,7 @@ if __name__ == '__main__':
     if options.processes:
         current_settings.ALLOWED_PROCESSES = int(options.processes)
     
+    
     if options.cell_type: current_settings.CURRENT_CELL_TYPE = options.cell_type
     cell_base = CellTypeBase().get_cell_type_base(current_settings.CURRENT_CELL_TYPE)()
     
@@ -67,7 +68,6 @@ if __name__ == '__main__':
     
     if options.staging: current_settings.STAGING = current_settings.STAGING_SUFFIX
 
-    #cell_base.glass_transcript.turn_off_autovacuum()    
     if options.tag_table:
         GlassTag._meta.db_table = options.schema_name and '%s"."%s' % (options.schema_name, options.tag_table) \
                                     or options.tag_table
@@ -93,7 +93,7 @@ if __name__ == '__main__':
             current_settings.ALLOWED_PROCESSES = curr_processes
     
         print 'Restarting server...'
-        #restart_server()
+        restart_server()
     elif options.set_density:
         cell_base.glass_transcript.set_density(allow_extended_gaps=allow_extended_gaps)
         cell_base.glass_transcript.force_vacuum_prep()
@@ -118,5 +118,4 @@ if __name__ == '__main__':
     if options.output_dir:
         cell_base.filtered_glass_transcript.generate_bed_file(options.output_dir)
         
-    #cell_base.glass_transcript.turn_on_autovacuum()
     
