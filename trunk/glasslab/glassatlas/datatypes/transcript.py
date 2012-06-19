@@ -62,10 +62,7 @@ def multiprocess_all_chromosomes(func, cls, *args, **kwargs):
             
         except Exception:
             # cls in question does not have explicit relation to chromosomes; get all
-            all_chr = fetch_rows('''
-                SELECT DISTINCT id
-                FROM "%s" ;''' % Chromosome._meta.db_table)
-            all_chr = zip(*all_chr)[0]
+            all_chr = current_settings.GENOME_CHROMOSOMES
 
         # Chromosomes are sorted by count descending, so we want to snake them
         # back and forth to create even-ish groups. 

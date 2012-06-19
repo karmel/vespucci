@@ -179,7 +179,7 @@ class GlassTag(GlassSequencingOutput):
         Can't be multiprocessed; too many attempts to ANALYZE at once.
         '''
         
-        for chr_id in cls.chromosomes():
+        for chr_id in current_settings.GENOME_CHROMOSOMES:
             table_sql = """
             CREATE TABLE "%s_%d" (
                 CHECK ( chromosome_id = %d )
