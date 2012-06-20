@@ -68,7 +68,7 @@ def restart_server():
     server_is_starting = datetime.datetime.now()
     while server_is_starting:
         try:
-            fetch_rows('SELECT NOW();')
+            print fetch_rows('SELECT NOW();')
             connection.close()
             server_is_starting = False
         except OperationalError, psycoError:

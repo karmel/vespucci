@@ -21,6 +21,7 @@ if __name__ == '__main__':
     data = grapher.normalize(data, 'nonplated_diabetic_balb_notx_tag_count', 0.645397)
     
     data['balb_notx_1h_reads_per_base'] = data['balb_notx_1h_tag_count']/data['length']
+    data['balb_kla_1h_reads_per_base'] = data['balb_kla_1h_tag_count']/data['length']
     
     refseq = grapher.get_refseq(data)
     
@@ -218,9 +219,9 @@ if __name__ == '__main__':
                                             ylabel='Fold Change in NOD vs. BALBc',
                                             show_plot=False)
     if True:
-        genes = ['Tlr2','Cxcl1','Cxcl2','Cxcl14','Il6','Ptgs2','Tnfsf9','Vegfa','Tnf',
+        genes = ['Tlr2','Cxcl1','Cxcl2','Il6','Ptgs2','Tnfsf9','Vegfa','Tnf',
                  'Siglec1','Mmp9',
-                 'Il1b','Cxcl10','Tlr4','Il12b']
+                 'Il10','Il1b','Cxcl10','Tlr4','Il12b']
         indices = [refseq[refseq['gene_names'] == ('{%s}' % gene)].index[0] for gene in genes]
         
         
@@ -236,5 +237,26 @@ if __name__ == '__main__':
                                             rank_label='Rank of read per base pair value in BALBc notx 1h, ascending',
                                             show_plot=False)
         grapher.save_plot(os.path.join(dirpath, 'notx_1h_fold_change_bargraph.png'))
+        grapher.show_plot()
+            
+    if True:
+        genes = ['Tlr2','Cxcl1','Cxcl2','Il6','Ptgs2','Tnfsf9','Vegfa','Tnf',
+                 'Siglec1','Mmp9',
+                 'Il10','Il1b','Cxcl10','Tlr4','Il12b']
+        indices = [refseq[refseq['gene_names'] == ('{%s}' % gene)].index[0] for gene in genes]
+        
+        
+        sorted_by_count = refseq.fillna(0).sort_index(axis=0, by='balb_kla_1h_reads_per_base').index.copy()
+        sort_indexes = list(enumerate(sorted_by_count))
+        sort_indexes.sort(key=lambda x: x[1])
+        refseq['rank'] = zip(*sort_indexes)[0]
+         
+        grapher.bargraph_for_transcripts(refseq, indices, ['balb_nod_kla_1h_fc'],
+                                            bar_names=genes,
+                                            title='Fold Change in NOD vs. BALBc KLA 1h GRO-seq',
+                                            ylabel='Fold Change in NOD vs. BALBc',
+                                            rank_label='Rank of read per base pair value in BALBc KLA 1h, ascending',
+                                            show_plot=False)
+        grapher.save_plot(os.path.join(dirpath, 'kla_1h_fold_change_bargraph.png'))
         grapher.show_plot()
             
