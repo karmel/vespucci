@@ -8,6 +8,7 @@ from subprocess import check_call
 from glasslab.config import current_settings
 import datetime
 from psycopg2 import OperationalError, Error as psycoError
+from glasslab.utils.datatypes.genome_reference import Chromosome
 
 def execute_query(query, using='default', return_cursor=False):
     connection = connections[using]
@@ -70,6 +71,7 @@ def restart_server():
         try:
             print fetch_rows('SELECT NOW();')
             connection.close()
+            print Chromosome.objects.all()
             server_is_starting = False
         except OperationalError, psycoError:
             if (datetime.datetime.now() - server_is_starting).seconds > time_to_wait:
