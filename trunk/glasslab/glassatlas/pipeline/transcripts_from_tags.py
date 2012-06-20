@@ -87,7 +87,7 @@ if __name__ == '__main__':
     
         cell_base.glass_transcript.stitch_together_transcripts(
                         allow_extended_gaps=allow_extended_gaps, set_density=options.set_density)
-        cell_base.glass_transcript.force_vacuum_prep()
+        #cell_base.glass_transcript.force_vacuum_prep()
     
         if options.stitch_processes:
             current_settings.ALLOWED_PROCESSES = curr_processes

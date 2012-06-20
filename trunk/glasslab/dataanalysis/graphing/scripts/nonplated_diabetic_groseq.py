@@ -3,25 +3,36 @@ Created on Mar 23, 2012
 
 @author: karmel
 '''
+from __future__ import division
 from glasslab.dataanalysis.graphing.seq_grapher import SeqGrapher
 import os
 
 if __name__ == '__main__':
     grapher = SeqGrapher()
     
-    dirpath = '/Users/karmel/Desktop/Projects/GlassLab/Notes_and_Reports/NOD_BALBc/ThioMacs/Diabetic/Nonplated/Analysis/'
+    dirpath = 'karmel/Desktop/Projects/GlassLab/Notes_and_Reports/NOD_BALBc/ThioMacs/Analysis_2012_06/'
+    dirpath = grapher.get_path(dirpath)
     filename = os.path.join(dirpath, 'balbc_nod_vectors.txt')
     data = grapher.import_file(filename)
     
-    data = grapher.normalize(data, 'nod_notx_1h_tag_count', 1.095517)
-    data = grapher.normalize(data, 'nod_kla_1h_tag_count', 0.653140)
+    data = grapher.normalize(data, 'nod_notx_1h_tag_count', 1.095387)
+    data = grapher.normalize(data, 'nod_kla_1h_tag_count', 0.653289)
     data = grapher.normalize(data, 'nonplated_diabetic_nod_notx_tag_count', 0.884956)
     data = grapher.normalize(data, 'nonplated_diabetic_balb_notx_tag_count', 0.645397)
-    #data = grapher.normalize(data, 'nonplated_diabetic_nod_notx_tag_count', 2.320349, suffix='_norm2')
-    #data = grapher.normalize(data, 'balb_notx_1h_tag_count', 0.486305)
+    
+    data['balb_notx_1h_reads_per_base'] = data['balb_notx_1h_tag_count']/data['length']
     
     refseq = grapher.get_refseq(data)
     
+    # Remove low tag counts
+    xcolname = 'balb_kla_1h_tag_count'
+    ycolname = 'nod_kla_1h_tag_count_norm'
+    refseq = refseq[refseq['transcript_score'] >= 10]
+    
+    refseq_bg = refseq
+    #refseq = refseq[(refseq[xcolname] > 20) | (refseq[ycolname] > 20)]
+    
+    '''
     xcolname = 'nonplated_diabetic_balb_notx_tag_count'
     ycolname = 'nonplated_diabetic_nod_notx_tag_count_norm'
     
@@ -35,7 +46,7 @@ if __name__ == '__main__':
     # Filter out those that are diff because of plating for BALBc, since there appears to be
     # some contamination there
     refseq = refseq[abs(refseq['balb_plating_notx_fc'] <= 1)]
-    
+    '''
     # Split into those that are also diff in non-diabetic NOD and those not
     refseq_diabetic = refseq[abs(refseq['balb_nod_notx_1h_fc']) < 1]
     refseq_strain = refseq[abs(refseq['balb_nod_notx_1h_fc']) >= 1]
@@ -49,14 +60,30 @@ if __name__ == '__main__':
     #refseq_nonplated_down = refseq_nonplated_down[refseq_nonplated_down['balb_nod_notx_1h_fc'] > -1]
     
     refseq_up_nond = refseq[refseq['balb_nod_notx_1h_fc'] >= 1]
+    refseq_up_nond_kla = refseq[refseq['balb_nod_kla_1h_fc'] >= 1]
     refseq_down_nond = refseq[refseq['balb_nod_notx_1h_fc'] <= -1]
+    refseq_down_nond_kla = refseq[refseq['balb_nod_kla_1h_fc'] <= -1]
     
     refseq_up_d = refseq[refseq['diabetic_balb_nod_notx_1h_fc'] >= 1]
     refseq_down_d = refseq[refseq['diabetic_balb_nod_notx_1h_fc'] <= -1]
     
+    more_up = refseq[(refseq['balb_kla_1h_fc'] >= 1) 
+                          & (refseq['balb_kla_1h_fc'] - refseq['nod_kla_1h_fc'] <= -1)]
+    less_up = refseq[(refseq['balb_kla_1h_fc'] >= 1) 
+                          & (refseq['balb_kla_1h_fc'] - refseq['nod_kla_1h_fc'] >= 1)]
+    more_down = refseq[(refseq['balb_kla_1h_fc'] <= -1) 
+                          & (refseq['balb_kla_1h_fc'] - refseq['nod_kla_1h_fc'] >= 1)]    
+    less_down = refseq[(refseq['balb_kla_1h_fc'] <= -1) 
+                          & (refseq['balb_kla_1h_fc'] - refseq['nod_kla_1h_fc'] <= -1)]
+    
     if False:
-        print grapher.get_gene_names(refseq_up_nond)
-        print grapher.get_gene_names(refseq_down_nond)
+        #print grapher.get_gene_names(refseq_bg)
+        print grapher.get_gene_names(refseq_up_nond_kla)
+        print grapher.get_gene_names(refseq_down_nond_kla)
+        print grapher.get_gene_names(more_up)
+        print grapher.get_gene_names(less_up)
+        print grapher.get_gene_names(more_down)
+        print grapher.get_gene_names(less_down)
         
     if False:
         
@@ -152,7 +179,7 @@ if __name__ == '__main__':
                             show_count=True, show_correlation=True, show_plot=False)
         grapher.save_plot(os.path.join(dirpath, 'plated_diabetic_balbc_vs_plated_nondiabetic_balbc_scatterplot.png'))
         grapher.show_plot()
-    if True:
+    if False:
         # non-diabetic Balb vs. non-diabetic nod
         ax = grapher.scatterplot(refseq, 'balb_notx_1h_tag_count', 'nod_notx_1h_tag_count_norm',
                             log=True, color='blue', master_dataset=refseq,
@@ -162,7 +189,7 @@ if __name__ == '__main__':
                             show_count=True, show_correlation=True, show_plot=False)
         grapher.save_plot(os.path.join(dirpath, 'nondiabetic_balbc_notx_vs_nondiabetic_nod_notx_scatterplot.png'))
         grapher.show_plot()
-    if True:
+    if False:
         # non-diabetic Balb vs. non-diabetic nod
         ax = grapher.scatterplot(refseq, 'balb_kla_1h_tag_count', 'nod_kla_1h_tag_count_norm',
                             log=True, color='blue', master_dataset=refseq,
@@ -174,7 +201,10 @@ if __name__ == '__main__':
         grapher.show_plot()
     
     if False:
-        genes = ['Clec4e', 'Tlr2', 'Cxcl1','Cxcl2','Siglec1','Tnf','Il1b','Cxcl10','Tlr4',]
+        genes = ['Clec4e', 
+                 'Tlr2','Cxcl1','Cxcl2','Cxcl14','Il6','Ptgs2','Tnfsf9','Vegfa','Tnf',
+                 'Siglec1','Mmp9','Angpt4',
+                 'Il1b','Cxcl10','Tlr4','Il12b']
         for gene in genes:
             gene_row = refseq[refseq['gene_names'] == ('{%s}' % gene)]
             grapher.bargraph_for_transcript(gene_row, 
@@ -187,5 +217,24 @@ if __name__ == '__main__':
                                             title='%s Fold Change in NOD vs. BALBc GRO-seq' % gene,
                                             ylabel='Fold Change in NOD vs. BALBc',
                                             show_plot=False)
-            grapher.save_plot(os.path.join(dirpath, '%s_fold_change_bargraph.png' % gene.lower()))
-            grapher.show_plot()
+    if True:
+        genes = ['Tlr2','Cxcl1','Cxcl2','Cxcl14','Il6','Ptgs2','Tnfsf9','Vegfa','Tnf',
+                 'Siglec1','Mmp9',
+                 'Il1b','Cxcl10','Tlr4','Il12b']
+        indices = [refseq[refseq['gene_names'] == ('{%s}' % gene)].index[0] for gene in genes]
+        
+        
+        sorted_by_count = refseq.fillna(0).sort_index(axis=0, by='balb_notx_1h_reads_per_base').index.copy()
+        sort_indexes = list(enumerate(sorted_by_count))
+        sort_indexes.sort(key=lambda x: x[1])
+        refseq['rank'] = zip(*sort_indexes)[0]
+         
+        grapher.bargraph_for_transcripts(refseq, indices, ['balb_nod_notx_1h_fc'],
+                                            bar_names=genes,
+                                            title='Fold Change in NOD vs. BALBc notx 1h GRO-seq',
+                                            ylabel='Fold Change in NOD vs. BALBc',
+                                            rank_label='Rank of read per base pair value in BALBc notx 1h, ascending',
+                                            show_plot=False)
+        grapher.save_plot(os.path.join(dirpath, 'notx_1h_fold_change_bargraph.png'))
+        grapher.show_plot()
+            
