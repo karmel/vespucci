@@ -101,23 +101,23 @@ class MotifAnalyzer(TranscriptAnalyzer):
 if __name__ == '__main__':
     yzer = MotifAnalyzer()
     
-    base_dirpath = yzer.get_path('/Users/karmel/GlassLab/Notes_and_Reports/NOD_BALBc/ThioMacs/Diabetic/Nonplated/Analysis/')
+    base_dirpath = yzer.get_path('karmel/GlassLab/Notes_and_Reports/NOD_BALBc/ThioMacs/Analysis_2012_06/')
     dirpath = os.path.join(base_dirpath,'motifs/')
     filename = os.path.join(os.path.dirname(base_dirpath), 'balbc_nod_vectors.txt')
     data = yzer.import_file(filename)
     
     bg = os.path.join(dirpath, 'h3k4me2_all/h3k4me2_all_regions_for_homer.txt')
     
-    #data = data[data['transcript_score'] >= 15]
+    data = data[data['transcript_score'] >= 10]
     #data = data[data['has_refseq'] != 0]
     data = data[data['has_refseq'] == 0]
     #data = data[data['distal'] == 't']
-    data = data[data['h3k4me2_notx_score'] > 0]
-    data = data[data['length'] > 200]
+    #data = data[data['h3k4me2_notx_score'] > 0]
+    #data = data[data['length'] > 200]
     #data = data[abs(data['balb_plating_notx_fc']) < 1]
-    data = data[data['balb_nod_notx_1h_fc'] >= 1]
+    #data = data[data['balb_nod_notx_1h_fc'] >= 1]
     
     #data = yzer.collapse_strands(data)
     
-    yzer.run_homer(data, 'nondiabetic_nod_notx_up_h3k4me2', dirpath, 
-                   cpus=6, center=False, reverse=False, size=200, length=[8,10,12,15], bg=bg)
+    yzer.run_homer(data, 'refseq', dirpath, 
+                   cpus=1, center=False, reverse=False, size=200, length=[8,10,12,15]) #, bg=bg)
