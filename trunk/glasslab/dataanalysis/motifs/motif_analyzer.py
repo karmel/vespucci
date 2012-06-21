@@ -49,8 +49,8 @@ class MotifAnalyzer(TranscriptAnalyzer):
             else:
                 data['transcription_end_alt'] = data[data['strand'] == first_strand]['transcription_start'] + size 
                 data['transcription_start_alt'] = data[data['strand'] == second_strand]['transcription_end'] - size
-            data['transcription_start'] = data['transcription_start_alt'].fillna(data['transcription_start']).apply(int)
-            data['transcription_end'] = data['transcription_end_alt'].fillna(data['transcription_end']).apply(int)
+            data['transcription_start'] = data['transcription_start_alt'].fillna(data['transcription_start'] + 50).apply(int)
+            data['transcription_end'] = data['transcription_end_alt'].fillna(data['transcription_end'] - 50).apply(int)
             
         data.to_csv(region_filename, 
                     cols=['id','chr_name','transcription_start','transcription_end','strand'],
@@ -117,16 +117,16 @@ if __name__ == '__main__':
     
     bg = os.path.join(dirpath, 'h3k4me2_centered/h3k4me2_centered_regions_for_homer.txt')
     
-    #data = data[data['transcript_score'] >= 10]
-    #data = data[data['has_refseq'] != 0]
+    data = data[data['transcript_score'] >= 10]
+    data = data[data['has_refseq'] != 0]
     #data = data[data['has_refseq'] == 0]
-    data = data[data['distal'] == 't']
-    data = data[data['h3k4me2_notx_score'] > 0]
-    data = data[data['length'] > 200]
+    #data = data[data['distal'] == 't']
+    #data = data[data['h3k4me2_notx_score'] > 0]
+    #data = data[data['length'] > 200]
     #data = data[abs(data['balb_plating_notx_fc']) < 1]
     #data = data[data['balb_nod_notx_1h_fc'] >= 1]
     
     #data = yzer.collapse_strands(data)
     
-    yzer.run_homer(data, 'h3k4me2_reversed', dirpath, 
-                   cpus=2, center=False, reverse=True, preceding=False, size=200, length=[8,10,12,15])#, bg=bg)
+    yzer.run_homer(data, 'promoter_overlap', dirpath, 
+                   cpus=2, center=False, reverse=False, preceding=True, size=400, length=[8,10,12,15])#, bg=bg)
