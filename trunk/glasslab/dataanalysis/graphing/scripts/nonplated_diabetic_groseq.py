@@ -218,7 +218,7 @@ if __name__ == '__main__':
                                             show_plot=False)
             grapher.save_plot(os.path.join(dirpath, '{0}_fold_change_bargraph.png'.format(gene)))
             
-    if True:
+    if False:
         genes = ['Tlr2','Cxcl1','Cxcl2','Il6','Ptgs2','Tnfsf9','Vegfa','Tnf',
                  'Siglec1','Mmp9',
                  'Il10','Il1b','Cxcl10','Tlr4','Il12b']
@@ -244,7 +244,7 @@ if __name__ == '__main__':
         grapher.save_plot(os.path.join(dirpath, 'notx_1h_phagocytosis_fold_change_bargraph.png'))
         grapher.show_plot()
             
-    if True:
+    if False:
         genes = ['Tlr2','Cxcl1','Cxcl2','Il6','Ptgs2','Tnfsf9','Vegfa','Tnf',
                  'Siglec1','Mmp9',
                  'Il10','Il1b','Cxcl10','Tlr4','Il12b']
