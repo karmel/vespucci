@@ -201,7 +201,7 @@ if __name__ == '__main__':
         grapher.save_plot(os.path.join(dirpath, 'nondiabetic_balbc_kla_vs_nondiabetic_nod_kla_scatterplot.png'))
         grapher.show_plot()
     
-    if True:
+    if False:
         genes = ['Clec4e',]
         genes = list(set(genes) & set(grapher.get_gene_list(refseq)))
         for gene in genes:
@@ -218,11 +218,14 @@ if __name__ == '__main__':
                                             show_plot=False)
             grapher.save_plot(os.path.join(dirpath, '{0}_fold_change_bargraph.png'.format(gene)))
             
-    if False:
+    if True:
         genes = ['Tlr2','Cxcl1','Cxcl2','Il6','Ptgs2','Tnfsf9','Vegfa','Tnf',
                  'Siglec1','Mmp9',
                  'Il10','Il1b','Cxcl10','Tlr4','Il12b']
-        
+        genes = ['Itgb2','Itgam','Rhoa','Limk',
+                 'Cdc42','Rac1','Rac2','Vav1','Vav2','Vav3',
+                 'Arpc1a','Arpc1b','Arpc2','Arpc3','Arpc4','Arpc5','Actr2','Actr3',
+                 'Cfl1','Cfl2','Dnm2','Arf1','Arf6']
         genes = list(set(genes) & set(grapher.get_gene_list(refseq)))
         indices = [refseq[refseq['gene_names'] == ('{%s}' % gene)].index[0] for gene in genes]
         
@@ -245,6 +248,11 @@ if __name__ == '__main__':
         genes = ['Tlr2','Cxcl1','Cxcl2','Il6','Ptgs2','Tnfsf9','Vegfa','Tnf',
                  'Siglec1','Mmp9',
                  'Il10','Il1b','Cxcl10','Tlr4','Il12b']
+        genes = ['Itgb2','Itgam','Rhoa','Limk',
+                 'Cdc42','Rac1','Rac2','Vav1','Vav2','Vav3',
+                 'Arpc1a','Arpc1b','Arpc2','Arpc3','Arpc4','Arpc5','Actr2','Actr3',
+                 'Cfl1','Cfl2','Dnm2','Arf1','Arf6']
+        
         
         genes = list(set(genes) & set(grapher.get_gene_list(refseq)))
         indices = [refseq[refseq['gene_names'] == ('{%s}' % gene)].index[0] for gene in genes]
