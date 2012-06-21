@@ -129,4 +129,4 @@ if __name__ == '__main__':
     data = yzer.collapse_strands(data)
     
     yzer.run_homer(data, 'h3k4me2_reversed', dirpath, 
-                   cpus=2, center=False, reverse=True, preceding=False, size=200, length=[8,10,12,15], bg=bg)
+                   cpus=2, center=False, reverse=True, preceding=False, size=200, length=[8,10,12,15])#, bg=bg)
