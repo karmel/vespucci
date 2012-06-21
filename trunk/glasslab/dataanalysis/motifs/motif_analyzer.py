@@ -19,7 +19,8 @@ class MotifAnalyzer(TranscriptAnalyzer):
     
     
     def run_homer(self, data, project_name, dirpath,
-                  center=True, reverse=False, size=None, length=None, number_of_motifs=10,
+                  center=True, reverse=False, preceding=True, 
+                  size=None, length=None, number_of_motifs=10,
                   bg='', genome='mm9', cpus=1):
         '''
         Run HOMER on passed set of transcripts, assuming a transcription_start,
@@ -38,8 +39,14 @@ class MotifAnalyzer(TranscriptAnalyzer):
             if reverse:
                 # Take the end of the transcript, rather than the beginning. 
                 first_strand, second_strand = 1, 0
-            data['transcription_end_alt'] = data[data['strand'] == first_strand]['transcription_start'] + size 
-            data['transcription_start_alt'] = data[data['strand'] == second_strand]['transcription_end'] - size
+            if preceding:
+                data['transcription_end_alt'] = data[data['strand'] == first_strand]['transcription_start'] 
+                data['transcription_start_alt'] = data[data['strand'] == first_strand]['transcription_start'] - size 
+                data['transcription_end_alt'] = data[data['strand'] == second_strand]['transcription_end'] + size 
+                data['transcription_start_alt'] = data[data['strand'] == second_strand]['transcription_end'] 
+            else:
+                data['transcription_end_alt'] = data[data['strand'] == first_strand]['transcription_start'] + size 
+                data['transcription_start_alt'] = data[data['strand'] == second_strand]['transcription_end'] - size
             data['transcription_start'] = data['transcription_start_alt'].fillna(data['transcription_start']).apply(int)
             data['transcription_end'] = data['transcription_end_alt'].fillna(data['transcription_end']).apply(int)
             
@@ -106,7 +113,7 @@ if __name__ == '__main__':
     filename = os.path.join(os.path.dirname(base_dirpath), 'balbc_nod_vectors.txt')
     data = yzer.import_file(filename)
     
-    bg = os.path.join(dirpath, 'h3k4me2_all/h3k4me2_all_regions_for_homer.txt')
+    bg = os.path.join(dirpath, 'refseq/refseq_regions_for_homer.txt')
     
     data = data[data['transcript_score'] >= 10]
     #data = data[data['has_refseq'] != 0]
@@ -119,5 +126,5 @@ if __name__ == '__main__':
     
     #data = yzer.collapse_strands(data)
     
-    yzer.run_homer(data, 'refseq', dirpath, 
-                   cpus=1, center=False, reverse=False, size=200, length=[8,10,12,15]) #, bg=bg)
+    yzer.run_homer(data, 'promoter', dirpath, 
+                   cpus=2, center=False, reverse=False, preceding=True, size=200, length=[8,10,12,15]) #, bg=bg)
