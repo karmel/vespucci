@@ -124,9 +124,9 @@ if __name__ == '__main__':
     #data = data[data['h3k4me2_notx_score'] > 0]
     #data = data[data['length'] > 200]
     #data = data[abs(data['balb_plating_notx_fc']) < 1]
-    #data = data[data['balb_nod_notx_1h_fc'] >= 1]
+    data = data[data['balb_nod_notx_1h_fc'] >= 1]
     
     #data = yzer.collapse_strands(data)
     
-    yzer.run_homer(data, 'promoter', dirpath, 
-                   cpus=2, center=False, reverse=False, preceding=True, size=200, length=[8,10,12,15]) #, bg=bg)
+    yzer.run_homer(data, 'promoter_notx_1h_nod_up', dirpath, 
+                   cpus=2, center=False, reverse=False, preceding=True, size=200, length=[8,10,12,15], bg=bg)
