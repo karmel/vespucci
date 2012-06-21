@@ -126,7 +126,7 @@ if __name__ == '__main__':
     #data = data[abs(data['balb_plating_notx_fc']) < 1]
     #data = data[data['balb_nod_notx_1h_fc'] >= 1]
     
-    data = yzer.collapse_strands(data)
+    #data = yzer.collapse_strands(data)
     
     yzer.run_homer(data, 'h3k4me2_reversed', dirpath, 
                    cpus=2, center=False, reverse=True, preceding=False, size=200, length=[8,10,12,15])#, bg=bg)
