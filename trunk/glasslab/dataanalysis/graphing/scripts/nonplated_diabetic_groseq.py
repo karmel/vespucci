@@ -201,24 +201,24 @@ if __name__ == '__main__':
         grapher.save_plot(os.path.join(dirpath, 'nondiabetic_balbc_kla_vs_nondiabetic_nod_kla_scatterplot.png'))
         grapher.show_plot()
     
-    if False:
-        genes = ['Clec4e', 
-                 'Tlr2','Cxcl1','Cxcl2','Cxcl14','Il6','Ptgs2','Tnfsf9','Vegfa','Tnf',
-                 'Siglec1','Mmp9','Angpt4',
-                 'Il1b','Cxcl10','Tlr4','Il12b']
+    if True:
+        genes = ['Clec4e',]
+        genes = list(set(genes) & set(grapher.get_gene_list(refseq)))
         for gene in genes:
             gene_row = refseq[refseq['gene_names'] == ('{%s}' % gene)]
             grapher.bargraph_for_transcript(gene_row, 
                                             ['balb_nod_notx_1h_fc', 'balb_nod_kla_1h_fc',
-                                             'diabetic_balb_nod_notx_1h_fc', 'diabetic_balb_nod_kla_1h_fc',
+                                             #'diabetic_balb_nod_notx_1h_fc', 'diabetic_balb_nod_kla_1h_fc',
                                              ],#'nonplated_diabetic_balb_nod_notx_fc',],
                                             bar_names=['Non-diabetic\nnotx 1h', 'Non-diabetic\nKLA 1h',
-                                                       'Diabetic\nnotx 1h', 'Diabetic\nKLA 1h',
+                                                       #'Diabetic\nnotx 1h', 'Diabetic\nKLA 1h',
                                                        ],#'Nonplated diabetic\nnotx 1h',],
                                             title='%s Fold Change in NOD vs. BALBc GRO-seq' % gene,
                                             ylabel='Fold Change in NOD vs. BALBc',
                                             show_plot=False)
-    if True:
+            grapher.save_plot(os.path.join(dirpath, '{0}_fold_change_bargraph.png'.format(gene)))
+            
+    if False:
         genes = ['Tlr2','Cxcl1','Cxcl2','Il6','Ptgs2','Tnfsf9','Vegfa','Tnf',
                  'Siglec1','Mmp9',
                  'Il10','Il1b','Cxcl10','Tlr4','Il12b']
@@ -241,7 +241,7 @@ if __name__ == '__main__':
         grapher.save_plot(os.path.join(dirpath, 'notx_1h_phagocytosis_fold_change_bargraph.png'))
         grapher.show_plot()
             
-    if True:
+    if False:
         genes = ['Tlr2','Cxcl1','Cxcl2','Il6','Ptgs2','Tnfsf9','Vegfa','Tnf',
                  'Siglec1','Mmp9',
                  'Il10','Il1b','Cxcl10','Tlr4','Il12b']
