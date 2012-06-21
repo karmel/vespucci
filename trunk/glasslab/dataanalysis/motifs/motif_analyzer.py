@@ -40,10 +40,12 @@ class MotifAnalyzer(TranscriptAnalyzer):
                 # Take the end of the transcript, rather than the beginning. 
                 first_strand, second_strand = 1, 0
             if preceding:
-                data['transcription_end_alt'] = data[data['strand'] == first_strand]['transcription_start'] 
-                data['transcription_start_alt'] = data[data['strand'] == first_strand]['transcription_start'] - size 
-                data['transcription_end_alt'] = data[data['strand'] == second_strand]['transcription_end'] + size 
-                data['transcription_start_alt'] = data[data['strand'] == second_strand]['transcription_end'] 
+                # First, expand the whole transcript on either side
+                data['transcription_start'] = data['transcription_start'] - size
+                data['transcription_end'] = data['transcription_end'] + size
+                # Then grab strand-dependent beginning and end
+                data['transcription_end_alt'] = data[data['strand'] == first_strand]['transcription_start'] + size 
+                data['transcription_start_alt'] = data[data['strand'] == second_strand]['transcription_end'] - size 
             else:
                 data['transcription_end_alt'] = data[data['strand'] == first_strand]['transcription_start'] + size 
                 data['transcription_start_alt'] = data[data['strand'] == second_strand]['transcription_end'] - size
