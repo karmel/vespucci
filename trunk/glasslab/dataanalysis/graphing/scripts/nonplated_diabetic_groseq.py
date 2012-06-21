@@ -203,7 +203,7 @@ if __name__ == '__main__':
     
     if False:
         genes = ['Clec4e',]
-        genes = list(set(genes) & set(grapher.get_gene_list(refseq)))
+        #genes = list(set(genes) & set(grapher.get_gene_list(refseq)))
         for gene in genes:
             gene_row = refseq[refseq['gene_names'] == ('{%s}' % gene)]
             grapher.bargraph_for_transcript(gene_row, 
@@ -222,11 +222,11 @@ if __name__ == '__main__':
         genes = ['Tlr2','Cxcl1','Cxcl2','Il6','Ptgs2','Tnfsf9','Vegfa','Tnf',
                  'Siglec1','Mmp9',
                  'Il10','Il1b','Cxcl10','Tlr4','Il12b']
-        genes = ['Itgb2','Itgam','Rhoa','Limk',
+        genes = ['Itgb2','Itgam','Rhoa','Limk1',
                  'Cdc42','Rac1','Rac2','Vav1','Vav2','Vav3',
                  'Arpc1a','Arpc1b','Arpc2','Arpc3','Arpc4','Arpc5','Actr2','Actr3',
                  'Cfl1','Cfl2','Dnm2','Arf1','Arf6']
-        genes = list(set(genes) & set(grapher.get_gene_list(refseq)))
+        #genes = list(set(genes) & set(grapher.get_gene_list(refseq)))
         indices = [refseq[refseq['gene_names'] == ('{%s}' % gene)].index[0] for gene in genes]
         
         
@@ -244,7 +244,7 @@ if __name__ == '__main__':
         grapher.save_plot(os.path.join(dirpath, 'notx_1h_phagocytosis_fold_change_bargraph.png'))
         grapher.show_plot()
             
-    if False:
+    if True:
         genes = ['Tlr2','Cxcl1','Cxcl2','Il6','Ptgs2','Tnfsf9','Vegfa','Tnf',
                  'Siglec1','Mmp9',
                  'Il10','Il1b','Cxcl10','Tlr4','Il12b']
@@ -254,7 +254,7 @@ if __name__ == '__main__':
                  'Cfl1','Cfl2','Dnm2','Arf1','Arf6']
         
         
-        genes = list(set(genes) & set(grapher.get_gene_list(refseq)))
+        #genes = list(set(genes) & set(grapher.get_gene_list(refseq)))
         indices = [refseq[refseq['gene_names'] == ('{%s}' % gene)].index[0] for gene in genes]
         
         
