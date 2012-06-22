@@ -17,7 +17,7 @@ from glasslab.utils.database import execute_query,\
     execute_query_without_transaction, fetch_rows
 import os
 from random import randint
-from django.db.models.aggregates import Max, Sum
+from django.db.models.aggregates import Max
 from datetime import datetime
 import traceback
 
@@ -27,10 +27,10 @@ TAG_EXTENSION = 0
 
 MAX_GAP = 0 # Max gap between transcripts from the same run
 MAX_STITCHING_GAP = MAX_GAP # Max gap between transcripts being stitched together
-MAX_EDGE = 0#20 # Max edge length of transcript graph subgraphs to be created
+MAX_EDGE = 20 # Max edge length of transcript graph subgraphs to be created
 EDGE_SCALING_FACTOR = 20 # Number of transcripts per DENSITY_MULTIPLIER bp required to get full allowed edge length
 DENSITY_MULTIPLIER = 1000 # Scaling factor on density-- think of as bps worth of tags to consider
-MIN_SCORE = 4 # Hide transcripts with scores below this threshold.
+MIN_SCORE = 6 # Hide transcripts with scores below this threshold.
 
 def multiprocess_all_chromosomes(func, cls, *args, **kwargs):
     ''' 
