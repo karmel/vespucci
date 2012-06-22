@@ -6,7 +6,7 @@ Created on Nov 12, 2010
 Convenience script for transcript functions.
 '''
 genome = 'mm9'
-cell_type='bmdc'
+cell_type='thiomac'
 def sql(genome, cell_type):
     return """
 -- Not run from within the codebase, but kept here in case functions need to be recreated.
@@ -140,7 +140,7 @@ BEGIN
         LOOP
             -- The tags returned from the sequencing run are shorter than we know them to be biologically
             -- We can therefore extend the mapped tag region by a set number of bp if an extension is passed in
-            IF tag_extension IS NOT NULL THEN
+            IF (tag_extension IS NOT NULL) AND (tag_extension != 0) THEN
                 IF strand = 0 THEN rec.transcription_end := rec.transcription_end + tag_extension;
                 ELSE rec.transcription_start := rec.transcription_start - tag_extension;
                 END IF;
@@ -151,10 +151,8 @@ BEGIN
             rec.transcription_end := (SELECT LEAST(max_chrom_pos, rec.transcription_end));
             
             -- Initialize the start and end if necessary
-            IF (last_start = 0) THEN 
-                last_start := rec.transcription_start;
-            END IF;
-            IF (last_end = 0) THEN 
+            IF (last_start = 0) AND (last_end = 0) THEN 
+                last_start := rec.transcription_start; 
                 last_end := rec.transcription_end;
             END IF;
             IF (current_refseq IS NULL) THEN
