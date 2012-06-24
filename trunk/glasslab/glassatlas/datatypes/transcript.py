@@ -322,7 +322,7 @@ class GlassTranscript(TranscriptBase):
             FROM (SELECT t.glass_transcript_id, {0}, t.transcription_start, tag.start
                 FROM gr_project_2012.glass_transcript_start t
                 JOIN "{1}_{2}" tag
-                ON t.chromosome_id = tag.chromosome_id
+                ON t.chromosome_id = {2}
                 AND t.strand = tag.strand
                 AND t.start_end && tag.start_end
             ) der;
