@@ -313,7 +313,37 @@ class GlassTranscript(TranscriptBase):
                        sequencing_run.source_table.strip(), 
                        MAX_GAP, TAG_EXTENSION, 
                        MAX_EDGE, EDGE_SCALING_FACTOR, DENSITY_MULTIPLIER)
-            execute_query(query)
+                
+            query_0 = '''
+            INSERT INTO gr_project_2012.overlapping_tag
+            (glass_transcript_id, sequencing_run_id, 
+                transcript_start, tag_start) 
+            SELECT *
+            FROM (SELECT t.glass_transcript_id, {0}, t.transcription_start, tag.start
+                FROM gr_project_2012.glass_transcript_start t
+                JOIN "{1}_{2}" tag
+                ON t.chromosome_id = tag.chromosome_id
+                AND t.strand = 0
+                AND tag.strand = 0
+                AND tag.start_end && public.make_box(t.transcription_start - 500, t.transcription_end + 2000)
+            ) der;
+            '''.format(sequencing_run.id, sequencing_run.source_table, chr_id)
+            execute_query(query_0)
+            query_1 = '''
+            INSERT INTO gr_project_2012.overlapping_tag
+            (glass_transcript_id, sequencing_run_id, 
+                transcript_start, tag_start) 
+            SELECT *
+            FROM (SELECT t.glass_transcript_id, {0}, t.transcription_start, tag.start
+                FROM gr_project_2012.glass_transcript_start t
+                JOIN "{1}_{2}" tag
+                ON t.chromosome_id = tag.chromosome_id
+                AND t.strand = 1
+                AND tag.strand = 1
+                AND tag.start_end && public.make_box(t.transcription_start - 2000, t.transcription_end + 500)
+            ) der;
+            '''.format(sequencing_run.id, sequencing_run.source_table, chr_id)
+            execute_query(query_1)
 
     
     ################################################
