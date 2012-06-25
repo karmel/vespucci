@@ -374,13 +374,18 @@ $$ LANGUAGE 'plpgsql';
 
 CREATE OR REPLACE FUNCTION glass_atlas_{0}_{1}_prep.set_density(chr_id integer, 
                                         allowed_edge integer, edge_scaling_factor integer, 
-                                        density_multiplier integer, allow_extended_gaps boolean)
+                                        density_multiplier integer, allow_extended_gaps boolean,
+                                        null_only boolean)
 RETURNS VOID AS $$
 DECLARE
     table_name text;
+    null_only_text text := ' AND 1=1 '; 
 BEGIN
     -- Use temp tables to speed up processing.
     table_name := 'set_density_' || chr_id || '_' || (1000*RANDOM())::int;
+    
+    IF (null_only = true) THEN null_only_text = ' AND density IS NULL ';
+    END IF;
     
     EXECUTE 'CREATE TEMP TABLE ' || table_name || '
         as SELECT t.id, GREATEST(0,(' || density_multiplier || '*sum(source.tag_count)::numeric)
@@ -389,6 +394,7 @@ BEGIN
         FROM glass_atlas_{0}_{1}_prep.glass_transcript_' || chr_id || ' t,
             glass_atlas_{0}_{1}_prep.glass_transcript_source_' || chr_id || ' source
         WHERE t.id = source.glass_transcript_id
+        ' || null_only_text || '
         GROUP BY t.id, t.transcription_start, t.transcription_end';
         
     EXECUTE 'UPDATE glass_atlas_{0}_{1}_prep.glass_transcript_' || chr_id || ' t
