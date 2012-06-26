@@ -317,11 +317,11 @@ class GlassTranscript(TranscriptBase):
             INSERT INTO gr_project_2012.tag_count_per_basepair
             (glass_transcript_id, sequencing_run_id, 
                 basepair, tag_count, tag_start) 
-            SELECT *
-            FROM (SELECT t.id, {0}, 
+            SELECT id, {0}, basepair, sum(tag_count), true
+            FROM (SELECT t.id, 
                 (CASE WHEN t.strand = 1 THEN t.transcription_end - tag."end"
-                    ELSE tag.start - t.transcription_start END), 
-                count(tag.id), true
+                    ELSE tag.start - t.transcription_start END) as basepair, 
+                count(tag.id) as tag_count
                 FROM glass_atlas_mm9_thiomac.glass_transcript_{2} t
                 JOIN "{1}_{2}" tag
                 ON t.strand = tag.strand
@@ -329,7 +329,8 @@ class GlassTranscript(TranscriptBase):
                 ON t.id = st.glass_transcript_id
                 AND st.start_end && tag.start_end
             group by t.id, t.strand, t.transcription_start, tag.start, t.transcription_end, tag."end"
-            ) der;
+            ) der
+            group by id, basepair;
             '''.format(sequencing_run.id, sequencing_run.source_table, chr_id)
 
             execute_query(query)
