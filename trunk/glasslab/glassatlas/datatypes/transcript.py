@@ -318,7 +318,7 @@ class GlassTranscript(TranscriptBase):
             (glass_transcript_id, sequencing_run_id, 
                 basepair, tag_count, tag_start) 
             SELECT *
-            FROM (SELECT t.glass_transcript_id, {0}, 
+            FROM (SELECT t.id, {0}, 
                 (CASE WHEN t.strand = 1 THEN t.transcription_end - tag."end"
                     ELSE tag.start - t.transcription_start END), 
                 count(tag.id), true
