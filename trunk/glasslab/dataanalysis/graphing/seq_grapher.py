@@ -12,6 +12,7 @@ import os
 from glasslab.dataanalysis.base.datatypes import TranscriptAnalyzer
 from random import normalvariate
 import numpy
+import math
 
 class SeqGrapher(TranscriptAnalyzer):
     def scatterplot(self, data, xcolname, ycolname, 
@@ -139,6 +140,22 @@ class SeqGrapher(TranscriptAnalyzer):
     def other_plot(self):
         return True
     
+    def get_colors(self, number):
+        '''
+        Set up colors so that we can set a range from red to green
+        Hold R at 1 while we pass through yellow, then decrement, then hold at 0 through blue;
+        meanwhile, increment G while we pass through yellow, then hold at 1 through greens, then decrement to blue;
+        and, hold B at 0 through yellow and green, then increment til blue.
+        
+        Add grey to the front for background.
+        '''
+        number = int(math.ceil(number/3)) - 1
+        colors = [x/(number+1) for x in xrange(0,number+2)][1:-1]
+        colors_r = [204/256] + [1]*len(colors) + colors[::-1] + [0]*len(colors)
+        colors_g = [204/256] + colors + [1]*len(colors) + colors[::-1]
+        colors_b = [204/256] + [0]*len(colors) + [0]*len(colors) + colors
+        return zip(colors_r, colors_g, colors_b)
+
     
     def bargraph_for_transcript(self, transcript_row, cols,
                                 bar_names=None, 
@@ -367,3 +384,4 @@ class SeqGrapher(TranscriptAnalyzer):
         if show_plot: self.show_plot()
     
         return ax
+    

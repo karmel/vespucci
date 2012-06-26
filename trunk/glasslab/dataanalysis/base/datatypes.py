@@ -17,7 +17,10 @@ class TranscriptAnalyzer(object):
             path = os.path.join(loc,dirpath)
             if os.path.exists(path): return path
         raise IOError('Could not find file %s.' % dirpath)
-            
+    
+    def get_filename(self, *args):
+        return os.path.join(*args)
+    
     def import_file(self, filename, separator='\t', header=True):
         if header: header_row = 0
         else: header_row = None

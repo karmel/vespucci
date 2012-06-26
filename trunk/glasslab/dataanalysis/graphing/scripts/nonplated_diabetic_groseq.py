@@ -245,7 +245,7 @@ if __name__ == '__main__':
         grapher.save_plot(os.path.join(dirpath, 'notx_1h_phagocytosis_fold_change_bargraph.png'))
         grapher.show_plot()
             
-    if False:
+    if True:
         genes = ['Tlr2','Cxcl1','Cxcl2','Il6','Ptgs2','Tnfsf9','Vegfa','Tnf',
                  'Siglec1','Mmp9',
                  'Il10','Il1b','Cxcl10','Tlr4','Il12b']
@@ -253,7 +253,7 @@ if __name__ == '__main__':
                  'Cdc42','Rac1','Rac2','Vav1','Vav2','Vav3',
                  'Arpc1a','Arpc1b','Arpc2','Arpc3','Arpc5','Actr2','Actr3',
                  'Cfl1','Cfl2','Dnm2','Arf1','Arf6']
-        
+        genes = ['Pdlim5', 'Pls3', 'Lima1', 'Vcl', 'Ctnnb1', 'Coro1c', 'Cdc42bpg', 'Flna', 'Flnc', 'Cnn2', 'Coro1a', 'Myl6', 'Cfl1', 'Csrp1', 'Srf', 'Cnn3', 'Arhgef17', 'Myh9', 'Myo18b', 'Mybpc3']
         
         #genes = list(set(genes) & set(grapher.get_gene_list(refseq)))
         indices = [refseq[refseq['gene_names'] == ('{%s}' % gene)].index[0] for gene in genes]
@@ -270,6 +270,6 @@ if __name__ == '__main__':
                                             ylabel='Fold Change in NOD vs. BALBc',
                                             rank_label='Rank of read per base pair value in BALBc KLA 1h, ascending',
                                             show_plot=False)
-        grapher.save_plot(os.path.join(dirpath, 'kla_1h_phagocytosis_fold_change_bargraph.png'))
+        grapher.save_plot(os.path.join(dirpath, 'kla_1h_actin_fold_change_bargraph.png'))
         grapher.show_plot()
             

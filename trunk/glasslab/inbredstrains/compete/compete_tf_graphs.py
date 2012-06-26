@@ -17,7 +17,6 @@ from __future__ import division
 from glasslab.dataanalysis.graphing.seq_grapher import SeqGrapher
 import pandas
 from matplotlib import pyplot
-import math
 import os
 import yaml
 import subprocess
@@ -96,23 +95,7 @@ class CompeteGrapher(SeqGrapher):
         f = open(output_name, 'w')
         f.write(result)
         f.close()
-        
-    def get_colors(self, number):
-        '''
-        Set up colors so that we can set a range from red to green
-        Hold R at 1 while we pass through yellow, then decrement, then hold at 0 through blue;
-        meanwhile, increment G while we pass through yellow, then hold at 1 through greens, then decrement to blue;
-        and, hold B at 0 through yellow and green, then increment til blue.
-        
-        Add grey to the front for background.
-        '''
-        number = int(math.ceil(number/3)) - 1
-        colors = [x/(number+1) for x in xrange(0,number+2)][1:-1]
-        colors_r = [204/256] + [1]*len(colors) + colors[::-1] + [0]*len(colors)
-        colors_g = [204/256] + colors + [1]*len(colors) + colors[::-1]
-        colors_b = [204/256] + [0]*len(colors) + [0]*len(colors) + colors
-        return zip(colors_r, colors_g, colors_b)
-        
+                
     def draw_graph(self, filename, peak_id, chr_name, pos_start, pos_end, 
                    strain_name='', subplot=121, ax=None):
         data = pandas.read_table(filename, sep='\t', header=0)
