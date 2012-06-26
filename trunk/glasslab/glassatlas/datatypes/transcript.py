@@ -328,7 +328,7 @@ class GlassTranscript(TranscriptBase):
                 JOIN gr_project_2012.glass_transcript_start st
                 ON t.id = st.glass_transcript_id
                 AND st.start_end && tag.start_end
-            group by t.glass_transcript_id, t.strand, t.transcription_start, tag.start, t.transcription_end, tag."end";
+            group by t.glass_transcript_id, t.strand, t.transcription_start, tag.start, t.transcription_end, tag."end"
             ) der;
             '''.format(sequencing_run.id, sequencing_run.source_table, chr_id)
 
