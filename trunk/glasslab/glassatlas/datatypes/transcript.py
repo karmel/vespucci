@@ -322,7 +322,7 @@ class GlassTranscript(TranscriptBase):
                 (CASE WHEN t.strand = 1 THEN t.transcription_end - tag."end"
                     ELSE tag.start - t.transcription_start END), 
                 count(tag.id), true
-                FROM glass_atlas_mm9_thiomac.glass_transcript_{2}
+                FROM glass_atlas_mm9_thiomac.glass_transcript_{2} t
                 JOIN "{1}_{2}" tag
                 ON t.strand = tag.strand
                 JOIN gr_project_2012.glass_transcript_start st
