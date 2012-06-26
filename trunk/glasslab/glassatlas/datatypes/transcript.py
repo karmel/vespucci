@@ -313,7 +313,7 @@ class GlassTranscript(TranscriptBase):
                        sequencing_run.source_table.strip(), 
                        MAX_GAP, TAG_EXTENSION, 
                        MAX_EDGE, EDGE_SCALING_FACTOR, DENSITY_MULTIPLIER)
-                
+            """    
             query = '''
             INSERT INTO gr_project_2012.overlapping_tag
             (glass_transcript_id, sequencing_run_id, 
@@ -326,7 +326,7 @@ class GlassTranscript(TranscriptBase):
                 AND t.strand = tag.strand
                 AND t.start_end && tag.start_end
             ) der;
-            '''.format(sequencing_run.id, sequencing_run.source_table, chr_id)
+            '''.format(sequencing_run.id, sequencing_run.source_table, chr_id)"""
             execute_query(query)
             
 

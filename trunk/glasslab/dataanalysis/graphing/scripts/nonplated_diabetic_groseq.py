@@ -77,14 +77,15 @@ if __name__ == '__main__':
     less_down = refseq[(refseq['balb_kla_1h_fc'] <= -1) 
                           & (refseq['balb_kla_1h_fc'] - refseq['nod_kla_1h_fc'] <= -1)]
     
-    if False:
-        #print grapher.get_gene_names(refseq_bg)
-        print grapher.get_gene_names(refseq_up_nond_kla)
-        print grapher.get_gene_names(refseq_down_nond_kla)
-        print grapher.get_gene_names(more_up)
-        print grapher.get_gene_names(less_up)
-        print grapher.get_gene_names(more_down)
-        print grapher.get_gene_names(less_down)
+    if True:
+        print grapher.get_gene_names(refseq_bg, add_quotes=True)
+        print grapher.get_gene_names(refseq[refseq['balb_nod_kla_1h_fc'] <= -.5])
+        #print grapher.get_gene_names(refseq_up_nond_kla)
+        #print grapher.get_gene_names(refseq_down_nond_kla)
+        #print grapher.get_gene_names(more_up)
+        #print grapher.get_gene_names(less_up)
+        #print grapher.get_gene_names(more_down)
+        #print grapher.get_gene_names(less_down)
         
     if False:
         
