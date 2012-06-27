@@ -26,12 +26,24 @@ class MotifAnalyzer(TranscriptAnalyzer):
         Run HOMER on passed set of transcripts, assuming a transcription_start,
         transcription_end, and chr_name.
         '''
-        fullpath = os.path.join(dirpath,project_name)
+        fullpath, homer_filename = self.prep_files_for_homer(data, 
+                            project_name, dirpath, center, reverse, preceding, size)
+        
+        self.run_homer_with_pos_file(homer_filename, fullpath, center, size, 
+                                     length, number_of_motifs, bg, genome, cpus)
+        
+    
+    def prep_files_for_homer(self, data, project_name, dirpath,
+                  center=True, reverse=False, preceding=True, size=None):
+        '''
+        Create tab-delimited files with Windows carriage returns for Homer.
+        '''
+        fullpath = self.get_filename(dirpath,project_name)
         self.make_directory(fullpath)
         
         # Create HOMER-compatible file.
-        region_filename = os.path.join(fullpath, project_name + '_regions.txt')
-        homer_filename = os.path.join(fullpath, project_name + '_regions_for_homer.txt')
+        region_filename = self.get_filename(fullpath, project_name + '_regions.txt')
+        homer_filename = self.get_filename(fullpath, project_name + '_regions_for_homer.txt')
         
         if not size: size = self.default_size
         if not center:
@@ -61,9 +73,7 @@ class MotifAnalyzer(TranscriptAnalyzer):
                                                     self.sanitize_filename(homer_filename)),
                                                     shell=True)
         
-        self.run_homer_with_pos_file(homer_filename, fullpath, center, size, 
-                                     length, number_of_motifs, bg, genome, cpus)
-        
+        return fullpath, homer_filename
         
     def run_homer_with_pos_file(self, homer_filename, dirpath,
                                 center=True, size=None, length=None, number_of_motifs=10,
@@ -80,7 +90,7 @@ class MotifAnalyzer(TranscriptAnalyzer):
         if bg: bg = '-bg %s' % bg
         else: bg = ''
         
-        fullpath = os.path.join(dirpath,'homer_motifs_size_%s_len_%s' % (
+        fullpath = self.get_filename(dirpath,'homer_motifs_size_%s_len_%s' % (
                                         size.replace(',','_'), length.replace(',','-'))
                                 )
         self.make_directory(fullpath)
@@ -111,11 +121,11 @@ if __name__ == '__main__':
     yzer = MotifAnalyzer()
     
     base_dirpath = yzer.get_path('karmel/GlassLab/Notes_and_Reports/NOD_BALBc/ThioMacs/Analysis_2012_06/')
-    dirpath = os.path.join(base_dirpath,'motifs/')
-    filename = os.path.join(os.path.dirname(base_dirpath), 'balbc_nod_vectors.txt')
+    dirpath = yzer.get_filename(base_dirpath,'motifs/')
+    filename = yzer.get_filename(os.path.dirname(base_dirpath), 'balbc_nod_vectors.txt')
     data = yzer.import_file(filename)
     
-    bg = os.path.join(dirpath, 'promoter_overlap/promoter_overlap_regions_for_homer.txt')
+    bg = yzer.get_filename(dirpath, 'promoter_overlap/promoter_overlap_regions_for_homer.txt')
     
     data = data[data['transcript_score'] >= 10]
     data = data[data['has_refseq'] != 0]

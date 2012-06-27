@@ -79,8 +79,13 @@ class SeqGrapher(TranscriptAnalyzer):
         
         # Show lines at two-fold change?
         if show_2x_range:
-            pyplot.plot([1, .5*max(master_dataset[ycolname])], [2, max(master_dataset[ycolname])], '--', color='black', label='Two-fold change')
-            pyplot.plot([1, max(master_dataset[xcolname])], [.5, .5*max(master_dataset[xcolname])], '--', color='black')
+            try: fold_change = float(show_2x_range)
+            except ValueError: fold_change= 2.0
+            pyplot.plot([1, (1/fold_change)*max(master_dataset[ycolname])], 
+                        [fold_change, max(master_dataset[ycolname])], 
+                        '--', color='black', label='{0}-fold change'.format(fold_change))
+            pyplot.plot([1, max(master_dataset[xcolname])], [(1/fold_change), (1/fold_change)*max(master_dataset[xcolname])], 
+                        '--', color='black')
         
         # Plot a least squares linear regression?
         if plot_regression:
