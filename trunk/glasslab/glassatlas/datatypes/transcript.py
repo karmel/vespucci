@@ -322,12 +322,11 @@ class GlassTranscript(TranscriptBase):
                 (CASE WHEN t.strand = 1 THEN t.transcription_end - tag."end"
                     ELSE tag.start - t.transcription_start END) as basepair, 
                 count(tag.id) as tag_count
-                FROM glass_atlas_mm9_thiomac.glass_transcript_{2} t
+                FROM gr_project_2012.glass_transcript_start t
                 JOIN "{1}_{2}" tag
-                ON t.strand = tag.strand
-                JOIN gr_project_2012.glass_transcript_start st
-                ON t.id = st.glass_transcript_id
-                AND st.start_end && tag.start_end
+                ON  t.start_end && tag.start_end
+                AND t.strand = tag.strand
+                WHERE t.chromosome_id = {2}
             group by t.id, t.strand, t.transcription_start, tag.start, t.transcription_end, tag."end"
             ) der
             group by id, basepair;
