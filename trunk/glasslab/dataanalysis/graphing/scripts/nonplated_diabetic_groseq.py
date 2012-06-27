@@ -77,7 +77,7 @@ if __name__ == '__main__':
     less_down = refseq[(refseq['balb_kla_1h_fc'] <= -1) 
                           & (refseq['balb_kla_1h_fc'] - refseq['nod_kla_1h_fc'] <= -1)]
     
-    if True:
+    if False:
         print grapher.get_gene_names(refseq_bg, add_quotes=True)
         print grapher.get_gene_names(refseq[refseq['balb_nod_kla_1h_fc'] <= -.5])
         #print grapher.get_gene_names(refseq_up_nond_kla)
@@ -245,7 +245,7 @@ if __name__ == '__main__':
         grapher.save_plot(os.path.join(dirpath, 'notx_1h_phagocytosis_fold_change_bargraph.png'))
         grapher.show_plot()
             
-    if True:
+    if False:
         genes = ['Tlr2','Cxcl1','Cxcl2','Il6','Ptgs2','Tnfsf9','Vegfa','Tnf',
                  'Siglec1','Mmp9',
                  'Il10','Il1b','Cxcl10','Tlr4','Il12b']
