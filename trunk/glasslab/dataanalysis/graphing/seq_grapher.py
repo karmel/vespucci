@@ -8,7 +8,6 @@ Miscellaneous methods for graphing tag count plots.
 from matplotlib import pyplot
 from string import capwords
 from matplotlib.ticker import ScalarFormatter
-import os
 from glasslab.dataanalysis.base.datatypes import TranscriptAnalyzer
 from random import normalvariate
 import numpy
