@@ -154,7 +154,7 @@ class SeqGrapher(TranscriptAnalyzer):
         
         Add grey to the front for background.
         '''
-        if number < 6: return ('blue','red','green','orange','purple')[number]
+        if number < 6: return ('blue','red','green','orange','purple')[:number]
         segments = max(int(math.ceil(number/3)) - 1,1)
         colors = [x/(segments+1) for x in xrange(0,segments+2)][1:-1]
         colors_r = [204/256] + [1]*len(colors) + colors[::-1] + [0]*len(colors)

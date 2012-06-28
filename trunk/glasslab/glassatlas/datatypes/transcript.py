@@ -317,8 +317,8 @@ class GlassTranscript(TranscriptBase):
             INSERT INTO gr_project_2012.tag_count_per_basepair
             (glass_transcript_id, sequencing_run_id, 
                 basepair, tag_count, tag_start) 
-            SELECT id, {0}, basepair, sum(tag_count), true
-            FROM (SELECT t.id, 
+            SELECT glass_transcript_id, {0}, basepair, sum(tag_count), true
+            FROM (SELECT t.glass_transcript_id, 
                 (CASE WHEN t.strand = 1 THEN t.transcription_end - tag."end"
                     ELSE tag.start - t.transcription_start END) as basepair, 
                 count(tag.id) as tag_count
