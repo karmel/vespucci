@@ -5,6 +5,7 @@ Created on Mar 20, 2012
 
 Miscellaneous methods for graphing tag count plots.
 '''
+from __future__ import division
 from matplotlib import pyplot
 from string import capwords
 from matplotlib.ticker import ScalarFormatter
@@ -153,12 +154,13 @@ class SeqGrapher(TranscriptAnalyzer):
         
         Add grey to the front for background.
         '''
-        number = int(math.ceil(number/3)) - 1
-        colors = [x/(number+1) for x in xrange(0,number+2)][1:-1]
+        if number < 6: return ('blue','red','green','orange','purple')[number]
+        segments = max(int(math.ceil(number/3)) - 1,1)
+        colors = [x/(segments+1) for x in xrange(0,segments+2)][1:-1]
         colors_r = [204/256] + [1]*len(colors) + colors[::-1] + [0]*len(colors)
         colors_g = [204/256] + colors + [1]*len(colors) + colors[::-1]
         colors_b = [204/256] + [0]*len(colors) + [0]*len(colors) + colors
-        return zip(colors_r, colors_g, colors_b)
+        return zip(colors_r, colors_g, colors_b)[:number]
 
     
     def bargraph_for_transcript(self, transcript_row, cols,
