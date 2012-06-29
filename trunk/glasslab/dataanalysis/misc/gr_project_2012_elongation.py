@@ -94,7 +94,11 @@ if __name__ == '__main__':
                 state_str = state.format(rep_str)
                 
                 # Include all transcripts at once, but only do it once.
-                if desc == 'KLA': datasets = [('All RefSeq', data)]
+                if desc == 'KLA': 
+                    datasets = [('All RefSeq', data),
+                                ('Up > 2x in KLA, Down > 1.4x from that in Dex', 
+                                 data[(data['kla_{0}state'.format(rep_str)] == 1)
+                                      & (data['dex_over_kla_{0}state'.format(rep_str)] == -1)]),]
                 else: datasets  = []
                 
                 datasets += [('No change in {0}'.format(desc), data[data[state_str] == 0]),
