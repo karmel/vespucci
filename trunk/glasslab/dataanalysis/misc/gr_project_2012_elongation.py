@@ -87,23 +87,23 @@ if __name__ == '__main__':
         data = grapher.import_file(filename)
     
     
-        states = (('KLA','kla_{0}state'), ('KLA+Dex','kla_dex_{0}state'))
+        states = (('Special', 'group_{0}'),
+                  ('KLA','kla_{0}state'), ('KLA+Dex','kla_dex_{0}state'))
         for desc,state in states:
             for replicate_id in ('',1,2,3,4):
                 rep_str = replicate_id and '{0}_'.format(replicate_id) or replicate_id
                 state_str = state.format(rep_str)
                 
                 # Include all transcripts at once, but only do it once.
-                if desc == 'KLA': 
+                if desc == 'Special': 
                     datasets = [('All RefSeq', data),
                                 ('Up > 2x in KLA, Down > 1.4x from that in Dex', 
                                  data[(data['kla_{0}state'.format(rep_str)] == 1)
                                       & (data['dex_over_kla_{0}state'.format(rep_str)] == -1)]),]
-                else: datasets  = []
-                
-                datasets += [('No change in {0}'.format(desc), data[data[state_str] == 0]),
-                            ('Up in {0}'.format(desc), data[data[state_str] == 1]),
-                            ('Down in {0}'.format(desc), data[data[state_str] == -1]),]
+                else:
+                    datasets = [('No change in {0}'.format(desc), data[data[state_str] == 0]),
+                                ('Up in {0}'.format(desc), data[data[state_str] == 1]),
+                                ('Down in {0}'.format(desc), data[data[state_str] == -1]),]
                 
                 for label, dataset in datasets:
                     slug_label = label.lower().replace(' ','_')
