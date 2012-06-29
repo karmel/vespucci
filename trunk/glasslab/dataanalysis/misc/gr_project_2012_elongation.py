@@ -92,7 +92,12 @@ if __name__ == '__main__':
             for replicate_id in ('',1,2,3,4):
                 rep_str = replicate_id and '{0}_'.format(replicate_id) or replicate_id
                 state_str = state.format(rep_str)
-                datasets = [('No change in {0}'.format(desc), data[data[state_str] == 0]),
+                
+                # Include all transcripts at once, but only do it once.
+                if desc == 'KLA': datasets = [('All RefSeq', data)]
+                else: datasets  = []
+                
+                datasets += [('No change in {0}'.format(desc), data[data[state_str] == 0]),
                             ('Up in {0}'.format(desc), data[data[state_str] == 1]),
                             ('Down in {0}'.format(desc), data[data[state_str] == -1]),]
                 
