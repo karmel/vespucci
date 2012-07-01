@@ -89,7 +89,7 @@ if __name__ == '__main__':
     
         states = (#('Special', 'group_{0}'),
                   #('KLA','kla_{0}state'), ('KLA+Dex','kla_dex_{0}state'),
-                  ('KLA+Dex over KLA','dex_over_kla_{0}state'))
+                  ('KLA+Dex over KLA','dex_over_kla_{0}state'),)
         for desc,state in states:
             for replicate_id in ('',1,2,3,4):
                 rep_str = replicate_id and '{0}_'.format(replicate_id) or replicate_id
