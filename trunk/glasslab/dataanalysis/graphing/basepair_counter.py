@@ -60,8 +60,8 @@ class BasepairCounter(SeqGrapher):
             pyplot.plot(x, y, line_type, color=colors[i], label=labels[i], linewidth=2)
             
             if show_count:
-                pyplot.text(.1, .9, 'Total count: %d' % len(dataset), color=colors[i],
-                            transform=ax.transAxes)
+                pyplot.text(.05, .9 - i*.05, 'Total count: {0}'.format(len(dataset['tag_count'])), 
+                            color=colors[i], transform=ax.transAxes)
                 
         # Limit yaxis by percentile if desired:
         if show_moving_average and ymax_percentile:
