@@ -49,12 +49,13 @@ if __name__ == '__main__':
                     ('paused_kla_dex_33', data[data['kla_dex_bucket_score'] >= .33]),
                     ]
         
-        
+        print len(data[data['dmso_bucket_score'] >= .33])
+        print data['dmso_bucket_score']
         for name, dataset in datasets:
             curr_dirpath = grapher.get_filename(dirpath, name)
             if not os.path.exists(curr_dirpath): os.mkdir(curr_dirpath)
             
-            draw_elongation_profile(dataset, grapher, curr_dirpath)
+            draw_elongation_profile(dataset, grapher, curr_dirpath, show_moving_average=False)
     
             
             

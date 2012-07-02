@@ -25,7 +25,7 @@ class BasepairCounter(SeqGrapher):
     def plot_tags_per_basepair(self, data, labels,
                                title='', xlabel='',ylabel='',
                                window_len=100, ymax_percentile=99.5,
-                               tag_scalars=None):
+                               tag_scalars=None, show_moving_average=True):
         '''
         Given a list of data frames with cols basepair and tag_count, 
         graph each as a line.
@@ -39,20 +39,23 @@ class BasepairCounter(SeqGrapher):
         
         all_y_vals = []
         colors = self.get_colors(len(data))
-        for i, dataset in enumerate(data):
-            try: dataset['tag_count'] = dataset['tag_count']*tag_scalars[i]
-            except TypeError: dataset['tag_count'] = dataset['tag_count']*(tag_scalars or 1)
-            
-            all_y_vals.extend(dataset['tag_count'])
-            pyplot.plot(dataset['basepair'], dataset['tag_count'], '.', 
-                        markeredgecolor=colors[i], markerfacecolor='None', 
-                        alpha=.2, markeredgewidth=.5)
-            
+        if show_moving_average:
+            for i, dataset in enumerate(data):
+                try: dataset['tag_count'] = dataset['tag_count']*tag_scalars[i]
+                except TypeError: dataset['tag_count'] = dataset['tag_count']*(tag_scalars or 1)
+                
+                all_y_vals.extend(dataset['tag_count'])
+                pyplot.plot(dataset['basepair'], dataset['tag_count'], '.', 
+                            markeredgecolor=colors[i], markerfacecolor='None', 
+                            alpha=.2, markeredgewidth=.5)
+                
         # Another loop, since we want all the lines above all the circles
         for i, dataset in enumerate(data):
             # Graph fit line
             line_type = i % 2 and '--' or '-'
-            x, y = self.smooth(dataset['basepair'], dataset['tag_count'], window_len=window_len)
+            if show_moving_average:
+                x, y = self.smooth(dataset['basepair'], dataset['tag_count'], window_len=window_len)
+            else: x, y = dataset['basepair'], dataset['tag_count']
             pyplot.plot(x, y, line_type, color=colors[i], label=labels[i], linewidth=2)
         
         # Limit yaxis by percentile if desired:
