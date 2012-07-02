@@ -50,6 +50,7 @@ if __name__ == '__main__':
                     #('not_paused_kla_dex_15', data[data['kla_dex_bucket_score'] <= .15]),
                     ('kla_dex_more_paused_than_kla_20', 
                         data[data['kla_dex_bucket_score'] - data['kla_bucket_score'] >= .2 ]),
+                    ('all_refseq', data),
                     ]
         
 
