@@ -44,13 +44,15 @@ if __name__ == '__main__':
         data['basepair'] = data['bucket']*int((grapher.to_bp - grapher.from_bp)/100) + grapher.from_bp
         
         # Create filtered groups.
-        datasets = [('paused_dmso_33', data[data['dmso_bucket_score'] >= .33]),
-                    ('paused_kla_33', data[data['kla_bucket_score'] >= .33]),
-                    ('paused_kla_dex_33', data[data['kla_dex_bucket_score'] >= .33]),
+        datasets = [('paused_dmso_50', data[data['dmso_bucket_score'] >= .5]),
+                    ('paused_kla_50', data[data['kla_bucket_score'] >= .5]),
+                    ('paused_kla_dex_50', data[data['kla_dex_bucket_score'] >= .5]),
                     ]
         
-        print len(data[data['dmso_bucket_score'] >= .33])
-        print data['dmso_bucket_score']
+        print len(data[data['dmso_bucket_score'] >= .5])
+        print len(data[data['kla_bucket_score'] >= .5])
+        print len(data[data['kla_dex_bucket_score'] >= .5])
+
         for name, dataset in datasets:
             curr_dirpath = grapher.get_filename(dirpath, name)
             if not os.path.exists(curr_dirpath): os.mkdir(curr_dirpath)
