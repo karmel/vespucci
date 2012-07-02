@@ -54,6 +54,7 @@ if __name__ == '__main__':
         
 
         for name, dataset in datasets:
+            print len(dataset)
             curr_dirpath = grapher.get_filename(dirpath, name)
             if not os.path.exists(curr_dirpath): os.mkdir(curr_dirpath)
             
