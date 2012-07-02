@@ -48,8 +48,8 @@ if __name__ == '__main__':
         datasets = [#('not_paused_dmso_15', data[data['dmso_bucket_score'] <= .15]),
                     #('not_paused_kla_15', data[data['kla_bucket_score'] <= .15]),
                     #('not_paused_kla_dex_15', data[data['kla_dex_bucket_score'] <= .15]),
-                    ('kla_dex_more_paused_than_kla_10', 
-                        data[data['kla_dex_bucket_score'] - data['kla_bucket_score'] >= .1 ]),
+                    ('kla_dex_more_paused_than_kla_20', 
+                        data[data['kla_dex_bucket_score'] - data['kla_bucket_score'] >= .2 ]),
                     ]
         
 
