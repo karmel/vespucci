@@ -59,7 +59,7 @@ class BasepairCounter(SeqGrapher):
             pyplot.plot(x, y, line_type, color=colors[i], label=labels[i], linewidth=2)
         
         # Limit yaxis by percentile if desired:
-        if ymax_percentile:
+        if show_moving_average and ymax_percentile:
             ymax = stats.scoreatpercentile(all_y_vals, ymax_percentile) 
             ax.set_ylim([0, int(math.ceil(ymax))])
 
