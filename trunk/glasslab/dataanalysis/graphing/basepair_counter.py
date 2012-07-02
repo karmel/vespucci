@@ -58,9 +58,8 @@ class BasepairCounter(SeqGrapher):
                 x, y = self.smooth(dataset['basepair'], dataset['tag_count'], window_len=window_len)
             else: x, y = dataset['basepair'], dataset['tag_count']
             pyplot.plot(x, y, line_type, color=colors[i], label=labels[i], linewidth=2)
-            print dataset['tag_count'].values
             if show_count:
-                pyplot.text(.05, .9 - i*.05, 'Total count: {0}'.format(len(dataset['tag_count'])), 
+                pyplot.text(.05, .9 - i*.05, 'Total count: {0}'.format(sum(dataset['tag_count'])), 
                             color=colors[i], transform=ax.transAxes)
                 
         # Limit yaxis by percentile if desired:
