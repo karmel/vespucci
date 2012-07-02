@@ -41,7 +41,8 @@ if __name__ == '__main__':
             
         
         # For the sake of graphing, imitate basepair
-        data['basepair'] = data['bucket']*int((grapher.to_bp - grapher.from_bp)/100) + grapher.from_bp
+        # Hardcoding 2500 here because that's what I used in the SQL query
+        data['basepair'] = data['bucket']*int((2500 - grapher.from_bp)/100) + grapher.from_bp
         
         # Create filtered groups.
         datasets = [#('not_paused_dmso_15', data[data['dmso_bucket_score'] <= .15]),
