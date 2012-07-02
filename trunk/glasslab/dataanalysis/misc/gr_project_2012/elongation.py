@@ -40,7 +40,7 @@ def total_tags_per_run():
 def get_rep_string(replicate_id):
     return replicate_id and '{0}_'.format(replicate_id) or ''
             
-def draw_elongation_profile(data, grapher, dirpath, show_moving_average=True):
+def draw_elongation_profile(data, grapher, dirpath, show_moving_average=True, show_count=False):
     run_ids = set_up_sequencing_run_ids()
     total_tags = total_tags_per_run()
 
@@ -85,7 +85,8 @@ def draw_elongation_profile(data, grapher, dirpath, show_moving_average=True):
                             labels=['DMSO', 'KLA', 'KLA+Dex'],
                             title='Tag localization for RefSeq: {0}, {1}'.format(label,
                                     replicate_id and 'Group {0}'.format(replicate_id) or 'overall'),
-                            tag_scalars=tag_scalars, show_moving_average=show_moving_average)
+                            tag_scalars=tag_scalars, show_moving_average=show_moving_average, 
+                            show_count=show_count)
                 grapher.save_plot(grapher.get_filename(dirpath, 
                             '{0}_refseq_by_run_type_{1}.png'.format(slug_label,
                                     replicate_id and 'group_{0}'.format(replicate_id) or 'all')))

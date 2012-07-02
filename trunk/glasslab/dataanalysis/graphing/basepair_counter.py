@@ -25,7 +25,8 @@ class BasepairCounter(SeqGrapher):
     def plot_tags_per_basepair(self, data, labels,
                                title='', xlabel='',ylabel='',
                                window_len=100, ymax_percentile=99.5,
-                               tag_scalars=None, show_moving_average=True):
+                               tag_scalars=None, show_moving_average=True,
+                               show_count = False):
         '''
         Given a list of data frames with cols basepair and tag_count, 
         graph each as a line.
@@ -57,12 +58,16 @@ class BasepairCounter(SeqGrapher):
                 x, y = self.smooth(dataset['basepair'], dataset['tag_count'], window_len=window_len)
             else: x, y = dataset['basepair'], dataset['tag_count']
             pyplot.plot(x, y, line_type, color=colors[i], label=labels[i], linewidth=2)
-        
+            
+            if show_count:
+                pyplot.text(.1, .9, 'Total count: %d' % len(data), color=colors[i])
+                
         # Limit yaxis by percentile if desired:
         if show_moving_average and ymax_percentile:
             ymax = stats.scoreatpercentile(all_y_vals, ymax_percentile) 
             ax.set_ylim([0, int(math.ceil(ymax))])
 
+        
         pyplot.legend()
         self.add_title(title or 'Tag counts around transcription start sites', ax)
         self.add_axis_labels(xlabel or 'Basepairs from TSS', 

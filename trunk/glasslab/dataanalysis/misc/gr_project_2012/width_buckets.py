@@ -44,20 +44,20 @@ if __name__ == '__main__':
         data['basepair'] = data['bucket']*int((grapher.to_bp - grapher.from_bp)/100) + grapher.from_bp
         
         # Create filtered groups.
-        datasets = [('not_paused_dmso_20', data[data['dmso_bucket_score'] <= .15]),
-                    ('not_paused_kla_20', data[data['kla_bucket_score'] <= .15]),
-                    ('not_paused_kla_dex_20', data[data['kla_dex_bucket_score'] <= .15]),
+        datasets = [#('not_paused_dmso_15', data[data['dmso_bucket_score'] <= .15]),
+                    #('not_paused_kla_15', data[data['kla_bucket_score'] <= .15]),
+                    #('not_paused_kla_dex_15', data[data['kla_dex_bucket_score'] <= .15]),
+                    ('kla_dex_more_paused_than_kla_10', 
+                        data[data['kla_dex_bucket_score'] - data['kla_bucket_score'] >= .1]),
                     ]
         
-        print len(data[data['dmso_bucket_score'] <= .15])
-        print len(data[data['kla_bucket_score'] <= .15])
-        print len(data[data['kla_dex_bucket_score'] <= .15])
 
         for name, dataset in datasets:
             curr_dirpath = grapher.get_filename(dirpath, name)
             if not os.path.exists(curr_dirpath): os.mkdir(curr_dirpath)
             
-            draw_elongation_profile(dataset, grapher, curr_dirpath, show_moving_average=False)
+            draw_elongation_profile(dataset, grapher, curr_dirpath, 
+                                    show_moving_average=False, show_count=True)
     
             
             
