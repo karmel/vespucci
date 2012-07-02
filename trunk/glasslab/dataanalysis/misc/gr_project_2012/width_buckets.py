@@ -41,7 +41,7 @@ if __name__ == '__main__':
             
         
         # For the sake of graphing, imitate basepair
-        data['basepair'] = data['bucket']*int((grapher.to_bp - grapher.from_bp)/100) + grapher.to_bp
+        data['basepair'] = data['bucket']*int((grapher.to_bp - grapher.from_bp)/100) + grapher.from_bp
         
         # Create filtered groups.
         datasets = [('paused_dmso_33', data[data['dmso_bucket_score'] >= .33]),

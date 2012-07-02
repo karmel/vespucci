@@ -65,7 +65,8 @@ def draw_elongation_profile(data, grapher, dirpath):
             
             for label, dataset in datasets:
                 slug_label = label.lower().replace(' ','_')
-                data_grouped = dataset.groupby(['basepair','sequencing_run_id'], as_index=False).sum()
+                group_by_cols = ['basepair','sequencing_run_id']
+                data_grouped = dataset.groupby(group_by_cols, as_index=False).sum()
                 
                 groups = [data_grouped[data_grouped['sequencing_run_id'].isin(
                                                 run_ids['dmso'][replicate_id or 0])],
