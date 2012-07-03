@@ -26,9 +26,9 @@ def get_tag_proportions(data, label):
                              data[(data['kla_{0}state'.format(rep_str)] == 1)
                                   & (data['dex_over_kla_{0}state'.format(rep_str)] == -1)]),]
             else: datasets = []
-            datasets += [('No change in {0}'.format(desc), data[data[state_str] == 0]),
-                        ('Up in {0}'.format(desc), data[data[state_str] == 1]),
-                        ('Down in {0}'.format(desc), data[data[state_str] == -1]),]
+            datasets += [('No change in {0} {1}'.format(desc, replicate_id), data[data[state_str] == 0]),
+                        ('Up in {0} {1}'.format(desc, replicate_id), data[data[state_str] == 1]),
+                        ('Down in {0} {1}'.format(desc, replicate_id), data[data[state_str] == -1]),]
             for name, dataset in datasets:
                 dataset_tags = sum(dataset['tag_count'])
                 print 'Total tags in {0}: {1}'.format(name, dataset_tags)
@@ -89,7 +89,6 @@ if __name__ == '__main__':
                     
                     ]
         
-        get_tag_proportions(data, 'All')
         for name, dataset in datasets:
             get_tag_proportions(dataset, name)
             
