@@ -9,29 +9,29 @@ from glasslab.dataanalysis.misc.gr_project_2012.elongation import draw_elongatio
 from glasslab.dataanalysis.graphing.basepair_counter import BasepairCounter
 import os
 
-def get_tag_proportions(all_data, subset, subset_label):
+def get_tag_proportions(data, label):
     
-    for label, data in (('All',all_data), (subset_label,subset)):
-        total_tags = sum(data['tag_count'])
-        print 'Total tags in {0}: {1}'.format(label, total_tags)
+    
+    total_tags = sum(data['tag_count'])
+    print '\n\n\nTotal tags in {0}: {1}'.format(label, total_tags)
+    
+    states = (('KLA','kla_{0}state'), ('KLA+Dex','kla_dex_{0}state'),
+              ('KLA+Dex over KLA','dex_over_kla_{0}state'),)
+    for desc,state in states:
+        for replicate_id in ('',1,2,3,4):
+            rep_str = get_rep_string(replicate_id)
+            state_str = state.format(rep_str)
+            datasets = [('No change in {0}'.format(desc), data[data[state_str] == 0]),
+                        ('Up in {0}'.format(desc), data[data[state_str] == 1]),
+                        ('Down in {0}'.format(desc), data[data[state_str] == -1]),
+                        ('Up > 2x in KLA, Down > 1.5x from that in Dex', 
+                         data[(data['kla_{0}state'.format(rep_str)] == 1)
+                              & (data['dex_over_kla_{0}state'.format(rep_str)] == -1)]),]
+            for name, dataset in datasets:
+                dataset_tags = sum(dataset['tag_count'])
+                print 'Total tags in {0}: {1}'.format(name, dataset_tags)
+                print 'Percent of total tags in {0}: {1}'.format(name, dataset_tags/total_tags)
         
-        states = (('KLA','kla_{0}state'), ('KLA+Dex','kla_dex_{0}state'),
-                  ('KLA+Dex over KLA','dex_over_kla_{0}state'),)
-        for desc,state in states:
-            for replicate_id in ('',1,2,3,4):
-                rep_str = get_rep_string(replicate_id)
-                state_str = state.format(rep_str)
-                datasets = [('No change in {0}'.format(desc), data[data[state_str] == 0]),
-                            ('Up in {0}'.format(desc), data[data[state_str] == 1]),
-                            ('Down in {0}'.format(desc), data[data[state_str] == -1]),
-                            ('Up > 2x in KLA, Down > 1.5x from that in Dex', 
-                             data[(data['kla_{0}state'.format(rep_str)] == 1)
-                                  & (data['dex_over_kla_{0}state'.format(rep_str)] == -1)]),]
-                for name, dataset in datasets:
-                    dataset_tags = sum(dataset['tag_count'])
-                    print 'Total tags in {0}: {1}'.format(name, dataset_tags)
-                    print 'Percent of total tags in {0}: {1}'.format(name, dataset_tags/total_tags)
-            
         
 if __name__ == '__main__':
     
@@ -87,9 +87,9 @@ if __name__ == '__main__':
                     
                     ]
         
-
+        get_tag_proportions(data, 'All')
         for name, dataset in datasets:
-            get_tag_proportions(data, dataset, name)
+            get_tag_proportions(dataset, name)
             
             '''
             curr_dirpath = grapher.get_filename(dirpath, name)
