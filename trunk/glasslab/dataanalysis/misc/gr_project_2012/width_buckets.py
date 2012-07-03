@@ -35,10 +35,10 @@ def draw_boxplot(data, dirpath):
             grapher.boxplot(pausing_ratios, 
                             bar_names, 
                             title='Pausing Ratio Delta in {0}, {1}'.format(
-                                        state, replicate_id and 'Group {0}'.format(replicate_id) or 'Overall'), 
+                                        desc, (replicate_id and 'Group {0}'.format(replicate_id) or 'Overall')), 
                             xlabel='State in {0} {1}'.format(desc, replicate_id), 
                             ylabel='Pausing ratio delta: (KLA+Dex pausing ratio) - (KLA pausing ratio)', 
-                            show_outliers=True, show_plot=False)
+                            show_outliers=False, show_plot=False)
             
             grapher.save_plot(grapher.get_filename(curr_dirpath, 'boxplot_{0}.png'.format(state_str)))
             
