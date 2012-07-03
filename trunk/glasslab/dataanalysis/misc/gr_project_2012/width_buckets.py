@@ -83,7 +83,7 @@ def get_tag_proportions(data, label):
 if __name__ == '__main__':
     
     grapher = BasepairCounter()
-    dirpath = 'karmel/Desktop/Projects/Classes/Rotations/Finland 2012/GR Project/basepair_buckets'
+    dirpath = 'karmel/Desktop/Projects/Classes/Rotations/Finland 2012/GR Project/buckets_per_row'
     dirpath = grapher.get_path(dirpath)
     
     if True:
@@ -93,8 +93,8 @@ if __name__ == '__main__':
         run_ids = set_up_sequencing_run_ids()
     
         def bucket_score(group):
-            # Ratio of starts in between -20 and 249 bp
-            return len(group[(group['bucket'] >= 17) & (group['bucket'] <= 25)])/len(group)
+            # Ratio of starts in between 0 and 249 bp to rest of gene
+            return len(group[group['bucket'] == 3])/len(group[group['bucket'] >= 3])
         
         # For each sequencing run group, fill in the bucket score val
         for run_type, id_set in run_ids.iteritems():
@@ -112,8 +112,7 @@ if __name__ == '__main__':
             
         
         # For the sake of graphing, imitate basepair
-        # Hardcoding 2500 here because that's what I used in the SQL query
-        data['basepair'] = data['bucket']*int((2500 - grapher.from_bp)/100) + grapher.from_bp
+        data['basepair'] = data['bucket']*int((grapher.to_bp - grapher.from_bp)/100) + grapher.from_bp
         
         # Create filtered groups.
         datasets = [#('not_paused_dmso_15', data[data['dmso_bucket_score'] <= .15]),
