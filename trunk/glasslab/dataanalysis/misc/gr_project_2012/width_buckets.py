@@ -37,7 +37,7 @@ def draw_boxplot(data, dirpath):
                             title='', 
                             xlabel='State in {0} {1}'.format(desc, replicate_id), 
                             ylabel='Pausing ratio delta: (KLA+Dex pausing ratio) - (KLA pausing ratio)', 
-                            show_outliers=False, show_plot=False)
+                            show_outliers=True, show_plot=False)
             
             grapher.save_plot(grapher.get_filename(curr_dirpath, 'boxplot_{0}.png'.format(state_str)))
             
