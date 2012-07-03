@@ -238,6 +238,15 @@ class SeqGrapher(TranscriptAnalyzer):
                     bar_names=None, subplot=111,
                     title='', xlabel=None, ylabel=None,
                     show_outliers=True, show_plot=True, ax=None):
+        '''
+        Draw a boxplot for passed data.
+        
+        Data should be a list of lists of vals same length as bar_names::
+            [[1,2,3,4,1,2,3,4],
+            [4,5,6,7,4,5,6,7],
+            ...]
+        
+        '''
         ax = self.set_up_plot(ax, subplot)
         
         if show_outliers: symbol = '+'

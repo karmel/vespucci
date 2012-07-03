@@ -9,6 +9,35 @@ from glasslab.dataanalysis.misc.gr_project_2012.elongation import draw_elongatio
 from glasslab.dataanalysis.graphing.basepair_counter import BasepairCounter
 import os
 
+def draw_boxplot(data):
+    
+    curr_dirpath = grapher.get_filename(dirpath, 'boxplots')
+    if not os.path.exists(curr_dirpath): os.mkdir(curr_dirpath)
+    
+    states = (('KLA','kla_{0}state'), ('KLA+Dex','kla_dex_{0}state'),
+              ('KLA+Dex over KLA','dex_over_kla_{0}state'),)
+    for desc,state in states:
+        
+        for replicate_id in ('',1,2,3,4):
+            rep_str = get_rep_string(replicate_id)
+            state_str = state.format(rep_str)
+            datasets = [('No change', data[data[state_str] == 0]),
+                        ('Up >= 2x', data[data[state_str] == 1]),
+                        ('Down >= 2x', data[data[state_str] == -1]),]
+
+            bar_names, datasets = zip(*datasets)
+            pausing_ratios = [d['kla_dex_{0}bucket_score'.format(rep_str)]/d['kla_{0}bucket_score'.format(rep_str)]
+                                for d in datasets]
+            
+            grapher.boxplot(pausing_ratios, 
+                            bar_names, 
+                            title='', 
+                            xlabel='State in {0} {1}'.format(desc, replicate_id), 
+                            ylabel='Ratio of (KLA+Dex pausing ratio)/(KLA pausing ratio)', 
+                            show_outliers=False, show_plot=False)
+            
+            grapher.save_plot(grapher.get_filename(curr_dirpath, 'boxplot_{0}.png'.format(state_str)))
+            
 def get_tag_proportions(data, label):
     
     
@@ -86,7 +115,8 @@ if __name__ == '__main__':
         datasets = [#('not_paused_dmso_15', data[data['dmso_bucket_score'] <= .15]),
                     #('not_paused_kla_15', data[data['kla_bucket_score'] <= .15]),
                     #('not_paused_kla_dex_15', data[data['kla_dex_bucket_score'] <= .15]),
-                    ('all_refseq', data),
+                    ('all_refseq', data),]
+        '''
                     ('kla_dex_more_paused_than_kla_05', 
                         data[data['kla_dex_bucket_score'] - data['kla_bucket_score'] >= .05 ]),
                     
@@ -100,10 +130,10 @@ if __name__ == '__main__':
                         data[data['kla_dex_4_bucket_score'] - data['kla_4_bucket_score'] >= .05 ]),
                     
                     ]
-        
+        '''
         for name, dataset in datasets:
-            get_tag_proportions(dataset, name)
-            
+            #get_tag_proportions(dataset, name)
+            draw_boxplot(data)
             '''
             curr_dirpath = grapher.get_filename(dirpath, name)
             if not os.path.exists(curr_dirpath): os.mkdir(curr_dirpath)
@@ -113,4 +143,3 @@ if __name__ == '__main__':
     
             '''
             
-        
