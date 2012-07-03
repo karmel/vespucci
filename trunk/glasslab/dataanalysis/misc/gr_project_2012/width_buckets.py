@@ -15,8 +15,7 @@ def get_tag_proportions(all_data, subset, subset_label):
         total_tags = sum(data['tag_count'])
         print 'Total tags in {0}: {1}'.format(label, total_tags)
         
-        states = (('Special', 'group_{0}'),
-                  ('KLA','kla_{0}state'), ('KLA+Dex','kla_dex_{0}state'),
+        states = (('KLA','kla_{0}state'), ('KLA+Dex','kla_dex_{0}state'),
                   ('KLA+Dex over KLA','dex_over_kla_{0}state'),)
         for desc,state in states:
             for replicate_id in ('',1,2,3,4):
