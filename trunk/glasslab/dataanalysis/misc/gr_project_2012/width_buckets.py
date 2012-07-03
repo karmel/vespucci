@@ -12,8 +12,8 @@ import os
 def get_tag_proportions(data, label):
     
     
-    total_tags = sum(data['tag_count'])
-    print '\n\n\nTotal tags in {0}: {1}'.format(label, total_tags)
+    total_trans = len(data)
+    print '\n\n\nTotal transcripts in {0}: {1}'.format(label, total_trans)
     
     states = (('KLA','kla_{0}state'), ('KLA+Dex','kla_dex_{0}state'),
               ('KLA+Dex over KLA','dex_over_kla_{0}state'),)
@@ -22,7 +22,7 @@ def get_tag_proportions(data, label):
             rep_str = get_rep_string(replicate_id)
             state_str = state.format(rep_str)
             if desc == 'KLA':
-                datasets = [('Up > 2x in KLA, Down > 1.5x from that in Dex', 
+                datasets = [('Up > 2x in KLA, Down > 1.5x from that in Dex {0}'.format(replicate_id), 
                              data[(data['kla_{0}state'.format(rep_str)] == 1)
                                   & (data['dex_over_kla_{0}state'.format(rep_str)] == -1)]),]
             else: datasets = []
@@ -30,9 +30,9 @@ def get_tag_proportions(data, label):
                         ('Up in {0} {1}'.format(desc, replicate_id), data[data[state_str] == 1]),
                         ('Down in {0} {1}'.format(desc, replicate_id), data[data[state_str] == -1]),]
             for name, dataset in datasets:
-                dataset_tags = sum(dataset['tag_count'])
-                print 'Total tags in {0}: {1}'.format(name, dataset_tags)
-                print 'Percent of total tags in {0}: {1}'.format(name, dataset_tags/total_tags)
+                dataset_trans = len(dataset)
+                print 'Total transcripts in {0}: {1}'.format(name, dataset_trans)
+                print 'Percent of total tags in {0}: {1}'.format(name, dataset_trans/total_trans)
         
         
 if __name__ == '__main__':
