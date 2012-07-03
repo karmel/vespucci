@@ -22,11 +22,15 @@ def get_tag_proportions(data, label):
             rep_str = get_rep_string(replicate_id)
             state_str = state.format(rep_str)
             if desc == 'KLA':
-                datasets = [('Up > 2x in KLA, Down > 1.5x from that in Dex {0}'.format(replicate_id), 
+                datasets = [('Down > 1.5x in Dex over KLA {0}'.format(replicate_id), 
+                             data[(data['dex_over_kla_{0}state'.format(rep_str)] == -1)]),
+                            ('Up > 2x in KLA, Down > 1.5x from that in Dex {0}'.format(replicate_id), 
                              data[(data['kla_{0}state'.format(rep_str)] == 1)
                                   & (data['dex_over_kla_{0}state'.format(rep_str)] == -1)]),
-                            ('Down > 1.5x in Dex over KLA {0}'.format(replicate_id), 
-                             data[(data['dex_over_kla_{0}state'.format(rep_str)] == -1)]),]
+                            ('Down > 2x in KLA, Down > 1.5x from that in Dex {0}'.format(replicate_id), 
+                             data[(data['kla_{0}state'.format(rep_str)] == -1)
+                                  & (data['dex_over_kla_{0}state'.format(rep_str)] == -1)]),
+                            ]
             else: datasets = []
             datasets += [('No change in {0} {1}'.format(desc, replicate_id), data[data[state_str] == 0]),
                         ('Up in {0} {1}'.format(desc, replicate_id), data[data[state_str] == 1]),
