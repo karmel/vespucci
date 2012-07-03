@@ -9,9 +9,9 @@ from glasslab.dataanalysis.misc.gr_project_2012.elongation import draw_elongatio
 from glasslab.dataanalysis.graphing.basepair_counter import BasepairCounter
 import os
 
-def draw_boxplot(data, dirpath):
+def draw_boxplot(data, label, dirpath):
     
-    curr_dirpath = grapher.get_filename(dirpath, 'boxplots')
+    curr_dirpath = grapher.get_filename(dirpath, 'boxplots_{0}'.format(label))
     if not os.path.exists(curr_dirpath): os.mkdir(curr_dirpath)
     
     # Group and take mean. We can use mean because we only care
@@ -120,7 +120,13 @@ if __name__ == '__main__':
         datasets = [#('not_paused_dmso_15', data[data['dmso_bucket_score'] <= .15]),
                     #('not_paused_kla_15', data[data['kla_bucket_score'] <= .15]),
                     #('not_paused_kla_dex_15', data[data['kla_dex_bucket_score'] <= .15]),
-                    ('all_refseq', data),]
+                    ('all_refseq', data),
+                    ('with_gr_kla_dex', data[data['gr_kla_dex'] == 1]),
+                    ('with_p65_kla_dex', data[data['p65_kla_dex'] == 1]),
+                    ('with_p65_no_gr_kla_dex', data[(data['p65_kla_dex'] == 1) & (data['gr_kla_dex'] == 0)]),
+                    ('with_gr_no_p65_kla_dex', data[(data['p65_kla_dex'] == 0) & (data['gr_kla_dex'] == 1)]),
+                    ('with_gr_and_p65_kla_dex', data[(data['p65_kla_dex'] == 1) & (data['gr_kla_dex'] == 1)]),
+                    ]
         '''
                     ('kla_dex_more_paused_than_kla_05', 
                         data[data['kla_dex_bucket_score'] - data['kla_bucket_score'] >= .05 ]),
@@ -138,7 +144,7 @@ if __name__ == '__main__':
         '''
         for name, dataset in datasets:
             #get_tag_proportions(dataset, name)
-            draw_boxplot(data, dirpath)
+            draw_boxplot(data, name, dirpath)
             '''
             curr_dirpath = grapher.get_filename(dirpath, name)
             if not os.path.exists(curr_dirpath): os.mkdir(curr_dirpath)
