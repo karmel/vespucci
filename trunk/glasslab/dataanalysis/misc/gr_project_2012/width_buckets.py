@@ -137,8 +137,8 @@ if __name__ == '__main__':
                     ]
         '''
         for name, dataset in datasets:
-            #get_tag_proportions(dataset, name)
-            draw_boxplot(data, dirpath)
+            get_tag_proportions(dataset, name)
+            #draw_boxplot(data, dirpath)
             '''
             curr_dirpath = grapher.get_filename(dirpath, name)
             if not os.path.exists(curr_dirpath): os.mkdir(curr_dirpath)
