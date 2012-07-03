@@ -14,7 +14,7 @@ def draw_boxplot(data, dirpath):
     curr_dirpath = grapher.get_filename(dirpath, 'boxplots')
     if not os.path.exists(curr_dirpath): os.mkdir(curr_dirpath)
 
-    data = data.groupby('glass_transcript_id',as_index=False)    
+    data = data.groupby('glass_transcript_id',as_index=False).mean()    
     states = (('KLA','kla_{0}state'), ('KLA+Dex','kla_dex_{0}state'),
               ('KLA+Dex over KLA','dex_over_kla_{0}state'),)
     for desc,state in states:
