@@ -48,9 +48,18 @@ if __name__ == '__main__':
         datasets = [#('not_paused_dmso_15', data[data['dmso_bucket_score'] <= .15]),
                     #('not_paused_kla_15', data[data['kla_bucket_score'] <= .15]),
                     #('not_paused_kla_dex_15', data[data['kla_dex_bucket_score'] <= .15]),
-                    ('kla_dex_more_paused_than_kla_20', 
-                        data[data['kla_dex_bucket_score'] - data['kla_bucket_score'] >= .2 ]),
-                    ('all_refseq', data),
+                    ('kla_dex_more_paused_than_kla_10', 
+                        data[data['kla_dex_bucket_score'] - data['kla_bucket_score'] >= .1 ]),
+                    
+                    ('kla_dex_more_paused_than_kla_1_10', 
+                        data[data['kla_dex_1_bucket_score'] - data['kla_1_bucket_score'] >= .1 ]),
+                    ('kla_dex_more_paused_than_kla_2_10', 
+                        data[data['kla_dex_2_bucket_score'] - data['kla_2_bucket_score'] >= .1 ]),
+                    ('kla_dex_more_paused_than_kla_3_10', 
+                        data[data['kla_dex_3_bucket_score'] - data['kla_3_bucket_score'] >= .1 ]),
+                    ('kla_dex_more_paused_than_kla_4_10', 
+                        data[data['kla_dex_4_bucket_score'] - data['kla_4_bucket_score'] >= .1 ]),
+                    
                     ]
         
 
