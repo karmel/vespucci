@@ -86,7 +86,7 @@ if __name__ == '__main__':
     dirpath = 'karmel/Desktop/Projects/Classes/Rotations/Finland 2012/GR Project/buckets_per_row'
     dirpath = grapher.get_path(dirpath)
     
-    if True:
+    if True: 
         filename = grapher.get_filename(dirpath, 'refseq_by_bucket.txt')
         data = grapher.import_file(filename)
         
