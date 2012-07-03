@@ -95,7 +95,7 @@ if __name__ == '__main__':
         def bucket_score(group):
             # Ratio of starts in between 0 and 249 bp to rest of gene
             try: 
-                return len(group[group['bucket'] == 3])/len(group[group['bucket'] >= 3])
+                return len(group[group['bucket'] == 3])/len(group)
             except ZeroDivisionError: return 0
         
         # For each sequencing run group, fill in the bucket score val
@@ -137,8 +137,8 @@ if __name__ == '__main__':
                     ]
         '''
         for name, dataset in datasets:
-            get_tag_proportions(dataset, name)
-            #draw_boxplot(data, dirpath)
+            #get_tag_proportions(dataset, name)
+            draw_boxplot(data, dirpath)
             '''
             curr_dirpath = grapher.get_filename(dirpath, name)
             if not os.path.exists(curr_dirpath): os.mkdir(curr_dirpath)
