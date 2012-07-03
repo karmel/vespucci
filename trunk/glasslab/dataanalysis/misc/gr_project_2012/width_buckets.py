@@ -35,7 +35,7 @@ def get_tag_proportions(data, label):
                                   & (data['dex_over_kla_{0}state'.format(rep_str)] == 1)]),
                             ('Down > 2x in KLA, Down > 1.5x in Dex {0}'.format(replicate_id), 
                              data[(data['kla_{0}state'.format(rep_str)] == -1)
-                                  & (data['dex_over_kla_{0}state'.format(rep_str)] == 0)]),
+                                  & (data['dex_over_kla_{0}state'.format(rep_str)] == -1)]),
                             ]
             else: datasets = []
             datasets += [('No change in {0} {1}'.format(desc, replicate_id), data[data[state_str] == 0]),
