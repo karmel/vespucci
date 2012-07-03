@@ -13,7 +13,9 @@ def draw_boxplot(data, dirpath):
     
     curr_dirpath = grapher.get_filename(dirpath, 'boxplots')
     if not os.path.exists(curr_dirpath): os.mkdir(curr_dirpath)
-
+    
+    # Group and take mean. We can use mean because we only care
+    # about the values that are the same for all rows for a given transcript.
     data = data.groupby('glass_transcript_id',as_index=False).mean()    
     states = (('KLA','kla_{0}state'), ('KLA+Dex','kla_dex_{0}state'),
               ('KLA+Dex over KLA','dex_over_kla_{0}state'),)
@@ -27,14 +29,14 @@ def draw_boxplot(data, dirpath):
                         ('Down >= 2x', data[data[state_str] == -1]),]
 
             bar_names, datasets = zip(*datasets)
-            pausing_ratios = [d['kla_dex_{0}bucket_score'.format(rep_str)]/d['kla_{0}bucket_score'.format(rep_str)]
+            pausing_ratios = [d['kla_dex_{0}bucket_score'.format(rep_str)] - d['kla_{0}bucket_score'.format(rep_str)]
                                 for d in datasets]
             
             grapher.boxplot(pausing_ratios, 
                             bar_names, 
                             title='', 
                             xlabel='State in {0} {1}'.format(desc, replicate_id), 
-                            ylabel='Ratio of (KLA+Dex pausing ratio)/(KLA pausing ratio)', 
+                            ylabel='Pausing ratio delta: (KLA+Dex pausing ratio) - (KLA pausing ratio)', 
                             show_outliers=False, show_plot=False)
             
             grapher.save_plot(grapher.get_filename(curr_dirpath, 'boxplot_{0}.png'.format(state_str)))
