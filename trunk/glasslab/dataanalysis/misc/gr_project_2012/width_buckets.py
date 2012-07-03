@@ -129,7 +129,9 @@ if __name__ == '__main__':
                     #('with_gr_no_p65_kla_dex', data[(data['p65_kla_dex'] == 0) & (data['gr_kla_dex'] == 1)]),
                     #('with_gr_and_p65_kla_dex', data[(data['p65_kla_dex'] == 1) & (data['gr_kla_dex'] == 1)]),
                     #('with_no_gr_and_no_p65_kla_dex', data[(data['p65_kla_dex'] == 0) & (data['gr_kla_dex'] == 0)]),
-                    ('with_p65_kla_no_p65_kla_dex', data[(data['p65_kla'] == 1) & (data['p65_kla_dex'] == 0)]),
+                    #('with_p65_kla_no_p65_kla_dex', data[(data['p65_kla'] == 1) & (data['p65_kla_dex'] == 0)]),
+                    ('with_p65_kla_dex_no_p65_kla', data[(data['p65_kla'] == 0) & (data['p65_kla_dex'] == 1)]),
+                    ('with_p65_kla', data[(data['p65_kla'] == 0)]),
                     ]
         '''
                     ('kla_dex_more_paused_than_kla_05', 
