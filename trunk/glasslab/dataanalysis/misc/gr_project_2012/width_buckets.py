@@ -21,12 +21,14 @@ def get_tag_proportions(data, label):
         for replicate_id in ('',1,2,3,4):
             rep_str = get_rep_string(replicate_id)
             state_str = state.format(rep_str)
-            datasets = [('No change in {0}'.format(desc), data[data[state_str] == 0]),
+            if desc == 'KLA':
+                datasets = [('Up > 2x in KLA, Down > 1.5x from that in Dex', 
+                             data[(data['kla_{0}state'.format(rep_str)] == 1)
+                                  & (data['dex_over_kla_{0}state'.format(rep_str)] == -1)]),]
+            else: datasets = []
+            datasets += [('No change in {0}'.format(desc), data[data[state_str] == 0]),
                         ('Up in {0}'.format(desc), data[data[state_str] == 1]),
-                        ('Down in {0}'.format(desc), data[data[state_str] == -1]),
-                        ('Up > 2x in KLA, Down > 1.5x from that in Dex', 
-                         data[(data['kla_{0}state'.format(rep_str)] == 1)
-                              & (data['dex_over_kla_{0}state'.format(rep_str)] == -1)]),]
+                        ('Down in {0}'.format(desc), data[data[state_str] == -1]),]
             for name, dataset in datasets:
                 dataset_tags = sum(dataset['tag_count'])
                 print 'Total tags in {0}: {1}'.format(name, dataset_tags)
