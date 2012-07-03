@@ -28,7 +28,7 @@ def get_tag_proportions(all_data, subset, subset_label):
                              data[(data['kla_{0}state'.format(rep_str)] == 1)
                                   & (data['dex_over_kla_{0}state'.format(rep_str)] == -1)]),]
                 for name, dataset in datasets:
-                    dataset_tags = sum(dataset['total_tags'])
+                    dataset_tags = sum(dataset['tag_count'])
                     print 'Total tags in {0}: {1}'.format(name, dataset_tags)
                     print 'Percent of total tags in {0}: {1}'.format(name, dataset_tags/total_tags)
             
