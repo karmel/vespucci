@@ -87,7 +87,7 @@ if __name__ == '__main__':
     dirpath = grapher.get_path(dirpath)
     
     if True: 
-        filename = grapher.get_filename(dirpath, 'refseq_by_bucket.txt')
+        filename = grapher.get_filename(dirpath, 'refseq_by_transcript_and_bucket.txt')
         data = grapher.import_file(filename)
         
         run_ids = set_up_sequencing_run_ids()
