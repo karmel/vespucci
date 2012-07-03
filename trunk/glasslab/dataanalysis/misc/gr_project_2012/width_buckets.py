@@ -12,7 +12,7 @@ import os
 def get_tag_proportions(data, label):
     
     
-    total_trans = len(data.groupby('glass_transcript_id'))
+    total_trans = len(set(data['glass_transcript_id']))
     print '\n\n\nTotal transcripts in {0}:\t{1}'.format(label, total_trans)
     
     states = (('KLA','kla_{0}state'), ('KLA+Dex','kla_dex_{0}state'),
@@ -30,7 +30,7 @@ def get_tag_proportions(data, label):
                         ('Up in {0} {1}'.format(desc, replicate_id), data[data[state_str] == 1]),
                         ('Down in {0} {1}'.format(desc, replicate_id), data[data[state_str] == -1]),]
             for name, dataset in datasets:
-                dataset_trans = len(dataset.groupby('glass_transcript_id'))
+                dataset_trans = len(set(dataset['glass_transcript_id']))
                 print 'Total transcripts in {0}:\t{1}'.format(name, dataset_trans)
                 print 'Percent of transcripts in {0}:\t{1}'.format(name, dataset_trans/total_trans)
         
