@@ -8,6 +8,7 @@ from glasslab.dataanalysis.misc.gr_project_2012.elongation import draw_elongatio
     get_rep_string, set_up_sequencing_run_ids
 from glasslab.dataanalysis.graphing.basepair_counter import BasepairCounter
 import os
+from matplotlib import pyplot
 
 def draw_boxplot(data, label, dirpath):
     
@@ -32,7 +33,7 @@ def draw_boxplot(data, label, dirpath):
             pausing_ratios = [d['kla_dex_{0}bucket_score'.format(rep_str)] - d['kla_{0}bucket_score'.format(rep_str)]
                                 for d in datasets]
             
-            grapher.boxplot(pausing_ratios, 
+            ax = grapher.boxplot(pausing_ratios, 
                             bar_names, 
                             title='Pausing Ratio Delta in {0}, {1}'.format(
                                         desc, (replicate_id and 'Group {0}'.format(replicate_id) or 'Overall')), 
@@ -40,6 +41,7 @@ def draw_boxplot(data, label, dirpath):
                             ylabel='Pausing ratio delta: (KLA+Dex pausing ratio) - (KLA pausing ratio)', 
                             show_outliers=False, show_plot=False)
             
+            pyplot.text(.05, .9, 'Total transcripts: {0}'.format(len(data)), transform=ax.transAxes)
             grapher.save_plot(grapher.get_filename(curr_dirpath, 'boxplot_{0}.png'.format(state_str)))
             
 def get_tag_proportions(data, label):
