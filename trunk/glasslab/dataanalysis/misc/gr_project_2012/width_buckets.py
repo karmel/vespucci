@@ -94,7 +94,9 @@ if __name__ == '__main__':
     
         def bucket_score(group):
             # Ratio of starts in between 0 and 249 bp to rest of gene
-            return len(group[group['bucket'] == 3])/len(group[group['bucket'] >= 3])
+            try: 
+                return len(group[group['bucket'] == 3])/len(group[group['bucket'] >= 3])
+            except ZeroDivisionError: return 0
         
         # For each sequencing run group, fill in the bucket score val
         for run_type, id_set in run_ids.iteritems():
