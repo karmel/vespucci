@@ -49,7 +49,7 @@ class BasepairCounter(SeqGrapher):
                 pyplot.plot(dataset['basepair'], dataset['tag_count'], '.', 
                             markeredgecolor=colors[i], markerfacecolor='None', 
                             alpha=.2, markeredgewidth=.5)
-                
+        
         # Another loop, since we want all the lines above all the circles
         for i, dataset in enumerate(data):
             # Graph fit line
