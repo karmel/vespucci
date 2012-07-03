@@ -9,7 +9,7 @@ from glasslab.dataanalysis.misc.gr_project_2012.elongation import draw_elongatio
 from glasslab.dataanalysis.graphing.basepair_counter import BasepairCounter
 import os
 
-def draw_boxplot(data):
+def draw_boxplot(data, dirpath):
     
     curr_dirpath = grapher.get_filename(dirpath, 'boxplots')
     if not os.path.exists(curr_dirpath): os.mkdir(curr_dirpath)
@@ -133,7 +133,7 @@ if __name__ == '__main__':
         '''
         for name, dataset in datasets:
             #get_tag_proportions(dataset, name)
-            draw_boxplot(data)
+            draw_boxplot(data, dirpath)
             '''
             curr_dirpath = grapher.get_filename(dirpath, name)
             if not os.path.exists(curr_dirpath): os.mkdir(curr_dirpath)
