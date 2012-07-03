@@ -24,7 +24,9 @@ def get_tag_proportions(data, label):
             if desc == 'KLA':
                 datasets = [('Up > 2x in KLA, Down > 1.5x from that in Dex {0}'.format(replicate_id), 
                              data[(data['kla_{0}state'.format(rep_str)] == 1)
-                                  & (data['dex_over_kla_{0}state'.format(rep_str)] == -1)]),]
+                                  & (data['dex_over_kla_{0}state'.format(rep_str)] == -1)]),
+                            ('Down > 1.5x in Dex over KLA {0}'.format(replicate_id), 
+                             data[(data['dex_over_kla_{0}state'.format(rep_str)] == -1)]),]
             else: datasets = []
             datasets += [('No change in {0} {1}'.format(desc, replicate_id), data[data[state_str] == 0]),
                         ('Up in {0} {1}'.format(desc, replicate_id), data[data[state_str] == 1]),
@@ -74,18 +76,18 @@ if __name__ == '__main__':
         datasets = [#('not_paused_dmso_15', data[data['dmso_bucket_score'] <= .15]),
                     #('not_paused_kla_15', data[data['kla_bucket_score'] <= .15]),
                     #('not_paused_kla_dex_15', data[data['kla_dex_bucket_score'] <= .15]),
-                    #('all_refseq', data),
-                    ('kla_dex_more_paused_than_kla_10', 
-                        data[data['kla_dex_bucket_score'] - data['kla_bucket_score'] >= .10 ]),
+                    ('all_refseq', data),
+                    ('kla_dex_more_paused_than_kla_05', 
+                        data[data['kla_dex_bucket_score'] - data['kla_bucket_score'] >= .05 ]),
                     
-                    ('kla_dex_more_paused_than_kla_1_10', 
-                        data[data['kla_dex_1_bucket_score'] - data['kla_1_bucket_score'] >= .10 ]),
-                    ('kla_dex_more_paused_than_kla_2_10', 
-                        data[data['kla_dex_2_bucket_score'] - data['kla_2_bucket_score'] >= .10 ]),
-                    ('kla_dex_more_paused_than_kla_3_10', 
-                        data[data['kla_dex_3_bucket_score'] - data['kla_3_bucket_score'] >= .10 ]),
-                    ('kla_dex_more_paused_than_kla_4_10', 
-                        data[data['kla_dex_4_bucket_score'] - data['kla_4_bucket_score'] >= .10 ]),
+                    ('kla_dex_more_paused_than_kla_1_05', 
+                        data[data['kla_dex_1_bucket_score'] - data['kla_1_bucket_score'] >= .05 ]),
+                    ('kla_dex_more_paused_than_kla_2_05', 
+                        data[data['kla_dex_2_bucket_score'] - data['kla_2_bucket_score'] >= .05 ]),
+                    ('kla_dex_more_paused_than_kla_3_05', 
+                        data[data['kla_dex_3_bucket_score'] - data['kla_3_bucket_score'] >= .05 ]),
+                    ('kla_dex_more_paused_than_kla_4_05', 
+                        data[data['kla_dex_4_bucket_score'] - data['kla_4_bucket_score'] >= .05 ]),
                     
                     ]
         
