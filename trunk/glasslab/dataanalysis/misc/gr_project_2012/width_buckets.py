@@ -16,9 +16,9 @@ def bucket_score(group):
             return sum(group[group['bucket'] == 3]['tag_count'])/sum(group[group['bucket'] >= 3]['tag_count'])
         except ZeroDivisionError: return 0
     
-def get_data_with_bucket_score(dirpath):
-    filename = grapher.get_filename(dirpath, 'refseq_by_transcript_and_bucket.txt')
-    data = grapher.import_file(filename)
+def get_data_with_bucket_score(yzer, dirpath):
+    filename = yzer.get_filename(dirpath, 'refseq_by_transcript_and_bucket.txt')
+    data = yzer.import_file(filename)
     
     run_ids = set_up_sequencing_run_ids()
     
@@ -39,6 +39,7 @@ def get_data_with_bucket_score(dirpath):
     data['basepair'] = data['bucket']*int((grapher.to_bp - grapher.from_bp)/100) + grapher.from_bp
 
     return data
+
 def draw_boxplot(data, label, dirpath):
     
     curr_dirpath = grapher.get_filename(dirpath, 'boxplots_{0}'.format(label))
@@ -118,7 +119,7 @@ if __name__ == '__main__':
     dirpath = grapher.get_path(dirpath)
     
     if True: 
-        data = get_data_with_bucket_score(dirpath)
+        data = get_data_with_bucket_score(grapher, dirpath)
         # Create filtered groups.
         datasets = [#('not_paused_dmso_15', data[data['dmso_bucket_score'] <= .15]),
                     #('not_paused_kla_15', data[data['kla_bucket_score'] <= .15]),

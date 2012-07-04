@@ -16,7 +16,7 @@ if __name__ == '__main__':
     dirpath = 'karmel/Desktop/Projects/Classes/Rotations/Finland 2012/GR Project/classification'
     dirpath = learner.get_path(dirpath)
     
-    data = get_data_with_bucket_score(dirpath)
+    data = get_data_with_bucket_score(learner, dirpath)
     # Get mean of all values to compress
     grouped = data.groupby('glass_transcript_id',as_index=False).mean()
     # Except for tag_count which should be summed.
