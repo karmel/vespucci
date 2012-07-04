@@ -14,6 +14,8 @@ from pandas import Series
 from glasslab.dataanalysis.machinelearning.base import Learner
 from matplotlib import pyplot
 import numpy
+from matplotlib.colors import ListedColormap, LinearSegmentedColormap
+from matplotlib.cm import register_cmap, get_cmap
 
 class LogisticClassifier(Learner):
     
@@ -43,9 +45,11 @@ class LogisticClassifier(Learner):
         if k is None: return all_feat
         return all_feat[:k]
 
-    def run_nested_cross_validation(self, data, labels, k=3, Cs=None, 
-                                    error_f=None, higher_is_better=False,
-                                    columns=None, balance=True):
+    def run_nested_cross_validation(self, data, labels, k=3, columns=None, 
+                                    draw_roc=True, draw_decision_boundaries=True,
+                                    title_suffix='', save_path_prefix='',
+                                    balance=True, Cs=None, error_f=None, higher_is_better=False,
+                                    threshold_p=.5):
         '''
         Run nested CV on data with passed k folds.
         
@@ -115,9 +119,7 @@ class LogisticClassifier(Learner):
             predicted_probs = fitted.predict_proba(data_chosen.ix[test_outer])
             err = error_f(predicted_probs, labels.ix[test_outer].values)
             
-            #self.draw_decision_boundaries(mod, data_chosen.columns, data_chosen.ix[train_outer].as_matrix(), labels.ix[train_outer].values)
-            predicted = fitted.predict(data_chosen.ix[test_outer])
-            print confusion_matrix(labels[test_outer].values, predicted)
+            print confusion_matrix(labels[test_outer].values, predicted_probs[:,1] > threshold_p)
             
             for_roc.append((labels[test_outer].values, predicted_probs))
             
@@ -130,7 +132,20 @@ class LogisticClassifier(Learner):
         print 'Final columns, coefficients: '
         print zip(columns, fitted.coef_[0])
         
-        return mean_metric, best_c, for_roc
+        if draw_decision_boundaries:
+            self.draw_decision_boundaries(mod, data_chosen.columns, 
+                                          data_chosen.ix[train_outer].as_matrix(), 
+                                          labels.ix[train_outer].values,
+                                          title = 'Decision Boundaries: ' + title_suffix, 
+                                          save_path = save_path_prefix + '_decision_boundaries.png'
+                                          )
+            
+        if draw_roc:
+            self.draw_roc(for_roc, 
+                          title = 'ROC for {1} features, c = {2}: {0}'.format(
+                                title_suffix, len(data_chosen.columns), best_c), 
+                          save_path = save_path_prefix + '_roc.png')
+        return mean_metric, best_c
 
     def get_best_c(self, Cs, metric, higher_is_better=False):
         paired = zip(metric, Cs)
@@ -148,7 +163,7 @@ class LogisticClassifier(Learner):
         labels = labels.drop(indices, axis=0)
         return data, labels
         
-    def draw_roc(self, label_sets, title='', save_path='', show_plot=True):
+    def draw_roc(self, label_sets, title='', save_path='', show_plot=False):
         # Compute ROC curve and area the curve
         pyplot.clf()
             
@@ -169,7 +184,8 @@ class LogisticClassifier(Learner):
         pyplot.savefig(save_path)
         if show_plot: pyplot.show()
         
-    def draw_decision_boundaries(self, model, columns, training_data, training_labels):
+    def draw_decision_boundaries(self, model, columns, training_data, training_labels,
+                                 title='', save_path='', show_plot=False):
         '''
         From
         http://scikit-learn.org/stable/auto_examples/linear_model/plot_iris_logistic.html#example-linear-model-plot-iris-logistic-py
@@ -184,21 +200,25 @@ class LogisticClassifier(Learner):
         xx, yy = numpy.meshgrid(numpy.arange(x_min, x_max, h), numpy.arange(y_min, y_max, h))
         Z = model.predict(numpy.c_[xx.ravel(), yy.ravel()])
         
-        cmap_instance = pyplot.cm.Paired
+        # WHY ARE ALL MATPLOTLIB COLORMAPS UGLY?
+        two_tone_cmap = LinearSegmentedColormap.from_list('two_tone_cmap',['#C9D9FB','#915EAB'])
+        register_cmap(cmap=two_tone_cmap)
+        cmap_instance = get_cmap('two_tone_cmap')
         # Put the result into a color plot
         Z = Z.reshape(xx.shape)
         pyplot.figure()
-        pyplot.pcolormesh(xx, yy, Z, cmap=cmap_instance)
+        pyplot.pcolormesh(xx, yy, Z, cmap=cmap_instance, alpha=.8)
         
         # Plot also the training points
         pyplot.scatter(training_data[:, 0], training_data[:, 1], 
+                       linewidths=.6,
                        c=training_labels, edgecolors='k', cmap=cmap_instance)
-        pyplot.xlabel(columns[0])
-        pyplot.ylabel(columns[1])
+        pyplot.xlabel('Normalized {0}'.format(columns[0]))
+        pyplot.ylabel('Normalized {0}'.format(columns[1]))
         
         pyplot.xlim(xx.min(), xx.max())
         pyplot.ylim(yy.min(), yy.max())
-        pyplot.xticks(())
-        pyplot.yticks(())
+        pyplot.title(title)
         
-        pyplot.show()
+        pyplot.savefig(save_path)
+        if show_plot: pyplot.show()
