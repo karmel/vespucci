@@ -10,6 +10,35 @@ from glasslab.dataanalysis.graphing.basepair_counter import BasepairCounter
 import os
 from matplotlib import pyplot
 
+def bucket_score(group):
+        # Ratio of starts in between 0 and 249 bp to rest of gene
+        try: 
+            return sum(group[group['bucket'] == 3]['tag_count'])/sum(group[group['bucket'] >= 3]['tag_count'])
+        except ZeroDivisionError: return 0
+    
+def get_data_with_bucket_score(dirpath):
+    filename = grapher.get_filename(dirpath, 'refseq_by_transcript_and_bucket.txt')
+    data = grapher.import_file(filename)
+    
+    run_ids = set_up_sequencing_run_ids()
+    
+    # For each sequencing run group, fill in the bucket score val
+    for run_type, id_set in run_ids.iteritems():
+        for replicate_id in ('',1,2,3,4):
+            rep_str = get_rep_string(replicate_id)
+            curr_ids = id_set[replicate_id or 0]
+            # First subset rows by sequencing run_ids of interest
+            subset = data[data['sequencing_run_id'].isin(curr_ids)]
+            # Group by transcript, and assign bucket score to each row
+            grouped = subset.groupby('glass_transcript_id')
+            grouped = grouped.apply(bucket_score)
+            # Fill in bucket score for each original row.
+            data['{0}_{1}bucket_score'.format(run_type, rep_str)] = grouped[data['glass_transcript_id']].values
+    
+    # For the sake of graphing, imitate basepair
+    data['basepair'] = data['bucket']*int((grapher.to_bp - grapher.from_bp)/100) + grapher.from_bp
+
+    return data
 def draw_boxplot(data, label, dirpath):
     
     curr_dirpath = grapher.get_filename(dirpath, 'boxplots_{0}'.format(label))
@@ -17,7 +46,7 @@ def draw_boxplot(data, label, dirpath):
     
     # Group and take mean. We can use mean because we only care
     # about the values that are the same for all rows for a given transcript.
-    data = data.groupby('glass_transcript_id',as_index=False).mean()    
+    data = data.groupby('glass_transcript_id',as_index=False).mean()
     states = (('KLA','kla_{0}state'), ('KLA+Dex','kla_dex_{0}state'),
               ('KLA+Dex over KLA','dex_over_kla_{0}state'),)
     for desc,state in states:
@@ -89,35 +118,7 @@ if __name__ == '__main__':
     dirpath = grapher.get_path(dirpath)
     
     if True: 
-        filename = grapher.get_filename(dirpath, 'refseq_by_transcript_and_bucket.txt')
-        data = grapher.import_file(filename)
-        
-        run_ids = set_up_sequencing_run_ids()
-    
-        def bucket_score(group):
-            # Ratio of starts in between 0 and 249 bp to rest of gene
-            try: 
-                return sum(group[group['bucket'] == 3]['tag_count'])/sum(group[group['bucket'] >= 3]['tag_count'])
-            except ZeroDivisionError: return 0
-        
-        # For each sequencing run group, fill in the bucket score val
-        for run_type, id_set in run_ids.iteritems():
-            for replicate_id in ('',1,2,3,4):
-                rep_str = get_rep_string(replicate_id)
-                curr_ids = id_set[replicate_id or 0]
-                # First subset rows by sequencing run_ids of interest
-                subset = data[data['sequencing_run_id'].isin(curr_ids)]
-                # Group by transcript, and assign bucket score to each row
-                grouped = subset.groupby('glass_transcript_id')
-                grouped = grouped.apply(bucket_score)
-                # Fill in bucket score for each original row.
-                data['{0}_{1}bucket_score'.format(run_type, rep_str)] = grouped[data['glass_transcript_id']].values
-            
-            
-        
-        # For the sake of graphing, imitate basepair
-        data['basepair'] = data['bucket']*int((grapher.to_bp - grapher.from_bp)/100) + grapher.from_bp
-        
+        data = get_data_with_bucket_score(dirpath)
         # Create filtered groups.
         datasets = [#('not_paused_dmso_15', data[data['dmso_bucket_score'] <= .15]),
                     #('not_paused_kla_15', data[data['kla_bucket_score'] <= .15]),
