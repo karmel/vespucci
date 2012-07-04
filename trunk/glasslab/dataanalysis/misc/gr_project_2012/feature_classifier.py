@@ -18,9 +18,10 @@ if __name__ == '__main__':
     
     data = get_data_with_bucket_score(learner, dirpath)
     # Get mean of all values to compress
-    grouped = data.groupby('glass_transcript_id',as_index=False).mean()
+    grouped_prelim = data.groupby('glass_transcript_id',as_index=False)
+    grouped = grouped_prelim.mean()
     # Except for tag_count which should be summed.
-    grouped['tag_count'] = data['tag_count'].groupby('glass_transcript_id',as_index=False).sum()
+    grouped['tag_count'] = grouped_prelim['tag_count'].sum()['tag_count']
     
     if True:
         # Can we predict pausing ratio?
