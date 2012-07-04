@@ -44,8 +44,8 @@ class LogisticClassifier(Learner):
         return all_feat[:k]
 
     def run_nested_cross_validation(self, data, labels, k=3, Cs=None, 
-                                    error_f=None, lower_is_better=True,
-                                    columns=None, balance=False,
+                                    error_f=None, higher_is_better=False,
+                                    columns=None, balance=True,
                                     draw_roc=False):
         '''
         Run nested CV on data with passed k folds.
@@ -61,7 +61,7 @@ class LogisticClassifier(Learner):
         
         Uses the scikit-learn LogisticRegression library.
         '''
-        if columns: data_chosen = data[columns]
+        if columns is not None: data_chosen = data[columns]
         Cs = Cs or self.Cs
         error_f = error_f or self.mse
         
@@ -101,7 +101,7 @@ class LogisticClassifier(Learner):
                 print "Average Error: ", error_for_this_c, ", for C: ", c
                 c_metric.append(error_for_this_c)
             
-            best_c = self.get_best_c(Cs, c_metric, lower_is_better=lower_is_better)
+            best_c = self.get_best_c(Cs, c_metric, higher_is_better=higher_is_better)
             
             # Now that we have selected the best parameter, apply to outer set.
             mod.set_params(C=best_c)
@@ -116,13 +116,15 @@ class LogisticClassifier(Learner):
 
         mean_metric = sum(outer_metric)/len(outer_metric)
 
-        print "Mean Nested CV Error for best c: ", mean_metric, ", C: ", best_c
+        print 'Mean Nested CV Error for best c: ', mean_metric, ', C: ', best_c
+        print 'Final columns, coefficients: '
+        print zip(columns, fitted.coef_[0])
         
         return mean_metric, best_c, for_roc
 
-    def get_best_c(self, Cs, metric, lower_is_better=True):
+    def get_best_c(self, Cs, metric, higher_is_better=False):
         paired = zip(metric, Cs)
-        paired.sort(reverse=lower_is_better)
+        paired.sort(reverse=higher_is_better)
         return paired[0][1]
     
     def balance_classes(self, data, labels):

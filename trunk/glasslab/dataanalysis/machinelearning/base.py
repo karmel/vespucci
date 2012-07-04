@@ -106,7 +106,9 @@ class Learner(TranscriptAnalyzer):
         fpr, tpr, _ = roc_curve(labels_true, labels_prob)
         return auc(fpr, tpr)
 
-    def mse(self, x, y):
-        # There isn't a library function to do this? There must be...
-        d = x-y
+    def mse(self, predicted, true):
+        try: d = predicted - true
+        except ValueError:
+            # Working with a scikits probabilities array
+            d = predicted[:,1] - true
         return numpy.inner(d,d)/len(d)

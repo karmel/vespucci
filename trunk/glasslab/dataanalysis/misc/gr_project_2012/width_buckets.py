@@ -116,7 +116,10 @@ if __name__ == '__main__':
     dirpath = grapher.get_path(dirpath)
     
     if True: 
-        data = get_data_with_bucket_score(grapher, dirpath)
+        # First time only:
+        #data = get_data_with_bucket_score(grapher, dirpath)
+        
+        data = grapher.import_file(grapher.get_filename(dirpath, 'feature_vectors.txt'))
         # For the sake of graphing, imitate basepair
         data['basepair'] = data['bucket']*int((grapher.to_bp - grapher.from_bp)/100) + grapher.from_bp
 
