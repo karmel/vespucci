@@ -35,7 +35,6 @@ class LogisticClassifier(Learner):
                 data = data[data.columns[selector._pvalues == 0]]
                 num_feat = k
         
-        print data.columns 
         return data.columns
 
     def get_k_features(self, data, labels, k=None):
@@ -117,6 +116,7 @@ class LogisticClassifier(Learner):
         mean_metric = sum(outer_metric)/len(outer_metric)
 
         print 'Mean Nested CV Error for best c: ', mean_metric, ', C: ', best_c
+        print 'Final intercept: ', fitted.intercept_[0]
         print 'Final columns, coefficients: '
         print zip(columns, fitted.coef_[0])
         

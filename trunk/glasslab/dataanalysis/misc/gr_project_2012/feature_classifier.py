@@ -10,6 +10,7 @@ or transrepression. Worth a stab.
 from glasslab.dataanalysis.misc.gr_project_2012.width_buckets import get_data_with_bucket_score
 from glasslab.dataanalysis.machinelearning.logistic_classifier import LogisticClassifier
 from glasslab.dataanalysis.misc.gr_project_2012.elongation import get_rep_string
+import os
 
 
 if __name__ == '__main__':
@@ -34,9 +35,13 @@ if __name__ == '__main__':
     if True:
         # Can we predict pausing ratio?
         
-        subdir = 'pausing_ratio_diff'
         
-        margin = 1.25 # Minimal diff in KLA+Dex vs. KLA pausing
+        margin = 1.5 # Minimal ratio in KLA+Dex vs. KLA pausing
+        
+        subdir = learner.get_filename(dirpath, 'pausing_ratio_diff_{0}'.format(margin.replace('.','_')))
+        
+        if not os.path.exists(subdir): os.mkdir(subdir)
+        
         pausing_states = grouped.filter(regex=r'(kla_dex_\d_bucket_score|kla_dex_bucket_score)')
             
         for replicate_id in ('', 1, 2, 3, 4):
@@ -60,17 +65,18 @@ if __name__ == '__main__':
             best_err = 1.0
             best_c = 0
             best_chosen = []
-            possible_k = [20]
+            possible_k = [20, 10, 5, 2]
             for k in possible_k:
-                if k > len(dataset.columns): k = len(dataset.columns)
-                
                 chosen = learner.get_best_features(dataset, labels, k=k)
+                #chosen = ['kla_{0}bucket_score'.format(rep_str), 'dmso_{0}bucket_score'.format(rep_str)]
+                num_features = len(chosen)
+                
                 err, c, for_roc = learner.run_nested_cross_validation(dataset, labels, columns=chosen)
                 learner.draw_roc(for_roc, 
                      title='ROC for {1} features, c = {2}, {0}'.format(
-                            replicate_id and 'Group {0}'.format(replicate_id) or 'Overall', k, c), 
-                     save_path=learner.get_filename(dirpath, subdir, 
-                            'ROC_{0}group_{1}_features_c_{2}.png'.format(rep_str, k, c)), 
+                            replicate_id and 'Group {0}'.format(replicate_id) or 'Overall', num_features, c), 
+                     save_path=learner.get_filename(subdir, 
+                            'ROC_{0}group_{1}_features_c_{2}.png'.format(rep_str, num_features, c)), 
                      show_plot=False)
                 if err < best_err:
                     best_err = err
@@ -78,7 +84,7 @@ if __name__ == '__main__':
                     best_chosen = chosen
         
         
-            print "Best number of features: ", len(chosen)
+            print "Best number of features: ", len(best_chosen)
             print "Best features: ", best_chosen
             print "Best C, MSE: ", best_c, best_err
 
