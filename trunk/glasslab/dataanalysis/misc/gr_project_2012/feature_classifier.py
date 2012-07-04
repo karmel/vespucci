@@ -24,6 +24,8 @@ if __name__ == '__main__':
     # Except for tag_count which should be summed.
     grouped['tag_count'] = grouped_prelim['tag_count'].sum()['tag_count']
     
+    grouped.to_csv(path=learner.get_filename(dirpath,'feature_vectors.txt',sep='\t',index=False))
+    
     if True:
         # Can we predict pausing ratio?
         

@@ -63,7 +63,7 @@ class LogisticClassifier(Learner):
         '''
         if columns: data_chosen = data[columns]
         Cs = Cs or self.Cs
-        error_f = error_f or self.mse_prob
+        error_f = error_f or self.mse
         
         best_c = 0
         
