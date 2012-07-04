@@ -35,9 +35,6 @@ def get_data_with_bucket_score(yzer, dirpath):
             # Fill in bucket score for each original row.
             data['{0}_{1}bucket_score'.format(run_type, rep_str)] = grouped[data['glass_transcript_id']].values
     
-    # For the sake of graphing, imitate basepair
-    data['basepair'] = data['bucket']*int((grapher.to_bp - grapher.from_bp)/100) + grapher.from_bp
-
     return data
 
 def draw_boxplot(data, label, dirpath):
@@ -120,6 +117,9 @@ if __name__ == '__main__':
     
     if True: 
         data = get_data_with_bucket_score(grapher, dirpath)
+        # For the sake of graphing, imitate basepair
+        data['basepair'] = data['bucket']*int((grapher.to_bp - grapher.from_bp)/100) + grapher.from_bp
+
         # Create filtered groups.
         datasets = [#('not_paused_dmso_15', data[data['dmso_bucket_score'] <= .15]),
                     #('not_paused_kla_15', data[data['kla_bucket_score'] <= .15]),
