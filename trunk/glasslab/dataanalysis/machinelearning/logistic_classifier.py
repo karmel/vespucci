@@ -9,10 +9,11 @@ from sklearn.feature_selection.univariate_selection import SelectKBest,\
     f_classif
 from sklearn.cross_validation import StratifiedKFold
 from sklearn import linear_model
-from sklearn.metrics.metrics import roc_curve, auc
+from sklearn.metrics.metrics import roc_curve, auc, confusion_matrix
 from pandas import Series
 from glasslab.dataanalysis.machinelearning.base import Learner
 from matplotlib import pyplot
+import numpy
 
 class LogisticClassifier(Learner):
     
@@ -44,8 +45,7 @@ class LogisticClassifier(Learner):
 
     def run_nested_cross_validation(self, data, labels, k=3, Cs=None, 
                                     error_f=None, higher_is_better=False,
-                                    columns=None, balance=True,
-                                    draw_roc=False):
+                                    columns=None, balance=True):
         '''
         Run nested CV on data with passed k folds.
         
@@ -104,10 +104,20 @@ class LogisticClassifier(Learner):
             
             # Now that we have selected the best parameter, apply to outer set.
             mod.set_params(C=best_c)
-            fitted = mod.fit(data_chosen.ix[train_outer], labels.ix[train_outer])
+            
+            # Balance rare classes if necessary:
+            if balance:
+                data_balanced, labels_balanced = self.balance_classes(
+                    data_chosen.ix[train_outer], labels.ix[train_outer])
+            else: 
+                data_balanced, labels_balanced = data_chosen.ix[train_outer], labels.ix[train_outer] 
             
             predicted_probs = fitted.predict_proba(data_chosen.ix[test_outer])
             err = error_f(predicted_probs, labels.ix[test_outer].values)
+            
+            #self.draw_decision_boundaries(mod, data_chosen.columns, data_chosen.ix[train_outer].as_matrix(), labels.ix[train_outer].values)
+            predicted = fitted.predict(data_chosen.ix[test_outer])
+            print confusion_matrix(labels[test_outer].values, predicted)
             
             for_roc.append((labels[test_outer].values, predicted_probs))
             
@@ -159,4 +169,36 @@ class LogisticClassifier(Learner):
         pyplot.savefig(save_path)
         if show_plot: pyplot.show()
         
+    def draw_decision_boundaries(self, model, columns, training_data, training_labels):
+        '''
+        From
+        http://scikit-learn.org/stable/auto_examples/linear_model/plot_iris_logistic.html#example-linear-model-plot-iris-logistic-py
+        '''
+        h = .02  # step size in the mesh
         
+        # Plot the decision boundary. For that, we will asign a color to each
+        # point in the mesh [x_min, m_max]x[y_min, y_max].
+        # Note that we're only taking the first two features here.
+        x_min, x_max = training_data[:, 0].min() - .5, training_data[:, 0].max() + .5
+        y_min, y_max = training_data[:, 1].min() - .5, training_data[:, 1].max() + .5
+        xx, yy = numpy.meshgrid(numpy.arange(x_min, x_max, h), numpy.arange(y_min, y_max, h))
+        Z = model.predict(numpy.c_[xx.ravel(), yy.ravel()])
+        
+        cmap_instance = pyplot.cm.Paired
+        # Put the result into a color plot
+        Z = Z.reshape(xx.shape)
+        pyplot.figure()
+        pyplot.pcolormesh(xx, yy, Z, cmap=cmap_instance)
+        
+        # Plot also the training points
+        pyplot.scatter(training_data[:, 0], training_data[:, 1], 
+                       c=training_labels, edgecolors='k', cmap=cmap_instance)
+        pyplot.xlabel(columns[0])
+        pyplot.ylabel(columns[1])
+        
+        pyplot.xlim(xx.min(), xx.max())
+        pyplot.ylim(yy.min(), yy.max())
+        pyplot.xticks(())
+        pyplot.yticks(())
+        
+        pyplot.show()

@@ -34,12 +34,9 @@ if __name__ == '__main__':
     
     if True:
         # Can we predict pausing ratio?
-        
-        
         margin = 1.5 # Minimal ratio in KLA+Dex vs. KLA pausing
         
-        subdir = learner.get_filename(dirpath, 'pausing_ratio_diff_{0}'.format(margin.replace('.','_')))
-        
+        subdir = learner.get_filename(dirpath, 'pausing_ratio_diff_{0}'.format(str(margin).replace('.','_')))
         if not os.path.exists(subdir): os.mkdir(subdir)
         
         pausing_states = grouped.filter(regex=r'(kla_dex_\d_bucket_score|kla_dex_bucket_score)')
@@ -72,12 +69,14 @@ if __name__ == '__main__':
                 num_features = len(chosen)
                 
                 err, c, for_roc = learner.run_nested_cross_validation(dataset, labels, columns=chosen)
+                
                 learner.draw_roc(for_roc, 
                      title='ROC for {1} features, c = {2}, {0}'.format(
                             replicate_id and 'Group {0}'.format(replicate_id) or 'Overall', num_features, c), 
                      save_path=learner.get_filename(subdir, 
                             'ROC_{0}group_{1}_features_c_{2}.png'.format(rep_str, num_features, c)), 
                      show_plot=False)
+                
                 if err < best_err:
                     best_err = err
                     best_c = c
