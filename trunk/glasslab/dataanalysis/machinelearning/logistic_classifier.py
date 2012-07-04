@@ -4,20 +4,13 @@ Created on May 12, 2012
 @author: martin, karmel
 '''
 from __future__ import division
-import numpy
 from random import shuffle
-import sys
-import math
 from sklearn.feature_selection.univariate_selection import SelectKBest,\
     f_classif
-from sklearn.feature_extraction.text import CountVectorizer, WordNGramAnalyzer
 from sklearn.cross_validation import StratifiedKFold
-from sklearn import svm, linear_model
-from sklearn.metrics.metrics import confusion_matrix, f1_score, roc_curve, auc
-from pandas import DataFrame, Series
-import os
-from math import log
-from operator import itemgetter
+from sklearn import linear_model
+from sklearn.metrics.metrics import roc_curve, auc
+from pandas import Series
 from glasslab.dataanalysis.machinelearning.base import Learner
 from matplotlib import pyplot
 
@@ -143,7 +136,7 @@ class LogisticClassifier(Learner):
         labels = labels.drop(indices, axis=0)
         return data, labels
         
-    def draw_roc(self, label_sets, title='', save_path, show_plot=True):
+    def draw_roc(self, label_sets, title='', save_path='', show_plot=True):
         # Compute ROC curve and area the curve
         pyplot.clf()
             
