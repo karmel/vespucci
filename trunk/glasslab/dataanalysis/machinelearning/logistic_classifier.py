@@ -25,7 +25,7 @@ class LogisticClassifier(Learner):
         while num_feat > k:
             num_feat = max(k, num_feat//2)
             selector = SelectKBest(f_classif, k=num_feat)
-            selector.fit(data.as_matrix(), labels.values)
+            selector.fit(data, labels)
         
             chosen = selector.get_support()
             if sum(selector._pvalues[chosen]) > 0:
