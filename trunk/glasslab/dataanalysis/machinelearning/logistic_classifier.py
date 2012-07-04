@@ -14,8 +14,9 @@ from pandas import Series
 from glasslab.dataanalysis.machinelearning.base import Learner
 from matplotlib import pyplot
 import numpy
-from matplotlib.colors import ListedColormap, LinearSegmentedColormap
+from matplotlib.colors import LinearSegmentedColormap
 from matplotlib.cm import register_cmap, get_cmap
+from scipy import stats
 
 class LogisticClassifier(Learner):
     
@@ -132,19 +133,19 @@ class LogisticClassifier(Learner):
         print 'Final columns, coefficients: '
         print zip(columns, fitted.coef_[0])
         
+        num_features = len(data_chosen.columns)
         if draw_decision_boundaries:
             self.draw_decision_boundaries(mod, data_chosen.columns, 
-                                          data_chosen.ix[train_outer].as_matrix(), 
-                                          labels.ix[train_outer].values,
-                                          title = 'Decision Boundaries: ' + title_suffix, 
-                                          save_path = save_path_prefix + '_decision_boundaries.png'
-                                          )
+                  data_chosen.ix[train_outer].as_matrix(), 
+                  labels.ix[train_outer].values,
+                  title = 'Decision Boundaries: ' + title_suffix, 
+                  save_path = save_path_prefix + '_{0}_features_decision_boundaries.png'.format(num_features)
+                  )
             
         if draw_roc:
             self.draw_roc(for_roc, 
-                          title = 'ROC for {1} features, c = {2}: {0}'.format(
-                                title_suffix, len(data_chosen.columns), best_c), 
-                          save_path = save_path_prefix + '_roc.png')
+                  title = 'ROC for {1} features, c = {2}: {0}'.format(title_suffix, num_features, best_c), 
+                  save_path = save_path_prefix + '_{0}_features_roc.png'.format(num_features))
         return mean_metric, best_c
 
     def get_best_c(self, Cs, metric, higher_is_better=False):
@@ -198,7 +199,9 @@ class LogisticClassifier(Learner):
         x_min, x_max = training_data[:, 0].min() - .5, training_data[:, 0].max() + .5
         y_min, y_max = training_data[:, 1].min() - .5, training_data[:, 1].max() + .5
         xx, yy = numpy.meshgrid(numpy.arange(x_min, x_max, h), numpy.arange(y_min, y_max, h))
-        Z = model.predict(numpy.c_[xx.ravel(), yy.ravel()])
+        filler = numpy.array([numpy.zeros(len(xx.ravel())) for _ in xrange(0,training_data.shape[1] - 2)])
+        if filler: Z = model.predict(numpy.c_[xx.ravel(), yy.ravel(), filler.T])
+        else: Z = model.predict(numpy.c_[xx.ravel(), yy.ravel()])
         
         # WHY ARE ALL MATPLOTLIB COLORMAPS UGLY?
         two_tone_cmap = LinearSegmentedColormap.from_list('two_tone_cmap',['#C9D9FB','#915EAB'])
@@ -216,8 +219,10 @@ class LogisticClassifier(Learner):
         pyplot.xlabel('Normalized {0}'.format(columns[0]))
         pyplot.ylabel('Normalized {0}'.format(columns[1]))
         
-        pyplot.xlim(xx.min(), xx.max())
-        pyplot.ylim(yy.min(), yy.max())
+        plot_max_x = stats.scoreatpercentile(training_data[:, 0], 99.5)
+        plot_max_y = stats.scoreatpercentile(training_data[:, 1], 99.5)
+        pyplot.xlim(xx.min(), plot_max_x)
+        pyplot.ylim(yy.min(), plot_max_y)
         pyplot.title(title)
         
         pyplot.savefig(save_path)

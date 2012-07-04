@@ -11,6 +11,8 @@ from glasslab.dataanalysis.misc.gr_project_2012.width_buckets import get_data_wi
 from glasslab.dataanalysis.machinelearning.logistic_classifier import LogisticClassifier
 from glasslab.dataanalysis.misc.gr_project_2012.elongation import get_rep_string
 import os
+import sys
+from matplotlib import pyplot
 
 
 if __name__ == '__main__':
@@ -34,9 +36,20 @@ if __name__ == '__main__':
     
     if True:
         # Can we predict pausing ratio?
-        margin = 1.25 # Minimal ratio in KLA+Dex vs. KLA pausing
         
-        subdir = learner.get_filename(dirpath, 'pausing_ratio_diff_{0}_forced_choice'.format(str(margin).replace('.','_')))
+        # Minimal ratio in KLA+Dex vs. KLA pausing
+        try: min_ratio= float(sys.argv[1])
+        except IndexError: min_ratio = 1.5 
+        try: min_diff = float(sys.argv[2])
+        except IndexError: min_diff = .05
+        try: force_choice = sys.argv[3] is not None
+        except IndexError: force_choice = False
+        
+        subdir = learner.get_filename(dirpath, 
+                    'pausing_ratio_diff_{0}_{1}'.format(
+                        str(min_ratio).replace('.','_'),str(min_diff).replace('.','_')))
+        if force_choice: subdir = subdir + '_forced_choice'
+        
         if not os.path.exists(subdir): os.mkdir(subdir)
         
         pausing_states = grouped.filter(regex=r'(kla_dex_\d_bucket_score|kla_dex_bucket_score)')
@@ -51,9 +64,13 @@ if __name__ == '__main__':
             dataset = grouped.filter(regex=regex)
         
             
-            labels = map(int, pausing_states['kla_dex_{0}bucket_score'.format(rep_str)] \
-                                /dataset['kla_{0}bucket_score'.format(rep_str)] >= margin)
+            labels = pausing_states['kla_dex_{0}bucket_score'.format(rep_str)] \
+                                /dataset['kla_{0}bucket_score'.format(rep_str)] >= min_ratio
             
+            labels_2 = pausing_states['kla_dex_{0}bucket_score'.format(rep_str)] \
+                                - dataset['kla_{0}bucket_score'.format(rep_str)] >= min_diff
+            labels = map(lambda x: int(x[0] and x[1]), zip(labels, labels_2))
+            print 'Total positive examples: ', sum(labels)
             # Nulls should be zeroes. Fill those first.
             dataset = dataset.fillna(0)
             dataset = learner.normalize_data(dataset)
@@ -62,14 +79,18 @@ if __name__ == '__main__':
             best_err = 1.0
             best_c = 0
             best_chosen = []
-            possible_k = [20,]# 10, 5, 2]
+            possible_k = [20, 10, 5, 2]
             for k in possible_k:
-                #chosen = learner.get_best_features(dataset, labels, k=k)
-                chosen = ['kla_{0}bucket_score'.format(rep_str), 'dmso_{0}bucket_score'.format(rep_str)]
+                if force_choice:
+                    chosen = ['kla_{0}bucket_score'.format(rep_str), 'dmso_{0}bucket_score'.format(rep_str)]
+                    chosen = ['kla_{0}bucket_score'.format(rep_str), 'tag_count']
+                else:
+                    chosen = learner.get_best_features(dataset, labels, k=k)
+                
                 num_features = len(chosen)
                 
                 err, c = learner.run_nested_cross_validation(dataset, labels, columns=chosen,
-                            draw_roc=True, draw_decision_boundaries=True,
+                            draw_roc=True, draw_decision_boundaries=force_choice,
                             title_suffix=replicate_id and 'Group {0}'.format(replicate_id) or 'Overall',
                             save_path_prefix=learner.get_filename(subdir,'plot_{0}group'.format(rep_str)),
                         )
@@ -78,7 +99,8 @@ if __name__ == '__main__':
                     best_err = err
                     best_c = c
                     best_chosen = chosen
-        
+                    
+                if force_choice: break
         
             print "Best number of features: ", len(best_chosen)
             print "Best features: ", best_chosen
