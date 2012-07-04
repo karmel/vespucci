@@ -42,9 +42,10 @@ if __name__ == '__main__':
         for replicate_id in ('', 1, 2, 3, 4):
             rep_str = get_rep_string(replicate_id)
             # First do some column cleanup..
-            # Remove cols that are the kla_dex_bucket target; or that are from a replicate
-            # other than the current; or that are id fields
-            regex = (rep_str and (r'((.*' + rep_str + r'.*)|{0})') or r'{0}').format('(?!^(kla_dex_\d_bucket_score|kla_dex_bucket_score|.*_\d_.*|.*_id))')
+            # Remove cols that are the kla_dex_bucket target; or that are not from the current replicate;
+            # or that are id fields
+            regex = r'(?!(kla_dex_\d_bucket_score|kla_dex_bucket_score))' +\
+                            (rep_str and (r'((.*' + rep_str + r'.*)|{0})') or r'{0}').format('(?!(.*_\d_.*|.*_id))')
             dataset = grouped.filter(regex=regex)
         
             
