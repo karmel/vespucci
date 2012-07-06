@@ -8,7 +8,7 @@ from random import shuffle
 from sklearn.feature_selection.univariate_selection import SelectKBest,\
     f_classif
 from sklearn.cross_validation import StratifiedKFold
-from sklearn import linear_model
+from sklearn import linear_model, svm
 from sklearn.metrics.metrics import roc_curve, auc, confusion_matrix
 from pandas import Series
 from glasslab.dataanalysis.machinelearning.base import Learner
@@ -79,7 +79,7 @@ class LogisticClassifier(Learner):
         
         outer_metric, for_roc = [], []
         for train_outer, test_outer in cv_outer:
-            mod = linear_model.LogisticRegression(C=1.0, penalty='l1', tol=1e-6)
+            mod = self.get_model(classifier_type='logistic')
             c_metric = []
             for c in Cs:
                 cv_inner = StratifiedKFold(labels.ix[train_outer].values, k=k)
@@ -130,8 +130,10 @@ class LogisticClassifier(Learner):
 
         print 'Mean Nested CV Error for best c: ', mean_metric, ', C: ', best_c
         print 'Final intercept: ', fitted.intercept_[0]
-        print 'Final columns, coefficients: '
-        print zip(columns, fitted.coef_[0])
+        try:
+            print 'Final columns, coefficients: '
+            print zip(columns, fitted.coef_[0])
+        except NotImplementedError: pass
         
         num_features = len(data_chosen.columns)
         if draw_decision_boundaries:
@@ -148,6 +150,11 @@ class LogisticClassifier(Learner):
                   save_path = save_path_prefix + '_{0}_features_roc.png'.format(num_features))
         return mean_metric, best_c
 
+    def get_model(self, classifier_type='logistic', C=1.0, gamma=.01):
+        if classifier_type == 'logistic':
+            return linear_model.LogisticRegression(C=C, penalty='l1', tol=1e-6)
+        else: return svm.SVC(C=C, kernel=classifier_type,probability=True,gamma=gamma)
+            
     def get_best_c(self, Cs, metric, higher_is_better=False):
         paired = zip(metric, Cs)
         paired.sort(reverse=higher_is_better)
@@ -200,7 +207,7 @@ class LogisticClassifier(Learner):
         y_min, y_max = training_data[:, 1].min() - .5, training_data[:, 1].max() + .5
         xx, yy = numpy.meshgrid(numpy.arange(x_min, x_max, h), numpy.arange(y_min, y_max, h))
         filler = numpy.array([numpy.zeros(len(xx.ravel())) for _ in xrange(0,training_data.shape[1] - 2)])
-        if filler: Z = model.predict(numpy.c_[xx.ravel(), yy.ravel(), filler.T])
+        if filler.any(): Z = model.predict(numpy.c_[xx.ravel(), yy.ravel(), filler.T])
         else: Z = model.predict(numpy.c_[xx.ravel(), yy.ravel()])
         
         # WHY ARE ALL MATPLOTLIB COLORMAPS UGLY?
@@ -221,8 +228,10 @@ class LogisticClassifier(Learner):
         
         plot_max_x = stats.scoreatpercentile(training_data[:, 0], 99.5)
         plot_max_y = stats.scoreatpercentile(training_data[:, 1], 99.5)
-        pyplot.xlim(xx.min(), plot_max_x)
-        pyplot.ylim(yy.min(), plot_max_y)
+        plot_min_x = stats.scoreatpercentile(training_data[:, 0], .5)
+        plot_min_y = stats.scoreatpercentile(training_data[:, 1], .5)
+        pyplot.xlim(plot_min_x, plot_max_x)
+        pyplot.ylim(plot_min_y, plot_max_y)
         pyplot.title(title)
         
         pyplot.savefig(save_path)

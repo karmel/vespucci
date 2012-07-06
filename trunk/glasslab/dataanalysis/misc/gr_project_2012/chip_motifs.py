@@ -3,11 +3,10 @@ Created on Jun 25, 2012
 
 @author: karmel
 '''
-from glasslab.dataanalysis.base.datatypes import TranscriptAnalyzer
 from glasslab.dataanalysis.motifs.motif_analyzer import MotifAnalyzer
 
 if __name__ == '__main__':
-    yzer = TranscriptAnalyzer()
+    yzer = MotifAnalyzer()
     dirpath = 'karmel/Desktop/Projects/Classes/Rotations/Finland 2012/GR Project/GR chip/'
     dirpath = yzer.get_path(dirpath)
     
@@ -17,7 +16,6 @@ if __name__ == '__main__':
     data = yzer.import_file(filename)
     data = data.fillna(0)
     
-    yzer = MotifAnalyzer()
     distal = data[data['distal'] == 't']
     refseq = data[data['has_refseq'] == 1]
 

@@ -12,7 +12,6 @@ from glasslab.dataanalysis.machinelearning.logistic_classifier import LogisticCl
 from glasslab.dataanalysis.misc.gr_project_2012.elongation import get_rep_string
 import os
 import sys
-from matplotlib import pyplot
 
 
 if __name__ == '__main__':
@@ -20,7 +19,7 @@ if __name__ == '__main__':
     dirpath = 'karmel/Desktop/Projects/Classes/Rotations/Finland 2012/GR Project/classification'
     dirpath = learner.get_path(dirpath)
     
-    '''
+    
     # First time file setup
     data = get_data_with_bucket_score(learner, dirpath)
     # Get mean of all values to compress
@@ -30,9 +29,10 @@ if __name__ == '__main__':
     grouped['tag_count'] = grouped_prelim['tag_count'].sum()['tag_count']
     
     grouped.to_csv(learner.get_filename(dirpath,'feature_vectors.txt'),sep='\t',index=False)
-    '''
     
-    grouped = learner.import_file(learner.get_filename(dirpath, 'feature_vectors.txt'))
+    raise Exception
+    
+    #grouped = learner.import_file(learner.get_filename(dirpath, 'feature_vectors.txt'))
     
     if True:
         # Can we predict pausing ratio?
@@ -42,15 +42,17 @@ if __name__ == '__main__':
         except IndexError: min_ratio = 1.5 
         try: min_diff = float(sys.argv[2])
         except IndexError: min_diff = .05
-        try: force_choice = sys.argv[3] is not None
+        try: force_choice = sys.argv[3].lower() == 'force'
         except IndexError: force_choice = False
+        try: extra_dir = sys.argv[4]
+        except IndexError: extra_dir = ''
         
         subdir = learner.get_filename(dirpath, 
-                    'pausing_ratio_diff_{0}_{1}'.format(
+                    '{2}/pausing_ratio_diff_{0}_{1}'.format(
                         str(min_ratio).replace('.','_'),str(min_diff).replace('.','_')))
         if force_choice: subdir = subdir + '_forced_choice'
         
-        if not os.path.exists(subdir): os.mkdir(subdir)
+        if not os.path.exists(subdir): os.makedirs(subdir)
         
         pausing_states = grouped.filter(regex=r'(kla_dex_\d_bucket_score|kla_dex_bucket_score)')
             
@@ -83,7 +85,7 @@ if __name__ == '__main__':
             for k in possible_k:
                 if force_choice:
                     chosen = ['kla_{0}bucket_score'.format(rep_str), 'dmso_{0}bucket_score'.format(rep_str)]
-                    chosen = ['kla_{0}bucket_score'.format(rep_str), 'tag_count']
+                    #chosen = ['kla_{0}bucket_score'.format(rep_str), 'tag_count']
                 else:
                     chosen = learner.get_best_features(dataset, labels, k=k)
                 
