@@ -37,8 +37,11 @@ if __name__ == '__main__':
         # Verify
         #for gt_id in data['id'][:10]: print pausing_data[pausing_data['glass_transcript_id'] == gt_id][key]
         #print data[data.fillna(0)['gene_names'] != 0]['gene_names'][:20]
-        print pausing_data[pausing_data['glass_transcript_id'].isin([760429, 575591, 234603])]['kla_dex_{0}state'.format(rep_str)]
-        print pausing_data[pausing_data['glass_transcript_id'].isin([760429, 575591, 234603])]['kla_{0}state'.format(rep_str)]
+        print pausing_data[pausing_data['glass_transcript_id'].isin([760429])]['dex_over_kla_{0}state'.format(rep_str)]
+        print pausing_data[pausing_data['glass_transcript_id'].isin([760429])]['kla_{0}state'.format(rep_str)]
+        print pausing_data[pausing_data['glass_transcript_id'].isin([760429])]['cebpa_kla'.format(rep_str)]
+        print pausing_data[pausing_data['glass_transcript_id'].isin([760429])]['pu_1_kla'.format(rep_str)]
+        print pausing_data[pausing_data['glass_transcript_id'].isin([760429])]['p65_kla'.format(rep_str)]
         print len(dataset)
         
         if False:

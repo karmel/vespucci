@@ -226,12 +226,19 @@ class LogisticClassifier(Learner):
         pyplot.xlabel('Normalized {0}'.format(columns[0]))
         pyplot.ylabel('Normalized {0}'.format(columns[1]))
         
-        plot_max_x = stats.scoreatpercentile(training_data[:, 0], 99.5)
-        plot_max_y = stats.scoreatpercentile(training_data[:, 1], 99.5)
-        plot_min_x = stats.scoreatpercentile(training_data[:, 0], .5)
-        plot_min_y = stats.scoreatpercentile(training_data[:, 1], .5)
-        pyplot.xlim(plot_min_x, plot_max_x)
-        pyplot.ylim(plot_min_y, plot_max_y)
+        # Cut off outliers only if necessary
+        
+        plot_max, plot_min = [], []
+        for i in (0,1):
+            if len(set(training_data[:, i])) > 10: 
+                plot_max.append(stats.scoreatpercentile(training_data[:, i], 99.5))
+                plot_min.append(stats.scoreatpercentile(training_data[:, i], .5))
+            else:
+                plot_max.append(training_data[:, i].max() + .1*abs(training_data[:, i].max()))
+                plot_min.append(training_data[:, i].min() - .1*abs(training_data[:, i].max()))
+
+        pyplot.xlim(plot_min[0], plot_max[0])
+        pyplot.ylim(plot_min[1], plot_max[1])
         pyplot.title(title)
         
         pyplot.savefig(save_path)
