@@ -31,6 +31,7 @@ if __name__ == '__main__':
     grouped.to_csv(learner.get_filename(dirpath,'feature_vectors.txt'),sep='\t',index=False)
     
     raise Exception
+    
     grouped = learner.import_file(learner.get_filename(dirpath, 'feature_vectors.txt'))
     
     if False:
@@ -83,8 +84,8 @@ if __name__ == '__main__':
             possible_k = [20, 10, 5, 2]
             for k in possible_k:
                 if force_choice:
-                    #chosen = ['kla_{0}bucket_score'.format(rep_str), 'dmso_{0}bucket_score'.format(rep_str)]
-                    chosen = ['cebpa','cebpa_kla']
+                    chosen = ['kla_{0}state'.format(rep_str), 'dex_over_kla_{0}state'.format(rep_str)]
+                    #chosen = ['cebpa','cebpa_kla']
                 else:
                     chosen = learner.get_best_features(dataset, labels, k=k)
                 
@@ -147,9 +148,8 @@ if __name__ == '__main__':
                     chosen = ['', 'kla_{0}bucket_score'.format(rep_str)]
                     #chosen = ['kla_{0}bucket_score'.format(rep_str), 'tag_count']
                 else:
-                    #chosen = learner.get_best_features(dataset, labels, k=k)
-                    chosen = ['kla_{0}bucket_score'.format(rep_str), 'dmso_{0}bucket_score'.format(rep_str),
-                              'gr_dex','cebpa_kla']
+                    chosen = learner.get_best_features(dataset, labels, k=k)
+                    
                 num_features = len(chosen)
                 
                 err, c = learner.run_nested_cross_validation(dataset, labels, columns=chosen,

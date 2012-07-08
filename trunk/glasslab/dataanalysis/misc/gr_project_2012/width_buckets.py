@@ -23,7 +23,7 @@ def bucket_score(group):
         except ZeroDivisionError: return 0
     
 def get_data_with_bucket_score(yzer, dirpath):
-    filename = yzer.get_filename(dirpath, 'refseq_by_transcript_and_bucket.txt')
+    filename = yzer.get_filename(dirpath, 'refseq_by_transcript_and_bucket_with_lfc.txt')
     data = yzer.import_file(filename)
     
     run_ids = set_up_sequencing_run_ids()
@@ -58,12 +58,13 @@ def draw_boxplot(data, label, dirpath):
         for replicate_id in ('',1,2,3,4):
             rep_str = get_rep_string(replicate_id)
             state_str = state.format(rep_str)
+            
             datasets = [('No change', data[data[state_str] == 0]),
                         ('Up >= 2x', data[data[state_str] == 1]),
                         ('Down >= 2x', data[data[state_str] == -1]),]
 
             bar_names, datasets = zip(*datasets)
-            pausing_ratios = [d['kla_dex_{0}bucket_score'.format(rep_str)] - d['kla_{0}bucket_score'.format(rep_str)]
+            pausing_ratios = [d['kla_dex_{0}bucket_score'.format(rep_str)]/d['kla_{0}bucket_score'.format(rep_str)]
                                 for d in datasets]
             
             ax = grapher.boxplot(pausing_ratios, 
@@ -90,20 +91,10 @@ def get_tag_proportions(data, label):
             rep_str = get_rep_string(replicate_id)
             state_str = state.format(rep_str)
             if desc == 'KLA':
-                datasets = [('Down > 1.5x in Dex over KLA {0}'.format(replicate_id), 
-                             data[(data['dex_over_kla_{0}state'.format(rep_str)] == -1)]),
-                            ('Up > 2x in KLA, Down > 1.5x from that in Dex {0}'.format(replicate_id), 
+                datasets = [('Up > 2x in KLA, Down > 1.5x from that in Dex {0}'.format(replicate_id), 
                              data[(data['kla_{0}state'.format(rep_str)] == 1)
                                   & (data['dex_over_kla_{0}state'.format(rep_str)] == -1)]),
-                            ('Down > 2x in KLA, No change in Dex {0}'.format(replicate_id), 
-                             data[(data['kla_{0}state'.format(rep_str)] == -1)
-                                  & (data['dex_over_kla_{0}state'.format(rep_str)] == 0)]),
-                            ('Down > 2x in KLA, Up > 1.5x in Dex {0}'.format(replicate_id), 
-                             data[(data['kla_{0}state'.format(rep_str)] == -1)
-                                  & (data['dex_over_kla_{0}state'.format(rep_str)] == 1)]),
-                            ('Down > 2x in KLA, Down > 1.5x in Dex {0}'.format(replicate_id), 
-                             data[(data['kla_{0}state'.format(rep_str)] == -1)
-                                  & (data['dex_over_kla_{0}state'.format(rep_str)] == -1)]),
+                            
                             ]
             else: datasets = []
             datasets += [('No change in {0} {1}'.format(desc, replicate_id), data[data[state_str] == 0]),
@@ -127,13 +118,15 @@ if __name__ == '__main__':
         
         data = grapher.import_file(grapher.get_filename(dirpath, 'feature_vectors.txt'))
         # For the sake of graphing, imitate basepair
-        data['basepair'] = data['bucket']*int((grapher.to_bp - grapher.from_bp)/100) + grapher.from_bp
+        data['basepair'] = (data['bucket_reduced'] - 1)*50
 
         # Create filtered groups.
-        datasets = [#('not_paused_dmso_15', data[data['dmso_bucket_score'] <= .15]),
-                    #('not_paused_kla_15', data[data['kla_bucket_score'] <= .15]),
-                    #('not_paused_kla_dex_15', data[data['kla_dex_bucket_score'] <= .15]),
-                    #('all_refseq', data),
+        datasets = [('all_refseq', data),
+                    
+                    ]
+        '''        ('not_paused_dmso_2', data[data['dmso_bucket_score'] <= 2]),
+                    ('not_paused_kla_2', data[data['kla_bucket_score'] <= 2]),
+                    ('not_paused_kla_dex_2', data[data['kla_dex_bucket_score'] <= 2]),
                     ('higher_in_kla_dex', data[data['dex_gt_kla_state'] == 1]),
                     ('higher_in_kla_dex_1', data[data['dex_gt_kla_1_state'] == 1]),
                     ('higher_in_kla_dex_2', data[data['dex_gt_kla_2_state'] == 1]),
@@ -144,8 +137,8 @@ if __name__ == '__main__':
                     ('lower_in_kla_dex_2', data[data['dex_gt_kla_2_state'] == -1]),
                     ('lower_in_kla_dex_3', data[data['dex_gt_kla_3_state'] == -1]),
                     ('lower_in_kla_dex_4', data[data['dex_gt_kla_4_state'] == -1]),
-                    ]
-        '''
+                    
+                    
                     ('with_gr_kla_dex', data[data['gr_kla_dex'] == 1]),
                     ('with_p65_kla_dex', data[data['p65_kla_dex'] == 1]),
                     ('with_p65_no_gr_kla_dex', data[(data['p65_kla_dex'] == 1) & (data['gr_kla_dex'] == 0)]),
@@ -174,12 +167,13 @@ if __name__ == '__main__':
         for name, dataset in datasets:
             #get_tag_proportions(dataset, name)
             draw_boxplot(dataset, name, dirpath)
+            
             '''
             curr_dirpath = grapher.get_filename(dirpath, name)
             if not os.path.exists(curr_dirpath): os.mkdir(curr_dirpath)
             
             draw_elongation_profile(dataset, grapher, curr_dirpath, 
                                     show_moving_average=False, show_count=True)
-    
-            '''
+        '''
+            
             
