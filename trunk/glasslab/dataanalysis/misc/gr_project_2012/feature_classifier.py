@@ -19,7 +19,7 @@ if __name__ == '__main__':
     dirpath = 'karmel/Desktop/Projects/Classes/Rotations/Finland 2012/GR Project/classification'
     dirpath = learner.get_path(dirpath)
     
-    
+    '''
     # First time file setup
     data = get_data_with_bucket_score(learner, dirpath)
     # Get mean of all values to compress
@@ -31,9 +31,10 @@ if __name__ == '__main__':
     grouped.to_csv(learner.get_filename(dirpath,'feature_vectors.txt'),sep='\t',index=False)
     
     raise Exception
-    
-    grouped = learner.import_file(learner.get_filename(dirpath, 'feature_vectors.txt'))
-    
+    '''
+    grouped = learner.import_file(learner.get_filename(dirpath, '../transcript_vectors.txt'))
+    grouped = grouped.drop(['chr_name','ucsc_link_nod','gene_names',
+                            'transcription_start','transcription_end'],axis=1)
     if False:
         # Can we predict pausing ratio?
         
@@ -88,7 +89,7 @@ if __name__ == '__main__':
                     #chosen = ['cebpa','cebpa_kla']
                 else:
                     chosen = learner.get_best_features(dataset, labels, k=k)
-                
+                    
                 num_features = len(chosen)
                 
                 err, c = learner.run_nested_cross_validation(dataset, labels, columns=chosen,
@@ -115,7 +116,7 @@ if __name__ == '__main__':
         except IndexError: extra_dir = ''
         
         subdir = learner.get_filename(dirpath, 
-                    extra_dir, 'transrepression')
+                    'transrepression' + extra_dir)
         if force_choice: subdir = subdir + '_forced_choice'
         
         if not os.path.exists(subdir): os.makedirs(subdir)
@@ -124,18 +125,22 @@ if __name__ == '__main__':
         for replicate_id in ('', 1, 2, 3, 4):
             rep_str = get_rep_string(replicate_id)
             
-            dataset = grouped[grouped['kla_{0}state'.format(rep_str)] == 1].reset_index()
-            targets = dataset.filter(regex=r'.*_state')    
-            dataset = dataset.filter(regex=r'(?!(.*state|.*id))')
+            dataset = grouped[grouped['kla_{0}lfc'.format(rep_str)] >= 1]
+            dataset = dataset[dataset['distal'] == 't']
+            #dataset = dataset[dataset['transcript_score'] >= 10]]
+            dataset = dataset[dataset['p65_kla_dex_tag_count'] > 0]
+            targets = dataset.reset_index().filter(regex=r'.*_lfc')    
+            dataset = dataset.reset_index().filter(regex=r'(?!(kla_dex.*|dex_over_kla.*|.*id))')
             
             
-            labels = targets['kla_{0}state'.format(rep_str)] == 1
-            labels_2 = targets['dex_over_kla_{0}state'.format(rep_str)] == -1
+            labels = targets['kla_{0}lfc'.format(rep_str)] >= 1
+            labels_2 = targets['dex_over_kla_{0}lfc'.format(rep_str)] <= -.58
             
             labels = map(lambda x: int(x[0] and x[1]), zip(labels, labels_2))
             print 'Total examples, positive: ', len(dataset), sum(labels)
             # Nulls should be zeroes. Fill those first.
             dataset = dataset.fillna(0)
+            dataset = learner.make_numeric(dataset)
             dataset = learner.normalize_data(dataset)
             
             
@@ -149,7 +154,12 @@ if __name__ == '__main__':
                     #chosen = ['kla_{0}bucket_score'.format(rep_str), 'tag_count']
                 else:
                     chosen = learner.get_best_features(dataset, labels, k=k)
-                    
+                    '''chosen = ['dmso_{0}tag_count'.format(rep_str), 
+                              'kla_{0}tag_count'.format(rep_str),
+                              'gr_dex_tag_count',
+                           'gr_kla_dex_tag_count', 'p65_kla_tag_count', 'p65_kla_dex_tag_count',
+                           'cebpa_tag_count', 'cebpa_kla_tag_count']'''
+                
                 num_features = len(chosen)
                 
                 err, c = learner.run_nested_cross_validation(dataset, labels, columns=chosen,

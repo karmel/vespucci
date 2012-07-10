@@ -21,6 +21,12 @@ class TranscriptAnalyzer(object):
     def get_filename(self, *args):
         return os.path.join(*args)
     
+    def get_and_create_path(self, *args):
+        dirpath = os.path.join(*args)
+        if not os.path.exists(dirpath):
+            os.makedirs(dirpath)
+        return dirpath
+    
     def import_file(self, filename, separator='\t', header=True):
         if header: header_row = 0
         else: header_row = None

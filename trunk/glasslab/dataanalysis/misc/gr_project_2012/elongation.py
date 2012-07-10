@@ -45,8 +45,9 @@ def draw_elongation_profile(data, grapher, dirpath, show_moving_average=True, sh
     total_tags = total_tags_per_run()
 
     states = (('Special', 'group_{0}'),
-              ('KLA','kla_{0}state'), ('KLA+Dex','kla_dex_{0}state'),
-              ('KLA+Dex over KLA','dex_over_kla_{0}state'),)
+              #('KLA','kla_{0}state'), ('KLA+Dex','kla_dex_{0}state'),
+              #('KLA+Dex over KLA','dex_over_kla_{0}state'),
+              )
     for desc,state in states:
         for replicate_id in ('',1,2,3,4):
             rep_str = get_rep_string(replicate_id)
