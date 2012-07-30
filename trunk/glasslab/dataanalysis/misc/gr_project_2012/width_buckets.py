@@ -5,7 +5,7 @@ Created on Jul 2, 2012
 '''
 from __future__ import division
 from glasslab.dataanalysis.misc.gr_project_2012.elongation import draw_elongation_profile,\
-    get_rep_string, set_up_sequencing_run_ids
+    get_rep_string, set_up_sequencing_run_ids, total_tags_per_run
 from glasslab.dataanalysis.graphing.basepair_counter import BasepairCounter
 import os
 from matplotlib import pyplot
@@ -28,9 +28,9 @@ def gene_body_tags(group):
     tags_at_end = sum(group[group['bucket_reduced'] == 0]['tag_count'])
     return tags_at_end
         
-def gene_body_lfc(row, rep_str, numerator, denominator):
+def gene_body_lfc(row, norm_factor, rep_str, numerator, denominator):
     try: 
-        fold_change = row['{0}_{1}gene_body_tags'.format(numerator, rep_str)]\
+        fold_change = (row['{0}_{1}gene_body_tags'.format(numerator, rep_str)]*norm_factor)\
                             /row['{0}_{1}gene_body_tags'.format(denominator, rep_str)]
     except ZeroDivisionError: fold_change = 0
     try: lfc = math.log(fold_change, 2)
@@ -42,7 +42,7 @@ def get_data_with_bucket_score(yzer, dirpath):
     data = yzer.import_file(filename)
     
     run_ids = set_up_sequencing_run_ids()
-    
+    total_tags = total_tags_per_run()
     # For each sequencing run group, fill in the bucket score val
     for replicate_id in ('',1,2,3,4):
         for run_type, id_set in run_ids.iteritems():
@@ -59,10 +59,14 @@ def get_data_with_bucket_score(yzer, dirpath):
             data['{0}_{1}gene_body_tags'.format(run_type, rep_str)] = gene_body_sums[data['glass_transcript_id']].values
         
         # Now calculate gene body log fold change
+        kla_norm = total_tags['dmso'][replicate_id]/total_tags['kla'][replicate_id]
+        dex_kla_norm = total_tags['kla'][replicate_id]/total_tags['dex_kla'][replicate_id]
         data['kla_{0}gene_body_lfc'.format(rep_str)] = data.apply(
-                                        lambda x: gene_body_lfc(x, rep_str,'kla','dmso'), axis=1)
+                                        lambda x: gene_body_lfc(x, kla_norm, rep_str,
+                                                                'kla','dmso'), axis=1)
         data['dex_over_kla_{0}gene_body_lfc'.format(rep_str)] = data.apply(
-                                        lambda x: gene_body_lfc(x, rep_str,'kla_dex','kla'), axis=1)
+                                        lambda x: gene_body_lfc(x, dex_kla_norm, rep_str,
+                                                                'kla_dex','kla'), axis=1)
         
     return data
 
