@@ -62,7 +62,7 @@ def get_data_with_bucket_score(yzer, dirpath):
             gene_body_sums = grouped.apply(gene_body_tags)
             # Fill in bucket score for each original row.
             data['{0}_{1}bucket_score'.format(run_type, rep_str)] = bucket_scores[data['glass_transcript_id']].values
-            data['{0}_{1}gene_start_tags'.format(run_type, rep_str)] = gene_body_sums[data['glass_transcript_id']].values
+            data['{0}_{1}gene_start_tags'.format(run_type, rep_str)] = gene_start_sums[data['glass_transcript_id']].values
             data['{0}_{1}gene_body_tags'.format(run_type, rep_str)] = gene_body_sums[data['glass_transcript_id']].values
         
         # Now calculate gene body log fold change
