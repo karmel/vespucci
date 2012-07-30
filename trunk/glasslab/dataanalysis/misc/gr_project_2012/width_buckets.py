@@ -14,22 +14,22 @@ import math
 def bucket_score(group):
     # Starts in between -50 and 249 bp
     tags_at_beginning = sum(group[group['bucket_reduced'] == 1]['tag_count'])
-    # Starts in between 500 and 2000 bp
+    # Starts in between 250 and 2000 bp
     tags_at_end = sum(group[group['bucket_reduced'] == 0]['tag_count'])
     # Normalize by number of bp
     tags_at_beginning /= 250 - (-50) 
-    tags_at_end /= 2000 - 500 
+    tags_at_end /= 2000 - 250 
     try: 
         return tags_at_beginning/tags_at_end
     except ZeroDivisionError: return 0
 
 def gene_start_tags(group):
-    # Starts in between 500 and 2000 bp
+    # Starts in between -50 and 249 bp
     tags_at_beginning = sum(group[group['bucket_reduced'] == 1]['tag_count'])
     return tags_at_beginning
 
 def gene_body_tags(group):
-    # Starts in between 500 and 2000 bp
+    # Starts in between 250 and 2000 bp
     tags_at_end = sum(group[group['bucket_reduced'] == 0]['tag_count'])
     return tags_at_end
         
