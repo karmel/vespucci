@@ -12,22 +12,31 @@ from matplotlib import pyplot
 import math
 
 def bucket_score(group):
-        # Starts in between -50 and 249 bp
-        tags_at_beginning = sum(group[group['bucket_reduced'] == 1]['tag_count'])
-        # Starts in between 500 and 2000 bp
-        tags_at_end = sum(group[group['bucket_reduced'] == 0]['tag_count'])
-        # Normalize by number of bp
-        tags_at_beginning /= 250 - (-50) 
-        tags_at_end /= 2000 - 500 
-        try: 
-            return tags_at_beginning/tags_at_end
-        except ZeroDivisionError: return 0
+    # Starts in between -50 and 249 bp
+    tags_at_beginning = sum(group[group['bucket_reduced'] == 1]['tag_count'])
+    # Starts in between 500 and 2000 bp
+    tags_at_end = sum(group[group['bucket_reduced'] == 0]['tag_count'])
+    # Normalize by number of bp
+    tags_at_beginning /= 250 - (-50) 
+    tags_at_end /= 2000 - 500 
+    try: 
+        return tags_at_beginning/tags_at_end
+    except ZeroDivisionError: return 0
 
 def gene_body_tags(group):
-        # Starts in between 500 and 2000 bp
-        tags_at_end = sum(group[group['bucket_reduced'] == 0]['tag_count'])
-        return tags_at_end
+    # Starts in between 500 and 2000 bp
+    tags_at_end = sum(group[group['bucket_reduced'] == 0]['tag_count'])
+    return tags_at_end
         
+def gene_body_lfc(row, rep_str):
+    try: 
+        fold_change = row['kla_{0}gene_body_tags'.format(rep_str)]\
+                            /row['dmso_{0}gene_body_tags'.format(rep_str)]
+    except ZeroDivisionError: fold_change = 0
+    try: lfc = math.log(fold_change, 2)
+    except ValueError: lfc = 0
+    return lfc
+    
 def get_data_with_bucket_score(yzer, dirpath):
     filename = yzer.get_filename(dirpath, 'refseq_by_transcript_and_bucket_with_lfc.txt')
     data = yzer.import_file(filename)
@@ -50,9 +59,8 @@ def get_data_with_bucket_score(yzer, dirpath):
             data['{0}_{1}gene_body_tags'.format(run_type, rep_str)] = gene_body_sums[data['glass_transcript_id']].values
         
         # Now calculate gene body log fold change
-        data['kla_{0}gene_body_lfc'.format(rep_str)] = (data['kla_{0}gene_body_tags'.format(rep_str)]
-                                                            /data['dmso_{0}gene_body_tags'.format(rep_str)]
-                                                        ).apply(lambda x: math.log(x, 2))
+        
+        data['kla_{0}gene_body_lfc'.format(rep_str)] = data.apply(lambda x: gene_body_lfc(x, rep_str))
         
     return data
 
