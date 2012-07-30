@@ -62,7 +62,7 @@ if __name__ == '__main__':
             rep_str = get_rep_string(replicate_id)
             
             
-            grouped = grouped[grouped['kla_{0}lfc'.format(rep_str)] >= -.5]
+            #grouped = grouped[grouped['kla_{0}lfc'.format(rep_str)] >= -.5]
             #grouped = grouped[grouped['score'] >= 100]
             pausing_states = grouped.filter(regex=r'(kla_dex_\d_bucket_score|kla_dex_bucket_score)')
         
