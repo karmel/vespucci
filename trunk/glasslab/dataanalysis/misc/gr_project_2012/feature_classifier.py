@@ -18,7 +18,7 @@ if __name__ == '__main__':
     dirpath = 'karmel/Desktop/Projects/Classes/Rotations/Finland 2012/GR Project/classification'
     dirpath = learner.get_path(dirpath)
     
-    '''
+    
     # First time file setup
     data = get_data_with_bucket_score(learner, dirpath)
     # Get mean of all values to compress
@@ -33,7 +33,7 @@ if __name__ == '__main__':
     grouped = learner.import_file(learner.get_filename(dirpath, '../transcript_vectors.txt'))
     grouped = grouped.drop(['chr_name','ucsc_link_nod','gene_names',
                             'transcription_start','transcription_end'],axis=1)
-    '''
+    
     
     grouped = learner.import_file(learner.get_filename(dirpath, 'feature_vectors.txt'))
     
