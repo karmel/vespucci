@@ -13,20 +13,15 @@ import math
 
 def bucket_score(group):
     # Starts in between -50 and 249 bp
-    tags_at_beginning = sum(group[group['bucket_reduced'] == 1]['tag_count'])
+    group['tags_at_beginning'] = sum(group[group['bucket_reduced'] == 1]['tag_count'])
     # Starts in between 500 and 2000 bp
-    tags_at_end = sum(group[group['bucket_reduced'] == 0]['tag_count'])
+    group['tags_at_end'] = sum(group[group['bucket_reduced'] == 0]['tag_count'])
     # Normalize by number of bp
-    tags_at_beginning /= 250 - (-50) 
-    tags_at_end /= 2000 - 500 
+    group['tags_at_beginning'] /= 250 - (-50) 
+    group['tags_at_end'] /= 2000 - 500 
     try: 
-        return tags_at_beginning/tags_at_end
+        return group['tags_at_beginning']/group['tags_at_end']
     except ZeroDivisionError: return 0
-
-def gene_body_tags(group):
-    # Starts in between 500 and 2000 bp
-    tags_at_end = sum(group[group['bucket_reduced'] == 0]['tag_count'])
-    return tags_at_end
         
 def gene_body_lfc(row, norm_factor, rep_str, numerator, denominator):
     try: 
@@ -53,10 +48,14 @@ def get_data_with_bucket_score(yzer, dirpath):
             # Group by transcript, and assign bucket score to each row
             grouped = subset.groupby('glass_transcript_id')
             bucket_scores = grouped.apply(bucket_score)
-            gene_body_sums = grouped.apply(gene_body_tags)
             # Fill in bucket score for each original row.
+            data['{0}_{1}tags_at_beginning'.format(run_type, rep_str)] = grouped['tags_at_beginning'][
+                                                                        data['glass_transcript_id']].values
+            data['{0}_{1}tags_at_end'.format(run_type, rep_str)] = grouped['tags_at_end'][
+                                                                        data['glass_transcript_id']].values
             data['{0}_{1}bucket_score'.format(run_type, rep_str)] = bucket_scores[data['glass_transcript_id']].values
-            data['{0}_{1}gene_body_tags'.format(run_type, rep_str)] = gene_body_sums[data['glass_transcript_id']].values
+            data['{0}_{1}gene_body_tags'.format(run_type, rep_str)] = data['{0}_{1}tags_at_end'.format(run_type, rep_str)][
+                                                                        data['glass_transcript_id']].values
         
         # Now calculate gene body log fold change
         kla_norm = total_tags['dmso'][replicate_id or 0]/total_tags['kla'][replicate_id or 0]

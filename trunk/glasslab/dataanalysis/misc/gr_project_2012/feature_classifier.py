@@ -92,7 +92,7 @@ if __name__ == '__main__':
             possible_k = [20, 10, 5, 2]
             for k in possible_k:
                 if force_choice:
-                    chosen = ['dmso_{0}bucket_score'.format(rep_str), 'kla_{0}bucket_score'.format(rep_str)]
+                    chosen = ['kla_{0}gene_body_lfc'.format(rep_str), 'dex_over_kla_{0}gene_body_lfc'.format(rep_str)]
                     #chosen = ['cebpa','cebpa_kla']
                 else:
                     chosen = learner.get_best_features(dataset, labels, k=k)
@@ -132,18 +132,17 @@ if __name__ == '__main__':
         for replicate_id in ('', 1, 2, 3, 4):
             rep_str = get_rep_string(replicate_id)
             
-            dataset = grouped[grouped['kla_{0}lfc'.format(rep_str)] >= 1]
-            dataset = dataset[dataset['distal'] == 't']
-            #dataset = dataset[dataset['transcript_score'] >= 10]]
-            dataset = dataset[dataset['p65_kla_dex_tag_count'] > 0]
+            dataset = grouped
+            dataset['{0}pausing_ratio'.format(rep_str)] = dataset['kla_dex_{0}bucket_score'.format(rep_str)] \
+                                                            /dataset['kla_{0}bucket_score'.format(rep_str)]
             targets = dataset.reset_index().filter(regex=r'.*_lfc')    
-            dataset = dataset.reset_index().filter(regex=r'(?!(kla_dex.*|dex_over_kla.*|.*id))')
+            dataset = dataset.reset_index().filter(regex=r'(?!(.*_lfc|kla_dex.*|dex_over_kla.*|.*id))')
             
             
-            labels = targets['kla_{0}lfc'.format(rep_str)] >= 1
-            labels_2 = targets['dex_over_kla_{0}lfc'.format(rep_str)] <= -.58
+            labels = targets['dex_over_kla_{0}gene_body_lfc'.format(rep_str)] <= -.58
+            #labels_2 = targets['dex_over_kla_{0}lfc'.format(rep_str)] <= -.58
             
-            labels = map(lambda x: int(x[0] and x[1]), zip(labels, labels_2))
+            #labels = map(lambda x: int(x[0] and x[1]), zip(labels, labels_2))
             print 'Total examples, positive: ', len(dataset), sum(labels)
             # Nulls should be zeroes. Fill those first.
             dataset = dataset.fillna(0)
@@ -154,19 +153,15 @@ if __name__ == '__main__':
             best_err = 1.0
             best_c = 0
             best_chosen = []
-            possible_k = [20, 10, 5, 2]
+            if force_choice: possible_k = [2]
+            else: possible_k = [20, 10, 5, 2]
             for k in possible_k:
                 if force_choice:
-                    chosen = ['', 'kla_{0}bucket_score'.format(rep_str)]
+                    chosen = ['gr_kla_dex_tag_count', '{0}pausing_ratio'.format(rep_str)]
                     #chosen = ['kla_{0}bucket_score'.format(rep_str), 'tag_count']
                 else:
                     chosen = learner.get_best_features(dataset, labels, k=k)
-                    '''chosen = ['dmso_{0}tag_count'.format(rep_str), 
-                              'kla_{0}tag_count'.format(rep_str),
-                              'gr_dex_tag_count',
-                           'gr_kla_dex_tag_count', 'p65_kla_tag_count', 'p65_kla_dex_tag_count',
-                           'cebpa_tag_count', 'cebpa_kla_tag_count']'''
-                
+
                 num_features = len(chosen)
                 
                 err, c = learner.run_nested_cross_validation(dataset, labels, columns=chosen,
