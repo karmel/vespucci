@@ -80,8 +80,8 @@ class SeqGrapher(TranscriptAnalyzer):
         
         # Show lines at two-fold change?
         if show_2x_range:
-            try: fold_change = float(show_2x_range)
-            except ValueError: fold_change= 2.0
+            if show_2x_range is True:  fold_change= 2.0
+            else: fold_change = float(show_2x_range)
             pyplot.plot([1, (1/fold_change)*max(master_dataset[ycolname])], 
                         [fold_change, max(master_dataset[ycolname])], 
                         '--', color='black', label='{0}-fold change'.format(fold_change))

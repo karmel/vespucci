@@ -9,6 +9,7 @@ from glasslab.dataanalysis.misc.gr_project_2012.elongation import draw_elongatio
 from glasslab.dataanalysis.graphing.basepair_counter import BasepairCounter
 import os
 from matplotlib import pyplot
+import math
 
 def bucket_score(group):
         # Starts in between -50 and 249 bp
@@ -21,7 +22,12 @@ def bucket_score(group):
         try: 
             return tags_at_beginning/tags_at_end
         except ZeroDivisionError: return 0
-    
+
+def gene_body_tags(group):
+        # Starts in between 500 and 2000 bp
+        tags_at_end = sum(group[group['bucket_reduced'] == 0]['tag_count'])
+        return tags_at_end
+        
 def get_data_with_bucket_score(yzer, dirpath):
     filename = yzer.get_filename(dirpath, 'refseq_by_transcript_and_bucket_with_lfc.txt')
     data = yzer.import_file(filename)
@@ -29,19 +35,26 @@ def get_data_with_bucket_score(yzer, dirpath):
     run_ids = set_up_sequencing_run_ids()
     
     # For each sequencing run group, fill in the bucket score val
-    for run_type, id_set in run_ids.iteritems():
-        for replicate_id in ('',1,2,3,4):
+    for replicate_id in ('',1,2,3,4):
+        for run_type, id_set in run_ids.iteritems():
             rep_str = get_rep_string(replicate_id)
             curr_ids = id_set[replicate_id or 0]
             # First subset rows by sequencing run_ids of interest
             subset = data[data['sequencing_run_id'].isin(curr_ids)]
             # Group by transcript, and assign bucket score to each row
             grouped = subset.groupby('glass_transcript_id')
-            grouped = grouped.apply(bucket_score)
+            bucket_scores = grouped.apply(bucket_score)
+            gene_body_sums = grouped.apply(gene_body_tags)
             # Fill in bucket score for each original row.
-            data['{0}_{1}bucket_score'.format(run_type, rep_str)] = grouped[data['glass_transcript_id']].values
-    
+            data['{0}_{1}bucket_score'.format(run_type, rep_str)] = bucket_scores[data['glass_transcript_id']].values
+            data['{0}_{1}gene_body_tags'.format(run_type, rep_str)] = gene_body_sums[data['glass_transcript_id']].values
+        
+        # Now calculate gene body log fold change
+        data['kla_{0}gene_body_lfc'.format(rep_str)] = math.log(data['kla_{0}gene_body_tags'.format(rep_str)]
+                                                        /data['dmso_{0}gene_body_tags'.format(rep_str)], 2)
+        
     return data
+
 
 def draw_boxplot(data, label, dirpath):
     
@@ -72,7 +85,7 @@ def draw_boxplot(data, label, dirpath):
                             title='Pausing Ratio Delta in {0}, {1}'.format(
                                         desc, (replicate_id and 'Group {0}'.format(replicate_id) or 'Overall')), 
                             xlabel='State in {0} {1}'.format(desc, replicate_id), 
-                            ylabel='Pausing ratio delta: (KLA+Dex pausing ratio) - (KLA pausing ratio)', 
+                            ylabel='Pausing ratio delta: (KLA+Dex pausing ratio)/(KLA pausing ratio)', 
                             show_outliers=False, show_plot=False)
             
             pyplot.text(.05, .9, 'Total transcripts: {0}'.format(len(data)), transform=ax.transAxes)

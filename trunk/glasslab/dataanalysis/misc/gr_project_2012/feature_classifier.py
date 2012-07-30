@@ -13,7 +13,6 @@ from glasslab.dataanalysis.misc.gr_project_2012.elongation import get_rep_string
 import os
 import sys
 
-
 if __name__ == '__main__':
     learner = LogisticClassifier()
     dirpath = 'karmel/Desktop/Projects/Classes/Rotations/Finland 2012/GR Project/classification'
@@ -31,11 +30,14 @@ if __name__ == '__main__':
     grouped.to_csv(learner.get_filename(dirpath,'feature_vectors.txt'),sep='\t',index=False)
     
     raise Exception
-    '''
     grouped = learner.import_file(learner.get_filename(dirpath, '../transcript_vectors.txt'))
     grouped = grouped.drop(['chr_name','ucsc_link_nod','gene_names',
                             'transcription_start','transcription_end'],axis=1)
-    if False:
+    '''
+    
+    grouped = learner.import_file(learner.get_filename(dirpath, 'feature_vectors.txt'))
+    
+    if True:
         # Can we predict pausing ratio?
         
         # Minimal ratio in KLA+Dex vs. KLA pausing
@@ -49,16 +51,21 @@ if __name__ == '__main__':
         except IndexError: extra_dir = ''
         
         subdir = learner.get_filename(dirpath, 
-                    extra_dir, 'pausing_ratio_diff_{0}_{1}'.format(
+                    extra_dir, 'pausing_ratio_{0}_{1}'.format(
                         str(min_ratio).replace('.','_'),str(min_diff).replace('.','_')))
         if force_choice: subdir = subdir + '_forced_choice'
         
         if not os.path.exists(subdir): os.makedirs(subdir)
         
-        pausing_states = grouped.filter(regex=r'(kla_dex_\d_bucket_score|kla_dex_bucket_score)')
             
         for replicate_id in ('', 1, 2, 3, 4):
             rep_str = get_rep_string(replicate_id)
+            
+            
+            grouped = grouped[grouped['kla_{0}lfc'.format(rep_str)] >= -.5]
+            #grouped = grouped[grouped['score'] >= 100]
+            pausing_states = grouped.filter(regex=r'(kla_dex_\d_bucket_score|kla_dex_bucket_score)')
+        
             # First do some column cleanup..
             # Remove cols that are the kla_dex_bucket target; or that are not from the current replicate;
             # or that are id fields
@@ -72,7 +79,7 @@ if __name__ == '__main__':
             
             labels_2 = pausing_states['kla_dex_{0}bucket_score'.format(rep_str)] \
                                 - dataset['kla_{0}bucket_score'.format(rep_str)] >= min_diff
-            labels = map(lambda x: int(x[0] and x[1]), zip(labels, labels_2))
+            #labels = map(lambda x: int(x[0] and x[1]), zip(labels, labels_2))
             print 'Total positive examples: ', sum(labels)
             # Nulls should be zeroes. Fill those first.
             dataset = dataset.fillna(0)
@@ -85,7 +92,7 @@ if __name__ == '__main__':
             possible_k = [20, 10, 5, 2]
             for k in possible_k:
                 if force_choice:
-                    chosen = ['kla_{0}state'.format(rep_str), 'dex_over_kla_{0}state'.format(rep_str)]
+                    chosen = ['dmso_{0}bucket_score'.format(rep_str), 'kla_{0}bucket_score'.format(rep_str)]
                     #chosen = ['cebpa','cebpa_kla']
                 else:
                     chosen = learner.get_best_features(dataset, labels, k=k)
@@ -108,7 +115,7 @@ if __name__ == '__main__':
             print "Best number of features: ", len(best_chosen)
             print "Best features: ", best_chosen
             print "Best C, MSE: ", best_c, best_err
-    if True:
+    if False:
         # How about transrepression?
         try: force_choice = sys.argv[1].lower() == 'force'
         except IndexError: force_choice = False

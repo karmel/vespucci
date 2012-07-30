@@ -14,7 +14,7 @@ if __name__ == '__main__':
     data = yzer.import_file(yzer.get_filename(dirpath, 'transcript_vectors.txt'))
     
     data = data.fillna(0)
-    #data = data[(data['p65_kla_dex_tag_count'] >= 100)]
+    data = data[(data['distal'] == 't')]
     data = data[(data['kla_1_lfc'] >= 1)]
     transrepressed = data[(data['kla_1_lfc'] >= 1) & (data['dex_over_kla_1_lfc'] <= -.58)]
     

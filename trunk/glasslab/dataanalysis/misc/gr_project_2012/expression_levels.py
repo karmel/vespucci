@@ -4,7 +4,7 @@ Created on Jun 26, 2012
 @author: karmel
 '''
 from glasslab.dataanalysis.misc.gr_project_2012.elongation import set_up_sequencing_run_ids, \
-    get_sequencing_run_id_sets
+    get_sequencing_run_id_sets, get_rep_string, total_tags_per_run
 from glasslab.dataanalysis.graphing.seq_grapher import SeqGrapher
 from glasslab.dataanalysis.motifs.motif_analyzer import MotifAnalyzer
 
@@ -19,6 +19,7 @@ if __name__ == '__main__':
     
     run_ids = set_up_sequencing_run_ids()
     dmso, kla, kla_dex, all_dmso, all_kla, all_kla_dex = get_sequencing_run_id_sets()
+    total_tags = total_tags_per_run()
     
     # Norm sum scalars listed for all, group 1, group 2, group 3, group 4
     kla_scalars = [1.223906, 1.281572, 1.118363, 1.104860, 1.503260]
@@ -26,11 +27,11 @@ if __name__ == '__main__':
     dex_over_kla_scalars = [1.069073, 0.967659, 1.122628, 1.008758, 0.927466]
     
     for i, scalar in enumerate(kla_scalars):
-        data = grapher.normalize(data, 'kla_{0}tag_count'.format(i and '{0}_'.format(i) or ''), scalar)
+        data = grapher.normalize(data, 'kla_{0}tag_count'.format(get_rep_string(i)), scalar)
     for i, scalar in enumerate(kla_dex_scalars):
-        data = grapher.normalize(data, 'kla_dex_{0}tag_count'.format(i and '{0}_'.format(i) or ''), scalar)
+        data = grapher.normalize(data, 'kla_dex_{0}tag_count'.format(get_rep_string(i)), scalar)
     for i, scalar in enumerate(dex_over_kla_scalars):
-        data = grapher.normalize(data, 'kla_dex_{0}tag_count'.format(i and '{0}_'.format(i) or ''), 
+        data = grapher.normalize(data, 'kla_dex_{0}tag_count'.format(get_rep_string(i)), 
                                  scalar, suffix='_norm_2')
     
     refseq = data[data['has_refseq'] != 0]    
@@ -241,7 +242,7 @@ if __name__ == '__main__':
         print grapher.get_gene_names(refseq[(refseq['kla_1_lfc'] >= 1)], add_quotes=True)
         print grapher.get_gene_names(refseq[(refseq['kla_1_lfc'] >= 1) & (refseq['dex_over_kla_1_lfc'] < -.58)])
 
-    if True:
+    if False:
         yzer = MotifAnalyzer()
         motif_dirpath = yzer.get_filename(dirpath,'motifs/size_200')
         distal = data[data['distal'] == 't']
@@ -272,3 +273,35 @@ if __name__ == '__main__':
         
 
 
+    if True:
+        # Do the runs correlate well?
+        for dataset, label in ((data, 'all transcripts'),(refseq,'RefSeq')):
+            slug_label = label.lower().replace(' ','_')
+            # All DMSO vs. all KLA
+            
+            for x in xrange(1,5):
+                # By group
+                dataset = grapher.normalize(dataset, 'kla_dex_{0}_tag_count'.format(x), 
+                                            total_tags['kla_dex'][0]/total_tags['kla_dex'][x], '_norm_3')
+                up_in_kla = dataset[dataset['kla_lfc'] >= 1]
+                else_in_kla = dataset[dataset['kla_lfc'] < 1]
+            
+                ax = grapher.scatterplot(else_in_kla, 
+                                'kla_dex_tag_count'.format(x), 'kla_dex_{0}_tag_count_norm_3'.format(x),
+                                master_dataset=dataset,
+                                log=True, color='blue', label='Not 2x up in KLA',
+                                show_2x_range=False, show_legend=False, 
+                                show_count=False, show_correlation=False,
+                                show_plot=False)
+                ax = grapher.scatterplot(up_in_kla, 
+                                'kla_{0}_tag_count'.format(x), 'kla_dex_{0}_tag_count_norm_3'.format(x),
+                                master_dataset=dataset,
+                                log=True, color='red', label='At least 2x up in KLA',
+                                title='KLA + Dex all vs. KLA + Dex by group tag counts: Group {0} runs, {1}'.format(x, label),
+                                xlabel='KLA 1h + Dex 2h tags for all groups', ylabel='KLA 1h + Dex 2h tags for group {0}'.format(x), 
+                                show_2x_range=1.5, show_legend=True, 
+                                show_count=True, show_correlation=True,
+                                show_plot=False, ax=ax)
+                grapher.save_plot(grapher.get_filename(scatter_dirpath, 
+                                    'two_color_kla_dex_all_vs_kla_dex_group_{0}_runs_{1}.png'.format(x, slug_label)))
+                grapher.show_plot()
