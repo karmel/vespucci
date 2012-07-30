@@ -61,7 +61,7 @@ def get_data_with_bucket_score(yzer, dirpath):
         
         # Now calculate gene body log fold change
         print data.columns
-        data['kla_{0}gene_body_lfc'.format(rep_str)] = data.apply(lambda x: gene_body_lfc(x, rep_str), axis=0)
+        data['kla_{0}gene_body_lfc'.format(rep_str)] = data.apply(lambda x: gene_body_lfc(x, rep_str), axis=1)
         
     return data
 
