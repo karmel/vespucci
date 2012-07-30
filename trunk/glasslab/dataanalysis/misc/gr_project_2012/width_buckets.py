@@ -29,6 +29,8 @@ def gene_body_tags(group):
     return tags_at_end
         
 def gene_body_lfc(row, rep_str):
+    print row.columns
+    print row
     try: 
         fold_change = row['kla_{0}gene_body_tags'.format(rep_str)]\
                             /row['dmso_{0}gene_body_tags'.format(rep_str)]
