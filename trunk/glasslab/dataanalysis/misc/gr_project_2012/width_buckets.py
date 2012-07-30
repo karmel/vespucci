@@ -60,7 +60,7 @@ def get_data_with_bucket_score(yzer, dirpath):
         
         # Now calculate gene body log fold change
         kla_norm = total_tags['dmso'][replicate_id or 0]/total_tags['kla'][replicate_id or 0]
-        dex_kla_norm = total_tags['kla'][replicate_id or 0]/total_tags['dex_kla'][replicate_id or 0]
+        dex_kla_norm = total_tags['kla'][replicate_id or 0]/total_tags['kla_dex'][replicate_id or 0]
         data['kla_{0}gene_body_lfc'.format(rep_str)] = data.apply(
                                         lambda x: gene_body_lfc(x, kla_norm, rep_str,
                                                                 'kla','dmso'), axis=1)
