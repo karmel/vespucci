@@ -25,8 +25,6 @@ if __name__ == '__main__':
     data = get_data_with_bucket_score(learner, dirpath)
     # Get mean of all values to compress
     grouped_prelim = data.groupby('glass_transcript_id',as_index=False)
-    print grouped_prelim[:10]
-    raise Exception
     grouped = grouped_prelim.mean()
     
     
