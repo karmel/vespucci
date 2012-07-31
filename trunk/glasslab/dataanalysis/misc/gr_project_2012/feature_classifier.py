@@ -20,22 +20,28 @@ if __name__ == '__main__':
     dirpath = 'karmel/Desktop/Projects/Classes/Rotations/Finland 2012/GR Project/classification'
     dirpath = learner.get_path(dirpath)
     
-    '''
+    
     # First time file setup
     data = get_data_with_bucket_score(learner, dirpath)
     # Get mean of all values to compress
     grouped_prelim = data.groupby('glass_transcript_id',as_index=False)
+    print grouped_prelim[:10]
+    raise Exception
     grouped = grouped_prelim.mean()
+    
+    
     # Except for tag_count which should be summed.
     grouped['tag_count'] = grouped_prelim['tag_count'].sum()['tag_count']
     
+    
     grouped.to_csv(learner.get_filename(dirpath,'feature_vectors.txt'),sep='\t',index=False)
+    
     
     raise Exception
     grouped = learner.import_file(learner.get_filename(dirpath, '../transcript_vectors.txt'))
     grouped = grouped.drop(['chr_name','ucsc_link_nod','gene_names',
                             'transcription_start','transcription_end'],axis=1)
-    '''
+    
     
     grouped = learner.import_file(learner.get_filename(dirpath, 'feature_vectors.txt'))
     
@@ -67,7 +73,7 @@ if __name__ == '__main__':
             #grouped = grouped[grouped['kla_{0}lfc'.format(rep_str)] >= -.5]
             #grouped = grouped[grouped['score'] >= 100]
             pausing_states = grouped.filter(regex=r'(kla_dex_\d_bucket_score|kla_dex_bucket_score|' +\
-                                            r'kla_\d_bucket_score|kla_bucket_score)')
+                                            r'kla_\d_bucket_score|kla_bucket_score)').fillna(0)
             
             # First do some column cleanup..
             # Remove cols that are the kla_dex_bucket target; or that are not from the current replicate;
@@ -78,10 +84,14 @@ if __name__ == '__main__':
             dataset = grouped.filter(regex=regex)
         
             
-            labels = pausing_states['kla_dex_{0}bucket_score'.format(rep_str)] \
-                                /pausing_states['kla_{0}bucket_score'.format(rep_str)] >= min_ratio
-            
-            
+            labels = (pausing_states['kla_dex_{0}bucket_score'.format(rep_str)] > 0) & \
+                        (pausing_states['kla_dex_{0}bucket_score'.format(rep_str)] \
+                                /pausing_states['kla_{0}bucket_score'.format(rep_str)] >= min_ratio)
+            print grouped[labels]['glass_transcript_id'].values.tolist()
+            print grouped[labels]['kla_dex_{0}bucket_score'.format(rep_str)] \
+                                /grouped[labels]['kla_{0}bucket_score'.format(rep_str)]
+            """
+            '''
             #For checking non-trivials,
             # where Dex+KLA start tags are not equal to KLA start tags
             # (since that would make the kla_dex_gene_body_lfc
@@ -92,12 +102,13 @@ if __name__ == '__main__':
             mask = mask.apply(lambda x: bool(x and abs(math.log(x,2)) > .5))
             
             labels = map(lambda x: int(x[0] and x[1]), zip(labels, mask))
-            
+            '''
             print 'Total positive examples: ', sum(labels)
             # Nulls should be zeroes. Fill those first.
             dataset = dataset.fillna(0)
             dataset = learner.normalize_data(dataset)
             
+            classifier_type='logistic'
             best_err = 1.0
             best_c = 0
             best_chosen = []
@@ -112,7 +123,7 @@ if __name__ == '__main__':
                 num_features = len(chosen)
                 
                 err, c = learner.run_nested_cross_validation(dataset, labels, columns=chosen,
-                            classifier_type='logistic',
+                            classifier_type=classifier_type,
                             draw_roc=True, draw_decision_boundaries=force_choice,
                             title_suffix=replicate_id and 'Group {0}'.format(replicate_id) or 'Overall',
                             save_path_prefix=learner.get_filename(subdir,'plot_{0}group'.format(rep_str)),
@@ -129,7 +140,7 @@ if __name__ == '__main__':
             print "Best features: ", best_chosen
             print "Best C, MSE: ", best_c, best_err
             
-            '''
+            
             # Now check reliability on non-trivial examples,
             # where Dex+KLA start tags are not equal to KLA start tags
             # (since that would make the kla_dex_gene_body_lfc
@@ -144,17 +155,16 @@ if __name__ == '__main__':
             test_labels = labels.ix[mask]
             print sum(test_labels)
             
-            mod = learner.get_model(C=best_c)
+            mod = learner.get_model(classifier_type=classifier_type, C=best_c)
             fitted = mod.fit(dataset[best_chosen],labels)
             predicted_probs = fitted.predict_proba(test_vectors)
             err = learner.mse(predicted_probs, test_labels.values)
             
             print confusion_matrix(test_labels.values, predicted_probs[:,1] > .5)
-            
-            print mod.coef_ 
+             
             learner.draw_roc(label_sets=[(test_labels.values, predicted_probs)], 
                              save_path=learner.get_filename(subdir,'check_nontrivial_{0}group'.format(rep_str)))
-            '''
+            """
     if False:
         # How about transrepression?
         try: force_choice = sys.argv[1].lower() == 'force'

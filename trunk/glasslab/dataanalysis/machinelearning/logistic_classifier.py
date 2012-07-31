@@ -151,7 +151,7 @@ class LogisticClassifier(Learner):
                   save_path = save_path_prefix + '_{0}_features_roc.png'.format(num_features))
         return mean_metric, best_c
 
-    def get_model(self, classifier_type='logistic', C=1.0, gamma=.01):
+    def get_model(self, classifier_type='logistic', C=1.0, gamma=.001):
         if classifier_type == 'logistic':
             return linear_model.LogisticRegression(C=C, penalty='l1', tol=1e-6)
         else: return svm.SVC(C=C, kernel=classifier_type,probability=True,gamma=gamma)
