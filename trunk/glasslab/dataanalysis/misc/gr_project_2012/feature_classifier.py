@@ -40,7 +40,7 @@ if __name__ == '__main__':
     grouped = grouped.drop(['chr_name','ucsc_link_nod','gene_names',
                             'transcription_start','transcription_end'],axis=1)
     
-    
+        
     grouped = learner.import_file(learner.get_filename(dirpath, 'feature_vectors.txt'))
     
     if True:
@@ -85,10 +85,7 @@ if __name__ == '__main__':
             labels = (pausing_states['kla_dex_{0}bucket_score'.format(rep_str)] > 0) & \
                         (pausing_states['kla_dex_{0}bucket_score'.format(rep_str)] \
                                 /pausing_states['kla_{0}bucket_score'.format(rep_str)] >= min_ratio)
-            print grouped[labels]['glass_transcript_id'].values.tolist()
-            print grouped[labels]['kla_dex_{0}bucket_score'.format(rep_str)] \
-                                /grouped[labels]['kla_{0}bucket_score'.format(rep_str)]
-            """
+            
             '''
             #For checking non-trivials,
             # where Dex+KLA start tags are not equal to KLA start tags
@@ -138,7 +135,7 @@ if __name__ == '__main__':
             print "Best features: ", best_chosen
             print "Best C, MSE: ", best_c, best_err
             
-            
+            '''
             # Now check reliability on non-trivial examples,
             # where Dex+KLA start tags are not equal to KLA start tags
             # (since that would make the kla_dex_gene_body_lfc
@@ -162,7 +159,7 @@ if __name__ == '__main__':
              
             learner.draw_roc(label_sets=[(test_labels.values, predicted_probs)], 
                              save_path=learner.get_filename(subdir,'check_nontrivial_{0}group'.format(rep_str)))
-            """
+            '''
     if False:
         # How about transrepression?
         try: force_choice = sys.argv[1].lower() == 'force'
