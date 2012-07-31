@@ -12,13 +12,15 @@ from glasslab.dataanalysis.machinelearning.logistic_classifier import LogisticCl
 from glasslab.dataanalysis.misc.gr_project_2012.elongation import get_rep_string
 import os
 import sys
+import math
+from sklearn.metrics.metrics import confusion_matrix
 
 if __name__ == '__main__':
     learner = LogisticClassifier()
     dirpath = 'karmel/Desktop/Projects/Classes/Rotations/Finland 2012/GR Project/classification'
     dirpath = learner.get_path(dirpath)
     
-    
+    '''
     # First time file setup
     data = get_data_with_bucket_score(learner, dirpath)
     # Get mean of all values to compress
@@ -33,7 +35,7 @@ if __name__ == '__main__':
     grouped = learner.import_file(learner.get_filename(dirpath, '../transcript_vectors.txt'))
     grouped = grouped.drop(['chr_name','ucsc_link_nod','gene_names',
                             'transcription_start','transcription_end'],axis=1)
-    
+    '''
     
     grouped = learner.import_file(learner.get_filename(dirpath, 'feature_vectors.txt'))
     
@@ -64,27 +66,37 @@ if __name__ == '__main__':
             
             #grouped = grouped[grouped['kla_{0}lfc'.format(rep_str)] >= -.5]
             #grouped = grouped[grouped['score'] >= 100]
-            pausing_states = grouped.filter(regex=r'(kla_dex_\d_bucket_score|kla_dex_bucket_score)')
-        
+            pausing_states = grouped.filter(regex=r'(kla_dex_\d_bucket_score|kla_dex_bucket_score|' +\
+                                            r'kla_\d_bucket_score|kla_bucket_score)')
+            
             # First do some column cleanup..
             # Remove cols that are the kla_dex_bucket target; or that are not from the current replicate;
             # or that are id fields
-            regex = r'(?!(kla_dex_\d_bucket_score|kla_dex_bucket_score))' +\
-                            r'(({1}pu_1_kla)|{0})'.format('(?!(.*_\d_.*|.*_id))', rep_str and r'.*' + rep_str + r'.*|' or '')
+            regex = r'(?!(kla_dex_\d_bucket_score|kla_dex_bucket_score|.*gene.*tags))' +\
+                            r'(({1}pu_1_kla)|{0})'.format('(?!(.*_\d_.*|.*_id))', 
+                                                          rep_str and r'.*' + rep_str + r'.*|' or '')
             dataset = grouped.filter(regex=regex)
         
             
             labels = pausing_states['kla_dex_{0}bucket_score'.format(rep_str)] \
-                                /dataset['kla_{0}bucket_score'.format(rep_str)] >= min_ratio
+                                /pausing_states['kla_{0}bucket_score'.format(rep_str)] >= min_ratio
             
-            labels_2 = pausing_states['kla_dex_{0}bucket_score'.format(rep_str)] \
-                                - dataset['kla_{0}bucket_score'.format(rep_str)] >= min_diff
-            #labels = map(lambda x: int(x[0] and x[1]), zip(labels, labels_2))
+            
+            #For checking non-trivials,
+            # where Dex+KLA start tags are not equal to KLA start tags
+            # (since that would make the kla_dex_gene_body_lfc
+            # perfectly predictive.
+            mask = (grouped['kla_dex_{0}gene_start_tags'.format(rep_str)]\
+                        /grouped['kla_{0}gene_start_tags'.format(rep_str)])
+            mask = mask.fillna(0)
+            mask = mask.apply(lambda x: bool(x and abs(math.log(x,2)) > .5))
+            
+            labels = map(lambda x: int(x[0] and x[1]), zip(labels, mask))
+            
             print 'Total positive examples: ', sum(labels)
             # Nulls should be zeroes. Fill those first.
             dataset = dataset.fillna(0)
             dataset = learner.normalize_data(dataset)
-            
             
             best_err = 1.0
             best_c = 0
@@ -93,13 +105,14 @@ if __name__ == '__main__':
             for k in possible_k:
                 if force_choice:
                     chosen = ['kla_{0}gene_body_lfc'.format(rep_str), 'dex_over_kla_{0}gene_body_lfc'.format(rep_str)]
-                    #chosen = ['cebpa','cebpa_kla']
+                    
                 else:
                     chosen = learner.get_best_features(dataset, labels, k=k)
                     
                 num_features = len(chosen)
                 
                 err, c = learner.run_nested_cross_validation(dataset, labels, columns=chosen,
+                            classifier_type='logistic',
                             draw_roc=True, draw_decision_boundaries=force_choice,
                             title_suffix=replicate_id and 'Group {0}'.format(replicate_id) or 'Overall',
                             save_path_prefix=learner.get_filename(subdir,'plot_{0}group'.format(rep_str)),
@@ -115,6 +128,33 @@ if __name__ == '__main__':
             print "Best number of features: ", len(best_chosen)
             print "Best features: ", best_chosen
             print "Best C, MSE: ", best_c, best_err
+            
+            '''
+            # Now check reliability on non-trivial examples,
+            # where Dex+KLA start tags are not equal to KLA start tags
+            # (since that would make the kla_dex_gene_body_lfc
+            # perfectly predictive.
+            mask = (grouped['kla_dex_{0}gene_start_tags'.format(rep_str)]\
+                        /grouped['kla_{0}gene_start_tags'.format(rep_str)])
+            mask = mask.fillna(0)
+            mask = mask.apply(lambda x: bool(x and abs(math.log(x,2)) > .25))
+            print sum(mask)
+            
+            test_vectors = dataset.ix[mask]
+            test_labels = labels.ix[mask]
+            print sum(test_labels)
+            
+            mod = learner.get_model(C=best_c)
+            fitted = mod.fit(dataset[best_chosen],labels)
+            predicted_probs = fitted.predict_proba(test_vectors)
+            err = learner.mse(predicted_probs, test_labels.values)
+            
+            print confusion_matrix(test_labels.values, predicted_probs[:,1] > .5)
+            
+            print mod.coef_ 
+            learner.draw_roc(label_sets=[(test_labels.values, predicted_probs)], 
+                             save_path=learner.get_filename(subdir,'check_nontrivial_{0}group'.format(rep_str)))
+            '''
     if False:
         # How about transrepression?
         try: force_choice = sys.argv[1].lower() == 'force'
@@ -153,8 +193,7 @@ if __name__ == '__main__':
             best_err = 1.0
             best_c = 0
             best_chosen = []
-            if force_choice: possible_k = [2]
-            else: possible_k = [20, 10, 5, 2]
+            possible_k = [20, 10, 5, 2]
             for k in possible_k:
                 if force_choice:
                     chosen = ['gr_kla_dex_tag_count', '{0}pausing_ratio'.format(rep_str)]

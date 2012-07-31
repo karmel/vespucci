@@ -20,7 +20,7 @@ from scipy import stats
 
 class LogisticClassifier(Learner):
     
-    Cs = [10**C for C in range(-3,3)]
+    Cs = [10**C for C in range(-3,4)]
     def get_best_features(self, data, labels, k=3):
         '''
         Using the scikit-learn library, narrow down feature set.
@@ -48,6 +48,7 @@ class LogisticClassifier(Learner):
 
     def run_nested_cross_validation(self, data, labels, k=3, columns=None, 
                                     draw_roc=True, draw_decision_boundaries=True,
+                                    classifier_type='logistic',
                                     title_suffix='', save_path_prefix='',
                                     balance=True, Cs=None, error_f=None, higher_is_better=False,
                                     threshold_p=.5):
@@ -79,7 +80,7 @@ class LogisticClassifier(Learner):
         
         outer_metric, for_roc = [], []
         for train_outer, test_outer in cv_outer:
-            mod = self.get_model(classifier_type='logistic')
+            mod = self.get_model(classifier_type=classifier_type)
             c_metric = []
             for c in Cs:
                 cv_inner = StratifiedKFold(labels.ix[train_outer].values, k=k)
@@ -189,7 +190,7 @@ class LogisticClassifier(Learner):
         pyplot.ylabel('True Positive Rate')
         pyplot.title(title)
         pyplot.legend(loc="lower right")
-        pyplot.savefig(save_path)
+        if save_path: pyplot.savefig(save_path)
         if show_plot: pyplot.show()
         
     def draw_decision_boundaries(self, model, columns, training_data, training_labels,
