@@ -16,15 +16,11 @@ def bucket_score(group):
     tags_at_beginning = max(1, sum(group[group['bucket_reduced'] == 1]['tag_count']))
     # Starts in between 250 and 2000 bp
     tags_at_end = max(1, sum(group[group['bucket_reduced'] == 0]['tag_count']))
-    if tags_at_beginning < 1: print 'Less than 1!', tags_at_beginning
-    if tags_at_end < 1: print 'Less than 1!', tags_at_end
     
     # Normalize by number of bp
     tags_at_beginning /= 99 - (-50) 
     tags_at_end /= 2000 - 250 
     
-    for col in group.columns: 
-        if sum(group[col].isnull()): print col, sum(group[col].isnull())
     return tags_at_beginning/tags_at_end
 
 def gene_start_tags(group):
@@ -62,6 +58,10 @@ def get_data_with_bucket_score(yzer, dirpath):
             bucket_scores = grouped.apply(bucket_score)
             gene_start_sums = grouped.apply(gene_start_tags)
             gene_body_sums = grouped.apply(gene_body_tags)
+            
+            print sum(bucket_scores.isnull())
+            print sum(gene_start_sums.isnull())
+            print sum(gene_body_sums.isnull())
             # Fill in bucket score for each original row.
             data['{0}_{1}bucket_score'.format(run_type, rep_str)] = bucket_scores[data['glass_transcript_id']].values
             data['{0}_{1}gene_start_tags'.format(run_type, rep_str)] = gene_start_sums[data['glass_transcript_id']].values
