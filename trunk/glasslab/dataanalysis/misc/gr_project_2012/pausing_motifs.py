@@ -34,17 +34,9 @@ if __name__ == '__main__':
         pausing_ids = pausing_data[pausing_data[key] >= min_ratio]['glass_transcript_id']
         dataset = data[data['id'].isin(pausing_ids)]
         
-        # Verify
-        #for gt_id in data['id'][:10]: print pausing_data[pausing_data['glass_transcript_id'] == gt_id][key]
-        #print data[data.fillna(0)['gene_names'] != 0]['gene_names'][:20]
-        print pausing_data[pausing_data['glass_transcript_id'].isin([760429])]['dex_over_kla_{0}state'.format(rep_str)]
-        print pausing_data[pausing_data['glass_transcript_id'].isin([760429])]['kla_{0}state'.format(rep_str)]
-        print pausing_data[pausing_data['glass_transcript_id'].isin([760429])]['cebpa_kla'.format(rep_str)]
-        print pausing_data[pausing_data['glass_transcript_id'].isin([760429])]['pu_1_kla'.format(rep_str)]
-        print pausing_data[pausing_data['glass_transcript_id'].isin([760429])]['p65_kla'.format(rep_str)]
         print len(dataset)
         
-        if False:
-            yzer.prep_files_for_homer(dataset, 'paused_{0}_{1}preceding_100'.format(min_ratio, rep_str), 
+        if True:
+            yzer.prep_files_for_homer(dataset, 'paused_{0}_{1}preceding_200'.format(min_ratio, rep_str), 
                                       dirpath, 
-                                      center=False, reverse=False, preceding=True, size=100)
+                                      center=False, reverse=False, preceding=True, size=200)

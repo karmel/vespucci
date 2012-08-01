@@ -14,7 +14,7 @@ import os
 import sys
 import math
 from sklearn.metrics.metrics import confusion_matrix
-from matplotlib import pyplot
+
 if __name__ == '__main__':
     learner = LogisticClassifier()
     dirpath = 'karmel/Desktop/Projects/Classes/Rotations/Finland 2012/GR Project/classification'
@@ -32,7 +32,7 @@ if __name__ == '__main__':
     grouped['tag_count'] = grouped_prelim['tag_count'].sum()['tag_count']
     
     
-    grouped.to_csv(learner.get_filename(dirpath,'feature_vectors.txt'),sep='\t',index=False)
+    grouped.to_csv(learner.get_filename(dirpath,'feature_vectors_100.txt'),sep='\t',index=False)
     
     
     raise Exception
@@ -86,6 +86,8 @@ if __name__ == '__main__':
                         (pausing_states['kla_dex_{0}bucket_score'.format(rep_str)] \
                                 /pausing_states['kla_{0}bucket_score'.format(rep_str)] >= min_ratio)
             
+            print grouped.ix[labels]['glass_transcript_id'].values.tolist()
+            continue
             '''
             #For checking non-trivials,
             # where Dex+KLA start tags are not equal to KLA start tags
@@ -110,7 +112,7 @@ if __name__ == '__main__':
             possible_k = [20, 10, 5, 2]
             for k in possible_k:
                 if force_choice:
-                    chosen = ['kla_{0}gene_body_lfc'.format(rep_str), 'kla_{0}bucket_score'.format(rep_str)]
+                    chosen = ['kla_{0}gene_body_lfc'.format(rep_str), 'dex_over_kla_{0}gene_body_lfc'.format(rep_str)]
                     
                 else:
                     chosen = learner.get_best_features(dataset, labels, k=k)
@@ -135,31 +137,33 @@ if __name__ == '__main__':
             print "Best features: ", best_chosen
             print "Best C, MSE: ", best_c, best_err
             
-            
-            # Now check reliability on non-trivial examples,
-            # where Dex+KLA start tags are not equal to KLA start tags
-            # (since that would make the kla_dex_gene_body_lfc
-            # perfectly predictive.
-            mask = (grouped['kla_dex_{0}gene_start_tags'.format(rep_str)]\
-                        /grouped['kla_{0}gene_start_tags'.format(rep_str)])
-            mask = mask.fillna(0)
-            mask = mask.apply(lambda x: bool(x and abs(math.log(x,2)) > .25))
-            print sum(mask)
-            
-            test_vectors = dataset.ix[mask]
-            test_labels = labels.ix[mask]
-            print sum(test_labels)
-            
-            mod = learner.get_model(classifier_type=classifier_type, C=best_c)
-            fitted = mod.fit(dataset[best_chosen],labels)
-            predicted_probs = fitted.predict_proba(test_vectors)
-            err = learner.mse(predicted_probs, test_labels.values)
-            
-            print confusion_matrix(test_labels.values, predicted_probs[:,1] > .5)
-             
-            learner.draw_roc(label_sets=[(test_labels.values, predicted_probs)], 
-                             save_path=learner.get_filename(subdir,'check_nontrivial_{0}group'.format(rep_str)))
-            
+            if force_choice:
+                # Skip if not force_choice because it takes too long on my laptop.
+                
+                # Now check reliability on non-trivial examples,
+                # where Dex+KLA start tags are not equal to KLA start tags
+                # (since that would make the kla_dex_gene_body_lfc
+                # perfectly predictive.
+                mask = (grouped['kla_dex_{0}gene_start_tags'.format(rep_str)]\
+                            /grouped['kla_{0}gene_start_tags'.format(rep_str)])
+                mask = mask.fillna(0)
+                mask = mask.apply(lambda x: bool(x and abs(math.log(x,2)) > .25))
+                print sum(mask)
+                
+                test_vectors = dataset.ix[mask]
+                test_labels = labels.ix[mask]
+                print sum(test_labels)
+                
+                mod = learner.get_model(classifier_type=classifier_type, C=best_c)
+                fitted = mod.fit(dataset[best_chosen],labels)
+                predicted_probs = fitted.predict_proba(test_vectors)
+                err = learner.mse(predicted_probs, test_labels.values)
+                
+                print confusion_matrix(test_labels.values, predicted_probs[:,1] > .5)
+                 
+                learner.draw_roc(label_sets=[(test_labels.values, predicted_probs)], 
+                                 save_path=learner.get_filename(subdir,'check_nontrivial_{0}group'.format(rep_str)))
+                
     if False:
         # How about transrepression?
         try: force_choice = sys.argv[1].lower() == 'force'

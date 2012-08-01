@@ -21,23 +21,23 @@ if __name__ == '__main__':
         data['id'] = data['peak_id']
         #data = data[data['p65_kla_dex_tag_count'] < data['p65_kla_tag_count']]    
         for name, dataset in (('all', data,),
-                              ('up_in_kla', data[(data['kla_lfc'] >= 1)],),
-                              ('up_in_kla_1', data[(data['kla_1_lfc'] >= 1)],),
-                              ('up_in_kla_2', data[(data['kla_2_lfc'] >= 1)],),
-                              ('up_in_kla_3', data[(data['kla_3_lfc'] >= 1)],),
-                              ('up_in_kla_4', data[(data['kla_4_lfc'] >= 1)],),
-                              ('transrepressed', data[(data['kla_lfc'] >= 1) & (data['dex_over_kla_lfc'] <= -.58)],),
-                              ('transrepressed_1', data[(data['kla_1_lfc'] >= 1) & (data['dex_over_kla_1_lfc'] <= -.58)],),
-                              ('transrepressed_2', data[(data['kla_2_lfc'] >= 1) & (data['dex_over_kla_2_lfc'] <= -.58)],),
-                              ('transrepressed_3', data[(data['kla_3_lfc'] >= 1) & (data['dex_over_kla_3_lfc'] <= -.58)],),
-                              ('transrepressed_4', data[(data['kla_4_lfc'] >= 1) & (data['dex_over_kla_4_lfc'] <= -.58)],),
-                              ('transrepressed_union', data[((data['kla_1_lfc'] >= 1) & (data['dex_over_kla_1_lfc'] <= -.58)) 
-                                                            | ((data['kla_2_lfc'] >= 1) & (data['dex_over_kla_2_lfc'] <= -.58))
-                                                            | ((data['kla_3_lfc'] >= 1) & (data['dex_over_kla_3_lfc'] <= -.58)) 
-                                                            | ((data['kla_4_lfc'] >= 1) & (data['dex_over_kla_4_lfc'] <= -.58))
+                              ('up_in_kla', data[(data['kla_gene_body_lfc'] >= 1)],),
+                              ('up_in_kla_1', data[(data['kla_1_gene_body_lfc'] >= 1)],),
+                              ('up_in_kla_2', data[(data['kla_2_gene_body_lfc'] >= 1)],),
+                              ('up_in_kla_3', data[(data['kla_3_gene_body_lfc'] >= 1)],),
+                              ('up_in_kla_4', data[(data['kla_4_gene_body_lfc'] >= 1)],),
+                              ('transrepressed', data[(data['kla_gene_body_lfc'] >= 1) & (data['dex_over_kla_gene_body_lfc'] <= -.58)],),
+                              ('transrepressed_1', data[(data['kla_1_gene_body_lfc'] >= 1) & (data['dex_over_kla_1_gene_body_lfc'] <= -.58)],),
+                              ('transrepressed_2', data[(data['kla_2_gene_body_lfc'] >= 1) & (data['dex_over_kla_2_gene_body_lfc'] <= -.58)],),
+                              ('transrepressed_3', data[(data['kla_3_gene_body_lfc'] >= 1) & (data['dex_over_kla_3_gene_body_lfc'] <= -.58)],),
+                              ('transrepressed_4', data[(data['kla_4_gene_body_lfc'] >= 1) & (data['dex_over_kla_4_gene_body_lfc'] <= -.58)],),
+                              ('transrepressed_union', data[((data['kla_1_gene_body_lfc'] >= 1) & (data['dex_over_kla_1_gene_body_lfc'] <= -.58)) 
+                                                            | ((data['kla_2_gene_body_lfc'] >= 1) & (data['dex_over_kla_2_gene_body_lfc'] <= -.58))
+                                                            | ((data['kla_3_gene_body_lfc'] >= 1) & (data['dex_over_kla_3_gene_body_lfc'] <= -.58)) 
+                                                            | ((data['kla_4_gene_body_lfc'] >= 1) & (data['dex_over_kla_4_gene_body_lfc'] <= -.58))
                                                             ],),
-                              ('up_in_kla_union', data[((data['kla_1_lfc'] >= 1)) | ((data['kla_2_lfc'] >= 1)) 
-                                                       | ((data['kla_3_lfc'] >= 1)) | ((data['kla_4_lfc'] >= 1))
+                              ('up_in_kla_union', data[((data['kla_1_gene_body_lfc'] >= 1)) | ((data['kla_2_gene_body_lfc'] >= 1)) 
+                                                       | ((data['kla_3_gene_body_lfc'] >= 1)) | ((data['kla_4_gene_body_lfc'] >= 1))
                                                             ],),
                               
                               ):
@@ -78,13 +78,13 @@ if __name__ == '__main__':
         data['id'] = data['peak_id']
         #data = data[data['p65_kla_dex_tag_count'] < data['p65_kla_tag_count']]    
         for name, dataset in (('all', data,),
-                              ('up_in_kla_dex', data[(data['dex_over_kla_lfc'] >= 1)],),
-                              ('up_in_kla_dex_1', data[(data['dex_over_kla_1_lfc'] >= 1)],),
-                              ('up_in_kla_dex_2', data[(data['dex_over_kla_2_lfc'] >= 1)],),
-                              ('up_in_kla_dex_3', data[(data['dex_over_kla_3_lfc'] >= 1)],),
-                              ('up_in_kla_dex_4', data[(data['dex_over_kla_4_lfc'] >= 1)],),
-                              ('up_in_kla_dex_union', data[((data['dex_over_kla_1_lfc'] >= 1)) | ((data['dex_over_kla_2_lfc'] >= 1)) 
-                                                       | ((data['dex_over_kla_3_lfc'] >= 1)) | ((data['dex_over_kla_4_lfc'] >= 1))
+                              ('up_in_kla_dex', data[(data['dex_over_kla_gene_body_lfc'] >= 1)],),
+                              ('up_in_kla_dex_1', data[(data['dex_over_kla_1_gene_body_lfc'] >= 1)],),
+                              ('up_in_kla_dex_2', data[(data['dex_over_kla_2_gene_body_lfc'] >= 1)],),
+                              ('up_in_kla_dex_3', data[(data['dex_over_kla_3_gene_body_lfc'] >= 1)],),
+                              ('up_in_kla_dex_4', data[(data['dex_over_kla_4_gene_body_lfc'] >= 1)],),
+                              ('up_in_kla_dex_union', data[((data['dex_over_kla_1_gene_body_lfc'] >= 1)) | ((data['dex_over_kla_2_gene_body_lfc'] >= 1)) 
+                                                       | ((data['dex_over_kla_3_gene_body_lfc'] >= 1)) | ((data['dex_over_kla_4_gene_body_lfc'] >= 1))
                                                             ],),
                               
                               ):
