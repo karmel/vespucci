@@ -40,7 +40,7 @@ def gene_body_lfc(row, norm_factor, rep_str, numerator, denominator):
     return math.log(fold_change, 2)
     
 def get_data_with_bucket_score(yzer, dirpath):
-    filename = yzer.get_filename(dirpath, 'refseq_by_transcript_and_bucket_with_lfc.txt')
+    filename = yzer.get_filename(dirpath, 'refseq_by_transcript_and_bucket_with_lfc_250.txt')
     data = yzer.import_file(filename)
     data = data.fillna(0)
     
@@ -81,9 +81,6 @@ def get_data_with_bucket_score(yzer, dirpath):
         data['dex_over_kla_{0}gene_body_lfc'.format(rep_str)] = data.apply(
                                         lambda x: gene_body_lfc(x, dex_kla_norm, rep_str,
                                                                 'kla_dex','kla'), axis=1)
-    
-    for col in data.columns: 
-        if sum(data[col].isnull()): print col, sum(data[col].isnull())
     return data
 
 
@@ -160,7 +157,7 @@ if __name__ == '__main__':
         # First time only:
         #data = get_data_with_bucket_score(grapher, dirpath)
         
-        data = grapher.import_file(grapher.get_filename(dirpath, 'feature_vectors.txt'))
+        data = grapher.import_file(grapher.get_filename(dirpath, 'feature_vectors_250.txt'))
         # For the sake of graphing, imitate basepair
         data['basepair'] = (data['bucket_reduced'] - 1)*50
 
