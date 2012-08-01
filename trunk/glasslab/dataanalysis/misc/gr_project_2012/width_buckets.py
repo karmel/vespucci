@@ -59,15 +59,19 @@ def get_data_with_bucket_score(yzer, dirpath):
             gene_start_sums = grouped.apply(gene_start_tags)
             gene_body_sums = grouped.apply(gene_body_tags)
             
-            print sum(bucket_scores.isnull())
-            print sum(gene_start_sums.isnull())
-            print sum(gene_body_sums.isnull())
             # Fill in bucket score for each original row.
             data['{0}_{1}bucket_score'.format(run_type, rep_str)] = bucket_scores[data['glass_transcript_id']].values
             data['{0}_{1}gene_start_tags'.format(run_type, rep_str)] = gene_start_sums[data['glass_transcript_id']].values
             data['{0}_{1}gene_body_tags'.format(run_type, rep_str)] = gene_body_sums[data['glass_transcript_id']].values
         
-            print sum(data['{0}_{1}bucket_score'.format(run_type, rep_str)].isnull())
+            # Fill NAs created by transcripts missing from certain sequencing runs.
+            data['{0}_{1}bucket_score'.format(run_type, rep_str)] = \
+                data['{0}_{1}bucket_score'.format(run_type, rep_str)].fillna(1) # Use 1 to show parity.
+            data['{0}_{1}bucket_score'.format(run_type, rep_str)] = \
+                data['{0}_{1}bucket_score'.format(run_type, rep_str)].fillna(0)
+            data['{0}_{1}bucket_score'.format(run_type, rep_str)] = \
+                data['{0}_{1}bucket_score'.format(run_type, rep_str)].fillna(0)
+            
         # Now calculate gene body log fold change
         kla_norm = total_tags['dmso'][replicate_id or 0]/total_tags['kla'][replicate_id or 0]
         dex_kla_norm = total_tags['kla'][replicate_id or 0]/total_tags['kla_dex'][replicate_id or 0]
@@ -77,7 +81,9 @@ def get_data_with_bucket_score(yzer, dirpath):
         data['dex_over_kla_{0}gene_body_lfc'.format(rep_str)] = data.apply(
                                         lambda x: gene_body_lfc(x, dex_kla_norm, rep_str,
                                                                 'kla_dex','kla'), axis=1)
-        
+    
+    for col in data.columns: 
+        if sum(data[col].isnull()): print col, sum(data[col].isnull())
     return data
 
 
