@@ -40,7 +40,7 @@ if __name__ == '__main__':
     grouped = grouped.drop(['chr_name','ucsc_link_nod','gene_names',
                             'transcription_start','transcription_end'],axis=1)
     
-        
+    
     grouped = learner.import_file(learner.get_filename(dirpath, 'feature_vectors.txt'))
     
     if True:
@@ -110,7 +110,7 @@ if __name__ == '__main__':
             possible_k = [20, 10, 5, 2]
             for k in possible_k:
                 if force_choice:
-                    chosen = ['kla_{0}gene_body_lfc'.format(rep_str), 'dex_over_kla_{0}gene_body_lfc'.format(rep_str)]
+                    chosen = ['kla_{0}gene_body_lfc'.format(rep_str), 'kla_{0}bucket_score'.format(rep_str)]
                     
                 else:
                     chosen = learner.get_best_features(dataset, labels, k=k)
