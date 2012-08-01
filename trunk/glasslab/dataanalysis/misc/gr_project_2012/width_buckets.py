@@ -13,15 +13,14 @@ import math
 
 def bucket_score(group):
     # Starts in between -50 and 99 bp
-    tags_at_beginning = sum(group[group['bucket_reduced'] == 1]['tag_count'])
+    tags_at_beginning = max(1, sum(group[group['bucket_reduced'] == 1]['tag_count']))
     # Starts in between 250 and 2000 bp
-    tags_at_end = max(1,sum(group[group['bucket_reduced'] == 0]['tag_count']))
+    tags_at_end = max(1, sum(group[group['bucket_reduced'] == 0]['tag_count']))
     # Normalize by number of bp
     tags_at_beginning /= 99 - (-50) 
     tags_at_end /= 2000 - 250 
-    try: 
-        return tags_at_beginning/tags_at_end
-    except ZeroDivisionError: return 0
+    
+    return tags_at_beginning/tags_at_end
 
 def gene_start_tags(group):
     # Starts in between -50 and 249 bp
@@ -34,16 +33,13 @@ def gene_body_tags(group):
     return tags_at_end
         
 def gene_body_lfc(row, norm_factor, rep_str, numerator, denominator):
-    try: 
-        fold_change = (row['{0}_{1}gene_body_tags'.format(numerator, rep_str)]*norm_factor)\
-                            /row['{0}_{1}gene_body_tags'.format(denominator, rep_str)]
-    except ZeroDivisionError: fold_change = 0
-    try: lfc = math.log(fold_change, 2)
-    except ValueError: lfc = 0
-    return lfc
+
+    fold_change = (max(1, row['{0}_{1}gene_body_tags'.format(numerator, rep_str)])*norm_factor)\
+                        /max(1, row['{0}_{1}gene_body_tags'.format(denominator, rep_str)])
+    return math.log(fold_change, 2)
     
 def get_data_with_bucket_score(yzer, dirpath):
-    filename = yzer.get_filename(dirpath, 'refseq_by_transcript_and_bucket_with_lfc.txt')
+    filename = yzer.get_filename(dirpath, 'refseq_by_transcript_and_bucket_with_lfc_test.txt')
     data = yzer.import_file(filename)
     
     run_ids = set_up_sequencing_run_ids()
