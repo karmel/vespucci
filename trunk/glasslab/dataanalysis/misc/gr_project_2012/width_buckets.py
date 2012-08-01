@@ -40,7 +40,7 @@ def gene_body_lfc(row, norm_factor, rep_str, numerator, denominator):
     return math.log(fold_change, 2)
     
 def get_data_with_bucket_score(yzer, dirpath):
-    filename = yzer.get_filename(dirpath, 'refseq_by_transcript_and_bucket_with_lfc_250.txt')
+    filename = yzer.get_filename(dirpath, 'refseq_by_transcript_and_bucket_with_lfc.txt')
     data = yzer.import_file(filename)
     data = data.fillna(0)
     
@@ -67,10 +67,10 @@ def get_data_with_bucket_score(yzer, dirpath):
             # Fill NAs created by transcripts missing from certain sequencing runs.
             data['{0}_{1}bucket_score'.format(run_type, rep_str)] = \
                 data['{0}_{1}bucket_score'.format(run_type, rep_str)].fillna(1) # Use 1 to show parity.
-            data['{0}_{1}bucket_score'.format(run_type, rep_str)] = \
-                data['{0}_{1}bucket_score'.format(run_type, rep_str)].fillna(0)
-            data['{0}_{1}bucket_score'.format(run_type, rep_str)] = \
-                data['{0}_{1}bucket_score'.format(run_type, rep_str)].fillna(0)
+            data['{0}_{1}gene_start_tags'.format(run_type, rep_str)] = \
+                data['{0}_{1}gene_start_tags'.format(run_type, rep_str)].fillna(0)
+            data['{0}_{1}gene_body_tags'.format(run_type, rep_str)] = \
+                data['{0}_{1}gene_body_tags'.format(run_type, rep_str)].fillna(0)
             
         # Now calculate gene body log fold change
         kla_norm = total_tags['dmso'][replicate_id or 0]/total_tags['kla'][replicate_id or 0]
@@ -160,7 +160,7 @@ if __name__ == '__main__':
         # First time only:
         #data = get_data_with_bucket_score(grapher, dirpath)
         
-        data = grapher.import_file(grapher.get_filename(dirpath, 'feature_vectors_250.txt'))
+        data = grapher.import_file(grapher.get_filename(dirpath, 'feature_vectors.txt'))
         # For the sake of graphing, imitate basepair
         data['basepair'] = (data['bucket_reduced'] - 1)*50
 
