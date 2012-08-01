@@ -23,7 +23,8 @@ def bucket_score(group):
     tags_at_beginning /= 99 - (-50) 
     tags_at_end /= 2000 - 250 
     
-    for col in group: print sum(group[col].isnull())
+    for col in group: 
+        if sum(group[col].isnull()): print sum(group[col].isnull())
     return tags_at_beginning/tags_at_end
 
 def gene_start_tags(group):
@@ -46,7 +47,8 @@ def get_data_with_bucket_score(yzer, dirpath):
     filename = yzer.get_filename(dirpath, 'refseq_by_transcript_and_bucket_with_lfc.txt')
     data = yzer.import_file(filename)
     data = data.fillna(0)
-    for col in data: print sum(data[col].isnull())
+    for col in data: 
+        sum(data[col].isnull()): print sum(data[col].isnull())
     run_ids = set_up_sequencing_run_ids()
     total_tags = total_tags_per_run()
     # For each sequencing run group, fill in the bucket score val
