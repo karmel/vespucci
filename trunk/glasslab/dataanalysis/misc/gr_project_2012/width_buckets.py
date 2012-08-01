@@ -39,7 +39,7 @@ def gene_body_lfc(row, norm_factor, rep_str, numerator, denominator):
     return math.log(fold_change, 2)
     
 def get_data_with_bucket_score(yzer, dirpath):
-    filename = yzer.get_filename(dirpath, 'refseq_by_transcript_and_bucket_with_lfc_test.txt')
+    filename = yzer.get_filename(dirpath, 'refseq_by_transcript_and_bucket_with_lfc.txt')
     data = yzer.import_file(filename)
     
     run_ids = set_up_sequencing_run_ids()
