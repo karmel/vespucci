@@ -23,7 +23,7 @@ def bucket_score(group):
     tags_at_beginning /= 99 - (-50) 
     tags_at_end /= 2000 - 250 
     
-    for col in group: 
+    for col in group.columns: 
         if sum(group[col].isnull()): print sum(group[col].isnull())
     return tags_at_beginning/tags_at_end
 
