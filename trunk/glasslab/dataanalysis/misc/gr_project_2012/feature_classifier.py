@@ -20,7 +20,7 @@ if __name__ == '__main__':
     dirpath = 'karmel/Desktop/Projects/Classes/Rotations/Finland 2012/GR Project/classification'
     dirpath = learner.get_path(dirpath)
     
-    
+    '''
     # First time file setup
     data = get_data_with_bucket_score(learner, dirpath)
     # Get mean of all values to compress
@@ -32,7 +32,7 @@ if __name__ == '__main__':
     grouped['tag_count'] = grouped_prelim['tag_count'].sum()['tag_count']
     
     
-    grouped.to_csv(learner.get_filename(dirpath,'feature_vectors_100.txt'),sep='\t',index=False)
+    grouped.to_csv(learner.get_filename(dirpath,'feature_vectors.txt'),sep='\t',index=False)
     
     
     raise Exception
@@ -40,25 +40,22 @@ if __name__ == '__main__':
     grouped = grouped.drop(['chr_name','ucsc_link_nod','gene_names',
                             'transcription_start','transcription_end'],axis=1)
     
-    
+    '''
     grouped = learner.import_file(learner.get_filename(dirpath, 'feature_vectors.txt'))
     
-    if True:
+    if False:
         # Can we predict pausing ratio?
         
         # Minimal ratio in KLA+Dex vs. KLA pausing
         try: min_ratio= float(sys.argv[1])
-        except IndexError: min_ratio = 1.5 
-        try: min_diff = float(sys.argv[2])
-        except IndexError: min_diff = .05
-        try: force_choice = sys.argv[3].lower() == 'force'
+        except IndexError: min_ratio = 2 
+        try: force_choice = sys.argv[2].lower() == 'force'
         except IndexError: force_choice = False
-        try: extra_dir = sys.argv[4]
+        try: extra_dir = sys.argv[3]
         except IndexError: extra_dir = ''
         
         subdir = learner.get_filename(dirpath, 
-                    extra_dir, 'pausing_ratio_{0}_{1}'.format(
-                        str(min_ratio).replace('.','_'),str(min_diff).replace('.','_')))
+                    extra_dir, 'pausing_ratio_{0}'.format(str(min_ratio).replace('.','_')))
         if force_choice: subdir = subdir + '_forced_choice'
         
         if not os.path.exists(subdir): os.makedirs(subdir)
@@ -68,8 +65,6 @@ if __name__ == '__main__':
             rep_str = get_rep_string(replicate_id)
             
             
-            #grouped = grouped[grouped['kla_{0}lfc'.format(rep_str)] >= -.5]
-            #grouped = grouped[grouped['score'] >= 100]
             pausing_states = grouped.filter(regex=r'(kla_dex_\d_bucket_score|kla_dex_bucket_score|' +\
                                             r'kla_\d_bucket_score|kla_bucket_score)').fillna(0)
             
@@ -86,8 +81,6 @@ if __name__ == '__main__':
                         (pausing_states['kla_dex_{0}bucket_score'.format(rep_str)] \
                                 /pausing_states['kla_{0}bucket_score'.format(rep_str)] >= min_ratio)
             
-            print grouped.ix[labels]['glass_transcript_id'].values.tolist()
-            continue
             '''
             #For checking non-trivials,
             # where Dex+KLA start tags are not equal to KLA start tags
@@ -164,15 +157,15 @@ if __name__ == '__main__':
                 learner.draw_roc(label_sets=[(test_labels.values, predicted_probs)], 
                                  save_path=learner.get_filename(subdir,'check_nontrivial_{0}group'.format(rep_str)))
                 
-    if False:
-        # How about transrepression?
+    if True:
+        # How about transrepression or derepression?
         try: force_choice = sys.argv[1].lower() == 'force'
         except IndexError: force_choice = False
         try: extra_dir = sys.argv[2]
         except IndexError: extra_dir = ''
         
         subdir = learner.get_filename(dirpath, 
-                    'transrepression' + extra_dir)
+                    'derepressed' + '_' + extra_dir)
         if force_choice: subdir = subdir + '_forced_choice'
         
         if not os.path.exists(subdir): os.makedirs(subdir)
@@ -182,16 +175,20 @@ if __name__ == '__main__':
             rep_str = get_rep_string(replicate_id)
             
             dataset = grouped
-            dataset['{0}pausing_ratio'.format(rep_str)] = dataset['kla_dex_{0}bucket_score'.format(rep_str)] \
+            dataset['rep_{0}pausing_ratio'.format(rep_str)] = dataset['kla_dex_{0}bucket_score'.format(rep_str)] \
                                                             /dataset['kla_{0}bucket_score'.format(rep_str)]
-            targets = dataset.reset_index().filter(regex=r'.*_lfc')    
-            dataset = dataset.reset_index().filter(regex=r'(?!(.*_lfc|kla_dex.*|dex_over_kla.*|.*id))')
+            targets = dataset.reset_index().filter(regex=r'.*_lfc')
+            # Get rid of lfc columns    
+            dataset = dataset.reset_index().filter(regex=r'(?!(.*_lfc|dex_over_kla.*|.*id|.*_tags))')
+            # And then columns from other replicates
+            dataset = dataset.reset_index().filter(regex=r'(({1}pu_1_kla)|{0})'.format('(?!(.*_\d_.*|.*_id))', 
+                                                          rep_str and r'.*' + rep_str + r'.*|' or ''))
+            print dataset.columns
             
+            labels = targets['dex_over_kla_{0}gene_body_lfc'.format(rep_str)] >= .58
+            labels_2 = targets['kla_{0}gene_body_lfc'.format(rep_str)] <= -.58
             
-            labels = targets['dex_over_kla_{0}gene_body_lfc'.format(rep_str)] <= -.58
-            #labels_2 = targets['dex_over_kla_{0}lfc'.format(rep_str)] <= -.58
-            
-            #labels = map(lambda x: int(x[0] and x[1]), zip(labels, labels_2))
+            labels = map(lambda x: int(x[0] and x[1]), zip(labels, labels_2))
             print 'Total examples, positive: ', len(dataset), sum(labels)
             # Nulls should be zeroes. Fill those first.
             dataset = dataset.fillna(0)
@@ -202,14 +199,16 @@ if __name__ == '__main__':
             best_err = 1.0
             best_c = 0
             best_chosen = []
-            possible_k = [20, 10, 5, 2]
+            possible_k = [20,]# 10, 5, 2]
             for k in possible_k:
                 if force_choice:
-                    chosen = ['gr_kla_dex_tag_count', '{0}pausing_ratio'.format(rep_str)]
+                    chosen = ['gr_kla_dex_tag_count', 'gr_dex_tag_count'.format(rep_str)]
                     #chosen = ['kla_{0}bucket_score'.format(rep_str), 'tag_count']
                 else:
-                    chosen = learner.get_best_features(dataset, labels, k=k)
-
+                    #chosen = learner.get_best_features(dataset, labels, k=k)
+                    chosen = ['gr_kla_dex_tag_count', 'gr_dex_tag_count',
+                              'rep_{0}pausing_ratio'.format(rep_str)]
+                    
                 num_features = len(chosen)
                 
                 err, c = learner.run_nested_cross_validation(dataset, labels, columns=chosen,

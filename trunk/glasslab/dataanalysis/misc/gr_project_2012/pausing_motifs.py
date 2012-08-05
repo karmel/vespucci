@@ -10,7 +10,7 @@ import sys
 
 if __name__ == '__main__':
     yzer = MotifAnalyzer()
-    dirpath = 'karmel/Desktop/Projects/Classes/Rotations/Finland 2012/GR Project/pausing_ratio_motifs'
+    dirpath = 'karmel/Desktop/Projects/Classes/Rotations/Finland 2012/GR Project/motifs'
     dirpath = yzer.get_path(dirpath)
 
     pausing_data = yzer.import_file(yzer.get_filename(dirpath, 'feature_vectors.txt'))
@@ -20,7 +20,7 @@ if __name__ == '__main__':
     except IndexError: min_ratio = 1.5 
         
     if False:
-        yzer.prep_files_for_homer(data, 'all_transcripts_preceding', dirpath, 
+        yzer.prep_files_for_homer(data, 'all_transcripts_promoter', dirpath, 
                                   center=False, reverse=False, preceding=True, size=200)
     
     
@@ -36,7 +36,7 @@ if __name__ == '__main__':
         
         print len(dataset)
         
-        if True:
+        if False:
             yzer.prep_files_for_homer(dataset, 'paused_{0}_{1}preceding_200'.format(min_ratio, rep_str), 
-                                      dirpath, 
+                                      yzer.get_filename(dirpath,'paused'), 
                                       center=False, reverse=False, preceding=True, size=200)
