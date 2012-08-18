@@ -21,8 +21,6 @@ if __name__ == '__main__':
     
     trans = []
     if True:
-        # Can we predict pausing ratio?
-        
         # Minimal ratio in KLA+Dex vs. KLA pausing
         try: min_ratio= float(sys.argv[1])
         except IndexError: min_ratio = -1
@@ -69,7 +67,7 @@ if __name__ == '__main__':
         
         ids = grouped[grouped['relevant_sets'] >= thresh]['glass_transcript_id']
         dataset = data[data['id'].isin(ids)]
-        if False:
+        if True:
             all_data = data[data['id'].isin(grouped['glass_transcript_id'])]
             yzer.prep_files_for_homer(all_data, 'all_transcripts_preceding'.format(thresh), 
                                           yzer.get_filename(dirpath, 'from_genes'), 
@@ -77,11 +75,12 @@ if __name__ == '__main__':
             yzer.prep_files_for_homer(all_data, 'all_transcripts_promoter'.format(thresh), 
                                           yzer.get_filename(dirpath, 'from_genes'), 
                                           center=False, reverse=False, preceding=False, size=200)
-        yzer.prep_files_for_homer(dataset, 'derepressed_in_{0}_kla_{1}_dex_over_kla_{2}_promoter_200'.format(
-                                                thresh, min_ratio, secondary_min_ratio), 
-                                      yzer.get_filename(dirpath,'from_genes','derepressed'), 
-                                      center=False, reverse=False, preceding=False, size=200)
-        yzer.prep_files_for_homer(dataset, 'derepressed_in_{0}_kla_{1}_dex_over_kla_{2}_preceding_200'.format(
-                                                thresh, min_ratio, secondary_min_ratio), 
-                                      yzer.get_filename(dirpath,'from_genes','derepressed'), 
-                                      center=False, reverse=False, preceding=True, size=200)
+        if False:
+            yzer.prep_files_for_homer(dataset, 'derepressed_in_{0}_kla_{1}_dex_over_kla_{2}_promoter_200'.format(
+                                                    thresh, min_ratio, secondary_min_ratio), 
+                                          yzer.get_filename(dirpath,'from_genes','derepressed'), 
+                                          center=False, reverse=False, preceding=False, size=200)
+            yzer.prep_files_for_homer(dataset, 'derepressed_in_{0}_kla_{1}_dex_over_kla_{2}_preceding_200'.format(
+                                                    thresh, min_ratio, secondary_min_ratio), 
+                                          yzer.get_filename(dirpath,'from_genes','derepressed'), 
+                                          center=False, reverse=False, preceding=True, size=200)

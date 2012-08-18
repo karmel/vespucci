@@ -61,8 +61,11 @@ class MotifAnalyzer(TranscriptAnalyzer):
             else:
                 data['transcription_end_alt'] = data[data['strand'] == first_strand]['transcription_start'] + size 
                 data['transcription_start_alt'] = data[data['strand'] == second_strand]['transcription_end'] - size
-            data['transcription_start'] = data['transcription_start_alt'].fillna(data['transcription_start']).apply(int)
-            data['transcription_end'] = data['transcription_end_alt'].fillna(data['transcription_end']).apply(int)
+            data['transcription_start'] = data['transcription_start_alt'].fillna(data['transcription_start'])
+            data['transcription_end'] = data['transcription_end_alt'].fillna(data['transcription_end'])
+        data['transcription_start'] = data['transcription_start'].apply(int)
+        data['transcription_end'] = data['transcription_end'].apply(int)
+        data['strand'] = data['strand'].apply(int)
             
         data.to_csv(region_filename, 
                     cols=['id','chr_name','transcription_start','transcription_end','strand'],
