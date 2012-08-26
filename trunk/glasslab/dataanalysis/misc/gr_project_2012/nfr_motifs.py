@@ -215,38 +215,41 @@ if __name__ == '__main__':
         # For motif finding
         # Peak files with transcripts
         motif_dirpath = yzer.get_and_create_path(dirpath, 'from_peaks',
-                                                 'motifs_gr_kla_dex_with_peaks/',
-                                                 'gr')
+                                                 'motifs_p65_kla/',
+                                                 'no_kla_dex')
 
-        
-        filename = yzer.get_filename(dirpath, 'from_peaks', 'gr_kla_dex_vectors_with_peaks_all.txt')
+        transcripts = yzer.import_file(yzer.get_filename(dirpath, 'transcript_vectors_kla_1_dex_over_kla_-0_58.txt'))
+        filename = yzer.get_filename(dirpath, 'from_peaks', 'p65_kla_dex_vectors_with_peaks.txt')
         
         data = yzer.import_file(filename)
         data = data.fillna(0)
         
         data = data[data['tag_count'] >= 10]
-        data = data[(data['touches'] == 't') | (data['relationship'] == 'is downstream of')]
+        #data = data[(data['touches'] == 't') | (data['relationship'] == 'is downstream of')]
         #data = data[(data['distal'] == 't')]
-        data = data[(data['refseq'] == 't') & (data['score'] >= 10)]
+        #data = data[(data['refseq'] == 't') & (data['score'] >= 10)]
         
+        data = data[data['tag_count_2'] < 10]
+        #data = data[data['tag_count_3'] < 10]
+        #data = data[data['tag_count_4'] < 10]
         
         size = 200
         if True:   
-            for name, dataset in (#('all', data,),
+            for name, dataset in (('all', data,),
                                   #('gr_kla_dex_over_dex_2', data[data['tag_count'] >= 2*data['tag_count_2']],),
                                   #('gr_kla_dex_over_dex_0_5', data[data['tag_count'] <= .5*data['tag_count_2']],),
-                                  #('p65_kla_dex_over_kla_2', data[(data['tag_count_3'] >= 2*data['tag_count_4']) & (data['tag_count_3'] >= 10)],),
+                                  #('p65_kla_dex_over_kla_2', data[(data['tag_count'] >= 2*data['tag_count_2'])],),
                                   #('p65_kla_dex_over_kla_0_5', data[(data['tag_count_3'] <= .5*data['tag_count_4']) & (data['tag_count_4'] >= 10)],),
                                   #('pu_1_kla_dex_over_kla_2', data[(data['tag_count_5'] >= 2*data['tag_count_6']) & (data['tag_count_5'] >= 10)],),
                                   #('pu_1_kla_dex_over_kla_0_5', data[(data['tag_count_5'] <= .5*data['tag_count_6']) & (data['tag_count_6'] >= 10)],),
                                   #('has_p65_kla_dex', data[data['tag_count_3'] >= 10],),
-                                  #('no_p65_kla_dex', data[data['tag_count_3'] < 10],),
+                                  #('no_p65_kla', data[data['tag_count_2'] < 10],),
                                   #('has_pu_1_kla_dex', data[data['tag_count_5'] >= 10],),
                                   #('no_pu_1_kla_dex', data[data['tag_count_5'] < 10],),
-                                  ('has_pu_1_p65_kla_dex', data[(data['tag_count_3'] >= 10) & (data['tag_count_5'] >= 10)],),
-                                  ('has_pu_1_no_p65_kla_dex', data[(data['tag_count_3'] < 10) & (data['tag_count_5'] >= 10)],),
-                                  ('has_p65_no_pu_1_kla_dex', data[(data['tag_count_3'] >= 10) & (data['tag_count_5'] < 10)],),
-                                  ('no_p65_pu_1_kla_dex', data[(data['tag_count_3'] < 10) & (data['tag_count_5'] < 10)],),
+                                  #('has_pu_1_p65_kla_dex', data[(data['tag_count_3'] >= 10) & (data['tag_count_5'] >= 10)],),
+                                  #('has_pu_1_no_p65_kla_dex', data[(data['tag_count_3'] < 10) & (data['tag_count_5'] >= 10)],),
+                                  #('has_p65_no_pu_1_kla_dex', data[(data['tag_count_3'] >= 10) & (data['tag_count_5'] < 10)],),
+                                  #('no_p65_pu_1_kla_dex', data[(data['tag_count_3'] < 10) & (data['tag_count_5'] < 10)],),
                                   ):
                 # We have multiple copies of peaks if they align to different transcripts
                 curr_path = yzer.get_and_create_path(motif_dirpath, name)

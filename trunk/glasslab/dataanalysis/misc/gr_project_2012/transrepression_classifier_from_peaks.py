@@ -50,7 +50,27 @@ if __name__ == '__main__':
     
     data = learner.custom_clean(transcripts, peaks)
     
-    if True:
+    
+    if False:
+        # Output some gene lists.
+        transcripts['gene_names'] = transcripts['gene_names'].apply(lambda x: x.strip('{').strip('}'))
+        sub_trans = transcripts[transcripts['relevant_sets'] >= 2]
+        sub_trans = sub_trans.sort(columns=['relevant_sets','gene_names'], ascending=False)
+        sub_trans.to_csv(learner.get_filename(dirpath,'transrepressed_genes.txt'), sep='\t',  
+                           cols=['glass_transcript_id', 'chr_name', 'transcription_start', 'transcription_end', 
+                               'strand', 'gene_names', 'relevant_sets', 'kla_relevant_sets', 'length',  
+                               'refseq', 'distal', 'transcript_score', 'has_infrastructure', 
+                               'gr_dex_tag_count', 'gr_kla_dex_tag_count', 'p65_kla_tag_count',
+                               'p65_kla_dex_tag_count', 'kla_lfc', 'kla_1_lfc', 'kla_2_lfc', 'kla_3_lfc', 
+                               'kla_4_lfc', 'kla_dex_lfc', 'kla_dex_1_lfc', 'kla_dex_2_lfc', 'kla_dex_3_lfc', 
+                               'kla_dex_4_lfc', 'dex_over_kla_lfc', 'dex_over_kla_1_lfc', 'dex_over_kla_2_lfc', 
+                               'dex_over_kla_3_lfc', 'dex_over_kla_4_lfc', 'dmso_tag_count', 'dmso_1_tag_count', 
+                               'dmso_2_tag_count', 'dmso_3_tag_count', 'dmso_4_tag_count', 'kla_tag_count', 
+                               'kla_1_tag_count', 'kla_2_tag_count', 'kla_3_tag_count', 'kla_4_tag_count', 
+                               'kla_dex_tag_count', 'kla_dex_1_tag_count', 'kla_dex_2_tag_count', 
+                               'kla_dex_3_tag_count', 'kla_dex_4_tag_count'], header=True, index=False)
+    
+    if False:
         # How about transrepression or derepression?
         try: force_choice = sys.argv[1].lower() == 'force'
         except IndexError: force_choice = False
