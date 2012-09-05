@@ -215,33 +215,44 @@ if __name__ == '__main__':
         # For motif finding
         # Peak files with transcripts
         motif_dirpath = yzer.get_and_create_path(dirpath, 'from_peaks',
-                                                 'motifs_p65_kla_dex/',
-                                                 'no_nearby_p65_kla')
+                                                 'motifs_gr_kla_dex/')
 
-        transcripts = yzer.import_file(yzer.get_filename(dirpath, 'transcript_vectors_kla_1_dex_over_kla_-0_58.txt'))
-        filename = yzer.get_filename(dirpath, 'from_peaks', 'p65_kla_dex_vectors_with_peak_distances.txt')
+        transcripts = yzer.import_file(yzer.get_filename(dirpath, 'transcript_vectors.txt'))
+        transcripts['glass_transcript_id'] = transcripts['id']
+        
+        filename = yzer.get_filename(dirpath, 'from_peaks', 'gr_kla_dex_vectors_with_peak_distances.txt')
         
         data = yzer.import_file(filename)
         
-        ids_to_avoid = data[(data['distance_to_tss_2'].isnull() == False) & (data['distance_to_peak_2'] < 400)]['id']
+        ids_to_avoid = data[(data['distance_to_tss_2'].isnull() == False) & (data['distance_to_peak_2'] <= 1000)]['id']
         
         data = data.fillna(0)
         
-        data = data[data['tag_count'] >= 30]
-        #data = data[(data['touches'] == 't') | (data['relationship'] == 'is downstream of')]
+        data = data[data['tag_count'] >= 10]
+        #data = data[(data['touches'] == 't')] | (data['relationship'] == 'is downstream of')]
         #data = data[(data['distal'] == 't')]
         #data = data[(data['refseq'] == 't') & (data['score'] >= 10)]
         
-        #data = data[data['tag_count_2'] < 10]
-        data = data[data['id'].isin(ids_to_avoid) == False]
+        #data = data[data['tag_count_2'] == 0]
+        #data = data[data['id'].isin(ids_to_avoid) == False]
         
         size = 200
         if True:   
             for name, dataset in (('all', data,),
-                                  #('no_nearby_p65_kla_dex', data[data['id'].isin(ids_to_avoid) == False],),
+                                  ('no_nearby_gr_dex', data[data['id'].isin(ids_to_avoid) == False],),
                                   ('refseq', data[(data['score'] > 10) & (data['refseq'] == 't') 
                                                   & (data['touches'] == 't') | (data['relationship'] == 'is downstream of')],),
                                   ('distal', data[(data['distal'] == 't')],),
+                                  ('with_p65_kla_dex', data[data['tag_count_3'] >= 10]),
+                                  ('no_p65_kla_dex', data[data['tag_count_3'] < 10]),
+                                  ('with_p65_kla', data[data['tag_count_4'] >= 10]),
+                                  ('no_p65_kla', data[data['tag_count_4'] < 10]),
+                                  ('with_pu_1_kla_dex', data[data['tag_count_5'] >= 10]),
+                                  ('no_pu_1_kla_dex', data[data['tag_count_5'] < 10]),
+                                  ('gt_gr_dex', data[data['tag_count'] > 1.2*data['tag_count_2']]),
+                                  ('lt_gr_dex', data[data['tag_count']*1.2 < data['tag_count_2']]),
+                                  ('with_gr_dex', data[data['tag_count_2'] >= 10]),
+                                  ('no_gr_dex', data[data['tag_count_2'] < 10])
                                   ):
                 # We have multiple copies of peaks if they align to different transcripts
                 curr_path = yzer.get_and_create_path(motif_dirpath, name)
