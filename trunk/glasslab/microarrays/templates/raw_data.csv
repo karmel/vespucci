@@ -1,3 +1,0 @@
-"Probe ID","Gene name",{% for orig in original_samples %}"{{ orig }}",{% endfor %}{% for test, control in samples %}"{{ test }} vs. {{ control }}",{% endfor %}{% for first, second in compared_samples %}"Differential: {{ first }} - {{ second }}",{% endfor %}{% if include_annotation %}"Other Information"{% endif %}
-{% for row_class, gene, row, differentials, original in table_cells %}"{{ gene.probe_id }}","{{ gene.gene_name }}",{% for orig in original %}"{{ orig }}",{% endfor %}{% for val in row %}"{{ val }}",{% endfor %}{% for val in differentials %}"{{ val }}",{% endfor %}{% if include_annotation %}"{% if gene.protein_name %}{{ gene.protein_name }};{% else %}{{ gene.description }};{% endif %}{% for p in gene.processes %}{{ p }}; {% endfor %}"{% endif %}
-{% endfor %}

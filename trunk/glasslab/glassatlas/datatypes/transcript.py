@@ -329,7 +329,7 @@ class GlassTranscript(TranscriptBase):
                 WHERE t.chromosome_id = {2}
             group by t.id, t.strand, t.transcription_start, tag.start, t.transcription_end, tag."end"
             ) der
-            group by id, basepair;
+            group by glass_transcript_id, basepair;
             '''.format(sequencing_run.id, sequencing_run.source_table, chr_id)
 
             execute_query(query)

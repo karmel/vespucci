@@ -1,2 +1,0 @@
-{% for field in field_names %}{{ field.0 }}	{% endfor %}{% for row in rows %}
-{% for cell in row %}{{ cell|safe }}	{% endfor %}{% endfor %}
