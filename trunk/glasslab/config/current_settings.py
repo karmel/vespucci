@@ -19,8 +19,6 @@ GENOME_CHROMOSOMES = range(1,23)
 STAGING = '' # Set to the appropriate suffix during DB staging.
 STAGING_SUFFIX = '_staging'
 
-GENOME_ASSEMBLY_PATHS = {'mm9': '/Volumes/Unknowme/kallison/Genomes/mm9/fasta',}
-
 #####################################
 # Databases
 #####################################

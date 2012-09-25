@@ -19,14 +19,13 @@ import subprocess
 import traceback
 
 from django.db import connection, transaction
-from glasslab.sequencing.datatypes.tag import GlassTag
+from glasslab.sequencing.tag import GlassTag
 from multiprocessing import Pool
 from glasslab.config import current_settings
 import shutil
 from glasslab.sequencing.pipeline.annotate_base import check_input, _print,\
     call_bowtie, create_schema, trim_sequences, clean_bowtie_file
-from glasslab.utils.database import execute_query_without_transaction,\
-    restart_server
+from glasslab.utils.database import execute_query_without_transaction
 
 class FastqOptionParser(GlassOptionParser):
     options = [

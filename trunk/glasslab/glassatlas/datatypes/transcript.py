@@ -98,10 +98,7 @@ def wrap_remove_rogue_run(cls, chr_list): wrap_errors(cls._remove_rogue_run, chr
 def wrap_stitch_together_transcripts(cls, chr_list, *args): wrap_errors(cls._stitch_together_transcripts, chr_list, *args)
 def wrap_set_density(cls, chr_list, *args): wrap_errors(cls._set_density, chr_list, *args)
 def wrap_draw_transcript_edges(cls, chr_list): wrap_errors(cls._draw_transcript_edges, chr_list)
-def wrap_set_score_thresholds(cls, chr_list, *args): wrap_errors(cls._set_score_thresholds, chr_list, *args)
 def wrap_set_scores(cls, chr_list): wrap_errors(cls._set_scores, chr_list)
-def wrap_mark_as_spliced(cls, chr_list): wrap_errors(cls._mark_as_spliced, chr_list)
-def wrap_associate_nucleotides(cls, chr_list): wrap_errors(cls._associate_nucleotides, chr_list)
 def wrap_force_vacuum(cls, chr_list): wrap_errors(cls._force_vacuum, chr_list)
 
 class CellTypeBase(object):
@@ -209,8 +206,6 @@ class TranscriptionRegionBase(TranscriptModelBase):
             raise Exception('This is not a table marked as "standard," and will not be added to the transcript set.')
         if sequencing_run.type.strip() == 'Gro-Seq':
             cls.add_transcripts_from_groseq(tag_table, sequencing_run)
-        elif sequencing_run.type.strip() == 'RNA-Seq':
-            cls.add_transcribed_rna_from_rnaseq(tag_table, sequencing_run)
             
     ################################################
     # Maintenance
@@ -241,31 +236,6 @@ class TranscriptionRegionBase(TranscriptModelBase):
             execute_query_without_transaction('VACUUM ANALYZE "%s_%d";' % (
                                                                     cls.cell_base.glass_transcript_prep._meta.db_table, 
                                                                     chr_id))
-
-    @classmethod
-    def toggle_autovacuum(cls, on=True):
-        '''
-        Toggle per-table autovacuum enabled state.
-        '''
-        for model in cls.cell_base.get_transcript_models():
-            execute_query('ALTER TABLE "%s" SET (autovacuum_enabled=%s);' \
-                    % (model._meta.db_table, on and 'true' or 'false'))
-            
-    @classmethod
-    def turn_on_autovacuum(cls):
-        '''
-        Return autovacuum to normal, enabled state once all processing is done.
-        '''
-        cls.toggle_autovacuum(on=True)
-    
-    @classmethod
-    def turn_off_autovacuum(cls):
-        '''
-        We want to be able to turn off autovacuuming on a table-by-table basis
-        when we are doing large-scale imports of data to prevent the autovacuum
-        daemon from spinning up and using up resources before we're ready.
-        '''
-        cls.toggle_autovacuum(on=False)
             
 class TranscriptBase(TranscriptionRegionBase):
     '''
@@ -425,70 +395,6 @@ class GlassTranscript(TranscriptBase):
                        current_settings.CURRENT_CELL_TYPE.lower(),
                        current_settings.STAGING, chr_id)
             execute_query(query) 
-    @classmethod
-    def mark_as_spliced(cls):
-        multiprocess_all_chromosomes(wrap_mark_as_spliced, cls)
-        #wrap_set_scores(cls,[21, 22])
-    
-    @classmethod
-    def _mark_as_spliced(cls, chr_list):
-        from glasslab.glassatlas.datatypes.transcribed_rna import MIN_SCORE_RNA
-        for chr_id in chr_list:
-            print 'Marking transcripts as spliced for chromosome %d' % chr_id
-            query = """
-                SELECT glass_atlas_%s_%s%s.mark_transcripts_spliced(%d, %d);
-                """ % (current_settings.TRANSCRIPT_GENOME,
-                       current_settings.CURRENT_CELL_TYPE.lower(),
-                       current_settings.STAGING, chr_id, 
-                       MIN_SCORE_RNA)
-            execute_query(query) 
-    
-    @classmethod
-    def associate_nucleotides(cls):
-        multiprocess_all_chromosomes(wrap_associate_nucleotides, cls)
-        #wrap_associate_nucleotides(cls,[1])
-        
-    @classmethod
-    def _associate_nucleotides(cls, chr_list):
-        '''
-        Pull and store sequence strings for transcripts for only those transcripts
-        that have been updated (score is null).
-        
-        Sequences information is stored in the local filesystem.
-        '''
-        for chr_id in chr_list:
-            connection.close()
-            
-            print 'Obtaining coding sequence for transcripts in chromosome %d' % chr_id
-            path = current_settings.GENOME_ASSEMBLY_PATHS[current_settings.REFERENCE_GENOME]
-            path = os.path.join(path, '%s.fa' % Chromosome.objects.get(id=chr_id).name.strip())
-            
-            fasta = map(lambda x: x[:-1], file(path).readlines()) # Read file and ditch '\n'
-            fasta = fasta[1:] # Ditch the first line, which is the chromosome identifier
-            length = len(fasta[0])
-            
-            nucleotides_model = cls.cell_base.glass_transcript_nucleotides
-            for transcript in cls.objects.filter(chromosome__id=chr_id, score__isnull=True):
-                start = transcript.transcription_start
-                stop = transcript.transcription_end
-                beginning = fasta[start//length][start % length - 1:]
-                end = fasta[stop//length][:stop % length]
-                middle = fasta[(start//length + 1):(stop//length)]
-                seq = (beginning + ''.join(middle) + end).upper()
-                try: sequence = nucleotides_model.objects.get(glass_transcript=transcript)
-                except nucleotides_model.DoesNotExist:
-                    sequence = nucleotides_model(glass_transcript=transcript)
-                sequence.sequence = seq
-                sequence.save()
-            connection.close()
-            
-    @classmethod
-    def mark_all_reloaded(cls):
-        '''
-        Mark all transcripts as reloaded. Called by external processes that have reloaded runs appropriately.
-        '''
-        connection.close()
-        cls.objects.all().update(requires_reload=False)
     
 class FilteredGlassTranscriptManager(models.Manager):
     def get_query_set(self):
