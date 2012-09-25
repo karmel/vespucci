@@ -75,8 +75,6 @@ if __name__ == '__main__':
         if options.stitch_processes:
             current_settings.ALLOWED_PROCESSES = curr_processes
     
-        print 'Restarting server...'
-        restart_server()
     elif options.set_density:
         cell_base.glass_transcript.set_density(allow_extended_gaps=allow_extended_gaps)
     

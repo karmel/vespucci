@@ -185,8 +185,6 @@ if __name__ == '__main__':
         GlassTag.set_table_name('tag_' + file_name)
         add_indices()
     else:
-        #_print('Restarting server...')
-        #restart_server()
         _print('Skipping creation of tag table')
         GlassTag.set_table_name('tag_' + file_name)
         GlassTag.set_refseq()
