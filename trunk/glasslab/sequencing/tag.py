@@ -4,13 +4,14 @@ Created on Sep 27, 2010
 @author: karmel
 '''
 from __future__ import division
-from django.db import models
+from django.db import models, connection
 from glasslab.utils.datatypes.genome_reference import Chromosome
 from glasslab.config import current_settings
 from glasslab.utils.datatypes.basic_model import DynamicTable, BoxField
 from glasslab.utils.database import execute_query
 from glasslab.glassatlas.datatypes.transcript import multiprocess_all_chromosomes,\
     wrap_errors
+from glasslab.glassatlas.datatypes.metadata import SequencingRun
 
     
 def wrap_partition_tables(cls, chr_list): wrap_errors(cls._create_partition_tables, chr_list)
@@ -269,3 +270,15 @@ class GlassTag(DynamicTable):
                    cls.name, chr_id, cls._meta.db_table, chr_id,
                    cls._meta.db_table, chr_id)
             execute_query(update_query)
+
+    @classmethod 
+    def add_record_of_tags(cls):
+        '''
+        Add SequencingRun record with the details of this run.
+        
+        Should be called only after all tags have been added.
+        '''
+        connection.close()
+        # If possible, retrieve bowtie stats
+        s, created = SequencingRun.objects.get_or_create(source_table=cls._meta.db_table)
+        return s

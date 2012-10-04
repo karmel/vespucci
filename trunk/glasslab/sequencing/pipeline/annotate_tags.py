@@ -121,7 +121,8 @@ def add_indices():
     GlassTag.add_indices()
     execute_query_without_transaction('VACUUM ANALYZE "%s";' % (GlassTag._meta.db_table))
     GlassTag.set_refseq()
-        
+    GlassTag.add_record_of_tags()
+    
 if __name__ == '__main__':    
     parser = FastqOptionParser()
     options, args = parser.parse_args()
@@ -151,5 +152,4 @@ if __name__ == '__main__':
     else:
         _print('Skipping creation of tag table')
         GlassTag.set_table_name('tag_' + file_name)
-        GlassTag.set_refseq()
         

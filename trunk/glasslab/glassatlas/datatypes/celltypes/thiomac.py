@@ -5,10 +5,8 @@ Created on Dec 22, 2010
 '''
 from glasslab.glassatlas.datatypes.transcript import GlassTranscript, \
     FilteredGlassTranscript, GlassTranscriptNucleotides, GlassTranscriptSource, \
-    GlassTranscriptSequence, GlassTranscriptConserved, GlassTranscriptPatterned, \
-    GlassTranscriptNonCoding, CellTypeBase, GlassTranscriptSourcePrep, \
-    GlassTranscriptPrep, GlassTranscriptInfrastructure, GlassTranscriptDuped, \
-    FilteredGlassTranscriptManager
+    GlassTranscriptSequence, GlassTranscriptNonCoding, CellTypeBase, \
+    GlassTranscriptSourcePrep, GlassTranscriptPrep, FilteredGlassTranscriptManager
 from glasslab.config import current_settings
 
 from django.db import models
@@ -34,22 +32,7 @@ class ThioMacBase(CellTypeBase):
     def glass_transcript_sequence(self): return GlassTranscriptSequenceThioMac
     @property
     def glass_transcript_non_coding(self): return GlassTranscriptNonCodingThioMac
-    @property
-    def glass_transcript_infrastructure(self): return GlassTranscriptInfrastructureThioMac
-    @property
-    def glass_transcript_patterned(self): return GlassTranscriptPatternedThioMac
-    @property
-    def glass_transcript_duped(self): return GlassTranscriptDupedThioMac
-    @property
-    def glass_transcript_conserved(self): return GlassTranscriptConservedThioMac
-    @property
-    def glass_transcribed_rna(self): return GlassTranscribedRnaThioMac
-    @property
-    def glass_transcribed_rna_source(self): return GlassTranscribedRnaSourceThioMac
-    @property
-    def peak_feature(self): return PeakFeatureThioMac
-    @property
-    def glass_transcript_label(self): return GlassTranscriptLabelThioMac
+
     
 class GlassTranscriptThioMac(GlassTranscript):
     cell_base = ThioMacBase()
