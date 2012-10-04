@@ -11,10 +11,8 @@ from glasslab.utils.datatypes.genome_reference import Chromosome,\
 from glasslab.glassatlas.datatypes.metadata import SequencingRun
 from glasslab.utils.datatypes.basic_model import BoxField, GlassModel
 from multiprocessing import Pool
-from glasslab.utils.database import execute_query,\
-    execute_query_without_transaction, fetch_rows
+from glasslab.utils.database import execute_query, fetch_rows
 import os
-from random import randint
 from django.db.models.aggregates import Max
 from datetime import datetime
 import traceback
@@ -290,7 +288,6 @@ class GlassTranscript(TranscriptBase):
     @classmethod
     def set_scores(cls):
         multiprocess_all_chromosomes(wrap_set_scores, cls)
-        #wrap_set_scores(cls,[21, 22])
     
     @classmethod
     def _set_scores(cls, chr_list):
@@ -346,7 +343,7 @@ class FilteredGlassTranscript(object):
                     + '"Glass Atlas Transcripts {1} strand" useScore=1 itemRgb=On\n').format(strand, strand_char)
         
         for trans in transcripts:
-            # chrom start end name score strand thick_start thick_end colors? exon_count csv_exon_sizes csv_exon_starts
+            # chrom start end name score strand thick_start thick_end colors?
             # Make sure we don't go beyond the length of the chromosome.
             # Transcripts shouldn't due to previous processing, but just in case, we check here as well.
             start = max(0,trans.transcription_start)
