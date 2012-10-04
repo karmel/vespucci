@@ -20,8 +20,8 @@ def check_input(options):
     '''
     Check that required arguments and directories are in place.
     '''
-    if not options.file_path and not getattr(options, 'bowtie_table', None) and not getattr(options, 'skip_tag_table', None):
-            raise Exception('Please make sure you have supplied an input file.')
+    if not options.file_path and not getattr(options, 'prep_table', None) and not getattr(options, 'skip_tag_table', None):
+        raise Exception('Please make sure you have supplied an input file.')
         
     if options.file_path and not os.path.exists(options.file_path):
         raise Exception('Sorry, but the specified input file cannot be found: %s' % os.path.realpath(options.file_path))
@@ -31,12 +31,12 @@ def check_input(options):
         _print('Creating output directory %s' % options.output_dir)
     
     if not options.schema_name: 
-        options.schema_name = options.project_name or current_settings.CURRENT_SCHEMA
-    current_settings.CURRENT_SCHEMA = options.schema_name
+        options.schema_name = current_settings.CURRENT_SCHEMA
+    else: current_settings.CURRENT_SCHEMA = options.schema_name
     
     if options.genome: current_settings.GENOME = options.genome
     
-    # Get a file name prefix for use with generated files, using FASTQ as base
+    # Get a file name prefix for use with generated files, using input file as base
     file_name = options.project_name or '.'.join(os.path.basename(options.file_path).split('.')[:-1])
     
     return file_name

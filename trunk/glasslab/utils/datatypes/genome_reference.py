@@ -23,7 +23,7 @@ class Chromosome(GlassModel):
     length = models.IntegerField(max_length=25, blank=False)
     
     class Meta: 
-        db_table    = 'genome_reference_%s"."chromosome' % current_settings.REFERENCE_GENOME
+        db_table    = 'genome_reference_%s"."chromosome' % current_settings.GENOME
         app_label   = 'Genome_Reference'
     
     def __unicode__(self): return self.name
@@ -35,7 +35,7 @@ class SequenceIdentifier(GlassModel):
     sequence_identifier = models.CharField(max_length=50, blank=False)
     
     class Meta: 
-        db_table    = 'genome_reference_%s"."sequence_identifier' % current_settings.REFERENCE_GENOME
+        db_table    = 'genome_reference_%s"."sequence_identifier' % current_settings.GENOME
         app_label   = 'Genome_Reference'
     
     def __unicode__(self): return self.sequence_identifier
@@ -67,7 +67,7 @@ class SequenceDetail(GlassModel):
     pfam_id             = models.CharField(max_length=100, blank=True)
     
     class Meta: 
-        db_table    = 'genome_reference_%s"."sequence_detail' % current_settings.REFERENCE_GENOME
+        db_table    = 'genome_reference_%s"."sequence_detail' % current_settings.GENOME
         app_label   = 'Genome_Reference'
     
     def __unicode__(self): 
@@ -92,37 +92,12 @@ class SequenceTranscriptionRegion(GlassModel):
     start_end           = BoxField(null=True, default=None, help_text='This is a placeholder for the PostgreSQL box type.')
     
     class Meta: 
-        db_table    = 'genome_reference_%s"."sequence_transcription_region' % current_settings.REFERENCE_GENOME
+        db_table    = 'genome_reference_%s"."sequence_transcription_region' % current_settings.GENOME
         app_label   = 'Genome_Reference'
 
     def __unicode__(self):
         return 'Sequence Transcription Region for %s' % self.sequence_identifier.sequence_identifier.strip()
     
-class SequenceExon(GlassModel):
-    '''
-    Mappings of transcription regions and coding sites.
-    '''
-    sequence_transcription_region = models.ForeignKey(SequenceTranscriptionRegion)
-    exon_start = models.IntegerField(max_length=12)
-    exon_end   = models.IntegerField(max_length=12)    
-    frame      = models.IntegerField(max_length=5, help_text='Number o nucleotides needed from prior exon to make a complete amino acid at the start of this exon.')
-    start_end  = BoxField(null=True, default=None, help_text='This is a placeholder for the PostgreSQL box type.')
-    class Meta: 
-        db_table    = 'genome_reference_%s"."sequence_exon' % current_settings.REFERENCE_GENOME
-        app_label   = 'Genome_Reference'
-        
-class SequenceKeggPathway(GlassModel):
-    '''
-    Mappings of transcription regions and coding sites.
-    '''
-    sequence_identifier = models.ForeignKey(SequenceIdentifier)
-    kegg_pathway        = models.ForeignKey(KeggPathway)
-    map_location        = models.CharField(max_length=50, help_text='Mappable identifier for this sequence and pathway; can be used in Kegg URLs.')
-    
-    class Meta: 
-        db_table    = 'genome_reference_%s"."sequence_kegg_pathway' % current_settings.REFERENCE_GENOME
-        app_label   = 'Genome_Reference'
-
 class NonCodingRna(GlassModel):
     '''
     Unique name and type for ncRNA
@@ -132,7 +107,7 @@ class NonCodingRna(GlassModel):
     description         = models.CharField(max_length=100)
     
     class Meta: 
-        db_table    = 'genome_reference_%s"."non_coding_rna' % current_settings.REFERENCE_GENOME
+        db_table    = 'genome_reference_%s"."non_coding_rna' % current_settings.GENOME
         app_label   = 'Genome_Reference'
         verbose_name = 'Non coding RNA'
         
@@ -164,77 +139,8 @@ class NonCodingTranscriptionRegion(GlassModel):
     start_end           = BoxField(null=True, default=None, help_text='This is a placeholder for the PostgreSQL box type.')
     
     class Meta: 
-        db_table    = 'genome_reference_%s"."non_coding_transcription_region' % current_settings.REFERENCE_GENOME
+        db_table    = 'genome_reference_%s"."non_coding_transcription_region' % current_settings.GENOME
         app_label   = 'Genome_Reference'
 
     def __unicode__(self):
         return '%s Transcription Region for %s' % (self.non_coding_rna.type.strip(), self.non_coding_rna.description.strip())
-    
-class PatternedTranscriptionRegion(GlassModel):
-    '''
-    Mappings of patterns-- i.e., repeats-- onto transcription regions.
-    '''
-    type                = models.CharField(max_length=20)
-    name                = models.CharField(max_length=100)
-    chromosome          = models.ForeignKey(Chromosome)
-    strand              = models.IntegerField(max_length=1, help_text='0 for +, 1 for -. Default NULL')
-    transcription_start = models.IntegerField(max_length=12)
-    transcription_end   = models.IntegerField(max_length=12)
-    
-    start_end           = BoxField(null=True, default=None, help_text='This is a placeholder for the PostgreSQL box type.')
-    
-    class Meta: 
-        db_table    = 'genome_reference_%s"."patterned_transcription_region' % current_settings.REFERENCE_GENOME
-        app_label   = 'Genome_Reference'
-
-    def __unicode__(self):
-        return 'Patterned Transcription Region for %s %s' % (self.type, self.name.strip())
-
-class DupedTranscriptionRegion(GlassModel):
-    '''
-    Mappings of segmental duplication regions from the UCSC DB
-    '''
-    name                = models.CharField(max_length=100)
-    chromosome          = models.ForeignKey(Chromosome)
-    strand              = models.IntegerField(max_length=1, help_text='0 for +, 1 for -. Default NULL')
-    transcription_start = models.IntegerField(max_length=12)
-    transcription_end   = models.IntegerField(max_length=12)
-    
-    start_end           = BoxField(null=True, default=None, help_text='This is a placeholder for the PostgreSQL box type.')
-    
-    other_chromosome          = models.ForeignKey(Chromosome)
-    other_transcription_start = models.IntegerField(max_length=12)
-    other_transcription_end   = models.IntegerField(max_length=12)
-    
-    class Meta: 
-        db_table    = 'genome_reference_%s"."duped_transcription_region' % current_settings.REFERENCE_GENOME
-        app_label   = 'Genome_Reference'
-
-    def __unicode__(self):
-        return 'Duped Transcription Region: %s' % self.name.strip()
-    
-class ConservedTranscriptionRegion(GlassModel):
-    '''
-    Coservation records for transcription regions determined by the phastCons HMM algorithm.
-    
-    Scores are 0 - 1000, higher indicating more likely to be a conserved region.
-    
-    More on the scores: http://genome.ucsc.edu/goldenPath/help/phastCons.html
-    
-    Siepel A and Haussler D (2005). Phylogenetic hidden Markov models. In R. Nielsen, ed., 
-    Statistical Methods in Molecular Evolution, pp. 325-351, Springer, New York.
-    
-    '''
-    chromosome          = models.ForeignKey(Chromosome)
-    transcription_start = models.IntegerField(max_length=12)
-    transcription_end   = models.IntegerField(max_length=12)
-    score               = models.IntegerField(max_length=5)
-    
-    start_end           = BoxField(null=True, default=None, help_text='This is a placeholder for the PostgreSQL box type.')
-    
-    class Meta: 
-        db_table    = 'genome_reference_%s"."conserved_transcription_region' % current_settings.REFERENCE_GENOME
-        app_label   = 'Genome_Reference'
-
-    def __unicode__(self):
-        return 'Conserved Transcription Region with score %d' % self.score
