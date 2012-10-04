@@ -1,4 +1,3 @@
-#!/bin/bash
 '''
 Created on Oct 18, 2010
 

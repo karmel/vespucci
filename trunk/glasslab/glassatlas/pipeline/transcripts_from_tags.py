@@ -8,7 +8,6 @@ from glasslab.sequencing.tag import GlassTag
 from glasslab.utils.scripting import GlassOptionParser
 from optparse import make_option
 from glasslab.config import current_settings
-from glasslab.utils.database import restart_server
 
 class TranscriptsFromTagsParser(GlassOptionParser):
     options = [
@@ -42,11 +41,6 @@ class TranscriptsFromTagsParser(GlassOptionParser):
 if __name__ == '__main__':
     parser = TranscriptsFromTagsParser()
     options, args = parser.parse_args()
-    
-    run_from_cammand_line = True 
-    if not run_from_cammand_line:
-        options.schema_name = 'thiomac_groseq_nathan_2010_10'
-        options.tag_table = 'tag_ncor_ko_kla_1h'
     
     if options.processes:
         current_settings.ALLOWED_PROCESSES = int(options.processes)
