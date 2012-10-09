@@ -8,6 +8,7 @@ from glasslab.sequencing.tag import GlassTag
 from glasslab.utils.scripting import GlassOptionParser
 from optparse import make_option
 from glasslab.config import current_settings
+from glasslab.utils.database import discard_temp_tables
 
 class TranscriptsFromTagsParser(GlassOptionParser):
     options = [
@@ -81,4 +82,4 @@ if __name__ == '__main__':
     if options.output_dir:
         cell_base.filtered_glass_transcript.generate_bed_file(options.output_dir)
         
-    
+    discard_temp_tables()

@@ -35,3 +35,10 @@ def fetch_rows(query, return_cursor=False, using='default'):
     if return_cursor: return result, cursor
     connection.close()
     return result
+
+def discard_temp_tables(using='default'):
+    '''
+    Drops all temporary tables created in the current session.
+    '''
+    execute_query_without_transaction('DISCARD TEMP;', using=using)
+    
