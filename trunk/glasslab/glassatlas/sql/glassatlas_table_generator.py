@@ -271,3 +271,33 @@ class GlassAtlasTableGenerator(object):
             FOR EACH ROW EXECUTE PROCEDURE glass_atlas_{0}_{1}{suffix}.glass_transcript_insert_trigger();
 
         """.format(self.genome, self.cell_type, suffix=self.staging)
+        
+        
+    def region_relationship_types(self):
+        return """
+        CREATE TYPE "glass_atlas_{0}_{1}{suffix}"."glass_transcript_transcription_region_relationship" 
+        AS ENUM('contains','is contained by','overlaps with','is equal to');
+        """.format(self.genome, self.cell_type, suffix=self.staging)
+        
+    def table_region_association(self, region_type):
+        return """
+        CREATE TABLE "glass_atlas_{0}_{1}{suffix}"."glass_transcript_{type}" (
+            id integer NOT NULL,
+            glass_transcript_id integer,
+            {type}_transcription_region_id integer,
+            relationship "glass_atlas_{0}_{1}{suffix}"."glass_transcript_transcription_region_relationship",
+            major boolean
+        );
+        GRANT ALL ON TABLE "glass_atlas_{0}_{1}{suffix}"."glass_transcript_{type}" TO  "glass";
+        CREATE SEQUENCE "glass_atlas_{0}_{1}{suffix}"."glass_transcript_{type}_id_seq"
+            START WITH 1
+            INCREMENT BY 1
+            NO MINVALUE
+            NO MAXVALUE
+            CACHE 1;
+        ALTER SEQUENCE "glass_atlas_{0}_{1}{suffix}"."glass_transcript_{type}_id_seq" OWNED BY "glass_atlas_{0}_{1}{suffix}"."glass_transcript_{type}".id;
+        ALTER TABLE "glass_atlas_{0}_{1}{suffix}"."glass_transcript_{type}" ALTER COLUMN id SET DEFAULT nextval('"glass_atlas_{0}_{1}{suffix}"."glass_transcript_{type}_id_seq"'::regclass);
+        ALTER TABLE ONLY "glass_atlas_{0}_{1}{suffix}"."glass_transcript_{type}" ADD CONSTRAINT glass_transcript_{type}_pkey PRIMARY KEY (id);
+        CREATE INDEX glass_transcript_{type}_transcript_idx ON "glass_atlas_{0}_{1}{suffix}"."glass_transcript_{type}" USING btree (glass_transcript_id);
+        CREATE INDEX glass_transcript_{type}_major_idx ON "glass_atlas_{0}_{1}{suffix}"."glass_transcript_{type}" USING btree (major);
+        """.format(self.genome, self.cell_type, type=region_type, suffix=self.staging)
