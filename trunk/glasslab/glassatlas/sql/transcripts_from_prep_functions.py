@@ -3,27 +3,24 @@ Created on Nov 12, 2010
 
 @author: karmel
 
-Convenience script for transcript functions.
+Prep table functions, extracted for ease of reading.
 '''
-genome = 'mm9'
-cell_type='thiomac'
-def sql(genome, cell_type):
+def sql(genome, cell_type, suffix):
     return """
--- Not run from within the codebase, but kept here in case functions need to be recreated.
 
-CREATE OR REPLACE FUNCTION glass_atlas_{0}_{1}_staging.draw_transcript_edges(chr_id integer)
+CREATE OR REPLACE FUNCTION glass_atlas_{0}_{1}{suffix}.draw_transcript_edges(chr_id integer)
 RETURNS VOID AS $$
 DECLARE
     strand integer;
-    last_trans glass_atlas_{0}_{1}_staging.glass_transcript;
-    trans glass_atlas_{0}_{1}_staging.glass_transcript;
-    transcript glass_atlas_{0}_{1}_staging.glass_transcript;
+    last_trans glass_atlas_{0}_{1}{suffix}.glass_transcript;
+    trans glass_atlas_{0}_{1}{suffix}.glass_transcript;
+    transcript glass_atlas_{0}_{1}{suffix}.glass_transcript;
 BEGIN
     FOR strand in 0..1
     LOOP
         last_trans := NULL;
         FOR trans IN 
-            SELECT * FROM glass_atlas_{0}_{1}_staging.get_close_transcripts(chr_id, strand)
+            SELECT * FROM glass_atlas_{0}_{1}{suffix}.get_close_transcripts(chr_id, strand)
         LOOP
             -- Initialize the transcript to be saved if necessary
             IF last_trans IS NULL THEN 
@@ -36,29 +33,29 @@ BEGIN
                     last_trans.transcription_start := (SELECT LEAST(last_trans.transcription_start, trans.transcription_start));
                     last_trans.transcription_end := (SELECT GREATEST(last_trans.transcription_end, trans.transcription_end));
                 ELSE
-                    transcript := (SELECT glass_atlas_{0}_{1}_staging.insert_transcript(last_trans));
+                    transcript := (SELECT glass_atlas_{0}_{1}{suffix}.insert_transcript(last_trans));
                     last_trans := trans;
                 END IF;
             END IF;
         END LOOP;
         -- And the last one..
         IF last_trans.transcription_start IS NOT NULL THEN
-            transcript := (SELECT glass_atlas_{0}_{1}_staging.insert_transcript(last_trans));
+            transcript := (SELECT glass_atlas_{0}_{1}{suffix}.insert_transcript(last_trans));
         END IF;
     END LOOP;
         
-    PERFORM glass_atlas_{0}_{1}_staging.insert_transcript_source_records(chr_id);
-    PERFORM glass_atlas_{0}_{1}_staging.insert_associated_transcript_regions(chr_id);
+    PERFORM glass_atlas_{0}_{1}{suffix}.insert_transcript_source_records(chr_id);
+    PERFORM glass_atlas_{0}_{1}{suffix}.insert_associated_transcript_regions(chr_id);
     RETURN;
 END;
 $$ LANGUAGE 'plpgsql';
 
-CREATE OR REPLACE FUNCTION glass_atlas_{0}_{1}_staging.get_close_transcripts(chr_id integer, strand integer)
-RETURNS SETOF glass_atlas_{0}_{1}_staging.glass_transcript AS $$
+CREATE OR REPLACE FUNCTION glass_atlas_{0}_{1}{suffix}.get_close_transcripts(chr_id integer, strand integer)
+RETURNS SETOF glass_atlas_{0}_{1}{suffix}.glass_transcript AS $$
 DECLARE
     above_thresh_table text;
     trans record;
-    transcript glass_atlas_{0}_{1}_staging.glass_transcript;    
+    transcript glass_atlas_{0}_{1}{suffix}.glass_transcript;    
 BEGIN
         -- From prep tables, get close-enough transcripts
     above_thresh_table = 'above_thresh_table_' || chr_id || '_' || strand || '_' || (1000*RANDOM())::int;
@@ -90,7 +87,6 @@ BEGIN
             GROUP by t1.id, t1.strand, t1.transcription_start, t1.transcription_end, t1.refseq
             ORDER by t1.transcription_start ASC'
     LOOP
-        -- @todo: Prevent two refseq transcripts being joined if there is an intervening non-refseq?
         IF trans.id IS NOT NULL THEN
             -- Reset transcript record.
             transcript := NULL;
@@ -106,13 +102,13 @@ BEGIN
 END;
 $$ LANGUAGE 'plpgsql';
 
-CREATE OR REPLACE FUNCTION glass_atlas_{0}_{1}_staging.insert_transcript(rec glass_atlas_{0}_{1}_staging.glass_transcript)
-RETURNS glass_atlas_{0}_{1}_staging.glass_transcript AS $$
+CREATE OR REPLACE FUNCTION glass_atlas_{0}_{1}{suffix}.insert_transcript(rec glass_atlas_{0}_{1}{suffix}.glass_transcript)
+RETURNS glass_atlas_{0}_{1}{suffix}.glass_transcript AS $$
 DECLARE
-    transcript glass_atlas_{0}_{1}_staging.glass_transcript;
+    transcript glass_atlas_{0}_{1}{suffix}.glass_transcript;
 BEGIN
     -- Update record
-    EXECUTE 'INSERT INTO glass_atlas_{0}_{1}_staging.glass_transcript_' || rec.chromosome_id 
+    EXECUTE 'INSERT INTO glass_atlas_{0}_{1}{suffix}.glass_transcript_' || rec.chromosome_id 
     || ' (chromosome_id, strand, transcription_start, transcription_end,
             start_end, refseq, modified, created) 
         VALUES (' || rec.chromosome_id || ',' || rec.strand || ','
@@ -124,7 +120,7 @@ BEGIN
 END;
 $$ LANGUAGE 'plpgsql';
 
-CREATE OR REPLACE FUNCTION glass_atlas_{0}_{1}_staging.insert_transcript_source_records(chr_id integer)
+CREATE OR REPLACE FUNCTION glass_atlas_{0}_{1}{suffix}.insert_transcript_source_records(chr_id integer)
 RETURNS VOID AS $$
 DECLARE
     temp_table text;
@@ -132,13 +128,13 @@ BEGIN
     temp_table = 'source_table_' || chr_id || '_' || (1000*RANDOM())::int;
     EXECUTE 'CREATE TEMP TABLE ' || temp_table || ' AS
         SELECT trans.id as transcript_id, prep.id as prep_id
-                FROM glass_atlas_{0}_{1}_staging.glass_transcript_' || chr_id || ' trans
+                FROM glass_atlas_{0}_{1}{suffix}.glass_transcript_' || chr_id || ' trans
                 JOIN glass_atlas_{0}_{1}_prep.glass_transcript_' || chr_id || ' prep
                 ON trans.start_end @> prep.start_end
                 AND trans.strand = prep.strand';
     EXECUTE 'CREATE INDEX ' || temp_table || '_prep_idx ON ' || temp_table || ' USING btree(prep_id)';
             
-    EXECUTE 'INSERT INTO glass_atlas_{0}_{1}_staging.glass_transcript_source_' || chr_id || '
+    EXECUTE 'INSERT INTO glass_atlas_{0}_{1}{suffix}.glass_transcript_source_' || chr_id || '
             (chromosome_id, glass_transcript_id, sequencing_run_id, tag_count, gaps)
             SELECT ' || chr_id || ', temp_t.transcript_id, source.sequencing_run_id, 
                 SUM(source.tag_count), COUNT(source.glass_transcript_id) - 1
@@ -150,14 +146,10 @@ BEGIN
 END;
 $$ LANGUAGE 'plpgsql';
 
-CREATE OR REPLACE FUNCTION glass_atlas_{0}_{1}_staging.insert_associated_transcript_regions(chr_id integer)
+CREATE OR REPLACE FUNCTION glass_atlas_{0}_{1}{suffix}.insert_associated_transcript_regions(chr_id integer)
 RETURNS VOID AS $$
 DECLARE
     region_types text[] := ARRAY['sequence','non_coding'];
-        -- ,'conserved','patterned','duped'];
-        -- As of May 2012, we are excluding some of the region types,
-        -- because they are rarely used yet time-intensive to add.
-        -- Duplicate regions are less necessary now that tags are uniquely mapped.
     counter integer;
     table_type text;
 BEGIN
@@ -165,54 +157,33 @@ BEGIN
     FOR counter IN array_lower(region_types,1)..array_upper(region_types,1)
     LOOP
         table_type := region_types[counter];
-        EXECUTE 'INSERT INTO glass_atlas_{0}_{1}_staging.glass_transcript_'
+        EXECUTE 'INSERT INTO glass_atlas_{0}_{1}{suffix}.glass_transcript_'
         || table_type || ' (glass_transcript_id, '
         || table_type || '_transcription_region_id, relationship, major)
             (SELECT trans.id, reg.id, 
                 (CASE WHEN reg.start_end ~= trans.start_end THEN 
-                glass_atlas_{0}_{1}_staging.glass_transcript_transcription_region_relationship(''is equal to'') 
+                glass_atlas_{0}_{1}{suffix}.glass_transcript_transcription_region_relationship(''is equal to'') 
                 WHEN reg.start_end <@ trans.start_end THEN 
-                glass_atlas_{0}_{1}_staging.glass_transcript_transcription_region_relationship(''contains'') 
+                glass_atlas_{0}_{1}{suffix}.glass_transcript_transcription_region_relationship(''contains'') 
                 WHEN reg.start_end @> trans.start_end THEN 
-                glass_atlas_{0}_{1}_staging.glass_transcript_transcription_region_relationship(''is contained by'') 
-                ELSE glass_atlas_{0}_{1}_staging.glass_transcript_transcription_region_relationship(''overlaps with'') END),
+                glass_atlas_{0}_{1}{suffix}.glass_transcript_transcription_region_relationship(''is contained by'') 
+                ELSE glass_atlas_{0}_{1}{suffix}.glass_transcript_transcription_region_relationship(''overlaps with'') END),
                 (CASE WHEN width(reg.start_end # trans.start_end) > width(reg.start_end)::numeric/2 THEN true
                 ELSE false END)
-            FROM glass_atlas_{0}_{1}_staging.glass_transcript_' || chr_id || ' trans
+            FROM glass_atlas_{0}_{1}{suffix}.glass_transcript_' || chr_id || ' trans
             JOIN genome_reference_{0}.' || table_type || '_transcription_region reg
             ON reg.start_end && trans.start_end
             WHERE reg.chromosome_id = ' || chr_id || '
             AND (reg.strand IS NULL OR reg.strand = trans.strand))';
             
     END LOOP;
-    
-    -- Special case for infrastructure regions
-    table_type := 'infrastructure';
-    EXECUTE 'INSERT INTO glass_atlas_{0}_{1}_staging.glass_transcript_'
-        || table_type || ' (glass_transcript_id, '
-        || table_type || '_transcription_region_id, relationship, major)
-            (SELECT trans.id, reg.id, 
-                (CASE WHEN reg.start_end ~= trans.start_end THEN 
-                glass_atlas_{0}_{1}_staging.glass_transcript_transcription_region_relationship(''is equal to'') 
-                WHEN reg.start_end <@ trans.start_end THEN 
-                glass_atlas_{0}_{1}_staging.glass_transcript_transcription_region_relationship(''contains'') 
-                WHEN reg.start_end @> trans.start_end THEN 
-                glass_atlas_{0}_{1}_staging.glass_transcript_transcription_region_relationship(''is contained by'') 
-                ELSE glass_atlas_{0}_{1}_staging.glass_transcript_transcription_region_relationship(''overlaps with'') END),
-                (CASE WHEN width(reg.start_end # trans.start_end) > width(reg.start_end)::numeric/2 THEN true
-                ELSE false END)
-            FROM glass_atlas_{0}_{1}_staging.glass_transcript_' || chr_id || ' trans
-            JOIN genome_reference_{0}.patterned_transcription_region_' || chr_id || ' reg
-            ON reg.start_end && trans.start_end
-            WHERE reg.type IN (''tRNA'',''rRNA'',''snRNA'',''srpRNA'',''scRNA'',''RNA'') 
-            AND (reg.strand IS NULL OR reg.strand = trans.strand))';
-            
+                
     -- We also want to mark whether a transcript is gene distal.
     -- This means it does not overlap with the region of any refseq transcripts
     -- plus 1000bp on either side. NOT strand specific.
-    EXECUTE 'UPDATE glass_atlas_{0}_{1}_staging.glass_transcript_' || chr_id || ' t
+    EXECUTE 'UPDATE glass_atlas_{0}_{1}{suffix}.glass_transcript_' || chr_id || ' t
         SET distal = true';
-    EXECUTE 'UPDATE glass_atlas_{0}_{1}_staging.glass_transcript_' || chr_id || ' t
+    EXECUTE 'UPDATE glass_atlas_{0}_{1}{suffix}.glass_transcript_' || chr_id || ' t
         SET distal = false
         FROM genome_reference_{0}.sequence_transcription_region seq
         WHERE t.start_end && seq.start_end_1000
@@ -221,7 +192,7 @@ BEGIN
 END;
 $$ LANGUAGE 'plpgsql';
 
-CREATE OR REPLACE FUNCTION glass_atlas_{0}_{1}_staging.calculate_scores(chr_id integer)
+CREATE OR REPLACE FUNCTION glass_atlas_{0}_{1}{suffix}.calculate_scores(chr_id integer)
 RETURNS VOID AS $$
 DECLARE
     total_runs integer;
@@ -231,7 +202,7 @@ BEGIN
     -- Score is tag count divided by the lesser of length/1000 and 2*log(length),
     -- which allows lower tag counts per bp for longer transcripts.
     
-    total_runs := (SELECT count(DISTINCT sequencing_run_id) FROM glass_atlas_{0}_{1}_staging.glass_transcript_source);
+    total_runs := (SELECT count(DISTINCT sequencing_run_id) FROM glass_atlas_{0}_{1}{suffix}.glass_transcript_source);
     
     temp_table = 'score_table_' || chr_id || '_' || (1000*RANDOM())::int;
     EXECUTE 'CREATE TEMP TABLE ' || temp_table || ' AS
@@ -239,8 +210,8 @@ BEGIN
             transcript.id,
             SUM(source.tag_count) as sum_tags, MAX(source.tag_count) as max_tags,
             (transcript.transcription_end - transcript.transcription_start + 1) as width
-        FROM glass_atlas_{0}_{1}_staging.glass_transcript_' || chr_id || ' transcript 
-        JOIN glass_atlas_{0}_{1}_staging.glass_transcript_source_' || chr_id || ' source
+        FROM glass_atlas_{0}_{1}{suffix}.glass_transcript_' || chr_id || ' transcript 
+        JOIN glass_atlas_{0}_{1}{suffix}.glass_transcript_source_' || chr_id || ' source
         ON transcript.id = source.glass_transcript_id
         JOIN glass_atlas_{0}.sequencing_run run
         ON source.sequencing_run_id = run.id
@@ -249,7 +220,7 @@ BEGIN
         GROUP BY transcript.id, transcript.transcription_end, transcript.transcription_start';
     EXECUTE 'CREATE INDEX ' || temp_table || '_idx ON ' || temp_table || ' USING btree(id)';
     
-	EXECUTE 'UPDATE glass_atlas_{0}_{1}_staging.glass_transcript_' || chr_id || ' transcript
+	EXECUTE 'UPDATE glass_atlas_{0}_{1}{suffix}.glass_transcript_' || chr_id || ' transcript
 	    SET score = GREATEST(0,
                 SQRT((temp_t.sum_tags::numeric/' || total_runs || ')*temp_t.max_tags)
                 /LEAST(GREATEST(1000, temp_t.width)::numeric/1000, 2*LOG(temp_t.width))
@@ -262,7 +233,7 @@ END;
 $$ LANGUAGE 'plpgsql';
 
 
-CREATE OR REPLACE FUNCTION glass_atlas_{0}_{1}_staging.calculate_standard_error(chr_id integer)
+CREATE OR REPLACE FUNCTION glass_atlas_{0}_{1}{suffix}.calculate_standard_error(chr_id integer)
 RETURNS VOID AS $$
 DECLARE
     total_runs integer;
@@ -304,8 +275,8 @@ BEGIN
                 || array_fill(0::float,array[' || total_runs || ']) -- concat a bunch of zeroes
             )[0:' || total_runs || '] -- Trim to desired length 
             as norm_tags
-        FROM glass_atlas_{0}_{1}_staging.glass_transcript_' || chr_id || '  t
-        JOIN glass_atlas_{0}_{1}_staging.glass_transcript_source_' || chr_id || ' s
+        FROM glass_atlas_{0}_{1}{suffix}.glass_transcript_' || chr_id || '  t
+        JOIN glass_atlas_{0}_{1}{suffix}.glass_transcript_source_' || chr_id || ' s
             ON t.id = s.glass_transcript_id
         JOIN glass_atlas_{0}.sequencing_run run
             ON s.sequencing_run_id = run.id
@@ -320,10 +291,10 @@ BEGIN
 
     -- Set all scores to zero at first, since some we will not have data on,
     -- and want those to be zero
-    EXECUTE 'UPDATE glass_atlas_{0}_{1}_staging.glass_transcript_' || chr_id || ' 
+    EXECUTE 'UPDATE glass_atlas_{0}_{1}{suffix}.glass_transcript_' || chr_id || ' 
         SET standard_error = 0';
         
-    EXECUTE 'UPDATE glass_atlas_{0}_{1}_staging.glass_transcript_' || chr_id || ' transcript
+    EXECUTE 'UPDATE glass_atlas_{0}_{1}{suffix}.glass_transcript_' || chr_id || ' transcript
         SET standard_error = der2.standard_error
         
         FROM (SELECT der.id, stddev(der.tags)/sqrt(count(der.tags)) as standard_error 
@@ -336,7 +307,4 @@ BEGIN
 END;
 $$ LANGUAGE 'plpgsql';
 
-""".format(genome, cell_type)
-
-if __name__ == '__main__':
-    print sql(genome, cell_type)
+""".format(genome, cell_type, suffix=suffix)

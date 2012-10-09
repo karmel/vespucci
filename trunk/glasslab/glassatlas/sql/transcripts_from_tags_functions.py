@@ -3,13 +3,11 @@ Created on Nov 12, 2010
 
 @author: karmel
 
-Convenience script for transcript functions.
+Prep table functions, extracted for ease of reading.
 '''
-genome = 'mm9'
-cell_type='thiomac'
+
 def sql(genome, cell_type):
     return """
--- Not run from within the codebase, but kept here in case functions need to be recreated.
 
 CREATE TYPE glass_atlas_{0}_{1}_prep.glass_transcript_row AS ("chromosome_id" integer, "strand" smallint, 
     transcription_start bigint, transcription_end bigint, refseq boolean, tag_count integer, gaps integer, ids integer[]);
@@ -424,6 +422,3 @@ $$ LANGUAGE 'plpgsql';
 
 
 """.format(genome, cell_type)
-
-if __name__ == '__main__':
-    print sql(genome, cell_type)
