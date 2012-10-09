@@ -422,34 +422,6 @@ END;
 $$ LANGUAGE 'plpgsql';
 
 
--- This function operates on the post-prep table, but we keep it here to avoid having to recreate it every time.
--- This is used in manually generated queries to determine adjusted fold changes
-CREATE OR REPLACE FUNCTION glass_atlas_{0}_{1}_prep.get_log_fold_change(ctl_tag_count bigint, sample_tag_count bigint, ctl_name text, sample_name text, standard_error numeric)
-RETURNS numeric AS $$
-DECLARE
-    norm_ctl_tag_count numeric;
-    norm_sample_tag_count numeric;
-    norm_standard_error numeric;
-BEGIN 
-    -- Calculate the log-relative-fold change, 
-    -- adjusting by deviation score in whatever direction _minimizes_ relative fold change.
-    norm_ctl_tag_count := ctl_tag_count;
-    norm_sample_tag_count := (SELECT coalesce(sample_tag_count,0)*norm_factor FROM glass_atlas_{0}_{1}.norm_sum WHERE name_1 = ctl_name AND name_2 = sample_name);
-    IF norm_sample_tag_count IS NULL THEN
-        RAISE EXCEPTION 'No norm_sum row was found for names % and %!', ctl_name, sample_name;
-        RETURN NULL;
-    END IF;
-    norm_standard_error := (SELECT (standard_error/(10^7))*total_tags_1 FROM glass_atlas_{0}_{1}.norm_sum WHERE name_1 = ctl_name AND name_2 = sample_name);
-    IF (norm_sample_tag_count > norm_ctl_tag_count) THEN
-        norm_sample_tag_count = (SELECT GREATEST(norm_ctl_tag_count, norm_sample_tag_count - norm_standard_error));
-    ELSE
-        IF (norm_sample_tag_count < norm_ctl_tag_count) THEN
-            norm_sample_tag_count = (SELECT LEAST(norm_ctl_tag_count, norm_sample_tag_count + norm_standard_error));
-        END IF;
-    END IF;
-    RETURN log(2, GREATEST(norm_sample_tag_count,1)/GREATEST(norm_ctl_tag_count,1)::numeric);
-END;
-$$ LANGUAGE 'plpgsql';
 
 """.format(genome, cell_type)
 

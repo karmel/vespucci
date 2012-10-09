@@ -336,20 +336,6 @@ BEGIN
 END;
 $$ LANGUAGE 'plpgsql';
 
-CREATE OR REPLACE FUNCTION glass_atlas_{0}_{1}_staging.mark_transcripts_spliced(chr_id integer, score_threshold numeric)
-RETURNS VOID AS $$
-BEGIN
-    -- Mark transcripts as spliced if sufficiently high-scoring RNA exists
-    EXECUTE 'UPDATE glass_atlas_{0}_{1}_staging.glass_transcript_' || chr_id || ' transcript 
-        SET spliced = true
-        FROM glass_atlas_{0}_{1}_staging.glass_transcribed_rna_' || chr_id || ' transcribed_rna
-        WHERE transcribed_rna.glass_transcript_id = transcript.id
-            AND transcribed_rna.score >= ' || score_threshold;
-    RETURN;
-END;
-$$ LANGUAGE 'plpgsql'; 
-
-
 """.format(genome, cell_type)
 
 if __name__ == '__main__':
