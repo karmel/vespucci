@@ -14,6 +14,9 @@ GENOME_CHOICES = ['mm9']
 GENOME = 'mm9'
 GENOME_CHROMOSOMES = range(1,23)
 
+
+CELL_TYPE = 'ThioMac'
+
 STAGING = '' # Set to the appropriate suffix during DB staging.
 STAGING_SUFFIX = '_staging'
 
