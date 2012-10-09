@@ -22,9 +22,21 @@ STAGING_SUFFIX = '_staging'
 #####################################
 CURRENT_SCHEMA = 'current_projects'
 CURRENT_CELL_TYPE = 'ThioMac'
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': 'glasslab',
+        'USER': 'glass',
+        'PASSWORD': 'monocyte',
+        'HOST': 'localhost',
+        'PORT': '54321',
+    },
+
+}
 
 #####################################
 # Compute power
 #####################################
 ALLOWED_PROCESSES = 1
 CHR_LISTS = None # Dynamically set during processing
+

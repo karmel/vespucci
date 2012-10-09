@@ -4,7 +4,7 @@ Created on Dec 22, 2010
 @author: karmel
 '''
 from glasslab.glassatlas.datatypes.transcript import GlassTranscript, \
-    FilteredGlassTranscript, GlassTranscriptNucleotides, GlassTranscriptSource, \
+    FilteredGlassTranscript, GlassTranscriptSource, \
     GlassTranscriptSequence, GlassTranscriptNonCoding, CellTypeBase, \
     GlassTranscriptSourcePrep, GlassTranscriptPrep, FilteredGlassTranscriptManager
 from glasslab.config import current_settings
@@ -26,8 +26,6 @@ class ThioMacBase(CellTypeBase):
     def glass_transcript_source(self): return GlassTranscriptSourceThioMac
     @property
     def glass_transcript_source_prep(self): return GlassTranscriptSourcePrepThioMac
-    @property
-    def glass_transcript_nucleotides(self): return GlassTranscriptNucleotidesThioMac
     @property
     def glass_transcript_sequence(self): return GlassTranscriptSequenceThioMac
     @property
@@ -61,15 +59,6 @@ class FilteredGlassTranscriptThioMac(GlassTranscriptThioMac, FilteredGlassTransc
         app_label = 'Transcription_%s' % CELL_TYPE
         verbose_name = 'Glass transcript (%s)' % CELL_TYPE
         verbose_name_plural = 'Glass transcripts (%s)' % CELL_TYPE
-
-class GlassTranscriptNucleotidesThioMac(GlassTranscriptNucleotides):
-    glass_transcript = models.ForeignKey(GlassTranscriptThioMac)
-    cell_base = ThioMacBase()
-    class Meta:
-        db_table = 'glass_atlas_%s_%s%s"."glass_transcript_nucleotides' % (current_settings.GENOME, CELL_TYPE.lower(), current_settings.STAGING)
-        app_label = 'Transcription_%s' % CELL_TYPE
-        verbose_name = 'Glass transcript nucleotide sequence (%s)' % CELL_TYPE
-        verbose_name_plural = 'Glass transcript nucleotide sequences (%s)' % CELL_TYPE
       
 class GlassTranscriptSourcePrepThioMac(GlassTranscriptSourcePrep):
     glass_transcript = models.ForeignKey(GlassTranscriptPrepThioMac, related_name='glasstranscriptsource')
