@@ -24,7 +24,6 @@ STAGING_SUFFIX = '_staging'
 # Databases
 #####################################
 CURRENT_SCHEMA = 'current_projects'
-CURRENT_CELL_TYPE = 'ThioMac'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',

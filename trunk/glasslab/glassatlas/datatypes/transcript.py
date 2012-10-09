@@ -206,7 +206,7 @@ class GlassTranscript(TranscriptBase):
             query = """
                 SELECT glass_atlas_%s_%s_prep.save_transcripts_from_sequencing_run(%d, %d,'%s', %d, %d, %d, %d, %d, NULL, NULL);
                 """ % (current_settings.GENOME,
-                       current_settings.CURRENT_CELL_TYPE.lower(),
+                       current_settings.CELL_TYPE.lower(),
                        sequencing_run.id, chr_id, 
                        sequencing_run.source_table.strip(), 
                        MAX_GAP, TAG_EXTENSION, 
@@ -233,7 +233,7 @@ class GlassTranscript(TranscriptBase):
             query = """
                 SELECT glass_atlas_%s_%s_prep.save_transcripts_from_existing(%d, %d);
                 """ % (current_settings.GENOME, 
-                       current_settings.CURRENT_CELL_TYPE.lower(),
+                       current_settings.CELL_TYPE.lower(),
                        chr_id, MAX_STITCHING_GAP)
             execute_query(query)
             if set_density:
@@ -241,7 +241,7 @@ class GlassTranscript(TranscriptBase):
                 query = """
                     SELECT glass_atlas_{0}_{1}_prep.set_density({2},{3},{4},{5},{6},{7});
                     """.format(current_settings.GENOME, 
-                               current_settings.CURRENT_CELL_TYPE.lower(),
+                               current_settings.CELL_TYPE.lower(),
                                chr_id, MAX_EDGE, EDGE_SCALING_FACTOR, 
                                DENSITY_MULTIPLIER, 
                                allow_extended_gaps and 'true' or 'false',
@@ -262,7 +262,7 @@ class GlassTranscript(TranscriptBase):
             query = """
                 SELECT glass_atlas_{0}_{1}_prep.set_density({2},{3},{4},{5},{6},{7});
                 """.format(current_settings.GENOME, 
-                           current_settings.CURRENT_CELL_TYPE.lower(),
+                           current_settings.CELL_TYPE.lower(),
                            chr_id, MAX_EDGE, EDGE_SCALING_FACTOR, 
                            DENSITY_MULTIPLIER, 
                            allow_extended_gaps and 'true' or 'false',
@@ -280,7 +280,7 @@ class GlassTranscript(TranscriptBase):
             query = """
                 SELECT glass_atlas_%s_%s%s.draw_transcript_edges(%d);
                 """ % (current_settings.GENOME, 
-                       current_settings.CURRENT_CELL_TYPE.lower(),
+                       current_settings.CELL_TYPE.lower(),
                        current_settings.STAGING,
                        chr_id)
             execute_query(query)           
@@ -297,10 +297,10 @@ class GlassTranscript(TranscriptBase):
                 SELECT glass_atlas_%s_%s%s.calculate_scores(%d);
                 SELECT glass_atlas_%s_%s%s.calculate_standard_error(%d);
                 """ % (current_settings.GENOME,
-                       current_settings.CURRENT_CELL_TYPE.lower(),
+                       current_settings.CELL_TYPE.lower(),
                        current_settings.STAGING, chr_id,
                        current_settings.GENOME,
-                       current_settings.CURRENT_CELL_TYPE.lower(),
+                       current_settings.CELL_TYPE.lower(),
                        current_settings.STAGING, chr_id)
             execute_query(query) 
     

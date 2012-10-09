@@ -45,8 +45,8 @@ if __name__ == '__main__':
     if options.processes:
         current_settings.ALLOWED_PROCESSES = int(options.processes)
     
-    if options.cell_type: current_settings.CURRENT_CELL_TYPE = options.cell_type
-    cell_base = CellTypeBase().get_cell_type_base(current_settings.CURRENT_CELL_TYPE)()
+    if options.cell_type: current_settings.CELL_TYPE = options.cell_type
+    cell_base = CellTypeBase().get_cell_type_base(current_settings.CELL_TYPE)()
     
     allow_extended_gaps = True
     if options.no_extended_gaps: allow_extended_gaps = False
