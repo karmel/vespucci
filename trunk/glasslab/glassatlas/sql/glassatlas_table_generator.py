@@ -18,60 +18,46 @@ class GlassAtlasTableGenerator(object):
         self.cell_type = cell_type or current_settings.CELL_TYPE
         self.staging = staging or current_settings.STAGING
         self.user = user or current_settings.DATABASES['default']['USER']
-        
-    def convenience_functions(self):
-        return """
-        CREATE OR REPLACE FUNCTION public.make_box(x1 numeric, y1 numeric, x2 numeric, y2 numeric)
-        RETURNS box AS $$
-        DECLARE
-            s text;
-        BEGIN
-            s := '((' || x1 || ',' || y1 || '),(' || x2 || ',' || y2 || '))';
-            RETURN s::box;
-        END;
-        $$ LANGUAGE 'plpgsql';
-        
-        CREATE OR REPLACE FUNCTION public.make_box(x1 numeric, x2 numeric)
-        RETURNS box AS $$
-        DECLARE
-            s text;
-        BEGIN
-            s := '((' || x1 || ', 0),(' || x2 || ',0))';
-            RETURN s::box;
-        END;
-        $$ LANGUAGE 'plpgsql';
-        """
     
-    def schemas(self, final=False):
-        s= """
-        CREATE SCHEMA "glass_atlas_{0}_{1}{staging}" AUTHORIZATION "{user}";"""
+    def all_sql(self):
+        return self.prep_set() + self.final_set()
     
-        if not final:
-            s += """
-        CREATE SCHEMA "glass_atlas_{0}_{1}_prep" AUTHORIZATION "{user}";""" 
-        return s.format(self.genome, self.cell_type, 
-                        staging=self.staging, user=self.user)
+    def prep_set(self):
+        prep_suffix = '_prep'
+        s = self.schema(prep_suffix)
+        s += self.prep_table_main_transcript()
+        s += self.table_main_source(prep_suffix)
         
-    def other_tables(self):
+        for chr_id in current_settings.GENOME_CHROMOSOMES:
+            s += self.prep_table_chrom_transcript(chr_id)
+            s += self.table_chrom_source(chr_id, prep_suffix)
+        
+        s += self.prep_table_trigger_transcript()
+        s += self.table_trigger_source(prep_suffix)
+        
+        return s
+            
+    def final_set(self):
+        s = self.schema(self.staging)
+        s += self.table_main_transcript()
+        s += self.table_main_source(self.staging)
+        for chr_id in current_settings.GENOME_CHROMOSOMES:
+            s += self.table_chrom_transcript(chr_id)
+            s += self.table_chrom_source(chr_id, self.staging)
+        
+        s += self.table_trigger_transcript()
+        s += self.table_trigger_source(self.staging)
+        
+        s += self.region_relationship_types()
+        s += self.table_region_association('sequence')
+        s += self.table_region_association('non_coding')
+        
+        return s
+        
+    def schema(self, suffix=''):
         return """
-        CREATE TABLE "glass_atlas_{0}"."sequencing_run" (
-            "id" int4 NOT NULL,
-            "source_table" varchar(100) DEFAULT NULL
-        );
-        GRANT ALL ON TABLE "glass_atlas_{0}"."sequencing_run" TO  "{user}";
-        CREATE SEQUENCE "glass_atlas_{0}"."sequencing_run_id_seq"
-            START WITH 1
-            INCREMENT BY 1
-            NO MINVALUE
-            NO MAXVALUE
-            CACHE 1;
-        ALTER SEQUENCE "glass_atlas_{0}"."sequencing_run_id_seq" OWNED BY "glass_atlas_{0}"."sequencing_run".id;
-        ALTER TABLE "glass_atlas_{0}"."sequencing_run" ALTER COLUMN id SET DEFAULT nextval('"glass_atlas_{0}"."sequencing_run_id_seq"'::regclass);
-        ALTER TABLE ONLY "glass_atlas_{0}"."sequencing_run" ADD CONSTRAINT sequencing_run_pkey PRIMARY KEY (id);
-        CREATE UNIQUE INDEX sequencing_run_source_table_idx ON "glass_atlas_{0}"."sequencing_run" USING btree (source_table);
-        
-        """.format(self.genome, user=self.user)
-        
+        CREATE SCHEMA "glass_atlas_{0}_{1}{staging}" AUTHORIZATION "{user}";
+        """.format(self.genome, self.cell_type, suffix=suffix, user=self.user)
         
     def prep_table_main_transcript(self):
         return """
@@ -301,3 +287,47 @@ class GlassAtlasTableGenerator(object):
         CREATE INDEX glass_transcript_{type}_transcript_idx ON "glass_atlas_{0}_{1}{suffix}"."glass_transcript_{type}" USING btree (glass_transcript_id);
         CREATE INDEX glass_transcript_{type}_major_idx ON "glass_atlas_{0}_{1}{suffix}"."glass_transcript_{type}" USING btree (major);
         """.format(self.genome, self.cell_type, type=region_type, suffix=self.staging)
+        
+    def other_tables(self):
+        return """
+        CREATE TABLE "glass_atlas_{0}"."sequencing_run" (
+            "id" int4 NOT NULL,
+            "source_table" varchar(100) DEFAULT NULL
+        );
+        GRANT ALL ON TABLE "glass_atlas_{0}"."sequencing_run" TO  "{user}";
+        CREATE SEQUENCE "glass_atlas_{0}"."sequencing_run_id_seq"
+            START WITH 1
+            INCREMENT BY 1
+            NO MINVALUE
+            NO MAXVALUE
+            CACHE 1;
+        ALTER SEQUENCE "glass_atlas_{0}"."sequencing_run_id_seq" OWNED BY "glass_atlas_{0}"."sequencing_run".id;
+        ALTER TABLE "glass_atlas_{0}"."sequencing_run" ALTER COLUMN id SET DEFAULT nextval('"glass_atlas_{0}"."sequencing_run_id_seq"'::regclass);
+        ALTER TABLE ONLY "glass_atlas_{0}"."sequencing_run" ADD CONSTRAINT sequencing_run_pkey PRIMARY KEY (id);
+        CREATE UNIQUE INDEX sequencing_run_source_table_idx ON "glass_atlas_{0}"."sequencing_run" USING btree (source_table);
+        
+        """.format(self.genome, user=self.user)
+    
+    def convenience_functions(self):
+        return """
+        CREATE OR REPLACE FUNCTION public.make_box(x1 numeric, y1 numeric, x2 numeric, y2 numeric)
+        RETURNS box AS $$
+        DECLARE
+            s text;
+        BEGIN
+            s := '((' || x1 || ',' || y1 || '),(' || x2 || ',' || y2 || '))';
+            RETURN s::box;
+        END;
+        $$ LANGUAGE 'plpgsql';
+        
+        CREATE OR REPLACE FUNCTION public.make_box(x1 numeric, x2 numeric)
+        RETURNS box AS $$
+        DECLARE
+            s text;
+        BEGIN
+            s := '((' || x1 || ', 0),(' || x2 || ',0))';
+            RETURN s::box;
+        END;
+        $$ LANGUAGE 'plpgsql';
+        """
+    
