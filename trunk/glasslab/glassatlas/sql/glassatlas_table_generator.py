@@ -14,8 +14,8 @@ class GlassAtlasTableGenerator(object):
     user = None
     
     def __init__(self, genome=None, cell_type=None, staging=None, user=None):
-        self.genome = genome or current_settings.GENOME
-        self.cell_type = cell_type or current_settings.CELL_TYPE
+        self.genome = genome or current_settings.GENOME.lower()
+        self.cell_type = cell_type or current_settings.CELL_TYPE.lower()
         self.staging = staging or current_settings.STAGING
         self.user = user or current_settings.DATABASES['default']['USER']
     
