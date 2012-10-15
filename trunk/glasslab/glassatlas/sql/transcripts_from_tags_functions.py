@@ -286,7 +286,7 @@ RETURNS VOID AS $$
     END IF; 
     
     -- Should this run have tags counted for density?
-    use_for_scoring := (SELECT r.use_for_scoring FROM glass_atlas_{0}.sequencing_run r WHERE id = seq_run_id);
+    use_for_scoring := (SELECT r.use_for_scoring FROM genome_reference_{0}.sequencing_run r WHERE id = seq_run_id);
     
      FOR strand IN strand_start..strand_end 
      LOOP

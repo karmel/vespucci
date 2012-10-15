@@ -6,9 +6,9 @@ Created on Nov 8, 2010
 from __future__ import division
 from glasslab.config import current_settings
 from django.db import models, connection, utils
-from glasslab.utils.datatypes.genome_reference import Chromosome,\
+from glasslab.genomereference.datatypes import Chromosome,\
     SequenceTranscriptionRegion, NonCodingTranscriptionRegion
-from glasslab.glassatlas.datatypes.metadata import SequencingRun
+from glasslab.genomereference.datatypes import SequencingRun
 from glasslab.utils.datatypes.basic_model import BoxField, GlassModel
 from multiprocessing import Pool
 from glasslab.utils.database import execute_query, fetch_rows

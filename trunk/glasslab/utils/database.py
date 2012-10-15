@@ -4,6 +4,7 @@ Created on Nov 15, 2010
 @author: karmel
 '''
 from django.db import transaction, connections
+from glasslab.config import current_settings
 
 def execute_query(query, using='default', return_cursor=False):
     connection = connections[using]
@@ -42,3 +43,27 @@ def discard_temp_tables(using='default'):
     '''
     execute_query_without_transaction('DISCARD TEMP;', using=using)
     
+    
+    
+class SqlGenerator(object):
+    ''' 
+    Parent class for schema-specific SQL generators.
+    '''
+    user = None
+    def __init__(self, user=None):
+        self.user = user or current_settings.DATABASES['default']['USER']
+    
+    def pkey_sequence_sql(self, schema_name, table_name):
+        return """
+        GRANT ALL ON TABLE "{0}"."{1}" TO  "{user}";
+        CREATE SEQUENCE "{0}"."{1}"
+            START WITH 1
+            INCREMENT BY 1
+            NO MINVALUE
+            NO MAXVALUE
+            CACHE 1;
+        ALTER SEQUENCE "{0}"."{1}_id_seq" OWNED BY "{0}"."{1}".id;
+        ALTER TABLE "{0}"."{1}" ALTER COLUMN id SET DEFAULT nextval('"{0}"."{1}_id_seq"'::regclass);
+        ALTER TABLE ONLY "{0}"."{1}" ADD CONSTRAINT {1}_pkey PRIMARY KEY (id);
+        """.format(schema_name, table_name, user=self.user)
+        

@@ -144,3 +144,19 @@ class NonCodingTranscriptionRegion(GlassModel):
 
     def __unicode__(self):
         return '%s Transcription Region for %s' % (self.non_coding_rna.type.strip(), self.non_coding_rna.description.strip())
+    
+#######################################################
+# Metadata
+#######################################################   
+class SequencingRun(GlassModel):
+    '''
+    Record of details of a given sequencing run and its total tags.
+    '''
+    source_table    = models.CharField(max_length=100)
+    
+    class Meta:
+        db_table    = 'genome_reference_%s"."sequencing_run' % current_settings.GENOME
+        app_label   = 'Genome_Reference'
+        
+    def __unicode__(self):
+        return '%s (%s, "%s")' % (self.name, self.type, self.source_table.strip())
