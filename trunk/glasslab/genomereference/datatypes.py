@@ -72,7 +72,31 @@ class SequenceDetail(GlassModel):
     
     def __unicode__(self): 
         return '%s (%s)' % (self.gene_name, self.sequence_identifier.sequence_identifier)
- 
+
+class NonCodingRna(GlassModel):
+    '''
+    Unique name and type for ncRNA
+    
+    '''
+    type                = models.CharField(max_length=20)
+    description         = models.CharField(max_length=100)
+    
+    class Meta: 
+        db_table    = 'genome_reference_%s"."non_coding_rna' % current_settings.GENOME
+        app_label   = 'Genome_Reference'
+        verbose_name = 'Non coding RNA'
+        
+    def __unicode__(self):
+        return '%s %s' % (self.type, self.description.strip())
+    
+    _non_coding_transcription_region = None
+    @property 
+    def non_coding_transcription_region(self):
+        if not self._non_coding_transcription_region:
+            reg = NonCodingTranscriptionRegion.objects.filter(non_coding_rna=self).order_by('transcription_start')[:1]
+            if reg: self._non_coding_transcription_region =  reg[0]
+        return self._non_coding_transcription_region
+
 #######################################################
 # Chromosome region details 
 #######################################################
@@ -97,31 +121,7 @@ class SequenceTranscriptionRegion(GlassModel):
 
     def __unicode__(self):
         return 'Sequence Transcription Region for %s' % self.sequence_identifier.sequence_identifier.strip()
-    
-class NonCodingRna(GlassModel):
-    '''
-    Unique name and type for ncRNA
-    
-    '''
-    type                = models.CharField(max_length=20)
-    description         = models.CharField(max_length=100)
-    
-    class Meta: 
-        db_table    = 'genome_reference_%s"."non_coding_rna' % current_settings.GENOME
-        app_label   = 'Genome_Reference'
-        verbose_name = 'Non coding RNA'
         
-    def __unicode__(self):
-        return '%s %s' % (self.type, self.description.strip())
-    
-    _non_coding_transcription_region = None
-    @property 
-    def non_coding_transcription_region(self):
-        if not self._non_coding_transcription_region:
-            reg = NonCodingTranscriptionRegion.objects.filter(non_coding_rna=self).order_by('transcription_start')[:1]
-            if reg: self._non_coding_transcription_region =  reg[0]
-        return self._non_coding_transcription_region
-    
 class NonCodingTranscriptionRegion(GlassModel):
     '''
     Mappings of transcription regions that are not tied to RefSeq genes.
