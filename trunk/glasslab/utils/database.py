@@ -56,7 +56,7 @@ class SqlGenerator(object):
     def pkey_sequence_sql(self, schema_name, table_name):
         return """
         GRANT ALL ON TABLE "{0}"."{1}" TO  "{user}";
-        CREATE SEQUENCE "{0}"."{1}"
+        CREATE SEQUENCE "{0}"."{1}_id_seq"
             START WITH 1
             INCREMENT BY 1
             NO MINVALUE

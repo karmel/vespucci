@@ -20,7 +20,7 @@ class GlassAtlasSqlGenerator(SqlGenerator):
         self.cell_type = cell_type or current_settings.CELL_TYPE.lower()
         self.staging = staging or current_settings.STAGING
         
-        self.schema_name_prefix = '{schema_name_prefix}'.format(self.genome, self.cell_type)
+        self.schema_name_prefix = 'glass_atlas_{0}_{1}'.format(self.genome, self.cell_type)
         super(GlassAtlasSqlGenerator, self).__init__()
     
     def all_sql(self):
