@@ -304,6 +304,52 @@ class GlassTranscript(TranscriptBase):
                        current_settings.STAGING, chr_id)
             execute_query(query) 
     
+    @classmethod
+    def nearest_genes(cls):
+        schema_name = 'glass_atlas_{0}_{1}'.format(current_settings.GENOME, current_settings.CELL_TYPE.lower())
+        query = """
+        INSERT INTO {schema_name}.nearest_refseq
+        (glass_transcript_id, nearest_refseq_transcript_id, distance, minimal_distance) 
+        select glass_transcript_id, nearest_refseq_transcript_id, distance, minimal_distance 
+        FROM 
+         (select 
+            DISTINCT nonrefseq.id as glass_transcript_id, 
+            refseq.id as nearest_refseq_transcript_id,
+            row_number() OVER (PARTITION by nonrefseq.id ORDER BY 
+            abs(((refseq.strand = 0)::int*refseq.transcription_start 
+                    + (refseq.strand = 1)::int*refseq.transcription_end) -
+                ((nonrefseq.strand = 0)::int*nonrefseq.transcription_start 
+                        + (nonrefseq.strand = 1)::int*nonrefseq.transcription_end))
+            ),
+            abs(((refseq.strand = 0)::int*refseq.transcription_start 
+                    + (refseq.strand = 1)::int*refseq.transcription_end) -
+                ((nonrefseq.strand = 0)::int*nonrefseq.transcription_start 
+                        + (nonrefseq.strand = 1)::int*nonrefseq.transcription_end)) as distance,
+            least(abs(nonrefseq.transcription_start - refseq.transcription_start), 
+                    abs(nonrefseq.transcription_end - refseq.transcription_end),
+                    abs(nonrefseq.transcription_start - refseq.transcription_end), 
+                    abs(nonrefseq.transcription_end - refseq.transcription_start)) as minimal_distance
+            
+        FROM {schema_name}.glass_transcript nonrefseq
+        
+        join {schema_name}.glass_transcript refseq
+        on nonrefseq.chromosome_id = refseq.chromosome_id
+        
+        -- HAS refseq
+        join {schema_name}.glass_transcript_sequence seq
+        on refseq.id = seq.glass_transcript_id
+        
+        
+        where refseq.score >= {refseq_score}
+        and nonrefseq.score >= {nonrefseq_score} 
+        and refseq.refseq = true
+        and seq.major = true
+        and nonrefseq.refseq = false) der
+        where der.row_number = 1
+        ;  
+        """.format(schema_name=schema_name, refseq_score=MIN_SCORE, nonrefseq_score=int(MIN_SCORE/3))
+        execute_query(query) 
+        
 class FilteredGlassTranscriptManager(models.Manager):
     def get_query_set(self):
         return super(FilteredGlassTranscriptManager, self).get_query_set().filter(score__gte=MIN_SCORE)

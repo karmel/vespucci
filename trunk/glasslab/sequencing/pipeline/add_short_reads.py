@@ -7,7 +7,7 @@ from glasslab.config import current_settings
 from django.db import utils
 from datetime import datetime
 import os
-from glasslab.config.django_settings import DATABASES
+from glasslab.config.current_settings import DATABASES
 from glasslab.utils.database import execute_query
 
 def _print(string):
@@ -17,11 +17,11 @@ def check_input(options):
     '''
     Check that required arguments and directories are in place.
     '''
-    if not options.file_path and not getattr(options, 'prep_table', None) and not getattr(options, 'skip_tag_table', None):
+    if not options.file_name and not getattr(options, 'prep_table', None) and not getattr(options, 'skip_tag_table', None):
         raise Exception('Please make sure you have supplied an input file.')
         
-    if options.file_path and not os.path.exists(options.file_path):
-        raise Exception('Sorry, but the specified input file cannot be found: %s' % os.path.realpath(options.file_path))
+    if options.file_name and not os.path.exists(options.file_name):
+        raise Exception('Sorry, but the specified input file cannot be found: %s' % os.path.realpath(options.file_name))
     
     if getattr(options,'output_dir',None) and not os.path.exists(options.output_dir):
         os.mkdir(options.output_dir)
@@ -34,7 +34,7 @@ def check_input(options):
     if options.genome: current_settings.GENOME = options.genome
     
     # Get a file name prefix for use with generated files, using input file as base
-    file_name = options.project_name or '.'.join(os.path.basename(options.file_path).split('.')[:-1])
+    file_name = options.project_name or '.'.join(os.path.basename(options.file_name).split('.')[:-1])
     
     return file_name
 
