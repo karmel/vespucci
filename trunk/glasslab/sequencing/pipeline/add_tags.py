@@ -32,8 +32,6 @@ class FastqOptionParser(GlassOptionParser):
                make_option('-f', '--file_name',action='store', type='string', dest='file_name', 
                            help='Path to SAM, BAM, or Bowtie file for processing.'),
                make_option('-o', '--output_dir',action='store', type='string', dest='output_dir'),
-               make_option('-g', '--genome',action='store', type='string', dest='genome', default='mm9', 
-                           help='Currently supported: mm8, mm8r, mm9, hg18, hg18r'),
                make_option('--project_name',action='store', type='string', dest='project_name',  
                            help='Optional name to be used as file prefix for created files.'),
                

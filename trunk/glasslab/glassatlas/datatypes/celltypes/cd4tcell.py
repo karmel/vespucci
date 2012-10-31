@@ -11,9 +11,9 @@ from glasslab.config import current_settings
 
 from django.db import models
 
-CELL_TYPE = 'ThioMac'
+CELL_TYPE = 'CD4TCell'
 
-class ThioMacBase(CellTypeBase):
+class CD4TCellBase(CellTypeBase):
     cell_type = CELL_TYPE
            
     @property
@@ -33,7 +33,7 @@ class ThioMacBase(CellTypeBase):
 
     
 class GlassTranscriptThioMac(GlassTranscript):
-    cell_base = ThioMacBase()
+    cell_base = CD4TCellBase()
     
     #labels = models.ManyToManyField(TranscriptClass, through='GlassTranscriptLabelThioMac')
     
@@ -44,7 +44,7 @@ class GlassTranscriptThioMac(GlassTranscript):
         verbose_name_plural = 'Unfiltered Glass transcripts ({0})'.format(CELL_TYPE)
 
 class GlassTranscriptPrepThioMac(GlassTranscriptPrep):
-    cell_base = ThioMacBase()
+    cell_base = CD4TCellBase()
     class Meta:
         db_table = 'glass_atlas_{0}_{1}_prep"."glass_transcript'.format(current_settings.GENOME, CELL_TYPE.lower())
         app_label = 'Transcription_{0}'.format(CELL_TYPE)
@@ -52,7 +52,7 @@ class GlassTranscriptPrepThioMac(GlassTranscriptPrep):
         verbose_name_plural = 'Preparatory Glass transcripts ({0})'.format(CELL_TYPE)
 
 class FilteredGlassTranscriptThioMac(GlassTranscriptThioMac, FilteredGlassTranscript):
-    cell_base = ThioMacBase()
+    cell_base = CD4TCellBase()
     objects = FilteredGlassTranscriptManager()
     class Meta:
         proxy = True
@@ -62,7 +62,7 @@ class FilteredGlassTranscriptThioMac(GlassTranscriptThioMac, FilteredGlassTransc
       
 class GlassTranscriptSourcePrepThioMac(GlassTranscriptSourcePrep):
     glass_transcript = models.ForeignKey(GlassTranscriptPrepThioMac, related_name='glasstranscriptsource')
-    cell_base = ThioMacBase()
+    cell_base = CD4TCellBase()
     class Meta:
         db_table = 'glass_atlas_{0}_{1}_prep"."glass_transcript_source'.format(current_settings.GENOME, CELL_TYPE.lower())
         app_label = 'Transcription_{0}'.format(CELL_TYPE)
@@ -71,7 +71,7 @@ class GlassTranscriptSourcePrepThioMac(GlassTranscriptSourcePrep):
 
 class GlassTranscriptSourceThioMac(GlassTranscriptSource):
     glass_transcript = models.ForeignKey(GlassTranscriptThioMac, related_name='glasstranscriptsource')
-    cell_base = ThioMacBase()
+    cell_base = CD4TCellBase()
     class Meta:
         db_table = 'glass_atlas_{0}_{1}{2}"."glass_transcript_source'.format(current_settings.GENOME, CELL_TYPE.lower(), current_settings.STAGING)
         app_label = 'Transcription_{0}'.format(CELL_TYPE)
@@ -80,7 +80,7 @@ class GlassTranscriptSourceThioMac(GlassTranscriptSource):
        
 class GlassTranscriptSequenceThioMac(GlassTranscriptSequence):
     glass_transcript = models.ForeignKey(GlassTranscriptThioMac)
-    cell_base = ThioMacBase()
+    cell_base = CD4TCellBase()
     class Meta: 
         db_table = 'glass_atlas_{0}_{1}{2}"."glass_transcript_sequence'.format(current_settings.GENOME, CELL_TYPE.lower(), current_settings.STAGING)
         app_label = 'Transcription_{0}'.format(CELL_TYPE)
@@ -89,7 +89,7 @@ class GlassTranscriptSequenceThioMac(GlassTranscriptSequence):
            
 class GlassTranscriptNonCodingThioMac(GlassTranscriptNonCoding):
     glass_transcript = models.ForeignKey(GlassTranscriptThioMac)
-    cell_base = ThioMacBase()
+    cell_base = CD4TCellBase()
     class Meta: 
         db_table = 'glass_atlas_{0}_{1}{2}"."glass_transcript_non_coding'.format(current_settings.GENOME, CELL_TYPE.lower(), current_settings.STAGING)
         app_label = 'Transcription_{0}'.format(CELL_TYPE)

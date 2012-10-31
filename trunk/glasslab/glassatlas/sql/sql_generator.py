@@ -39,7 +39,7 @@ class GlassAtlasSqlGenerator(SqlGenerator):
         s += self.prep_table_trigger_transcript()
         s += self.table_trigger_source(prep_suffix)
         
-        s += self.from_tags_functions()        
+        s += self.from_tags_functions()  
         return s
             
     def final_set(self):
@@ -140,7 +140,7 @@ class GlassAtlasSqlGenerator(SqlGenerator):
     def table_main_source(self, suffix=''):
         table_name = 'glass_transcript_source'
         return """
-        CREATE TABLE "{schema_name_prefix}{suffix}"."" (
+        CREATE TABLE "{schema_name_prefix}{suffix}"."{table_name}" (
             "id" int4 NOT NULL,
             "chromosome_id" int4 DEFAULT NULL,
             "glass_transcript_id" int4 DEFAULT NULL,
@@ -268,7 +268,8 @@ class GlassAtlasSqlGenerator(SqlGenerator):
         );
         CREATE INDEX {table_name}_transcript_idx ON "{schema_name_prefix}{suffix}"."{table_name}" USING btree (glass_transcript_id);
         CREATE INDEX {table_name}_major_idx ON "{schema_name_prefix}{suffix}"."{table_name}" USING btree (major);
-        """.format(schema_name_prefix=self.schema_name_prefix, table_name=table_name, suffix=self.staging) \
+        """.format(schema_name_prefix=self.schema_name_prefix, 
+                   table_name=table_name, suffix=self.staging, type=region_type) \
         + self.pkey_sequence_sql(self.schema_name_prefix + self.staging, table_name)
         
     

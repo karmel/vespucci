@@ -1,0 +1,34 @@
+'''
+Created on Feb 23, 2011
+
+@author: karmel
+'''
+import sys
+from glasslab.utils.database import execute_query
+from optparse import make_option
+from glasslab.glassatlas.datatypes.transcript import CellTypeBase
+from glasslab.glassatlas.pipeline.base_parser import GlassAtlasParser
+from glasslab.glassatlas.sql.sql_generator import GlassAtlasSqlGenerator
+
+class SetUpDatabaseParser(GlassAtlasParser):
+    options = [
+               make_option('-g', '--genome',action='store', type='string', dest='genome', default='mm9', 
+                           help='Currently supported: mm8, mm8r, mm9, hg18, hg18r'),
+               make_option('-c', '--cell_type',action='store', type='string', dest='cell_type', 
+                           help='Cell type for this run? Options are: %s' % ','.join(CellTypeBase.get_correlations().keys())),
+               make_option('-f', '--final', action='store_true', dest='final', default=False,
+                           help='Generate only the final schema and tables, without the prep schema?'),
+                ]
+
+if __name__ == '__main__':
+    parser = SetUpDatabaseParser()
+    options, args = parser.parse_args()
+    
+    cell_type, cell_base = parser.set_cell(options)
+    genome = parser.set_genome(options)
+    
+    generator = GlassAtlasSqlGenerator(cell_type=cell_type, genome=genome)
+    
+    q = (options.final and generator.final_set()) or generator.all_sql()
+    print q
+    execute_query(q)

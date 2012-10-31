@@ -103,7 +103,9 @@ class CellTypeBase(object):
     @classmethod
     def get_correlations(cls):
         from glasslab.glassatlas.datatypes.celltypes.thiomac import ThioMacBase
-        return {'thiomac': ThioMacBase }
+        from glasslab.glassatlas.datatypes.celltypes.cd4tcell import CD4TCellBase
+        return {'thiomac': ThioMacBase,
+                 'cd4tcell': CD4TCellBase}
           
     @property
     def glass_transcript(self): return GlassTranscript

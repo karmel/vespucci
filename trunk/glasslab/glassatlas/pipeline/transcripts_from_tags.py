@@ -5,13 +5,15 @@ Created on Nov 8, 2010
 '''
 from glasslab.glassatlas.datatypes.transcript import CellTypeBase
 from glasslab.sequencing.tag import GlassTag
-from glasslab.utils.scripting import GlassOptionParser
 from optparse import make_option
 from glasslab.config import current_settings
 from glasslab.utils.database import discard_temp_tables
+from glasslab.glassatlas.pipeline.base_parser import GlassAtlasParser
 
-class TranscriptsFromTagsParser(GlassOptionParser):
+class TranscriptsFromTagsParser(GlassAtlasParser):
     options = [
+               make_option('-g', '--genome',action='store', type='string', dest='genome', default='mm9', 
+                           help='Currently supported: mm8, mm8r, mm9, hg18, hg18r'),
                make_option('-c', '--cell_type',action='store', type='string', dest='cell_type', 
                            help='Cell type for this run? Options are: %s' % ','.join(CellTypeBase.get_correlations().keys())),
                make_option('-t', '--tag_table',action='store', type='string', dest='tag_table', 
@@ -46,8 +48,8 @@ if __name__ == '__main__':
     if options.processes:
         current_settings.ALLOWED_PROCESSES = int(options.processes)
     
-    if options.cell_type: current_settings.CELL_TYPE = options.cell_type
-    cell_base = CellTypeBase().get_cell_type_base(current_settings.CELL_TYPE)()
+    cell_type, cell_base = parser.set_cell(options)
+    parser.set_genome(options)
     
     allow_extended_gaps = True
     if options.no_extended_gaps: allow_extended_gaps = False
