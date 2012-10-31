@@ -39,6 +39,6 @@ DATABASES = {
 #####################################
 # Compute power
 #####################################
-ALLOWED_PROCESSES = 1
+ALLOWED_PROCESSES = 6
 CHR_LISTS = None # Dynamically set during processing
 

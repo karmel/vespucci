@@ -155,7 +155,9 @@ class SequencingRun(GlassModel):
     source_table    = models.CharField(max_length=100)
     
     class Meta:
-        db_table    = 'genome_reference_%s"."sequencing_run' % current_settings.GENOME
+        db_table    = 'glass_atlas_%s"."sequencing_run' % current_settings.GENOME
+        #@todo
+        #db_table    = 'genome_reference_%s"."sequencing_run' % current_settings.GENOME
         app_label   = 'Genome_Reference'
         
     def __unicode__(self):

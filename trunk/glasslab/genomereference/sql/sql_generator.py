@@ -110,9 +110,9 @@ class GenomeReferenceSqlGenerator(SqlGenerator):
             "transcription_end" int8 DEFAULT NULL,
             "start_end" box DEFAULT NULL
         );
-        CREATE INDEX "{1}_chr_idx" ON "genome_reference_mm9"."{1}" USING btree(chromosome_id);
-        CREATE INDEX "{1}_start_end_idx" ON "genome_reference_mm9"."{1}" USING gist(start_end);
-        CREATE INDEX "{1}_strand_idx" ON "genome_reference_mm9"."{1}" USING btree(strand);
+        CREATE INDEX "{1}_chr_idx" ON "{0}"."{1}" USING btree(chromosome_id);
+        CREATE INDEX "{1}_start_end_idx" ON "{0}"."{1}" USING gist(start_end);
+        CREATE INDEX "{1}_strand_idx" ON "{0}"."{1}" USING btree(strand);
         """.format(self.schema_name, table_name, object_relation) \
         + self.pkey_sequence_sql(self.schema_name, table_name)
         
