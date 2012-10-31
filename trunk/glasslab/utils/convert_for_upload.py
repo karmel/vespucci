@@ -7,7 +7,7 @@ class TagFileConverter(object):
 		'''
 		Use extensions to guess file name and perform the necessary conversion.
 		'''
-		file_type = file_type.lower()
+		file_type = (file_type or '').lower()
 		# Is this a BAM file? Convert first to SAM.
 		
 		if file_type == 'bam' or file_name[-4:].lower() == '.bam':
@@ -26,7 +26,8 @@ class TagFileConverter(object):
 		Use samtools to convert BAM to SAM first if necessary.
 		'''
 		output = output_file or (file_name[-4:] == '.bam' and file_name.replace('bam','sam')) or (file_name + '.sam')
-		subprocess.check_call('samtools -h -o {0} {1}'.format(output, file_name))
+		print 'samtools view -h -o {0} {1}'.format(output, file_name)
+		subprocess.check_call('samtools view -h -o {0} {1}'.format(output, file_name))
 		return output
 	
 	def convert_sam_file(self, file_name, output_file=None):
