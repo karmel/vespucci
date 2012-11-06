@@ -69,14 +69,16 @@ if __name__ == '__main__':
             current_settings.ALLOWED_PROCESSES = int(options.stitch_processes)
     
         cell_base.glass_transcript.stitch_together_transcripts(
-                        allow_extended_gaps=allow_extended_gaps, extension_percent=options.extension_percent, 
+                        allow_extended_gaps=allow_extended_gaps, 
+                        extension_percent=options.extension_percent, 
                         set_density=options.set_density)
     
         if options.stitch_processes:
             current_settings.ALLOWED_PROCESSES = curr_processes
     
     elif options.set_density:
-        cell_base.glass_transcript.set_density(allow_extended_gaps=allow_extended_gaps)
+        cell_base.glass_transcript.set_density(allow_extended_gaps=allow_extended_gaps,
+                                               extension_percent=options.extension_percent)
     
     if options.draw_edges:
         cell_base.glass_transcript.draw_transcript_edges()

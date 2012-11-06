@@ -367,7 +367,7 @@ $$ LANGUAGE 'plpgsql';
 CREATE OR REPLACE FUNCTION glass_atlas_{0}_{1}_prep.set_density(chr_id integer, 
                                         allowed_edge integer, edge_scaling_factor integer, 
                                         density_multiplier integer, allow_extended_gaps boolean,
-                                        extension_percent int, null_only boolean)
+                                        extension_percent float, null_only boolean)
 RETURNS VOID AS $$
 DECLARE
     table_name text;
@@ -417,3 +417,4 @@ $$ LANGUAGE 'plpgsql';
 
 
 """.format(genome, cell_type)
+

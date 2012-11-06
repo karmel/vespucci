@@ -266,7 +266,8 @@ BEGIN
             ON exons.sequence_transcription_region_id = sequence.sequence_transcription_region_id
             WHERE sequence.major = true
             GROUP BY sequence.glass_transcript_id) seq
-        WHERE t.id = seq.glass_transcript_id';
+        WHERE t.id = seq.glass_transcript_id
+        AND t.width > max_width';
         
     EXECUTE 'UPDATE glass_atlas_{0}_{1}{suffix}.glass_transcript_' || chr_id || ' transcript
         SET score = temp_t.sum_tags::numeric/temp_t.width/' || millions_of_tags || '::numeric
@@ -352,4 +353,3 @@ $$ LANGUAGE 'plpgsql';
 
 """.format(genome, cell_type, suffix=suffix)
 
-if __name__ == '__main__': print sql('mm9','cd4tcell','')
