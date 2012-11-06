@@ -50,7 +50,8 @@ END;
 $$ LANGUAGE 'plpgsql';
 
 CREATE OR REPLACE FUNCTION glass_atlas_{0}_{1}_prep.get_allowed_edge(trans glass_atlas_{0}_{1}_prep.glass_transcript, 
-                                            allowed_edge integer, scaling_factor integer, allow_extended_gaps boolean)
+                                            allowed_edge integer, scaling_factor integer, allow_extended_gaps boolean, 
+                                            extension_percent float)
 RETURNS float AS $$
 DECLARE
     overlapping_edge float := NULL;
@@ -58,16 +59,16 @@ DECLARE
 BEGIN 
     edge := allowed_edge;
     IF allow_extended_gaps = true THEN
-        -- Allow longer edge (up to 20 percent of seq) if this sequence is contained in a RefSeq region
+        -- Allow longer edge (up to extension_percent percent of seq) if this sequence is contained in a RefSeq region
         overlapping_edge := (SELECT LEAST(reg.transcription_end - trans.transcription_end + 1,
-                                    (reg.transcription_end - reg.transcription_start + 1)*.2) 
+                                    (reg.transcription_end - reg.transcription_start + 1)*extension_percent) 
                         FROM genome_reference_{0}.sequence_transcription_region reg
                         WHERE reg.chromosome_id = trans.chromosome_id
                             AND reg.strand = trans.strand
                             AND reg.start_end @>
                                 point(trans.transcription_end, 0)
                         ORDER BY LEAST(reg.transcription_end - trans.transcription_end + 1,
-                                    (reg.transcription_end - reg.transcription_start + 1)*.2) DESC
+                                    (reg.transcription_end - reg.transcription_start + 1)*extension_percent) DESC
                         LIMIT 1);
         edge := (SELECT GREATEST(allowed_edge, overlapping_edge));
     END IF;
@@ -273,7 +274,6 @@ RETURNS VOID AS $$
     scaling_factor text;
     strand_start integer := 0;
     strand_end integer := 1;
-    use_for_scoring boolean;
  BEGIN
     IF edge_scaling_factor = 0 THEN scaling_factor := 'NULL';
     ELSE scaling_factor := edge_scaling_factor::text;
@@ -285,9 +285,6 @@ RETURNS VOID AS $$
         strand_end := one_strand;
     END IF; 
     
-    -- Should this run have tags counted for density?
-    use_for_scoring := (SELECT r.use_for_scoring FROM genome_reference_{0}.sequencing_run r WHERE id = seq_run_id);
-    
      FOR strand IN strand_start..strand_end 
      LOOP
         FOR rec IN 
@@ -298,11 +295,8 @@ RETURNS VOID AS $$
                 
                 -- This transcript has been added for a single run, so we can set density
                 -- as simple tag_count/length.
-                IF use_for_scoring = true THEN
-                    density := (density_multiplier*(rec.tag_count)::numeric)/
-                                    (rec.transcription_end - rec.transcription_start + 1)::numeric;
-                ELSE density := 0;
-                END IF;
+                density := (density_multiplier*(rec.tag_count)::numeric)/
+                                (rec.transcription_end - rec.transcription_start + 1)::numeric;
                 
                 EXECUTE 'INSERT INTO glass_atlas_{0}_{1}_prep.glass_transcript_' || rec.chromosome_id
                     || ' ("chromosome_id", "strand", 
@@ -373,7 +367,7 @@ $$ LANGUAGE 'plpgsql';
 CREATE OR REPLACE FUNCTION glass_atlas_{0}_{1}_prep.set_density(chr_id integer, 
                                         allowed_edge integer, edge_scaling_factor integer, 
                                         density_multiplier integer, allow_extended_gaps boolean,
-                                        null_only boolean)
+                                        extension_percent int, null_only boolean)
 RETURNS VOID AS $$
 DECLARE
     table_name text;
@@ -405,7 +399,8 @@ BEGIN
     EXECUTE 'CREATE TEMP TABLE ' || table_name || '_2
         as SELECT t.id,
                 glass_atlas_{0}_{1}_prep.get_allowed_edge(t.*,
-                    ' || allowed_edge || ',' || edge_scaling_factor || ', ' || allow_extended_gaps || ') as edge
+                    ' || allowed_edge || ',' || edge_scaling_factor || ', ' 
+                    || allow_extended_gaps || ', ' || extension_percent || ') as edge
         FROM glass_atlas_{0}_{1}_prep.glass_transcript_' || chr_id || ' t';
 
     EXECUTE 'UPDATE glass_atlas_{0}_{1}_prep.glass_transcript_' || chr_id || ' t

@@ -3,7 +3,6 @@ Created on Feb 23, 2011
 
 @author: karmel
 '''
-import sys
 from glasslab.utils.database import execute_query
 from optparse import make_option
 from glasslab.glassatlas.datatypes.transcript import CellTypeBase
@@ -29,6 +28,7 @@ if __name__ == '__main__':
     
     generator = GlassAtlasSqlGenerator(cell_type=cell_type, genome=genome)
     
+    print 'Creating database schema and tables...'
     q = (options.final and generator.final_set()) or generator.all_sql()
-    print q
     execute_query(q)
+    

@@ -195,36 +195,31 @@ $$ LANGUAGE 'plpgsql';
 CREATE OR REPLACE FUNCTION glass_atlas_{0}_{1}{suffix}.calculate_scores(chr_id integer)
 RETURNS VOID AS $$
 DECLARE
-    total_runs integer;
+    millions_of_tags float;
     temp_table text;
 BEGIN 
-    -- Tag count is scaled avg and max tags: sqrt(avg_tags * max_tags)
-    -- Score is tag count divided by the lesser of length/1000 and 2*log(length),
-    -- which allows lower tag counts per bp for longer transcripts.
+    -- RPKM. Can be modified as necessary.
     
-    total_runs := (SELECT count(DISTINCT sequencing_run_id) FROM glass_atlas_{0}_{1}{suffix}.glass_transcript_source);
+    -- Use prep tables to determine raw runs and tag counts
+    millions_of_tags := (SELECT sum(tag_count)::numeric/1000000 FROM glass_atlas_{0}_{1}_prep.glass_transcript_source);
     
     temp_table = 'score_table_' || chr_id || '_' || (1000*RANDOM())::int;
     EXECUTE 'CREATE TEMP TABLE ' || temp_table || ' AS
         SELECT 
             transcript.id,
-            SUM(source.tag_count) as sum_tags, MAX(source.tag_count) as max_tags,
+            SUM(source.tag_count) as sum_tags, 
             (transcript.transcription_end - transcript.transcription_start + 1) as width
         FROM glass_atlas_{0}_{1}{suffix}.glass_transcript_' || chr_id || ' transcript 
         JOIN glass_atlas_{0}_{1}{suffix}.glass_transcript_source_' || chr_id || ' source
         ON transcript.id = source.glass_transcript_id
         JOIN glass_atlas_{0}.sequencing_run run
         ON source.sequencing_run_id = run.id
-        WHERE run.use_for_scoring = true
-            AND transcript.score IS NULL
+        WHERE transcript.score IS NULL
         GROUP BY transcript.id, transcript.transcription_end, transcript.transcription_start';
     EXECUTE 'CREATE INDEX ' || temp_table || '_idx ON ' || temp_table || ' USING btree(id)';
     
 	EXECUTE 'UPDATE glass_atlas_{0}_{1}{suffix}.glass_transcript_' || chr_id || ' transcript
-	    SET score = GREATEST(0,
-                SQRT((temp_t.sum_tags::numeric/' || total_runs || ')*temp_t.max_tags)
-                /LEAST(GREATEST(1000, temp_t.width)::numeric/1000, 2*LOG(temp_t.width))
-            )
+	    SET score = temp_t.sum_tags::numeric/temp_t.width/' || millions_of_tags || '::numeric
 	    FROM ' || temp_table || ' temp_t
 	    WHERE transcript.id = temp_t.id';
 
@@ -232,6 +227,55 @@ BEGIN
 END;
 $$ LANGUAGE 'plpgsql';
 
+CREATE OR REPLACE FUNCTION glass_atlas_{0}_{1}{suffix}.calculate_scores_rnaseq(chr_id integer)
+RETURNS VOID AS $$
+DECLARE
+    millions_of_tags float;
+    temp_table text;
+BEGIN 
+    -- RPKM. Can be modified as necessary.
+    -- Only uses exonic distance, where available.
+    
+    -- Use prep tables to determine raw runs and tag counts
+    millions_of_tags := (SELECT sum(tag_count)::numeric/1000000 FROM glass_atlas_{0}_{1}_prep.glass_transcript_source);
+    
+    temp_table = 'score_table_' || chr_id || '_' || (1000*RANDOM())::int;
+    EXECUTE 'CREATE TEMP TABLE ' || temp_table || ' AS
+        SELECT 
+            transcript.id,
+            SUM(source.tag_count) as sum_tags, 
+            (transcript.transcription_end - transcript.transcription_start + 1) as width
+        FROM glass_atlas_{0}_{1}{suffix}.glass_transcript_' || chr_id || ' transcript 
+        JOIN glass_atlas_{0}_{1}{suffix}.glass_transcript_source_' || chr_id || ' source
+        ON transcript.id = source.glass_transcript_id
+        JOIN glass_atlas_{0}.sequencing_run run
+        ON source.sequencing_run_id = run.id
+        WHERE transcript.score IS NULL
+        GROUP BY transcript.id, transcript.transcription_end, transcript.transcription_start';
+    EXECUTE 'CREATE INDEX ' || temp_table || '_idx ON ' || temp_table || ' USING btree(id)';
+    
+    -- Update with exonic width.
+    EXECUTE 'UPDATE ' || temp_table || ' t
+        SET width = max_width
+        FROM (SELECT sequence.glass_transcript_id, max(exons.width) as max_width
+            FROM
+            (SELECT sequence_transcription_region_id, sum(width(start_end)) as width
+            FROM genome_reference_{0}.sequence_exon
+            GROUP BY sequence_transcription_region_id) exons
+            JOIN glass_atlas_{0}_{1}{suffix}.glass_transcript_sequence sequence
+            ON exons.sequence_transcription_region_id = sequence.sequence_transcription_region_id
+            WHERE sequence.major = true
+            GROUP BY sequence.glass_transcript_id) seq
+        WHERE t.id = seq.glass_transcript_id';
+        
+    EXECUTE 'UPDATE glass_atlas_{0}_{1}{suffix}.glass_transcript_' || chr_id || ' transcript
+        SET score = temp_t.sum_tags::numeric/temp_t.width/' || millions_of_tags || '::numeric
+        FROM ' || temp_table || ' temp_t
+        WHERE transcript.id = temp_t.id';
+
+    RETURN;
+END;
+$$ LANGUAGE 'plpgsql';
 
 CREATE OR REPLACE FUNCTION glass_atlas_{0}_{1}{suffix}.calculate_standard_error(chr_id integer)
 RETURNS VOID AS $$
@@ -286,7 +330,6 @@ BEGIN
             AND run.notx = true
             AND run.kla = false
             AND run.other_conditions = false
-            AND run.use_for_scoring = true
         GROUP BY t.id';
 
     -- Set all scores to zero at first, since some we will not have data on,
@@ -308,3 +351,5 @@ END;
 $$ LANGUAGE 'plpgsql';
 
 """.format(genome, cell_type, suffix=suffix)
+
+if __name__ == '__main__': print sql('mm9','cd4tcell','')

@@ -26,7 +26,7 @@ MAX_STITCHING_GAP = MAX_GAP # Max gap between transcripts being stitched togethe
 MAX_EDGE = 20 # Max edge length of transcript graph subgraphs to be created
 EDGE_SCALING_FACTOR = 20 # Number of transcripts per DENSITY_MULTIPLIER bp required to get full allowed edge length
 DENSITY_MULTIPLIER = 1000 # Scaling factor on density-- think of as bps worth of tags to consider
-MIN_SCORE = 6 # Hide transcripts with scores below this threshold.
+MIN_SCORE = 0.01 # Hide transcripts with scores below this threshold.
 
 def multiprocess_all_chromosomes(func, cls, *args, **kwargs):
     ''' 
@@ -221,12 +221,14 @@ class GlassTranscript(TranscriptBase):
     # Transcript cleanup and refinement
     ################################################
     @classmethod
-    def stitch_together_transcripts(cls, allow_extended_gaps=True, set_density=False, null_only=True):
+    def stitch_together_transcripts(cls, allow_extended_gaps=True, extension_percent='.2', 
+                                    set_density=False, null_only=True):
         multiprocess_all_chromosomes(wrap_stitch_together_transcripts, cls, 
-                                     allow_extended_gaps, set_density, null_only)
+                                     allow_extended_gaps, extension_percent, set_density, null_only)
     
     @classmethod
-    def _stitch_together_transcripts(cls, chr_list, allow_extended_gaps=True, set_density=False, null_only=True):
+    def _stitch_together_transcripts(cls, chr_list, allow_extended_gaps=True, extension_percent='.2', 
+                                     set_density=False, null_only=True):
         '''
         This is tag-level agnostic, stitching based on gap size alone.
         '''
@@ -241,33 +243,35 @@ class GlassTranscript(TranscriptBase):
             if set_density:
                 print 'Setting average tags for preparatory transcripts for chromosome %d' % chr_id
                 query = """
-                    SELECT glass_atlas_{0}_{1}_prep.set_density({2},{3},{4},{5},{6},{7});
+                    SELECT glass_atlas_{0}_{1}_prep.set_density({2},{3},{4},{5},{6},{7},{8});
                     """.format(current_settings.GENOME, 
                                current_settings.CELL_TYPE.lower(),
                                chr_id, MAX_EDGE, EDGE_SCALING_FACTOR, 
                                DENSITY_MULTIPLIER, 
                                allow_extended_gaps and 'true' or 'false',
+                               extension_percent,
                                null_only and 'true' or 'false')
                 execute_query(query)
     
     @classmethod
-    def set_density(cls, allow_extended_gaps=True, null_only=True):
-        multiprocess_all_chromosomes(wrap_set_density, cls, allow_extended_gaps, null_only)
+    def set_density(cls, allow_extended_gaps=True, extension_percent='.2', null_only=True):
+        multiprocess_all_chromosomes(wrap_set_density, cls, allow_extended_gaps, extension_percent, null_only)
     
     @classmethod
-    def _set_density(cls, chr_list, allow_extended_gaps=True, null_only=True):
+    def _set_density(cls, chr_list, allow_extended_gaps=True, extension_percent='.2', null_only=True):
         '''
         Force reset average tags for prep DB.
         '''
         for chr_id  in chr_list:
             print 'Setting average tags for preparatory transcripts for chromosome %d' % chr_id
             query = """
-                SELECT glass_atlas_{0}_{1}_prep.set_density({2},{3},{4},{5},{6},{7});
+                SELECT glass_atlas_{0}_{1}_prep.set_density({2},{3},{4},{5},{6},{7},{8});
                 """.format(current_settings.GENOME, 
                            current_settings.CELL_TYPE.lower(),
                            chr_id, MAX_EDGE, EDGE_SCALING_FACTOR, 
                            DENSITY_MULTIPLIER, 
                            allow_extended_gaps and 'true' or 'false',
+                           extension_percent,
                            null_only and 'true' or 'false')
             execute_query(query)
             

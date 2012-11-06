@@ -23,7 +23,7 @@ class Chromosome(GlassModel):
     length = models.IntegerField(max_length=25, blank=False)
     
     class Meta: 
-        db_table    = 'genome_reference_%s"."chromosome' % current_settings.GENOME
+        db_table    = 'genome_reference_{0}"."chromosome'.format(current_settings.GENOME)
         app_label   = 'Genome_Reference'
     
     def __unicode__(self): return self.name
@@ -35,7 +35,7 @@ class SequenceIdentifier(GlassModel):
     sequence_identifier = models.CharField(max_length=50, blank=False)
     
     class Meta: 
-        db_table    = 'genome_reference_%s"."sequence_identifier' % current_settings.GENOME
+        db_table    = 'genome_reference_{0}"."sequence_identifier'.format(current_settings.GENOME)
         app_label   = 'Genome_Reference'
     
     def __unicode__(self): return self.sequence_identifier
@@ -67,7 +67,7 @@ class SequenceDetail(GlassModel):
     pfam_id             = models.CharField(max_length=100, blank=True)
     
     class Meta: 
-        db_table    = 'genome_reference_%s"."sequence_detail' % current_settings.GENOME
+        db_table    = 'genome_reference_{0}"."sequence_detail'.format(current_settings.GENOME)
         app_label   = 'Genome_Reference'
     
     def __unicode__(self): 
@@ -82,7 +82,7 @@ class NonCodingRna(GlassModel):
     description         = models.CharField(max_length=100)
     
     class Meta: 
-        db_table    = 'genome_reference_%s"."non_coding_rna' % current_settings.GENOME
+        db_table    = 'genome_reference_{0}"."non_coding_rna'.format(current_settings.GENOME)
         app_label   = 'Genome_Reference'
         verbose_name = 'Non coding RNA'
         
@@ -116,7 +116,7 @@ class SequenceTranscriptionRegion(GlassModel):
     start_end           = BoxField(null=True, default=None, help_text='This is a placeholder for the PostgreSQL box type.')
     
     class Meta: 
-        db_table    = 'genome_reference_%s"."sequence_transcription_region' % current_settings.GENOME
+        db_table    = 'genome_reference_{0}"."sequence_transcription_region'.format(current_settings.GENOME)
         app_label   = 'Genome_Reference'
 
     def __unicode__(self):
@@ -139,7 +139,7 @@ class NonCodingTranscriptionRegion(GlassModel):
     start_end           = BoxField(null=True, default=None, help_text='This is a placeholder for the PostgreSQL box type.')
     
     class Meta: 
-        db_table    = 'genome_reference_%s"."non_coding_transcription_region' % current_settings.GENOME
+        db_table    = 'genome_reference_{0}"."non_coding_transcription_region'.format(current_settings.GENOME)
         app_label   = 'Genome_Reference'
 
     def __unicode__(self):
@@ -155,9 +155,9 @@ class SequencingRun(GlassModel):
     source_table    = models.CharField(max_length=100)
     
     class Meta:
-        db_table    = 'glass_atlas_%s"."sequencing_run' % current_settings.GENOME
+        db_table    = 'glass_atlas_{0}"."sequencing_run'.format(current_settings.GENOME)
         #@todo
-        #db_table    = 'genome_reference_%s"."sequencing_run' % current_settings.GENOME
+        #db_table    = 'genome_reference_{0}"."sequencing_run'.format(current_settings.GENOME)
         app_label   = 'Genome_Reference'
         
     def __unicode__(self):

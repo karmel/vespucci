@@ -37,6 +37,8 @@ class TranscriptsFromTagsParser(GlassAtlasParser):
                            help='Should transcripts be stored?'),
                make_option('--no_extended_gaps',action='store_true', dest='no_extended_gaps',  
                            help='Should extended gaps (i.e., under RefSeq regions) be allowed?'),
+               make_option('--extension_percent',action='store', dest='extension_percent', type='string', default='.2',
+                           help='What percent of a RefSeq gene body can be automatically stitched over? Expects float, default: .2 (20%)'),
                make_option('--staging',action='store_true', dest='staging', default=False,  
                            help='Use the transcript database with the suffix _staging?'),
                 ]
@@ -67,7 +69,8 @@ if __name__ == '__main__':
             current_settings.ALLOWED_PROCESSES = int(options.stitch_processes)
     
         cell_base.glass_transcript.stitch_together_transcripts(
-                        allow_extended_gaps=allow_extended_gaps, set_density=options.set_density)
+                        allow_extended_gaps=allow_extended_gaps, extension_percent=options.extension_percent, 
+                        set_density=options.set_density)
     
         if options.stitch_processes:
             current_settings.ALLOWED_PROCESSES = curr_processes

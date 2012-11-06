@@ -29,7 +29,7 @@ class TagFileConverter(object):
 		subprocess.check_call('samtools view -h -o {0} {1}'.format(output, file_name), shell=True)
 		return output
 	
-	def convert_sam_file(self, file_name, output_file=None):
+	def convert_sam_file(self, file_name, output_file=None, min_map_quality=10):
 		'''
 		Sample output::
 		
@@ -75,11 +75,16 @@ class TagFileConverter(object):
 			
 			if fields[0][0] == '@': continue # Header line
 			if int(fields[1]) == 4: continue # Read did not match
-			if not 'NH:i:1' in fields: continue # Not uniquely mapped
-			if int(fields[1]) == 0: strand = '+'
-			elif int(fields[1]) == 16: strand = '-'
-			else: raise Exception('Did not recognize flag %s in line: \n%s' % (fields[1], line))
-				
+			
+			bitwise_flag = int(fields[1])
+			if bitwise_flag & 0x100: continue # Not primary alignment
+			# Filter for quality
+			if min_map_quality and int(fields[4]) < min_map_quality: continue
+			
+			strand = '+'
+			if bitwise_flag & 0x10: strand = '-'
+			
+			
 			pos = int(fields[3]) - 1
 			
 			to_write = map(str, [strand, fields[2], pos, fields[9]]) # Strand, chr, position, matched sequence

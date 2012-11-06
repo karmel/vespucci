@@ -30,9 +30,7 @@ def check_input(options):
     if not options.schema_name: 
         options.schema_name = current_settings.CURRENT_SCHEMA
     else: current_settings.CURRENT_SCHEMA = options.schema_name
-    
-    if options.genome: current_settings.GENOME = options.genome
-    
+        
     # Get a file name prefix for use with generated files, using input file as base
     file_name = options.project_name or '.'.join(os.path.basename(options.file_name).split('.')[:-1])
     
