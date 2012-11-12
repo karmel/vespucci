@@ -34,3 +34,5 @@ if __name__ == '__main__':
     
     execute_query(q)
     
+    # And cleanup the import tables:
+    execute_query(generator.cleanup())

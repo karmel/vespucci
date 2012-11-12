@@ -6,6 +6,7 @@ Created on Nov 12, 2012
 
 from glasslab.config import current_settings
 from glasslab.utils.database import SqlGenerator
+import csv
 
 class GenomeResourcesSqlGenerator(SqlGenerator):
     ''' Generates the SQL queries for building DB schema. '''
@@ -24,6 +25,8 @@ class GenomeResourcesSqlGenerator(SqlGenerator):
         s += self.chromosome()
         s += self.sequence_identifier()
         s += self.sequence_transcription_region()
+        s += self.non_coding_rna()
+        s += self.non_coding_transcription_region()
         s += self.sequencing_run()
         
         return s
@@ -33,12 +36,17 @@ class GenomeResourcesSqlGenerator(SqlGenerator):
         s += self.import_ucsc_sequence_mm9_values()
         s += self.insert_sequence_mm9_values()
         s += self.insert_sequence_transcription_region_mm9_values()
-        
+        s += self.import_ncrna_org_mm9_values()
+        s += self.insert_non_coding_mm9_values()
+        s += self.insert_non_coding_transcription_region_mm9_values()
+         
         return s
     
     def cleanup(self):
         return """
         DROP TABLE IF EXISTS "{schema_name}"."refGene";
+        DROP TABLE IF EXISTS "{schema_name}"."summary";
+        DROP TABLE IF EXISTS "{schema_name}"."mm9_bed";
         """.format(schema_name=self.schema_name)
         
     def schema(self):
@@ -115,8 +123,7 @@ class GenomeResourcesSqlGenerator(SqlGenerator):
             strand smallint,
             transcription_start bigint,
             transcription_end bigint,
-            start_end box,
-            score smallint
+            start_end box
         );
         CREATE INDEX {table_name}_chr_idx ON "{schema_name}"."{table_name}" USING btree (chromosome_id);
         CREATE INDEX {table_name}_strand_idx ON "{schema_name}"."{table_name}" USING btree (strand);
@@ -184,7 +191,7 @@ class GenomeResourcesSqlGenerator(SqlGenerator):
         This is hardcoded to work with the UCSC download as it is. 
         More flexible import logic can be created here.
         '''
-        path_to_file = '../refGene.txt'
+        path_to_file = '../data/refGene.txt'
         f = open(path_to_file)
         output = []
         for l in f:
@@ -246,4 +253,107 @@ class GenomeResourcesSqlGenerator(SqlGenerator):
         """.format(schema_name=self.schema_name, table_name=table_name)
 
     
+    def import_ncrna_org_mm9_values(self):
+        '''
+        Create a temp table to be normalized and associated appropriately.
+        
+        File downloaded at: http://www.ncrna.org/frnadb/files/summary.zip
+        and: http://www.ncrna.org/frnadb/files/mm9_bed.zip --> mm9_bed/mm9.bed
+        
+        This is hardcoded to work with the fRNAdb download as it is. 
+        More flexible import logic can be created here.
+        '''
+        path_to_summary = '../data/summary.csv'
+        f_summary = csv.reader(open(path_to_summary, 'rb'))
+        output = []
+        for fields in f_summary:
+            # ID,acc,Description,SO name,Oranism,Xref,Length
+            if fields[0] == 'ID': continue
+            
+            # Shorten and clean up some apostrophes
+            fields = [val[:255].replace("'", "''") for val in fields]
+            output.append("""
+                INSERT into "{schema_name}"."summary" 
+                    ("ID","Description","SO name","Xref") 
+                    VALUES ('{0}', '{1}', '{2}', '{3}');
+                """.format(fields[0], fields[2], fields[3], fields[5],
+                           schema_name=self.schema_name))
+        
+        s = """
+        CREATE TABLE "{schema_name}"."summary" (
+            "ID" varchar(50) NOT NULL DEFAULT NULL,
+            "Description" varchar(255) NOT NULL DEFAULT NULL,
+            "SO name" varchar(255) NOT NULL DEFAULT NULL,
+            "Xref" varchar(255) NOT NULL DEFAULT NULL
+        );
+        """.format(schema_name=self.schema_name) \
+        + '\n'.join(output)
+        
+        path_to_bed = '../data/mm9.bed'
+        f_bed = open(path_to_bed)
+        output = []
+        for l in f_bed:
+            fields = l.split('\t')
+            #chr8    119597933       119597953       FR408228        1000    +       
+            output.append("""
+                INSERT into "{schema_name}"."mm9_bed" 
+                    ("name","chrom","strand","start","end") 
+                    VALUES ('{0}', '{1}', '{2}', {3}, {4});
+                """.format(fields[3], fields[0], fields[5], fields[1], fields[2],
+                           schema_name=self.schema_name))
+        
+        s += """
+        CREATE TABLE "{schema_name}"."mm9_bed" (
+            "name" varchar(50) NOT NULL DEFAULT NULL,
+            "chrom" varchar(25) NOT NULL DEFAULT NULL,
+            "strand" varchar(1) NOT NULL DEFAULT NULL,
+            "start" int8 NOT NULL DEFAULT NULL,
+            "end" int8 NOT NULL DEFAULT NULL
+        );
+        """.format(schema_name=self.schema_name) \
+        + '\n'.join(output)
+        
+        return s
     
+    def insert_non_coding_mm9_values(self):
+        '''
+        fRNAdb from ncrna.org has sequences for all organisms in one large file. 
+        We only want those relevant to mm9,
+        so we match based on the mm9_bed file provided.
+        '''
+        table_name = 'non_coding_rna'
+        return """
+        INSERT INTO "{schema_name}"."{table_name}" ("type", "description", "source") 
+        SELECT 
+            summary."SO name",
+            summary."ID" || ': ' || summary."Description",
+            summary."Xref"
+        FROM "{schema_name}"."summary" summary
+        WHERE
+            summary."ID" IN (SELECT "name" from "{schema_name}"."mm9_bed");
+        """.format(schema_name=self.schema_name, table_name=table_name)
+    
+    def insert_non_coding_transcription_region_mm9_values(self):
+        '''
+        fRNAdb from ncrna.org has sequences for all organisms in one large file. 
+        We only want those relevant to mm9,
+        so we match based on the mm9_bed file provided.
+        '''
+        table_name = 'non_coding_transcription_region'
+        return """
+        INSERT INTO "{schema_name}"."{table_name}" (non_coding_rna_id, chromosome_id, strand, 
+        transcription_start, transcription_end, start_end) 
+        SELECT 
+            nc_rna.id, chr.id, 
+            (CASE WHEN mm9_bed.strand = '-' THEN '1' ELSE 0 END),
+            mm9_bed.start, mm9_bed."end",
+            public.make_box(mm9_bed."start",0,mm9_bed."end",0)
+        FROM "{schema_name}"."mm9_bed" mm9_bed, 
+            "{schema_name}"."summary" summary, 
+            "{schema_name}"."non_coding_rna" nc_rna, 
+            "{schema_name}"."chromosome" chr
+        WHERE 
+            mm9_bed."name" = summary."ID"
+            AND nc_rna.description = summary."ID" || ': ' || summary."Description"
+            AND chr.name = mm9_bed.chrom;
+        """.format(schema_name=self.schema_name, table_name=table_name)
