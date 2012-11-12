@@ -24,6 +24,7 @@ class GenomeResourcesSqlGenerator(SqlGenerator):
         s += self.sequence_identifier()
         s += self.sequence_transcription_region()
         s += self.sequencing_run()
+        s += self.convenience_functions()
         
         return s
     
@@ -185,3 +186,26 @@ class GenomeResourcesSqlGenerator(SqlGenerator):
         CREATE UNIQUE INDEX {table_name}_source_table_idx ON "{schema_name}"."{table_name}" USING btree (source_table);
         """.format(self.genome, user=self.user) \
         + self.pkey_sequence_sql(schema_name=self.schema_name, table_name=table_name)
+    
+    def convenience_functions(self):
+        return """
+        CREATE OR REPLACE FUNCTION public.make_box(x1 numeric, y1 numeric, x2 numeric, y2 numeric)
+        RETURNS box AS $$
+        DECLARE
+            s text;
+        BEGIN
+            s := '((' || x1 || ',' || y1 || '),(' || x2 || ',' || y2 || '))';
+            RETURN s::box;
+        END;
+        $$ LANGUAGE 'plpgsql';
+        
+        CREATE OR REPLACE FUNCTION public.make_box(x1 numeric, x2 numeric)
+        RETURNS box AS $$
+        DECLARE
+            s text;
+        BEGIN
+            s := '((' || x1 || ', 0),(' || x2 || ',0))';
+            RETURN s::box;
+        END;
+        $$ LANGUAGE 'plpgsql';
+        """  

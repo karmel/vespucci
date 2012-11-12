@@ -7,7 +7,7 @@ from glasslab.utils.database import execute_query
 from optparse import make_option
 from glasslab.glassatlas.datatypes.transcript import CellTypeBase
 from glasslab.glassatlas.pipeline.base_parser import GlassAtlasParser
-from glasslab.glassatlas.sql.sql_generator import GlassAtlasSqlGenerator
+from glasslab.genomeresources.sql.sql_generator import GenomeResourcesSqlGenerator
 
 class SetUpDatabaseParser(GlassAtlasParser):
     options = [
@@ -26,9 +26,11 @@ if __name__ == '__main__':
     cell_type, cell_base = parser.set_cell(options)
     genome = parser.set_genome(options)
     
-    generator = GlassAtlasSqlGenerator(cell_type=cell_type, genome=genome)
+    generator = GenomeResourcesSqlGenerator(cell_type=cell_type, genome=genome)
     
-    print 'Creating database schema and tables...'
-    q = (options.final and generator.final_set()) or generator.all_sql()
+    print 'Creating genome resources database schema and tables...'
+    q = generator.all_sql()
+    if not options.schema_only: q += generator.fill_tables_mm9()
+    
     execute_query(q)
     
