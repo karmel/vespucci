@@ -27,11 +27,11 @@ CURRENT_SCHEMA = 'current_projects'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'glasslab',
-        'USER': 'glass',
-        'PASSWORD': 'monocyte',
+        'NAME': 'glassatlas',
+        'USER': 'glassatlas_user',
+        'PASSWORD': 'I#found#Waldo.',
         'HOST': 'localhost',
-        'PORT': '54321',
+        'PORT': '5432',
     },
 
 }
