@@ -37,6 +37,7 @@ class GenomeResourcesSqlGenerator(SqlGenerator):
                  self.insert_sequence_mm9_values(),
                  self.insert_sequence_transcription_region_mm9_values(),
                  self.import_ncrna_org_mm9_values(),
+                 self.import_ncrna_org_mm9_regions(),
                  self.insert_non_coding_mm9_values(),
                  self.insert_non_coding_transcription_region_mm9_values(),]
          
@@ -291,6 +292,9 @@ class GenomeResourcesSqlGenerator(SqlGenerator):
         """.format(schema_name=self.schema_name) \
         + '\n'.join(output)
         
+        return s
+    
+    def import_ncrna_org_mm9_regions(self):
         path_to_bed = '../data/mm9.bed'
         f_bed = open(path_to_bed)
         output = []
@@ -304,7 +308,7 @@ class GenomeResourcesSqlGenerator(SqlGenerator):
                 """.format(fields[3], fields[0], fields[5], fields[1], fields[2],
                            schema_name=self.schema_name))
         
-        s += """
+        s = """
         CREATE TABLE "{schema_name}"."mm9_bed" (
             "name" varchar(50) NOT NULL DEFAULT NULL,
             "chrom" varchar(25) NOT NULL DEFAULT NULL,
@@ -315,7 +319,6 @@ class GenomeResourcesSqlGenerator(SqlGenerator):
         """.format(schema_name=self.schema_name) \
         + '\n'.join(output)
         
-        print s
         return s
     
     def insert_non_coding_mm9_values(self):
