@@ -270,6 +270,8 @@ class GenomeResourcesSqlGenerator(SqlGenerator):
             # ID,acc,Description,SO name,Oranism,Xref,Length
             if fields[0] == 'ID': continue
             
+            if not fields[0] or 'Mus musculus' not in fields[4]: continue
+            
             # Shorten and clean up some apostrophes
             fields = [val[:255].replace("'", "''") for val in fields]
             output.append("""
