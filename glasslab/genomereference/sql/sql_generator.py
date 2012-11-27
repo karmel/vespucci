@@ -315,6 +315,7 @@ class GenomeResourcesSqlGenerator(SqlGenerator):
         """.format(schema_name=self.schema_name) \
         + '\n'.join(output)
         
+        print s
         return s
     
     def insert_non_coding_mm9_values(self):
