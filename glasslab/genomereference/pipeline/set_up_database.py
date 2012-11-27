@@ -30,9 +30,10 @@ if __name__ == '__main__':
     
     print 'Creating genome resources database schema and tables...'
     q = generator.all_sql()
-    if not options.schema_only: q += generator.fill_tables_mm9()
-    
     execute_query(q)
+    if not options.schema_only: 
+        q = generator.fill_tables_mm9()
+        execute_query(q)
     
     # And cleanup the import tables:
     execute_query(generator.cleanup())
