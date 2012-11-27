@@ -32,8 +32,8 @@ if __name__ == '__main__':
     q = generator.all_sql()
     execute_query(q)
     if not options.schema_only: 
-        q = generator.fill_tables_mm9()
-        execute_query(q)
+        q_set = generator.fill_tables_mm9()
+        for q in q_set: execute_query(q)
     
     # And cleanup the import tables:
     execute_query(generator.cleanup())

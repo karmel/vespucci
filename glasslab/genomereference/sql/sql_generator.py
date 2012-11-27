@@ -32,15 +32,15 @@ class GenomeResourcesSqlGenerator(SqlGenerator):
         return s
     
     def fill_tables_mm9(self):
-        s = self.insert_chromosome_mm9_values()
-        s += self.import_ucsc_sequence_mm9_values()
-        s += self.insert_sequence_mm9_values()
-        s += self.insert_sequence_transcription_region_mm9_values()
-        s += self.import_ncrna_org_mm9_values()
-        s += self.insert_non_coding_mm9_values()
-        s += self.insert_non_coding_transcription_region_mm9_values()
+        q_set = [self.insert_chromosome_mm9_values(),
+                 self.import_ucsc_sequence_mm9_values(),
+                 self.insert_sequence_mm9_values(),
+                 self.insert_sequence_transcription_region_mm9_values(),
+                 self.import_ncrna_org_mm9_values(),
+                 self.insert_non_coding_mm9_values(),
+                 self.insert_non_coding_transcription_region_mm9_values(),]
          
-        return s
+        return q_set
     
     def cleanup(self):
         return """
