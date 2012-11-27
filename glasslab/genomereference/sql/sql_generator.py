@@ -16,7 +16,7 @@ class GenomeResourcesSqlGenerator(SqlGenerator):
         self.genome = genome or current_settings.GENOME.lower()
         self.staging = staging or current_settings.STAGING
         
-        self.schema_name = 'genome_resources_{0}'.format(self.genome)
+        self.schema_name = 'genome_reference_{0}'.format(self.genome)
         super(GenomeResourcesSqlGenerator, self).__init__()
 
     def all_sql(self):
