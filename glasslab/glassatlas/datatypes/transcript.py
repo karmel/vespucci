@@ -41,16 +41,16 @@ def multiprocess_all_chromosomes(func, cls, *args, **kwargs):
                 # Note that we accept a kwarg use_table
                 all_chr = fetch_rows('''
                     SELECT chromosome_id as id
-                    FROM "%s" 
-                    GROUP BY chromosome_id ORDER BY COUNT(chromosome_id) DESC;''' 
-                                    % (kwargs.get('use_table',None) or cls._meta.db_table))
+                    FROM "{0}" 
+                    GROUP BY chromosome_id ORDER BY COUNT(chromosome_id) DESC;'''.format(
+                                    kwargs.get('use_table',None) or cls._meta.db_table))
             except utils.DatabaseError:
                 # Prep table instead?
                 all_chr = fetch_rows('''
                     SELECT chromosome_id as id
-                    FROM "%s" 
-                    GROUP BY chromosome_id ORDER BY COUNT(chromosome_id) DESC;''' 
-                                    % (getattr(cls,'prep_table',None)
+                    FROM "{0}" 
+                    GROUP BY chromosome_id ORDER BY COUNT(chromosome_id) DESC;'''.format(
+                                    getattr(cls,'prep_table',None)
                                         or cls.cell_base.glass_transcript_prep._meta.db_table))
                 
             all_chr = zip(*all_chr)[0]
@@ -72,7 +72,7 @@ def multiprocess_all_chromosomes(func, cls, *args, **kwargs):
             if i % 2 == 0: chr_set.reverse()
             
         current_settings.CHR_LISTS = chr_sets
-        print 'Determined chromosome sets:\n%s' % str(current_settings.CHR_LISTS)
+        print 'Determined chromosome sets:\n{0}'.format(str(current_settings.CHR_LISTS))
     
     for chr_list in current_settings.CHR_LISTS:
         p.apply_async(func, args=[cls, chr_list,] + list(args))
@@ -85,7 +85,7 @@ def multiprocess_all_chromosomes(func, cls, *args, **kwargs):
 def wrap_errors(func, *args):
     try: func(*args)
     except Exception:
-        print 'Encountered exception in wrapped function:\n%s' % traceback.format_exc()
+        print 'Encountered exception in wrapped function:\n{0}'.format(traceback.format_exc())
         raise
    
 def wrap_add_transcripts_from_groseq(cls, chr_list, *args): wrap_errors(cls._add_transcripts_from_groseq, chr_list, *args)
@@ -104,9 +104,11 @@ class CellTypeBase(object):
     def get_correlations(cls):
         from glasslab.glassatlas.datatypes.celltypes.thiomac import ThioMacBase
         from glasslab.glassatlas.datatypes.celltypes.cd4tcell import CD4TCellBase
-        return {'thiomac': ThioMacBase,
-                 'cd4tcell': CD4TCellBase}
-          
+        from glasslab.glassatlas.datatypes.celltypes.default import DefaultBase
+        return {'default': DefaultBase,
+                'thiomac': ThioMacBase,
+                'cd4tcell': CD4TCellBase}
+      
     @property
     def glass_transcript(self): return GlassTranscript
     @property
@@ -135,8 +137,8 @@ class CellTypeBase(object):
         correlations = self.__class__.get_correlations()
         try: return correlations[cell_type.lower()]
         except KeyError:
-            raise Exception('Could not find models to match cell type %s.' % cell_type
-                            + '\nOptions are: %s' % ','.join(correlations.keys()))
+            raise Exception('Could not find models to match cell type {0}.'.format(cell_type)
+                            + '\nOptions are: {0}'.format(','.join(correlations.keys())))
 class TranscriptModelBase(GlassModel):
     cell_base = CellTypeBase()
     class Meta:
@@ -147,7 +149,7 @@ class TranscriptionRegionBase(TranscriptModelBase):
     chromosome              = models.ForeignKey(Chromosome)
     strand                  = models.IntegerField(max_length=1, help_text='0 for +, 1 for -')
     transcription_start     = models.IntegerField(max_length=12)
-    transcription_end       = models.IntegerField(max_length=12, help_text='<span id="length-message"></span>')
+    transcription_end       = models.IntegerField(max_length=12)
     
     start_end               = BoxField(null=True, default=None, help_text='This is a placeholder for the PostgreSQL box type.')
     
@@ -155,7 +157,7 @@ class TranscriptionRegionBase(TranscriptModelBase):
         abstract = True
     
     def __unicode__(self):
-        return '%s %d: %s: %d-%d' % (self.__class__.__name__, self.id,
+        return '{0} {1}: {2}: {3}-{4}'.format(self.__class__.__name__, self.id,
                                   self.chromosome.name.strip(), 
                                   self.transcription_start, 
                                   self.transcription_end)
@@ -310,51 +312,6 @@ class GlassTranscript(TranscriptBase):
                        current_settings.STAGING, chr_id)
             execute_query(query) 
     
-    @classmethod
-    def nearest_genes(cls):
-        schema_name = 'glass_atlas_{0}_{1}'.format(current_settings.GENOME, current_settings.CELL_TYPE.lower())
-        query = """
-        INSERT INTO {schema_name}.nearest_refseq
-        (glass_transcript_id, nearest_refseq_transcript_id, distance, minimal_distance) 
-        select glass_transcript_id, nearest_refseq_transcript_id, distance, minimal_distance 
-        FROM 
-         (select 
-            DISTINCT nonrefseq.id as glass_transcript_id, 
-            refseq.id as nearest_refseq_transcript_id,
-            row_number() OVER (PARTITION by nonrefseq.id ORDER BY 
-            abs(((refseq.strand = 0)::int*refseq.transcription_start 
-                    + (refseq.strand = 1)::int*refseq.transcription_end) -
-                ((nonrefseq.strand = 0)::int*nonrefseq.transcription_start 
-                        + (nonrefseq.strand = 1)::int*nonrefseq.transcription_end))
-            ),
-            abs(((refseq.strand = 0)::int*refseq.transcription_start 
-                    + (refseq.strand = 1)::int*refseq.transcription_end) -
-                ((nonrefseq.strand = 0)::int*nonrefseq.transcription_start 
-                        + (nonrefseq.strand = 1)::int*nonrefseq.transcription_end)) as distance,
-            least(abs(nonrefseq.transcription_start - refseq.transcription_start), 
-                    abs(nonrefseq.transcription_end - refseq.transcription_end),
-                    abs(nonrefseq.transcription_start - refseq.transcription_end), 
-                    abs(nonrefseq.transcription_end - refseq.transcription_start)) as minimal_distance
-            
-        FROM {schema_name}.glass_transcript nonrefseq
-        
-        join {schema_name}.glass_transcript refseq
-        on nonrefseq.chromosome_id = refseq.chromosome_id
-        
-        -- HAS refseq
-        join {schema_name}.glass_transcript_sequence seq
-        on refseq.id = seq.glass_transcript_id
-        
-        
-        where refseq.score >= {refseq_score}
-        and nonrefseq.score >= {nonrefseq_score} 
-        and refseq.refseq = true
-        and seq.major = true
-        and nonrefseq.refseq = false) der
-        where der.row_number = 1
-        ;  
-        """.format(schema_name=schema_name, refseq_score=MIN_SCORE, nonrefseq_score=int(MIN_SCORE/3))
-        execute_query(query) 
         
 class FilteredGlassTranscriptManager(models.Manager):
     def get_query_set(self):

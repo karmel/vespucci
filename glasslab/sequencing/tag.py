@@ -280,5 +280,5 @@ class GlassTag(DynamicTable):
         '''
         connection.close()
         # If possible, retrieve bowtie stats
-        s, created = SequencingRun.objects.get_or_create(source_table=cls._meta.db_table)
+        s, _ = SequencingRun.objects.get_or_create(source_table=cls._meta.db_table)
         return s

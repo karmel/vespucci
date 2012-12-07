@@ -11,7 +11,9 @@ Created on Sep 24, 2010
 from django.db import models
 from glasslab.config import current_settings
 from glasslab.utils.datatypes.basic_model import BoxField, GlassModel
-       
+
+SCHEMA_BASE = 'genome_reference_{0}'.format(current_settings.GENOME)
+
 #######################################################
 # Per-genome Gene identifiers
 #######################################################
@@ -23,7 +25,7 @@ class Chromosome(GlassModel):
     length = models.IntegerField(max_length=25, blank=False)
     
     class Meta: 
-        db_table    = 'genome_reference_{0}"."chromosome'.format(current_settings.GENOME)
+        db_table    = '{0}"."chromosome'.format(SCHEMA_BASE)
         app_label   = 'Genome_Reference'
     
     def __unicode__(self): return self.name
@@ -35,7 +37,7 @@ class SequenceIdentifier(GlassModel):
     sequence_identifier = models.CharField(max_length=50, blank=False)
     
     class Meta: 
-        db_table    = 'genome_reference_{0}"."sequence_identifier'.format(current_settings.GENOME)
+        db_table    = '{0}"."sequence_identifier'.format(SCHEMA_BASE)
         app_label   = 'Genome_Reference'
     
     def __unicode__(self): return self.sequence_identifier
@@ -67,11 +69,11 @@ class SequenceDetail(GlassModel):
     pfam_id             = models.CharField(max_length=100, blank=True)
     
     class Meta: 
-        db_table    = 'genome_reference_{0}"."sequence_detail'.format(current_settings.GENOME)
+        db_table    = '{0}"."sequence_detail'.format(SCHEMA_BASE)
         app_label   = 'Genome_Reference'
     
     def __unicode__(self): 
-        return '%s (%s)' % (self.gene_name, self.sequence_identifier.sequence_identifier)
+        return '{0} ({1})'.format(self.gene_name, self.sequence_identifier.sequence_identifier)
 
 class NonCodingRna(GlassModel):
     '''
@@ -82,12 +84,12 @@ class NonCodingRna(GlassModel):
     description         = models.CharField(max_length=100)
     
     class Meta: 
-        db_table    = 'genome_reference_{0}"."non_coding_rna'.format(current_settings.GENOME)
+        db_table    = '{0}"."non_coding_rna'.format(SCHEMA_BASE)
         app_label   = 'Genome_Reference'
         verbose_name = 'Non coding RNA'
         
     def __unicode__(self):
-        return '%s %s' % (self.type, self.description.strip())
+        return '{0} {1}'.format(self.type, self.description.strip())
     
     _non_coding_transcription_region = None
     @property 
@@ -116,11 +118,11 @@ class SequenceTranscriptionRegion(GlassModel):
     start_end           = BoxField(null=True, default=None, help_text='This is a placeholder for the PostgreSQL box type.')
     
     class Meta: 
-        db_table    = 'genome_reference_{0}"."sequence_transcription_region'.format(current_settings.GENOME)
+        db_table    = '{0}"."sequence_transcription_region'.format(SCHEMA_BASE)
         app_label   = 'Genome_Reference'
 
     def __unicode__(self):
-        return 'Sequence Transcription Region for %s' % self.sequence_identifier.sequence_identifier.strip()
+        return 'Sequence Transcription Region for {0}'.format(self.sequence_identifier.sequence_identifier.strip())
         
 class NonCodingTranscriptionRegion(GlassModel):
     '''
@@ -139,11 +141,11 @@ class NonCodingTranscriptionRegion(GlassModel):
     start_end           = BoxField(null=True, default=None, help_text='This is a placeholder for the PostgreSQL box type.')
     
     class Meta: 
-        db_table    = 'genome_reference_{0}"."non_coding_transcription_region'.format(current_settings.GENOME)
+        db_table    = '{0}"."non_coding_transcription_region'.format(SCHEMA_BASE)
         app_label   = 'Genome_Reference'
 
     def __unicode__(self):
-        return '%s Transcription Region for %s' % (self.non_coding_rna.type.strip(), self.non_coding_rna.description.strip())
+        return '{0} Transcription Region for {1}'.format(self.non_coding_rna.type.strip(), self.non_coding_rna.description.strip())
     
 #######################################################
 # Metadata
@@ -155,10 +157,8 @@ class SequencingRun(GlassModel):
     source_table    = models.CharField(max_length=100)
     
     class Meta:
-        db_table    = 'glass_atlas_{0}"."sequencing_run'.format(current_settings.GENOME)
-        #@todo
-        #db_table    = 'genome_reference_{0}"."sequencing_run'.format(current_settings.GENOME)
+        db_table    = '{0}"."sequencing_run'.format(SCHEMA_BASE)
         app_label   = 'Genome_Reference'
         
     def __unicode__(self):
-        return '%s (%s, "%s")' % (self.name, self.type, self.source_table.strip())
+        return '{0} ({1}, "{2}")'.format(self.name, self.type, self.source_table.strip())
