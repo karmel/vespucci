@@ -16,7 +16,6 @@ from glasslab.genomereference.datatypes import SequencingRun
     
 def wrap_partition_tables(cls, chr_list): wrap_errors(cls._create_partition_tables, chr_list)
 def wrap_translate_from_prep(cls, chr_list): wrap_errors(cls._translate_from_prep, chr_list)
-def wrap_set_start_end_box(cls, chr_list): wrap_errors(cls._set_start_end_box, chr_list)
 def wrap_set_refseq(cls, chr_list): wrap_errors(cls._set_refseq, chr_list)
 def wrap_insert_matching_tags(cls, chr_list): wrap_errors(cls._insert_matching_tags, chr_list)
 def wrap_add_indices(cls, chr_list): wrap_errors(cls._add_indices, chr_list)        
@@ -157,17 +156,6 @@ class GlassTag(DynamicTable):
         execute_query(trigger_sql)
         
     @classmethod
-    def associate_chromosome(cls):
-        '''
-        Denormalize chromosome value.
-        '''
-        update_query = """
-        UPDATE "%s" tag SET chromosome_id = chr.id
-        FROM "%s" chr WHERE tag.chromosome = chr.name;
-        """ % (cls._meta.db_table, Chromosome._meta.db_table,)
-        execute_query(update_query)
-    
-    @classmethod
     def translate_from_prep(cls):
         multiprocess_all_chromosomes(wrap_translate_from_prep, cls)
         
@@ -178,36 +166,20 @@ class GlassTag(DynamicTable):
         '''
         for chr_id in chr_list:
             update_query = """
-            INSERT INTO "%s_%d" (chromosome_id, strand, "start", "end", start_end, refseq)
+            INSERT INTO "{0}_{chr_id}" (chromosome_id, strand, "start", "end", start_end, refseq)
             SELECT * FROM (
-                SELECT %d, (CASE WHEN prep.strand_char = '-' THEN 1 ELSE 0 END), 
+                SELECT {chr_id}, (CASE WHEN prep.strand_char = '-' THEN 1 ELSE 0 END), 
                 prep."start", (prep."start" + char_length(prep.sequence_matched)),
                 public.make_box(prep."start", 0, (prep."start" + char_length(prep.sequence_matched)), 0),
                 NULL::boolean
-            FROM "%s" prep
-            JOIN "%s" chr ON chr.name = prep.chromosome
-            WHERE chr.id = %d) derived;
-            """ % (cls._meta.db_table,chr_id,
-                   chr_id, cls.prep_table,
+            FROM "{1}" prep
+            JOIN "{2}" chr ON chr.name = prep.chromosome
+            WHERE chr.id = {chr_id}) derived;
+            """.format(cls._meta.db_table, cls.prep_table,
                    Chromosome._meta.db_table,
-                   chr_id)
+                   chr_id=chr_id)
             execute_query(update_query)
-                        
-    @classmethod
-    def set_start_end_box(cls):
-        multiprocess_all_chromosomes(wrap_set_start_end_box, cls)
-        
-    @classmethod
-    def _set_start_end_box(cls, chr_list):
-        '''
-        Create type box field for faster interval searching with the PostgreSQL box.
-        '''
-        for chr_id in chr_list:
-            update_query = """
-            UPDATE "%s" set start_end = public.make_box("start", 0, "end", 0) WHERE chromosome_id = %d;
-            """ % (cls._meta.db_table, chr_id)
-            execute_query(update_query)
-    
+                            
     @classmethod
     def set_refseq(cls):
         multiprocess_all_chromosomes(wrap_set_refseq, cls)
@@ -259,18 +231,14 @@ class GlassTag(DynamicTable):
     def _add_indices(cls, chr_list):
         for chr_id in chr_list:
             update_query = """
-            CREATE INDEX %s_%d_pkey_idx ON "%s_%d" USING btree (id);
-            CREATE INDEX %s_%d_chr_idx ON "%s_%d" USING btree (chromosome_id);
-            CREATE INDEX %s_%d_strand_idx ON "%s_%d" USING btree (strand);
-            CREATE INDEX %s_%d_start_end_idx ON "%s_%d" USING gist (start_end);
-            ANALYZE "%s_%d";
-            """ % (cls.name, chr_id, cls._meta.db_table, chr_id,
-                   cls.name, chr_id, cls._meta.db_table, chr_id,
-                   cls.name, chr_id, cls._meta.db_table, chr_id,
-                   cls.name, chr_id, cls._meta.db_table, chr_id,
-                   cls._meta.db_table, chr_id)
+            CREATE INDEX {0}_{chr_id}_pkey_idx ON "{1}_{chr_id}" USING btree (id);
+            CREATE INDEX {0}_{chr_id}_chr_idx ON "{1}_{chr_id}" USING btree (chromosome_id);
+            CREATE INDEX {0}_{chr_id}_strand_idx ON "{1}_{chr_id}" USING btree (strand);
+            CREATE INDEX {0}_{chr_id}_start_end_idx ON "{1}_{chr_id}" USING gist (start_end);
+            ANALYZE "{1}_{chr_id}";
+            """.format(cls.name, cls._meta.db_table, chr_id=chr_id)
             execute_query(update_query)
-
+            
     @classmethod 
     def add_record_of_tags(cls):
         '''
