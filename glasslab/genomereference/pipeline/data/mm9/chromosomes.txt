@@ -1,0 +1,35 @@
+chr1	197195433
+chr2	181748088
+chr3	159599784
+chr4	155630121
+chr5	152537260
+chr6	149517038
+chr7	152524554
+chr8	131738872
+chr9	124076173
+chrX	166650297
+chrY	15902556
+chr10	129993256
+chr11	121843857
+chr12	121257531
+chr13	120284313
+chr14	125194865
+chr15	103494975
+chr16	98319151
+chr17	95272652
+chr18	90772032
+chr19	61342431
+chrM	16300
+chr1_random	
+chr3_random	
+chr4_random	
+chr5_random	
+chr7_random	
+chr8_random	
+chr9_random	
+chr13_random	
+chr16_random	
+chr17_random	
+chrX_random	
+chrY_random	
+chrUn_random	

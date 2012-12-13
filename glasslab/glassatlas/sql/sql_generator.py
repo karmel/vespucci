@@ -32,7 +32,7 @@ class GlassAtlasSqlGenerator(SqlGenerator):
         s += self.prep_table_main_transcript()
         s += self.table_main_source(prep_suffix)
         
-        for chr_id in current_settings.GENOME_CHROMOSOMES:
+        for chr_id in current_settings.GENOME_CHOICES[current_settings.GENOME]['chromosomes']:
             s += self.prep_table_chrom_transcript(chr_id)
             s += self.table_chrom_source(chr_id, prep_suffix)
         
@@ -46,7 +46,7 @@ class GlassAtlasSqlGenerator(SqlGenerator):
         s = self.schema(self.staging)
         s += self.table_main_transcript()
         s += self.table_main_source(self.staging)
-        for chr_id in current_settings.GENOME_CHROMOSOMES:
+        for chr_id in current_settings.GENOME_CHOICES[current_settings.GENOME]['chromosomes']:
             s += self.table_chrom_transcript(chr_id)
             s += self.table_chrom_source(chr_id, self.staging)
         

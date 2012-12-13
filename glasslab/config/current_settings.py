@@ -9,10 +9,10 @@ should be set on a run-wide basis.
 #####################################
 # Genomes
 #####################################
-GENOME_CHOICES = ['mm9']
+GENOME_CHOICES = {'mm9': {'name':'Mus musculus', 'chromsomes': range(1,23)},
+                  'dm3': {'name':'Drosophila melanogaster', 'chromsomes': range(1,23)}}
 
 GENOME = 'mm9'
-GENOME_CHROMOSOMES = range(1,23)
 
 
 CELL_TYPE = 'Default'

@@ -58,7 +58,7 @@ def multiprocess_all_chromosomes(func, cls, *args, **kwargs):
             
         except Exception:
             # cls in question does not have explicit relation to chromosomes; get all
-            all_chr = current_settings.GENOME_CHROMOSOMES
+            all_chr = current_settings.GENOME_CHOICES[current_settings.GENOME]['chromosomes']
 
         # Chromosomes are sorted by count descending, so we want to snake them
         # back and forth to create even-ish groups. 

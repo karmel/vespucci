@@ -31,15 +31,15 @@ class GenomeResourcesSqlGenerator(SqlGenerator):
         
         return s
     
-    def fill_tables_mm9(self):
-        q_set = [self.insert_chromosome_mm9_values(),
-                 self.import_ucsc_sequence_mm9_values(),
-                 self.insert_sequence_mm9_values(),
-                 self.insert_sequence_transcription_region_mm9_values(),
-                 self.import_ncrna_org_mm9_values(),
-                 self.import_ncrna_org_mm9_regions(),
-                 self.insert_non_coding_mm9_values(),
-                 self.insert_non_coding_transcription_region_mm9_values(),]
+    def fill_tables(self):
+        q_set = [self.insert_chromosome_values(),
+                 self.import_ucsc_sequence_values(),
+                 self.insert_sequence_values(),
+                 self.insert_sequence_transcription_region_values(),
+                 self.import_ncrna_org_values(),
+                 self.import_ncrna_org_regions(),
+                 self.insert_non_coding_values(),
+                 self.insert_non_coding_transcription_region_values(),]
          
         return q_set
     
@@ -47,7 +47,7 @@ class GenomeResourcesSqlGenerator(SqlGenerator):
         return """
         DROP TABLE IF EXISTS "{schema_name}"."refGene";
         DROP TABLE IF EXISTS "{schema_name}"."summary";
-        DROP TABLE IF EXISTS "{schema_name}"."mm9_bed";
+        DROP TABLE IF EXISTS "{schema_name}"."bed";
         """.format(schema_name=self.schema_name)
         
     def schema(self):
@@ -172,7 +172,7 @@ class GenomeResourcesSqlGenerator(SqlGenerator):
         """  
         
         
-    def insert_chromosome_mm9_values(self):
+    def insert_chromosome_values(self):
         table_name = 'chromosome'
         return """
         INSERT INTO "{schema_name}"."{table_name}" (name, length) values ('chr1', 197195433), ('chr2', 181748088), 
@@ -183,7 +183,7 @@ class GenomeResourcesSqlGenerator(SqlGenerator):
             ('chr17', 95272652), ('chr18', 90772032), ('chr19', 61342431), ('chrM', 16300);
         """.format(schema_name=self.schema_name, table_name=table_name)
     
-    def import_ucsc_sequence_mm9_values(self):
+    def import_ucsc_sequence_values(self):
         '''
         Create a temp table to be normalized and associated appropriately.
         
@@ -192,7 +192,7 @@ class GenomeResourcesSqlGenerator(SqlGenerator):
         This is hardcoded to work with the UCSC download as it is. 
         More flexible import logic can be created here.
         '''
-        path_to_file = '../data/refGene.txt'
+        path_to_file = '../data/{0}/refGene.txt'.format(self.genome)
         f = open(path_to_file)
         output = []
         for l in f:
@@ -215,7 +215,7 @@ class GenomeResourcesSqlGenerator(SqlGenerator):
         """.format(schema_name=self.schema_name) \
         + '\n'.join(output)
     
-    def insert_sequence_mm9_values(self):
+    def insert_sequence_values(self):
         table_name = 'sequence_identifier'
         return """
         INSERT INTO "{schema_name}"."{table_name}" ("sequence_identifier", "type") 
@@ -226,7 +226,7 @@ class GenomeResourcesSqlGenerator(SqlGenerator):
          from "{schema_name}"."refGene";
         """.format(schema_name=self.schema_name, table_name=table_name)
     
-    def insert_sequence_transcription_region_mm9_values(self):
+    def insert_sequence_transcription_region_values(self):
         table_name = 'sequence_transcription_region'
         return """
         INSERT INTO "{schema_name}"."{table_name}" 
@@ -254,7 +254,7 @@ class GenomeResourcesSqlGenerator(SqlGenerator):
         """.format(schema_name=self.schema_name, table_name=table_name)
 
     
-    def import_ncrna_org_mm9_values(self):
+    def import_ncrna_org_values(self):
         '''
         Create a temp table to be normalized and associated appropriately.
         
@@ -271,7 +271,8 @@ class GenomeResourcesSqlGenerator(SqlGenerator):
             # ID,acc,Description,SO name,Oranism,Xref,Length
             if fields[0] == 'ID': continue
             
-            if not fields[0] or 'Mus musculus' not in fields[4]: continue
+            if not fields[0] or current_settings.GENOME_CHOICES[self.genome]['name']\
+                    not in fields[4]: continue
             
             # Shorten and clean up some apostrophes
             fields = [val[:255].replace("'", "''") for val in fields]
@@ -294,22 +295,22 @@ class GenomeResourcesSqlGenerator(SqlGenerator):
         
         return s
     
-    def import_ncrna_org_mm9_regions(self):
-        path_to_bed = '../data/mm9.bed'
+    def import_ncrna_org_regions(self):
+        path_to_bed = '../data/{0}/{0}.bed'.format(self.genome)
         f_bed = open(path_to_bed)
         output = []
         for l in f_bed:
             fields = l.split('\t')
             #chr8    119597933       119597953       FR408228        1000    +       
             output.append("""
-                INSERT into "{schema_name}"."mm9_bed" 
+                INSERT into "{schema_name}"."bed" 
                     ("name","chrom","strand","start","end") 
                     VALUES ('{0}', '{1}', '{2}', {3}, {4});
                 """.format(fields[3], fields[0], fields[5], fields[1], fields[2],
                            schema_name=self.schema_name))
         
         s = """
-        CREATE TABLE "{schema_name}"."mm9_bed" (
+        CREATE TABLE "{schema_name}"."bed" (
             "name" varchar(50) NOT NULL DEFAULT NULL,
             "chrom" varchar(25) NOT NULL DEFAULT NULL,
             "strand" varchar(1) NOT NULL DEFAULT NULL,
@@ -325,7 +326,7 @@ class GenomeResourcesSqlGenerator(SqlGenerator):
         '''
         fRNAdb from ncrna.org has sequences for all organisms in one large file. 
         We only want those relevant to mm9,
-        so we match based on the mm9_bed file provided.
+        so we match based on the bed file provided.
         '''
         table_name = 'non_coding_rna'
         return """
@@ -336,14 +337,14 @@ class GenomeResourcesSqlGenerator(SqlGenerator):
             summary."Xref"
         FROM "{schema_name}"."summary" summary
         WHERE
-            summary."ID" IN (SELECT "name" from "{schema_name}"."mm9_bed");
+            summary."ID" IN (SELECT "name" from "{schema_name}"."bed");
         """.format(schema_name=self.schema_name, table_name=table_name)
     
     def insert_non_coding_transcription_region_mm9_values(self):
         '''
         fRNAdb from ncrna.org has sequences for all organisms in one large file. 
         We only want those relevant to mm9,
-        so we match based on the mm9_bed file provided.
+        so we match based on the bed file provided.
         '''
         table_name = 'non_coding_transcription_region'
         return """
@@ -351,15 +352,15 @@ class GenomeResourcesSqlGenerator(SqlGenerator):
         transcription_start, transcription_end, start_end) 
         SELECT 
             nc_rna.id, chr.id, 
-            (CASE WHEN mm9_bed.strand = '-' THEN '1' ELSE 0 END),
-            mm9_bed.start, mm9_bed."end",
-            public.make_box(mm9_bed."start",0,mm9_bed."end",0)
-        FROM "{schema_name}"."mm9_bed" mm9_bed, 
+            (CASE WHEN bed.strand = '-' THEN '1' ELSE 0 END),
+            bed.start, bed."end",
+            public.make_box(bed."start",0,bed."end",0)
+        FROM "{schema_name}"."bed" bed, 
             "{schema_name}"."summary" summary, 
             "{schema_name}"."non_coding_rna" nc_rna, 
             "{schema_name}"."chromosome" chr
         WHERE 
-            mm9_bed."name" = summary."ID"
+            bed."name" = summary."ID"
             AND nc_rna.description = summary."ID" || ': ' || summary."Description"
-            AND chr.name = mm9_bed.chrom;
+            AND chr.name = bed.chrom;
         """.format(schema_name=self.schema_name, table_name=table_name)

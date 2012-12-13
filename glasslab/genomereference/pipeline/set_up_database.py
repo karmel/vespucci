@@ -8,6 +8,7 @@ from optparse import make_option
 from glasslab.glassatlas.datatypes.transcript import CellTypeBase
 from glasslab.glassatlas.pipeline.base_parser import GlassAtlasParser
 from glasslab.genomereference.sql.sql_generator import GenomeResourcesSqlGenerator
+from glasslab.config import current_settings
 
 class SetUpDatabaseParser(GlassAtlasParser):
     options = [
@@ -31,8 +32,8 @@ if __name__ == '__main__':
     print 'Creating genome resources database schema and tables...'
     q = generator.all_sql()
     execute_query(q)
-    if not options.schema_only: 
-        q_set = generator.fill_tables_mm9()
+    if not options.schema_only and genome in current_settings.GENOME_CHOICES.keys(): 
+        q_set = generator.fill_tables()
         for q in q_set: execute_query(q)
     
     # And cleanup the import tables:
