@@ -173,6 +173,11 @@ class GenomeResourcesSqlGenerator(SqlGenerator):
         
         
     def insert_chromosome_values(self):
+        '''
+        Pulls from chromosomes.txt file, which has been created manually
+        as a tab-delimited file with names and lengths.
+        
+        '''
         table_name = 'chromosome'
         path_to_file = '../data/{0}/chromosomes.txt'.format(self.genome)
         f = open(path_to_file)
@@ -263,6 +268,10 @@ class GenomeResourcesSqlGenerator(SqlGenerator):
         
         File downloaded at: http://www.ncrna.org/frnadb/files/summary.zip
         and: http://www.ncrna.org/frnadb/files/mm9_bed.zip --> mm9_bed/mm9.bed
+        
+        Note that the dm3 file excludes the set of fly smallRNA, which is large.
+        This can easily be added by downloading the file dm3.bed,
+        but is not included in the codebase to avoid bloat.
         
         This is hardcoded to work with the fRNAdb download as it is. 
         More flexible import logic can be created here.
