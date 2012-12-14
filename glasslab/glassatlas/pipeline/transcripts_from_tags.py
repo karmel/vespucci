@@ -8,9 +8,9 @@ from glasslab.sequencing.tag import GlassTag
 from optparse import make_option
 from glasslab.config import current_settings
 from glasslab.utils.database import discard_temp_tables
-from glasslab.glassatlas.pipeline.base_parser import GlassAtlasParser
+from glasslab.utils.scripting import GlassOptionParser
 
-class TranscriptsFromTagsParser(GlassAtlasParser):
+class TranscriptsFromTagsParser(GlassOptionParser):
     options = [
                make_option('-g', '--genome',action='store', type='string', dest='genome', default='mm9', 
                            help='Currently supported: mm8, mm8r, mm9, hg18, hg18r, dm3'),
