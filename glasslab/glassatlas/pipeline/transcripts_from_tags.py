@@ -4,6 +4,7 @@ Created on Nov 8, 2010
 @author: karmel
 '''
 from glasslab.glassatlas.datatypes.transcript import CellTypeBase
+from glasslab.sequencing.tag import GlassTag
 from optparse import make_option
 from glasslab.config import current_settings
 from glasslab.utils.database import discard_temp_tables
@@ -52,8 +53,6 @@ if __name__ == '__main__':
     cell_type, cell_base = parser.set_cell(options)
     parser.set_genome(options)
     
-    from glasslab.sequencing.tag import GlassTag
-
     allow_extended_gaps = True
     if options.no_extended_gaps: allow_extended_gaps = False
     
