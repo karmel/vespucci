@@ -16,4 +16,4 @@ class GlassOptionParser(OptionParser):
 
 def get_glasslab_path():
     import glasslab
-    return os.path.basename(glasslab.__file__)
+    return os.path.dirname(glasslab.__file__)
