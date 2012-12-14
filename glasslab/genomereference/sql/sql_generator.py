@@ -180,6 +180,8 @@ class GenomeResourcesSqlGenerator(SqlGenerator):
         '''
         table_name = 'chromosome'
         path_to_file = '../data/{0}/chromosomes.txt'.format(self.genome)
+        import os
+        print os.listdir('../')
         f = open(path_to_file)
         output = []
         for l in f:
