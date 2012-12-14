@@ -20,6 +20,9 @@ class GenomeReferenceBase(GlassModel):
     def set_db_table(cls):
         cls._meta.db_table = cls._meta.db_table.format(current_settings.GENOME)
         
+    class Meta:
+        abstract = True
+        
 #######################################################
 # Per-genome Gene identifiers
 #######################################################
