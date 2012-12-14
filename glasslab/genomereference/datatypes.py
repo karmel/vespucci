@@ -26,10 +26,9 @@ class Chromosome(GlassModel):
     length = models.IntegerField(max_length=25, blank=False)
     
     class Meta:
+        db_table = '{0}"."chromosome'.format(SCHEMA_BASE.format(current_settings.GENOME))
         app_label   = 'Genome_Reference'
     
-        @property 
-        def db_table(self): return '{0}"."chromosome'.format(SCHEMA_BASE.format(current_settings.GENOME))
         
     def __unicode__(self): return self.name
 
@@ -40,8 +39,7 @@ class SequenceIdentifier(GlassModel):
     sequence_identifier = models.CharField(max_length=50, blank=False)
     
     class Meta: 
-        @property 
-        def db_table(self): return '{0}"."sequence_identifier'.format(SCHEMA_BASE.format(current_settings.GENOME))
+        db_table = '{0}"."sequence_identifier'.format(SCHEMA_BASE.format(current_settings.GENOME))
         app_label   = 'Genome_Reference'
     
     def __unicode__(self): return self.sequence_identifier
@@ -161,8 +159,7 @@ class SequencingRun(GlassModel):
     source_table    = models.CharField(max_length=100)
     
     class Meta:
-        @property 
-        def db_table(self): return '{0}"."sequencing_run'.format(SCHEMA_BASE.format(current_settings.GENOME))
+        db_table = '{0}"."sequencing_run'.format(SCHEMA_BASE.format(current_settings.GENOME))
         app_label   = 'Genome_Reference'
         
     def __unicode__(self):
