@@ -13,7 +13,7 @@ from glasslab.glassatlas.pipeline.base_parser import GlassAtlasParser
 class TranscriptsFromTagsParser(GlassAtlasParser):
     options = [
                make_option('-g', '--genome',action='store', type='string', dest='genome', default='mm9', 
-                           help='Currently supported: mm8, mm8r, mm9, hg18, hg18r'),
+                           help='Currently supported: mm8, mm8r, mm9, hg18, hg18r, dm3'),
                make_option('-c', '--cell_type',action='store', type='string', dest='cell_type', 
                            help='Cell type for this run? Options are: %s' % ','.join(CellTypeBase.get_correlations().keys())),
                make_option('-t', '--tag_table',action='store', type='string', dest='tag_table', 
