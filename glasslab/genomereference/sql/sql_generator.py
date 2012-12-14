@@ -180,7 +180,8 @@ class GenomeResourcesSqlGenerator(SqlGenerator):
         
         '''
         table_name = 'chromosome'
-        path_to_file = os.path.join(__file__,'../data/{0}/chromosomes.txt'.format(self.genome))
+        path_to_file = os.path.join(current_settings.GLASSLAB_PATH,
+                                    'genomereference/pipeline/data/{0}/chromosomes.txt'.format(self.genome))
         f = open(path_to_file)
         output = []
         for l in f:
@@ -201,7 +202,8 @@ class GenomeResourcesSqlGenerator(SqlGenerator):
         This is hardcoded to work with the UCSC download as it is. 
         More flexible import logic can be created here.
         '''
-        path_to_file = os.path.join(__file__,'../data/{0}/refGene.txt'.format(self.genome))
+        path_to_file = os.path.join(current_settings.GLASSLAB_PATH,
+                                    'genomereference/pipeline/data/{0}/refGene.txt'.format(self.genome))
         f = open(path_to_file)
         output = []
         for l in f:
