@@ -108,7 +108,7 @@ class CellTypeBase(object):
         return {'default': DefaultBase,
                 'thiomac': ThioMacBase,
                 'cd4tcell': CD4TCellBase,
-                'refseq':'For use in initial DB setup'}
+                'refseq': DefaultBase}
       
     @property
     def glass_transcript(self): return GlassTranscript
