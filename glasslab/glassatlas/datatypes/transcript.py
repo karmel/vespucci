@@ -107,7 +107,8 @@ class CellTypeBase(object):
         from glasslab.glassatlas.datatypes.celltypes.default import DefaultBase
         return {'default': DefaultBase,
                 'thiomac': ThioMacBase,
-                'cd4tcell': CD4TCellBase}
+                'cd4tcell': CD4TCellBase,
+                'refseq':'For use in initial DB setup'}
       
     @property
     def glass_transcript(self): return GlassTranscript

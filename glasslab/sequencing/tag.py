@@ -5,13 +5,12 @@ Created on Sep 27, 2010
 '''
 from __future__ import division
 from django.db import models, connection
-from glasslab.genomereference.datatypes import Chromosome
+from glasslab.genomereference.datatypes import Chromosome, SequencingRun
 from glasslab.config import current_settings
 from glasslab.utils.datatypes.basic_model import DynamicTable, BoxField
 from glasslab.utils.database import execute_query
 from glasslab.glassatlas.datatypes.transcript import multiprocess_all_chromosomes,\
     wrap_errors
-from glasslab.genomereference.datatypes import SequencingRun
 
     
 def wrap_partition_tables(cls, chr_list): wrap_errors(cls._create_partition_tables, chr_list)
