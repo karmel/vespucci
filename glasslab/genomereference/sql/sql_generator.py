@@ -8,6 +8,7 @@ from glasslab.config import current_settings
 from glasslab.utils.database import SqlGenerator
 import csv
 import os
+from glasslab.utils.scripting import get_glasslab_path
 
 class GenomeResourcesSqlGenerator(SqlGenerator):
     ''' Generates the SQL queries for building DB schema. '''
@@ -180,7 +181,7 @@ class GenomeResourcesSqlGenerator(SqlGenerator):
         
         '''
         table_name = 'chromosome'
-        path_to_file = os.path.join(current_settings.GLASSLAB_PATH,
+        path_to_file = os.path.join(get_glasslab_path(),
                                     'genomereference/pipeline/data/{0}/chromosomes.txt'.format(self.genome))
         f = open(path_to_file)
         output = []
@@ -202,7 +203,7 @@ class GenomeResourcesSqlGenerator(SqlGenerator):
         This is hardcoded to work with the UCSC download as it is. 
         More flexible import logic can be created here.
         '''
-        path_to_file = os.path.join(current_settings.GLASSLAB_PATH,
+        path_to_file = os.path.join(get_glasslab_path(),
                                     'genomereference/pipeline/data/{0}/refGene.txt'.format(self.genome))
         f = open(path_to_file)
         output = []
