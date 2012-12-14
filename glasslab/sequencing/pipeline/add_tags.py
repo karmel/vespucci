@@ -18,7 +18,6 @@ import subprocess
 import traceback
 
 from django.db import connection, transaction
-from glasslab.sequencing.tag import GlassTag
 from multiprocessing import Pool
 from glasslab.config import current_settings
 import shutil
@@ -134,6 +133,8 @@ if __name__ == '__main__':
     cell_type, cell_base = parser.set_cell(options)
     parser.set_genome(options)
     
+    from glasslab.sequencing.tag import GlassTag
+
     if not options.skip_tag_table:
         # First, convert the mapped file to the desired format.
         converter = TagFileConverter()
