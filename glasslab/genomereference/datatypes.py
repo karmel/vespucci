@@ -14,11 +14,16 @@ from glasslab.utils.datatypes.basic_model import BoxField, GlassModel
 
 SCHEMA_BASE = 'genome_reference_{0}'
 
-    
+
+class GenomeReferenceBase(GlassModel):
+    @classmethod
+    def set_db_table(cls):
+        cls._meta.db_table = cls._meta.db_table.format(current_settings.GENOME)
+        
 #######################################################
 # Per-genome Gene identifiers
 #######################################################
-class Chromosome(GlassModel):
+class Chromosome(GenomeReferenceBase):
     '''
     Unique record of chromosome, i.e. 'chr1', 'chrUn_random', etc
     '''
@@ -26,20 +31,20 @@ class Chromosome(GlassModel):
     length = models.IntegerField(max_length=25, blank=False)
     
     class Meta:
-        db_table = '{0}"."chromosome'.format(SCHEMA_BASE.format(current_settings.GENOME))
+        db_table = '{0}"."chromosome'.format(SCHEMA_BASE)
         app_label   = 'Genome_Reference'
     
         
     def __unicode__(self): return self.name
 
-class SequenceIdentifier(GlassModel):
+class SequenceIdentifier(GenomeReferenceBase):
     '''
     Gene and sequence (i.e., noncoding RNA) identifiers from RefSeq, unique per genome.
     '''
     sequence_identifier = models.CharField(max_length=50, blank=False)
     
     class Meta: 
-        db_table = '{0}"."sequence_identifier'.format(SCHEMA_BASE.format(current_settings.GENOME))
+        db_table = '{0}"."sequence_identifier'.format(SCHEMA_BASE)
         app_label   = 'Genome_Reference'
     
     def __unicode__(self): return self.sequence_identifier
@@ -60,7 +65,7 @@ class SequenceIdentifier(GlassModel):
             if reg: self._sequence_transcription_region =  reg[0]
         return self._sequence_transcription_region
 
-class SequenceDetail(GlassModel):
+class SequenceDetail(GenomeReferenceBase):
     '''
     Gene details, keyed to unique sequences.
     '''
@@ -77,7 +82,7 @@ class SequenceDetail(GlassModel):
     def __unicode__(self): 
         return '{0} ({1})'.format(self.gene_name, self.sequence_identifier.sequence_identifier)
 
-class NonCodingRna(GlassModel):
+class NonCodingRna(GenomeReferenceBase):
     '''
     Unique name and type for ncRNA
     
@@ -104,7 +109,7 @@ class NonCodingRna(GlassModel):
 #######################################################
 # Chromosome region details 
 #######################################################
-class SequenceTranscriptionRegion(GlassModel):
+class SequenceTranscriptionRegion(GenomeReferenceBase):
     '''
     Mappings of transcription regions and coding sites.
     '''
@@ -126,7 +131,7 @@ class SequenceTranscriptionRegion(GlassModel):
     def __unicode__(self):
         return 'Sequence Transcription Region for {0}'.format(self.sequence_identifier.sequence_identifier.strip())
         
-class NonCodingTranscriptionRegion(GlassModel):
+class NonCodingTranscriptionRegion(GenomeReferenceBase):
     '''
     Mappings of transcription regions that are not tied to RefSeq genes.
     
@@ -152,14 +157,14 @@ class NonCodingTranscriptionRegion(GlassModel):
 #######################################################
 # Metadata
 #######################################################   
-class SequencingRun(GlassModel):
+class SequencingRun(GenomeReferenceBase):
     '''
     Record of details of a given sequencing run and its total tags.
     '''
     source_table    = models.CharField(max_length=100)
     
     class Meta:
-        db_table = '{0}"."sequencing_run'.format(SCHEMA_BASE.format(current_settings.GENOME))
+        db_table = '{0}"."sequencing_run'.format(SCHEMA_BASE)
         app_label   = 'Genome_Reference'
         
     def __unicode__(self):

@@ -24,6 +24,14 @@ class GlassOptionParser(OptionParser):
     
     def set_genome(self, options):
         current_settings.GENOME = options.genome
+        
+        # Update table names for loaded classes
+        from glasslab.genomereference import datatypes
+        for m in (datatypes.Chromosome, datatypes.SequenceIdentifier,
+                  datatypes.SequenceDetail, datatypes.SequenceTranscriptionRegion,
+                  datatypes.NonCodingRna, datatypes.NonCodingTranscriptionRegion,
+                  datatypes.SequencingRun):
+            m.set_db_table()
         return current_settings.GENOME
     
 def get_glasslab_path():
