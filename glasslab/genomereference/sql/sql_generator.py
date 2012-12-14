@@ -280,8 +280,9 @@ class GenomeResourcesSqlGenerator(SqlGenerator):
         This is hardcoded to work with the fRNAdb download as it is. 
         More flexible import logic can be created here.
         '''
-        path_to_summary = '../data/summary.csv'
-        f_summary = csv.reader(open(path_to_summary, 'rb'))
+        path_to_file = os.path.join(get_glasslab_path(),
+                                    'genomereference/pipeline/data/summary.csv')
+        f_summary = csv.reader(open(path_to_file, 'rb'))
         output = []
         for fields in f_summary:
             # ID,acc,Description,SO name,Oranism,Xref,Length
@@ -312,8 +313,9 @@ class GenomeResourcesSqlGenerator(SqlGenerator):
         return s
     
     def import_ncrna_org_regions(self):
-        path_to_bed = '../data/{0}/{0}.bed'.format(self.genome)
-        f_bed = open(path_to_bed)
+        path_to_file = os.path.join(get_glasslab_path(),
+                                    'genomereference/pipeline/data/{0}/{0}.bed'.format(self.genome))
+        f_bed = open(path_to_file)
         output = []
         for l in f_bed:
             fields = l.split('\t')
