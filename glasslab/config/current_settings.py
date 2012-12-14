@@ -29,7 +29,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': 'glassatlas',
         'USER': 'glassatlas_user',
-        'PASSWORD': 'I#found#Waldo.',
+        'PASSWORD': 'I#found#Waldo',
         'HOST': 'localhost',
         'PORT': '5432',
     },
