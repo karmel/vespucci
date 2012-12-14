@@ -26,9 +26,14 @@ from glasslab.sequencing.pipeline.add_short_reads import check_input, _print,\
     create_schema
 from glasslab.utils.convert_for_upload import TagFileConverter
 from glasslab.utils.database import execute_query_without_transaction
+from glasslab.glassatlas.datatypes.transcript import CellTypeBase
 
 class FastqOptionParser(GlassOptionParser):
     options = [
+               make_option('-g', '--genome',action='store', type='string', dest='genome', default='mm9', 
+                           help='Currently supported: mm8, mm8r, mm9, hg18, hg18r, dm3'),
+               make_option('-c', '--cell_type',action='store', type='string', dest='cell_type', 
+                           help='Cell type for this run? Options are: %s' % ','.join(CellTypeBase.get_correlations().keys())),
                make_option('-f', '--file_name',action='store', type='string', dest='file_name', 
                            help='Path to SAM, BAM, or Bowtie file for processing.'),
                make_option('-o', '--output_dir',action='store', type='string', dest='output_dir'),
@@ -126,6 +131,8 @@ if __name__ == '__main__':
     options, args = parser.parse_args()
 
     file_name = check_input(options)
+    cell_type, cell_base = parser.set_cell(options)
+    parser.set_genome(options)
     
     if not options.skip_tag_table:
         # First, convert the mapped file to the desired format.
