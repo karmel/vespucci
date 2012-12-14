@@ -38,6 +38,7 @@ class GenomeResourcesSqlGenerator(SqlGenerator):
                  self.import_ucsc_sequence_values(),
                  self.insert_sequence_values(),
                  self.insert_sequence_transcription_region_values(),
+                 self.insert_sequencing_run_for_refseq(),
                  self.import_ncrna_org_values(),
                  self.import_ncrna_org_regions(),
                  self.insert_non_coding_values(),
@@ -265,7 +266,19 @@ class GenomeResourcesSqlGenerator(SqlGenerator):
         WHERE strand = 1;
         """.format(schema_name=self.schema_name, table_name=table_name)
 
-    
+    def insert_sequencing_run_for_refseq(self):
+        '''
+        A record of a sequencing run is faked so that we can easily
+        load in the sequence transcription regions as a refseq DB.
+        '''
+        table_name = 'sequencing_run'
+        return """
+        INSERT INTO "{schema_name}"."{table_name}" 
+            (cell_type, name, source_table, modified)
+        VALUES ('Default','sequence_transcription_region',
+            '{schema_name}"."sequence_transcription_region', NOW());
+        """.format(schema_name=self.schema_name, table_name=table_name)
+            
     def import_ncrna_org_values(self):
         '''
         Create a temp table to be normalized and associated appropriately.
