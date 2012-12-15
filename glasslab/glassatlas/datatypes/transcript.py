@@ -75,11 +75,12 @@ def multiprocess_all_chromosomes(func, cls, *args, **kwargs):
         current_settings.CHR_LISTS = chr_sets
         print 'Determined chromosome sets:\n{0}'.format(str(current_settings.CHR_LISTS))
     
-    p = Pool(processes)
+    #p = Pool(processes)
     for chr_list in current_settings.CHR_LISTS:
-        p.apply_async(func, args=[cls, chr_list,] + list(args))
-    p.close()
-    p.join()
+        #p.apply_async(func, args=[cls, chr_list,] + list(args))
+        func(cls, chr_list, *args)
+    #p.close()
+    #p.join()
 
 # The following methods wrap bound methods. This is necessary
 # for use with multiprocessing. Note that getattr with dynamic function names
