@@ -40,16 +40,16 @@ if __name__ == '__main__':
     #execute_query(q)
     
     try:
-        """
         print 'Adding data...'
         path = os.path.join(get_glasslab_path(), 'glassatlas/pipeline/scripts')
-        print subprocess.check_output(path + '/set_up_database.sh -g dm3 -c refseq', shell=True)
+        #print subprocess.check_output(path + '/set_up_database.sh -g dm3 -c refseq', shell=True)
         print subprocess.check_output(path + '/transcripts_from_tags.sh -g dm3 -c refseq '
                                       + ' --schema_name=genome_reference_dm3 '
                                       + ' --tag_table=sequence_transcription_region '
                                       #+ ' --stitch --stitch_processes=2 --set_density --draw_edges '
-                                      + ' --no_extended_gaps', shell=True)
-        """
+                                      #+ ' --no_extended_gaps'
+                                      , shell=True)
+        
     except Exception, e: 
         print e
     finally:
