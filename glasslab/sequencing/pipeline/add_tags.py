@@ -130,8 +130,8 @@ if __name__ == '__main__':
     options, args = parser.parse_args()
 
     file_name = check_input(options)
-    cell_type, cell_base = parser.set_cell(options)
     parser.set_genome(options)
+    cell_type, cell_base = parser.set_cell(options)
     
     from glasslab.sequencing.tag import GlassTag
 

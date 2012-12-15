@@ -212,7 +212,7 @@ BEGIN
         FROM glass_atlas_{0}_{1}{suffix}.glass_transcript_' || chr_id || ' transcript 
         JOIN glass_atlas_{0}_{1}{suffix}.glass_transcript_source_' || chr_id || ' source
         ON transcript.id = source.glass_transcript_id
-        JOIN glass_atlas_{0}.sequencing_run run
+        JOIN genome_reference_{0}.sequencing_run run
         ON source.sequencing_run_id = run.id
         WHERE transcript.score IS NULL
         GROUP BY transcript.id, transcript.transcription_end, transcript.transcription_start';
@@ -248,7 +248,7 @@ BEGIN
         FROM glass_atlas_{0}_{1}{suffix}.glass_transcript_' || chr_id || ' transcript 
         JOIN glass_atlas_{0}_{1}{suffix}.glass_transcript_source_' || chr_id || ' source
         ON transcript.id = source.glass_transcript_id
-        JOIN glass_atlas_{0}.sequencing_run run
+        JOIN genome_reference_{0}.sequencing_run run
         ON source.sequencing_run_id = run.id
         WHERE transcript.score IS NULL
         GROUP BY transcript.id, transcript.transcription_end, transcript.transcription_start';
@@ -300,14 +300,7 @@ BEGIN
     -- For transcripts that don't show up at all in the notx runs, we default to zero.
     -- This is not theoretically perfect, but will suffice for our purposes.
     
-    total_runs := (SELECT count(*) FROM glass_atlas_{0}.sequencing_run run
-        WHERE run.standard = true
-            AND run.type = 'Gro-Seq'
-            AND run.wt = true
-            AND run.notx = true
-            AND run.kla = false
-            AND run.other_conditions = false
-    );
+    total_runs := (SELECT count(*) FROM genome_reference_{0}.sequencing_run run);
     
     temp_table = 'deviation_table_' || chr_id || '_' || (1000*RANDOM())::int; 
     
@@ -323,14 +316,8 @@ BEGIN
         FROM glass_atlas_{0}_{1}{suffix}.glass_transcript_' || chr_id || '  t
         JOIN glass_atlas_{0}_{1}{suffix}.glass_transcript_source_' || chr_id || ' s
             ON t.id = s.glass_transcript_id
-        JOIN glass_atlas_{0}.sequencing_run run
+        JOIN genome_reference_{0}.sequencing_run run
             ON s.sequencing_run_id = run.id
-        WHERE run.standard = true
-            AND run.type = ''Gro-Seq''
-            AND run.wt = true
-            AND run.notx = true
-            AND run.kla = false
-            AND run.other_conditions = false
         GROUP BY t.id';
 
     -- Set all scores to zero at first, since some we will not have data on,
@@ -353,3 +340,4 @@ $$ LANGUAGE 'plpgsql';
 
 """.format(genome, cell_type, suffix=suffix)
 
+print sql('dm3','default','')

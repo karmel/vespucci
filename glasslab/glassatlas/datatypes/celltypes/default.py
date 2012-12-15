@@ -12,7 +12,7 @@ from glasslab.config import current_settings
 from django.db import models
 
 CELL_TYPE = 'Default'
-SCHEMA_BASE = '{0}'.format(current_settings.GENOME, CELL_TYPE.lower())
+SCHEMA_BASE = '{0}_{1}'.format(current_settings.GENOME, CELL_TYPE.lower())
 
 class DefaultBase(CellTypeBase):
     cell_type = CELL_TYPE

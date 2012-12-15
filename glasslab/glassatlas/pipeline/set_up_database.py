@@ -23,8 +23,8 @@ if __name__ == '__main__':
     parser = SetUpDatabaseParser()
     options, args = parser.parse_args()
     
-    cell_type, cell_base = parser.set_cell(options)
     genome = parser.set_genome(options)
+    cell_type, cell_base = parser.set_cell(options)
     
     generator = GlassAtlasSqlGenerator(cell_type=cell_type, genome=genome)
     
