@@ -33,7 +33,6 @@ def multiprocess_all_chromosomes(func, cls, *args, **kwargs):
     Convenience method for splitting up queries based on glass tag id.
     '''
     processes = current_settings.ALLOWED_PROCESSES
-    p = Pool(processes)
     
     if not current_settings.CHR_LISTS:
         try:
@@ -74,6 +73,7 @@ def multiprocess_all_chromosomes(func, cls, *args, **kwargs):
         current_settings.CHR_LISTS = chr_sets
         print 'Determined chromosome sets:\n{0}'.format(str(current_settings.CHR_LISTS))
     
+    p = Pool(processes)
     for chr_list in current_settings.CHR_LISTS:
         p.apply_async(func, args=[cls, chr_list,] + list(args))
     p.close()
@@ -216,7 +216,6 @@ class GlassTranscript(TranscriptBase):
                        sequencing_run.source_table.strip(), 
                        MAX_GAP, TAG_EXTENSION, 
                        MAX_EDGE, EDGE_SCALING_FACTOR, DENSITY_MULTIPLIER)
-            print query
             execute_query(query)
             
 
