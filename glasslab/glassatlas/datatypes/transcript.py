@@ -32,9 +32,6 @@ def multiprocess_all_chromosomes(func, cls, *args, **kwargs):
     ''' 
     Convenience method for splitting up queries based on glass tag id.
     '''
-    processes = current_settings.ALLOWED_PROCESSES
-    p = Pool(processes)
-    
     if not current_settings.CHR_LISTS:
         try:
             try:
@@ -63,7 +60,9 @@ def multiprocess_all_chromosomes(func, cls, *args, **kwargs):
         
         print 'Got chr', all_chr
         # Chromosomes are sorted by count descending, so we want to snake them
-        # back and forth to create even-ish groups. 
+        # back and forth to create even-ish groups.
+        processes = current_settings.ALLOWED_PROCESSES
+     
         chr_sets = [[] for _ in xrange(0, processes)]
         for i,chrom in enumerate(all_chr):
             if i and not i % processes: chr_sets.reverse()
@@ -76,6 +75,7 @@ def multiprocess_all_chromosomes(func, cls, *args, **kwargs):
         current_settings.CHR_LISTS = chr_sets
         print 'Determined chromosome sets:\n{0}'.format(str(current_settings.CHR_LISTS))
     
+    p = Pool(processes)
     for chr_list in current_settings.CHR_LISTS:
         p.apply_async(func, args=[cls, chr_list,] + list(args))
     p.close()
