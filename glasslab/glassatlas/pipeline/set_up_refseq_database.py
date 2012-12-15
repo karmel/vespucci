@@ -37,13 +37,15 @@ if __name__ == '__main__':
     
     try:
         print 'Adding data...'
+        print subprocess.check_output('pwd')
         print subprocess.check_output('scripts/transcripts_from_tags.sh -g dm3 -c refseq '
                                       + ' --schema_name=genome_reference_dm3 '
                                       + ' --tag_table=sequence_transcription_region --stitch '
                                       + ' --stitch_processes=2 --set_density --draw_edges '
                                       + ' --score --no_extended_gaps', shell=True)
         
-    except Exception: raise
+    except Exception, e: 
+        print e
     finally:
         print 'Deleting views...'
         for chr_id in chr_ids:
