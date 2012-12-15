@@ -43,7 +43,7 @@ if __name__ == '__main__':
         print 'Adding data...'
         ref_path = os.path.join(get_glasslab_path(), 'genomereference/pipeline/scripts')
         path = os.path.join(get_glasslab_path(), 'glassatlas/pipeline/scripts')
-        print subprocess.check_output(ref_path + '/set_up_refseq_database.sh -g dm3', shell=True)
+        print subprocess.check_output(ref_path + '/set_up_database.sh -g dm3', shell=True)
         print subprocess.check_output(path + '/transcripts_from_tags.sh -g dm3 -c refseq '
                                       + ' --schema_name=genome_reference_dm3 '
                                       + ' --tag_table=sequence_transcription_region '
