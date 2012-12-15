@@ -13,7 +13,7 @@ def execute_query(query, using='default', return_cursor=False, discard_temp=Fals
     cursor.execute(query)
     transaction.commit_unless_managed()
     if return_cursor: return cursor
-    discard_temp_tables(using=using)
+    #discard_temp_tables(using=using)
     connection.close()
 
 def execute_query_without_transaction(query, using='default', return_cursor=False):
