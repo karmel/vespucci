@@ -44,6 +44,7 @@ def multiprocess_all_chromosomes(func, cls, *args, **kwargs):
                     FROM "{0}" 
                     GROUP BY chromosome_id ORDER BY COUNT(chromosome_id) DESC;'''.format(
                                     kwargs.get('use_table',None) or cls._meta.db_table))
+                print all_chr
             except utils.DatabaseError:
                 # Prep table instead?
                 all_chr = fetch_rows('''
@@ -59,7 +60,8 @@ def multiprocess_all_chromosomes(func, cls, *args, **kwargs):
         except Exception:
             # cls in question does not have explicit relation to chromosomes; get all
             all_chr = current_settings.GENOME_CHOICES[current_settings.GENOME]['chromosomes']
-
+        
+        print 'Got chr', all_chr
         # Chromosomes are sorted by count descending, so we want to snake them
         # back and forth to create even-ish groups. 
         chr_sets = [[] for _ in xrange(0, processes)]
@@ -206,6 +208,7 @@ class GlassTranscript(TranscriptBase):
          
     @classmethod
     def _add_transcripts_from_groseq(cls, chr_list, sequencing_run):
+        print 'Running with chr_list:', chr_list
         for chr_id in chr_list:
             print 'Adding transcripts for chromosome %d' % chr_id
             query = """
