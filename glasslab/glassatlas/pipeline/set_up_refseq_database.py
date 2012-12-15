@@ -35,6 +35,7 @@ if __name__ == '__main__':
                     SELECT * FROM "{0}" WHERE chromosome_id = {chr_id};
                 ALTER TABLE "{0}_{chr_id}" RENAME COLUMN "transcription_start" TO "start";
                 ALTER TABLE "{0}_{chr_id}" RENAME COLUMN "transcription_end" TO "end";
+                ALTER TABLE "{0}_{chr_id}" ADD COLUMN "refseq" bool DEFAULT true;
                     """.format(SequenceTranscriptionRegion._meta.db_table, chr_id=chr_id)
     execute_query(q)
     
