@@ -43,7 +43,7 @@ if __name__ == '__main__':
                                       + ' --schema_name=genome_reference_dm3 '
                                       + ' --tag_table=sequence_transcription_region --stitch '
                                       + ' --stitch_processes=2 --set_density --draw_edges '
-                                      + ' --score --no_extended_gaps', shell=True)
+                                      + ' --no_extended_gaps', shell=True)
         
     except Exception, e: 
         print e
@@ -52,3 +52,4 @@ if __name__ == '__main__':
         for chr_id in chr_ids:
             q += """DROP VIEW "{0}_{chr_id}";
                         """.format(SequenceTranscriptionRegion._meta.db_table, chr_id=chr_id)
+        execute_query(q)
