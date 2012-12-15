@@ -27,7 +27,7 @@ if __name__ == '__main__':
     
     genome = parser.set_genome(options)
     
-    print 'Creating views over refseq data...'
+    print 'Creating tables for refseq data...'
     chr_ids = Chromosome.objects.values_list('id', flat=True)
     q = ''
     for chr_id in chr_ids:
@@ -37,7 +37,7 @@ if __name__ == '__main__':
                 ALTER TABLE "{0}_{chr_id}" RENAME COLUMN "transcription_end" TO "end";
                 ALTER TABLE "{0}_{chr_id}" ADD COLUMN "refseq" bool DEFAULT true;
                     """.format(SequenceTranscriptionRegion._meta.db_table, chr_id=chr_id)
-    execute_query(q)
+    #execute_query(q)
     
     try:
         """
