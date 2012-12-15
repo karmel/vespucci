@@ -41,8 +41,9 @@ if __name__ == '__main__':
     
     try:
         print 'Adding data...'
-        path = os.path.join(get_glasslab_path(), 'glassatlas/pipeline/scripts/transcripts_from_tags.sh')
-        print subprocess.check_output(path + ' -g dm3 -c refseq '
+        path = os.path.join(get_glasslab_path(), 'glassatlas/pipeline/scripts')
+        print subprocess.check_output(path + '/set_up_refseq_database.sh -g dm3', shell=True)
+        print subprocess.check_output(path + '/transcripts_from_tags.sh -g dm3 -c refseq '
                                       + ' --schema_name=genome_reference_dm3 '
                                       + ' --tag_table=sequence_transcription_region '
                                       #+ ' --stitch_processes=2 --set_density --draw_edges '
@@ -51,7 +52,8 @@ if __name__ == '__main__':
     except Exception, e: 
         print e
     finally:
-        print 'Deleting views...'
+        print 'Deleting tables...'
+        q = ''
         for chr_id in chr_ids:
             q += """DROP TABLE "{0}_{chr_id}";
                         """.format(SequenceTranscriptionRegion._meta.db_table, chr_id=chr_id)
