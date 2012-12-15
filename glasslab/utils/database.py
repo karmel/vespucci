@@ -6,13 +6,14 @@ Created on Nov 15, 2010
 from django.db import transaction, connections
 from glasslab.config import current_settings
 
-def execute_query(query, using='default', return_cursor=False):
+def execute_query(query, using='default', return_cursor=False, discard_temp=False):
     connection = connections[using]
     connection.close()
     cursor = connection.cursor()
     cursor.execute(query)
     transaction.commit_unless_managed()
     if return_cursor: return cursor
+    discard_temp_tables(using=using)
     connection.close()
 
 def execute_query_without_transaction(query, using='default', return_cursor=False):
