@@ -217,8 +217,7 @@ class GlassTranscript(TranscriptBase):
                        sequencing_run.source_table.strip(), 
                        MAX_GAP, TAG_EXTENSION, 
                        MAX_EDGE, EDGE_SCALING_FACTOR, DENSITY_MULTIPLIER)
-            execute_query(query, discard_temp=True)
-
+            execute_query(query)
     
     ################################################
     # Transcript cleanup and refinement
@@ -254,7 +253,7 @@ class GlassTranscript(TranscriptBase):
                                allow_extended_gaps and 'true' or 'false',
                                extension_percent,
                                null_only and 'true' or 'false')
-                execute_query(query, discard_temp=True)
+                execute_query(query)
     
     @classmethod
     def set_density(cls, allow_extended_gaps=True, extension_percent='.2', null_only=True):
@@ -276,7 +275,7 @@ class GlassTranscript(TranscriptBase):
                            allow_extended_gaps and 'true' or 'false',
                            extension_percent,
                            null_only and 'true' or 'false')
-            execute_query(query, discard_temp=True)
+            execute_query(query)
             
     @classmethod
     def draw_transcript_edges(cls):
@@ -292,7 +291,7 @@ class GlassTranscript(TranscriptBase):
                        current_settings.CELL_TYPE.lower(),
                        current_settings.STAGING,
                        chr_id)
-            execute_query(query, discard_temp=True)           
+            execute_query(query)           
             
     @classmethod
     def set_scores(cls):
@@ -311,7 +310,7 @@ class GlassTranscript(TranscriptBase):
                        current_settings.GENOME,
                        current_settings.CELL_TYPE.lower(),
                        current_settings.STAGING, chr_id)
-            execute_query(query, discard_temp=True) 
+            execute_query(query) 
     
         
 class FilteredGlassTranscriptManager(models.Manager):
