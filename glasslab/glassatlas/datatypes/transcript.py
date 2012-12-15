@@ -32,6 +32,9 @@ def multiprocess_all_chromosomes(func, cls, *args, **kwargs):
     ''' 
     Convenience method for splitting up queries based on glass tag id.
     '''
+    processes = current_settings.ALLOWED_PROCESSES
+    p = Pool(processes)
+    
     if not current_settings.CHR_LISTS:
         try:
             try:
@@ -41,7 +44,6 @@ def multiprocess_all_chromosomes(func, cls, *args, **kwargs):
                     FROM "{0}" 
                     GROUP BY chromosome_id ORDER BY COUNT(chromosome_id) DESC;'''.format(
                                     kwargs.get('use_table',None) or cls._meta.db_table))
-                print all_chr
             except utils.DatabaseError:
                 # Prep table instead?
                 all_chr = fetch_rows('''
@@ -57,12 +59,9 @@ def multiprocess_all_chromosomes(func, cls, *args, **kwargs):
         except Exception:
             # cls in question does not have explicit relation to chromosomes; get all
             all_chr = current_settings.GENOME_CHOICES[current_settings.GENOME]['chromosomes']
-        
-        print 'Got chr', all_chr
+
         # Chromosomes are sorted by count descending, so we want to snake them
-        # back and forth to create even-ish groups.
-        processes = current_settings.ALLOWED_PROCESSES
-     
+        # back and forth to create even-ish groups. 
         chr_sets = [[] for _ in xrange(0, processes)]
         for i,chrom in enumerate(all_chr):
             if i and not i % processes: chr_sets.reverse()
@@ -75,12 +74,10 @@ def multiprocess_all_chromosomes(func, cls, *args, **kwargs):
         current_settings.CHR_LISTS = chr_sets
         print 'Determined chromosome sets:\n{0}'.format(str(current_settings.CHR_LISTS))
     
-    #p = Pool(processes)
     for chr_list in current_settings.CHR_LISTS:
-        #p.apply_async(func, args=[cls, chr_list,] + list(args))
-        func(cls, chr_list, *args)
-    #p.close()
-    #p.join()
+        p.apply_async(func, args=[cls, chr_list,] + list(args))
+    p.close()
+    p.join()
 
 # The following methods wrap bound methods. This is necessary
 # for use with multiprocessing. Note that getattr with dynamic function names
@@ -209,7 +206,6 @@ class GlassTranscript(TranscriptBase):
          
     @classmethod
     def _add_transcripts_from_groseq(cls, chr_list, sequencing_run):
-        print 'Running with chr_list:', chr_list
         for chr_id in chr_list:
             print 'Adding transcripts for chromosome %d' % chr_id
             query = """
@@ -220,6 +216,7 @@ class GlassTranscript(TranscriptBase):
                        sequencing_run.source_table.strip(), 
                        MAX_GAP, TAG_EXTENSION, 
                        MAX_EDGE, EDGE_SCALING_FACTOR, DENSITY_MULTIPLIER)
+            print query
             execute_query(query)
             
 
