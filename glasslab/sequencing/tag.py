@@ -60,6 +60,13 @@ class GlassTag(DynamicTable):
     @classmethod 
     def set_prep_table(cls, name): 
         cls.prep_table = '%s"."%s' % (current_settings.CURRENT_SCHEMA, name)
+    
+    @classmethod        
+    def delete_prep_table(cls):
+        table_sql = """
+        DROP TABLE "{0}" CASCADE;
+        """.format(cls.prep_table)
+        execute_query(table_sql)
         
     @classmethod                
     def create_parent_table(cls, name):

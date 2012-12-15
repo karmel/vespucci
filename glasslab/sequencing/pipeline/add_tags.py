@@ -155,6 +155,7 @@ if __name__ == '__main__':
         _print('Adding indices.')
         GlassTag.set_table_name('tag_' + file_name)
         add_indices()
+        GlassTag.delete_prep_table()
     else:
         _print('Skipping creation of tag table')
         GlassTag.set_table_name('tag_' + file_name)
