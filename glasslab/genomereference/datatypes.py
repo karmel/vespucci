@@ -16,8 +16,10 @@ SCHEMA_BASE = 'genome_reference_{0}'
 
 
 class GenomeReferenceBase(GlassModel):
+    schema_name = None
     @classmethod
     def set_db_table(cls):
+        cls.schema_name = SCHEMA_BASE.format(current_settings.GENOME)
         cls._meta.db_table = cls._meta.db_table.format(current_settings.GENOME)
         
     class Meta:
@@ -127,6 +129,7 @@ class SequenceTranscriptionRegion(GenomeReferenceBase):
     
     start_end           = BoxField(null=True, default=None, help_text='This is a placeholder for the PostgreSQL box type.')
     
+    table_name = 'sequence_transcription_region'
     class Meta: 
         db_table    = '{0}"."sequence_transcription_region'.format(SCHEMA_BASE)
         app_label   = 'Genome_Reference'

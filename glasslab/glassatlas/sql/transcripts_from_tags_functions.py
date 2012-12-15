@@ -169,21 +169,7 @@ BEGIN
             -- last_end + 1, rendering a 0-bp transcript. Checking for last_end + 1
             -- means that any clipped transcript is at least 1bp long.
             IF ((current_refseq = rec.refseq) OR (last_end + 1 >= rec.transcription_end)) THEN
-                IF ((last_end + max_gap) >= rec.transcription_start) THEN should_merge := true;
-                ELSE
-                    -- Note that none of the default implementations use span_repeats = True right now,
-                    -- but we would like to maintain the option.
-                    IF span_repeats = true THEN
-                        -- Should this gap be considered in light of an overlapping repeat region?
-                        -- Note: not strand specific!
-                        EXECUTE 'SELECT reg.id ' 
-                            || ' FROM genome_reference_{0}.patterned_transcription_region_' || chr_id || ' reg '
-                                || ' WHERE reg.start_end @> '
-                                        || ' ''((' || last_end || ', 0), (' || rec.transcription_start || ', 0))''::box '
-                                || ' LIMIT 1' INTO repeat_region;
-                        IF repeat_region IS NOT NULL THEN should_merge := true;
-                        END IF;
-                    END IF;
+                IF ((last_end + max_gap) >= rec.transcription_start) THEN should_merge := true; 
                 END IF;
             END IF;
             

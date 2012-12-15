@@ -6,10 +6,10 @@ Created on Feb 23, 2011
 from glasslab.utils.database import execute_query
 from optparse import make_option
 from glasslab.glassatlas.datatypes.transcript import CellTypeBase
-from glasslab.glassatlas.pipeline.base_parser import GlassAtlasParser
 from glasslab.glassatlas.sql.sql_generator import GlassAtlasSqlGenerator
+from glasslab.utils.scripting import GlassOptionParser
 
-class SetUpDatabaseParser(GlassAtlasParser):
+class SetUpDatabaseParser(GlassOptionParser):
     options = [
                make_option('-g', '--genome',action='store', type='string', dest='genome', default='mm9', 
                            help='Currently supported: mm8, mm8r, mm9, hg18, hg18r, dm3'),

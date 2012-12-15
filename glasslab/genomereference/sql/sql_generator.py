@@ -274,9 +274,9 @@ class GenomeResourcesSqlGenerator(SqlGenerator):
         table_name = 'sequencing_run'
         return """
         INSERT INTO "{schema_name}"."{table_name}" 
-            (cell_type, name, source_table, modified)
+            (cell_type, name, source_table, modified, created)
         VALUES ('Default','sequence_transcription_region',
-            '{schema_name}"."sequence_transcription_region', NOW());
+            '{schema_name}"."sequence_transcription_region', NOW(), NOW());
         """.format(schema_name=self.schema_name, table_name=table_name)
             
     def import_ncrna_org_values(self):
