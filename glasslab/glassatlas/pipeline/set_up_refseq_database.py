@@ -8,11 +8,12 @@ Here we set it up by calling the other scripts.
 '''
 from glasslab.utils.database import execute_query
 from optparse import make_option
-from glasslab.utils.scripting import GlassOptionParser
+from glasslab.utils.scripting import GlassOptionParser, get_glasslab_path
 from glasslab.genomereference.datatypes import Chromosome,\
     SequenceTranscriptionRegion
 from glasslab.glassatlas.pipeline import transcripts_from_tags
 import subprocess
+import os
 
 class SetUpRefseqDatabaseParser(GlassOptionParser):
     options = [
@@ -37,8 +38,8 @@ if __name__ == '__main__':
     
     try:
         print 'Adding data...'
-        print subprocess.check_output('pwd')
-        print subprocess.check_output('scripts/transcripts_from_tags.sh -g dm3 -c refseq '
+        path = os.path.join(get_glasslab_path(), 'glassatlas/pipeline/scripts/transcripts_from_tags.sh')
+        print subprocess.check_output(path + ' -g dm3 -c refseq '
                                       + ' --schema_name=genome_reference_dm3 '
                                       + ' --tag_table=sequence_transcription_region --stitch '
                                       + ' --stitch_processes=2 --set_density --draw_edges '
