@@ -31,8 +31,10 @@ if __name__ == '__main__':
     chr_ids = Chromosome.objects.values_list('id', flat=True)
     q = ''
     for chr_id in chr_ids:
-        q += """CREATE VIEW "{0}_{chr_id}" AS 
+        q += """CREATE TABLE "{0}_{chr_id}" AS 
                     SELECT * FROM "{0}" WHERE chromosome_id = {chr_id};
+                ALTER TABLE "{0}_{chr_id}" RENAME COLUMN "transcription_start" TO "start";
+                ALTER TABLE "{0}_{chr_id}" RENAME COLUMN "transcription_end" TO "end";
                     """.format(SequenceTranscriptionRegion._meta.db_table, chr_id=chr_id)
     execute_query(q)
     
@@ -50,6 +52,6 @@ if __name__ == '__main__':
     finally:
         print 'Deleting views...'
         for chr_id in chr_ids:
-            q += """DROP VIEW "{0}_{chr_id}";
+            q += """DROP TABLE "{0}_{chr_id}";
                         """.format(SequenceTranscriptionRegion._meta.db_table, chr_id=chr_id)
         execute_query(q)
