@@ -12,6 +12,7 @@ from glasslab.utils.scripting import GlassOptionParser
 from glasslab.genomereference.datatypes import Chromosome,\
     SequenceTranscriptionRegion
 from glasslab.glassatlas.pipeline import transcripts_from_tags
+import subprocess
 
 class SetUpRefseqDatabaseParser(GlassOptionParser):
     options = [
@@ -34,14 +35,17 @@ if __name__ == '__main__':
                     """.format(SequenceTranscriptionRegion._meta.db_table, chr_id=chr_id)
     execute_query(q)
     
-    print 'Adding data...'
-    transcripts_from_tags(genome=options.genome, cell_type='refseq', 
-                          schema_name=SequenceTranscriptionRegion.schema_name,
-                          tag_table=SequenceTranscriptionRegion.table_name,
-                          set_density=True, stitch=True, stitch_processes=2, 
-                          draw_edges=True, score=True, no_extended_gaps=True)
-    
-    print 'Deleting views...'
-    for chr_id in chr_ids:
-        q += """DROP VIEW "{0}_{chr_id}";
-                    """.format(SequenceTranscriptionRegion._meta.db_table, chr_id=chr_id)
+    try:
+        print 'Adding data...'
+        print subprocess.check_output('scripts/transcripts_from_tags.sh -g dm3 -c refseq '
+                                      + ' --schema_name=genome_reference_dm3 '
+                                      + ' --tag_table=sequence_transcription_region --stitch '
+                                      + ' --stitch_processes=2 --set_density --draw_edges '
+                                      + ' --score --no_extended_gaps', shell=True)
+        
+    except Exception: raise
+    finally:
+        print 'Deleting views...'
+        for chr_id in chr_ids:
+            q += """DROP VIEW "{0}_{chr_id}";
+                        """.format(SequenceTranscriptionRegion._meta.db_table, chr_id=chr_id)
