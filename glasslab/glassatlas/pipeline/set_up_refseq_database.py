@@ -26,7 +26,7 @@ if __name__ == '__main__':
     genome = parser.set_genome(options)
     
     print 'Creating views over refseq data...'
-    chr_ids = Chromosome.objects.values_list('id')
+    chr_ids = Chromosome.objects.values_list('id', flat=True)
     q = ''
     for chr_id in chr_ids:
         q += """CREATE VIEW "{0}_{chr_id}" AS 
