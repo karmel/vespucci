@@ -97,3 +97,10 @@ class GlassTranscriptNonCodingThioMac(GlassTranscriptNonCoding):
         app_label = 'Transcription_{0}'.format(CELL_TYPE)
         verbose_name = 'Glass transcript non-coding region ({0})'.format(CELL_TYPE)
         verbose_name_plural = 'Glass transcript non-coding regions ({0})'.format(CELL_TYPE)
+
+
+class RefSeqBase(CellTypeBase):
+    '''
+    Empty class for use in setting up RefSeq database.
+    '''
+    cell_type = 'RefSeq'

@@ -16,6 +16,7 @@ import os
 from django.db.models.aggregates import Max
 from datetime import datetime
 import traceback
+from glasslab.glassatlas.datatypes.celltypes.default import RefSeqBase
 
 # The tags returned from the sequencing run are shorter than we know them to be biologically
 # We can therefore extend the mapped tag region by a set number of bp if an extension is passed in
@@ -108,7 +109,7 @@ class CellTypeBase(object):
         return {'default': DefaultBase,
                 'thiomac': ThioMacBase,
                 'cd4tcell': CD4TCellBase,
-                'refseq': DefaultBase}
+                'refseq': RefSeqBase}
       
     @property
     def glass_transcript(self): return GlassTranscript
@@ -140,6 +141,7 @@ class CellTypeBase(object):
         except KeyError:
             raise Exception('Could not find models to match cell type {0}.'.format(cell_type)
                             + '\nOptions are: {0}'.format(','.join(correlations.keys())))
+            
 class TranscriptModelBase(GlassModel):
     cell_base = CellTypeBase()
     class Meta:
@@ -206,7 +208,6 @@ class GlassTranscript(TranscriptBase):
          
     @classmethod
     def _add_transcripts_from_groseq(cls, chr_list, sequencing_run):
-        print current_settings.CELL_TYPE.lower()
         for chr_id in chr_list:
             print 'Adding transcripts for chromosome %d' % chr_id
             query = """

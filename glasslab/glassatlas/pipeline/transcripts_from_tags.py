@@ -52,7 +52,6 @@ if __name__ == '__main__':
     
     cell_type, cell_base = parser.set_cell(options)
     parser.set_genome(options)
-    print cell_type
     
     allow_extended_gaps = True
     if options.no_extended_gaps: allow_extended_gaps = False
