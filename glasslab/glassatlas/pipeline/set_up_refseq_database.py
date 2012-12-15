@@ -11,7 +11,7 @@ from optparse import make_option
 from glasslab.utils.scripting import GlassOptionParser
 from glasslab.genomereference.datatypes import Chromosome,\
     SequenceTranscriptionRegion
-from glasslab.glassatlas.pipeline.transcripts_from_tags import TranscriptsFromTagsParser
+from glasslab.glassatlas.pipeline import transcripts_from_tags
 
 class SetUpRefseqDatabaseParser(GlassOptionParser):
     options = [
@@ -35,11 +35,11 @@ if __name__ == '__main__':
     execute_query(q)
     
     print 'Adding data...'
-    TranscriptsFromTagsParser(genome=options.genome, cell_type='refseq', 
-                              schema_name=SequenceTranscriptionRegion.schema_name,
-                              tag_table=SequenceTranscriptionRegion.table_name,
-                              set_density=True, stitch=True, stitch_processes=2, 
-                              draw_edges=True, score=True, no_extended_gaps=True)
+    transcripts_from_tags(genome=options.genome, cell_type='refseq', 
+                          schema_name=SequenceTranscriptionRegion.schema_name,
+                          tag_table=SequenceTranscriptionRegion.table_name,
+                          set_density=True, stitch=True, stitch_processes=2, 
+                          draw_edges=True, score=True, no_extended_gaps=True)
     
     print 'Deleting views...'
     for chr_id in chr_ids:
