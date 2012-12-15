@@ -30,7 +30,7 @@ if __name__ == '__main__':
     q = ''
     for chr_id in chr_ids:
         q += """CREATE VIEW "{0}_{chr_id}" AS 
-                    SELECT * FROM {0} WHERE chromosome_id = {chr_id};
+                    SELECT * FROM "{0}" WHERE chromosome_id = {chr_id};
                     """.format(SequenceTranscriptionRegion._meta.db_table, chr_id=chr_id)
     execute_query(q)
     
