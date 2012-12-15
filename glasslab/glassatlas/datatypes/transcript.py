@@ -16,7 +16,6 @@ import os
 from django.db.models.aggregates import Max
 from datetime import datetime
 import traceback
-from glasslab.glassatlas.datatypes.celltypes.default import RefSeqBase
 
 # The tags returned from the sequencing run are shorter than we know them to be biologically
 # We can therefore extend the mapped tag region by a set number of bp if an extension is passed in
@@ -105,7 +104,7 @@ class CellTypeBase(object):
     def get_correlations(cls):
         from glasslab.glassatlas.datatypes.celltypes.thiomac import ThioMacBase
         from glasslab.glassatlas.datatypes.celltypes.cd4tcell import CD4TCellBase
-        from glasslab.glassatlas.datatypes.celltypes.default import DefaultBase
+        from glasslab.glassatlas.datatypes.celltypes.default import DefaultBase, RefSeqBase
         return {'default': DefaultBase,
                 'thiomac': ThioMacBase,
                 'cd4tcell': CD4TCellBase,
