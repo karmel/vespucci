@@ -206,6 +206,7 @@ class GlassTranscript(TranscriptBase):
          
     @classmethod
     def _add_transcripts_from_groseq(cls, chr_list, sequencing_run):
+        print current_settings.CELL_TYPE.lower()
         for chr_id in chr_list:
             print 'Adding transcripts for chromosome %d' % chr_id
             query = """
