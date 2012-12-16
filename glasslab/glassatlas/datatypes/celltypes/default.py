@@ -8,10 +8,8 @@ from glasslab.glassatlas.datatypes.transcript import GlassTranscript, \
     GlassTranscriptSequence, GlassTranscriptNonCoding, CellTypeBase, \
     GlassTranscriptSourcePrep, GlassTranscriptPrep, FilteredGlassTranscriptManager
 from glasslab.config import current_settings
-
 from django.db import models
 
-print 'Loading default'
 CELL_TYPE = 'Default'
 SCHEMA_BASE = 'glass_atlas_{0}_{1}'.format(current_settings.GENOME, CELL_TYPE.lower())
 

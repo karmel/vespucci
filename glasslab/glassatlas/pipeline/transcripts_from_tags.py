@@ -44,16 +44,13 @@ class TranscriptsFromTagsParser(GlassOptionParser):
                 ]
 
 if __name__ == '__main__':
-    print 'Main'
     parser = TranscriptsFromTagsParser()
     options, args = parser.parse_args()
     
     if options.processes:
         current_settings.ALLOWED_PROCESSES = int(options.processes)
     
-    print 'Loading genome...'
     parser.set_genome(options)
-    print 'Loading cell...'
     cell_type, cell_base = parser.set_cell(options)
     
     allow_extended_gaps = True
