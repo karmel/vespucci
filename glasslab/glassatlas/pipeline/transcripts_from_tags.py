@@ -5,12 +5,12 @@ Created on Nov 8, 2010
 '''
 from glasslab.glassatlas.datatypes.transcript import CellTypeBase
 from glasslab.sequencing.tag import GlassTag
-from optparse import make_option
+from optparse import make_option, OptionParser
 from glasslab.config import current_settings
 from glasslab.utils.database import discard_temp_tables
 from glasslab.utils.scripting import GlassOptionParser
 
-class TranscriptsFromTagsParser(GlassOptionParser):
+class TranscriptsFromTagsParser(OptionParser):
     options = [
                make_option('-g', '--genome',action='store', type='string', dest='genome', default='mm9', 
                            help='Currently supported: mm8, mm8r, mm9, hg18, hg18r, dm3'),

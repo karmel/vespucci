@@ -5,6 +5,7 @@ Created on Sep 24, 2010
 '''
 from optparse import OptionParser
 import os
+from glasslab.glassatlas.datatypes.transcript import CellTypeBase
 from glasslab.config import current_settings
 
 class GlassOptionParser(OptionParser):
@@ -15,8 +16,6 @@ class GlassOptionParser(OptionParser):
         OptionParser.__init__(self, option_list=option_list or self.options, **kwargs)
 
     def set_cell(self, options):
-        from glasslab.glassatlas.datatypes.transcript import CellTypeBase
-
         cell_type = (options.cell_type and options.cell_type.lower()) or current_settings.CELL_TYPE.lower()
         cell_base = CellTypeBase().get_cell_type_base(cell_type)()
         for m in cell_base.get_transcript_models():
