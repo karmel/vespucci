@@ -15,6 +15,7 @@ class GlassModel(models.Model):
         
     @classmethod
     def set_db_table(cls):
+        print 'Calling set_db for {0}'.format(cls.__name__)
         cls.schema_name = cls.schema_base.format(current_settings.GENOME, current_settings.CELL_TYPE)
         cls._meta.db_table = cls._meta.db_table.format(current_settings.GENOME, current_settings.CELL_TYPE)
         
