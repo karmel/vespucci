@@ -13,6 +13,7 @@ from glasslab.genomereference.datatypes import Chromosome,\
     SequenceTranscriptionRegion
 import subprocess
 import os
+from glasslab.config import current_settings
 
 class SetUpRefseqDatabaseParser(GlassOptionParser):
     options = [
@@ -41,9 +42,10 @@ if __name__ == '__main__':
     try:
         print 'Adding data...'
         path = os.path.join(get_glasslab_path(), 'glassatlas/pipeline/scripts')
-        print subprocess.check_output(path + '/set_up_database.sh -g dm3 -c refseq', shell=True)
-        print subprocess.check_output(path + '/transcripts_from_tags.sh -g dm3 -c refseq '
-                                      + ' --schema_name=genome_reference_dm3 '
+        print subprocess.check_output(path + 
+                    '/set_up_database.sh -g {0} -c refseq'.format(current_settings.GENOME), shell=True)
+        print subprocess.check_output(path + '/transcripts_from_tags.sh -g {0} -c refseq '.format(current_settings.GENOME)
+                                      + ' --schema_name=genome_reference_{0} '.format(current_settings.GENOME)
                                       + ' --tag_table=sequence_transcription_region '
                                       + ' --stitch --stitch_processes=2 --set_density --draw_edges '
                                       + ' --no_extended_gaps'
