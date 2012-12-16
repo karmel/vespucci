@@ -5,7 +5,6 @@ Created on Feb 23, 2011
 '''
 from glasslab.utils.database import execute_query
 from optparse import make_option
-from glasslab.glassatlas.datatypes.transcript import CellTypeBase
 from glasslab.glassatlas.sql.sql_generator import GlassAtlasSqlGenerator
 from glasslab.utils.scripting import GlassOptionParser
 
@@ -14,7 +13,7 @@ class SetUpDatabaseParser(GlassOptionParser):
                make_option('-g', '--genome',action='store', type='string', dest='genome', default='mm9', 
                            help='Currently supported: mm8, mm8r, mm9, hg18, hg18r, dm3'),
                make_option('-c', '--cell_type',action='store', type='string', dest='cell_type', 
-                           help='Cell type for this run? Options are: %s' % ','.join(CellTypeBase.get_correlations().keys())),
+                           help='Cell type for this run?'),
                make_option('-f', '--final', action='store_true', dest='final', default=False,
                            help='Generate only the final schema and tables, without the prep schema?'),
                 ]

@@ -11,7 +11,6 @@ from glasslab.config import current_settings
 
 from django.db import models
 
-print 'Loading default'
 CELL_TYPE = 'Default'
 SCHEMA_BASE = 'glass_atlas_{0}_{1}'
 

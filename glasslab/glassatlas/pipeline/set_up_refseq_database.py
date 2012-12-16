@@ -11,7 +11,6 @@ from optparse import make_option
 from glasslab.utils.scripting import GlassOptionParser, get_glasslab_path
 from glasslab.genomereference.datatypes import Chromosome,\
     SequenceTranscriptionRegion
-from glasslab.glassatlas.pipeline import transcripts_from_tags
 import subprocess
 import os
 

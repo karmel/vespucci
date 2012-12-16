@@ -11,12 +11,11 @@ from glasslab.utils.database import discard_temp_tables
 from glasslab.utils.scripting import GlassOptionParser
 
 class TranscriptsFromTagsParser(GlassOptionParser):
-
-    options = []
-'''               make_option('-g', '--genome',action='store', type='string', dest='genome', default='mm9', 
+    options = [
+               make_option('-g', '--genome',action='store', type='string', dest='genome', default='mm9', 
                            help='Currently supported: mm8, mm8r, mm9, hg18, hg18r, dm3'),
                make_option('-c', '--cell_type',action='store', type='string', dest='cell_type', 
-                           help='Cell type for this run? Options are: %s' % ','.join(CellTypeBase.get_correlations().keys())),
+                           help='Cell type for this run?'),
                make_option('-t', '--tag_table',action='store', type='string', dest='tag_table', 
                            help='Table name from which to load tags. Appended to schema if schema is included. Otherwise used as is.'),
                make_option('-s', '--schema_name',action='store', type='string', dest='schema_name',  
@@ -52,9 +51,7 @@ if __name__ == '__main__':
     if options.processes:
         current_settings.ALLOWED_PROCESSES = int(options.processes)
     
-    print 'Loading genome...'
     parser.set_genome(options)
-    print 'Loading cell...'
     cell_type, cell_base = parser.set_cell(options)
     
     allow_extended_gaps = True
@@ -93,4 +90,4 @@ if __name__ == '__main__':
     if options.output_dir:
         cell_base.filtered_glass_transcript.generate_bed_file(options.output_dir)
         
-    discard_temp_tables()'''
+    discard_temp_tables()
