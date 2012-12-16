@@ -18,19 +18,22 @@ class GlassOptionParser(OptionParser):
     def set_cell(self, options):
         cell_type = (options.cell_type and options.cell_type.lower()) or current_settings.CELL_TYPE.lower()
         cell_base = CellTypeBase().get_cell_type_base(cell_type)()
+        for m in cell_base.get_transcript_models():
+            m.set_db_table()
         current_settings.CELL_TYPE = cell_base.cell_type
-        
+            
         return cell_type, cell_base
     
     def set_genome(self, options):
         current_settings.GENOME = options.genome
         
         # Update table names for loaded classes
-        from django.db import models
-        for m in models.get_models():
-            print m.__name__
-            try: m.set_db_table()
-            except AttributeError: pass
+        from glasslab.genomereference import datatypes
+        for m in (datatypes.Chromosome, datatypes.SequenceIdentifier,
+                  datatypes.SequenceDetail, datatypes.SequenceTranscriptionRegion,
+                  datatypes.NonCodingRna, datatypes.NonCodingTranscriptionRegion,
+                  datatypes.SequencingRun):
+            m.set_db_table()
         return current_settings.GENOME
     
 def get_glasslab_path():

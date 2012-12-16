@@ -9,7 +9,6 @@ Created on Sep 24, 2010
 
 '''
 from django.db import models
-from glasslab.config import current_settings
 from glasslab.utils.datatypes.basic_model import BoxField, GlassModel
 
 SCHEMA_BASE = 'genome_reference_{0}'
