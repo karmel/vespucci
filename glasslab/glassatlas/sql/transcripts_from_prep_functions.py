@@ -39,7 +39,7 @@ BEGIN
             END IF;
         END LOOP;
         -- And the last one..
-        IF last_trans.transcription_start IS NOT NULL THEN
+        IF (last_trans.transcription_start IS NULL) = false THEN
             transcript := (SELECT glass_atlas_{0}_{1}{suffix}.insert_transcript(last_trans));
         END IF;
     END LOOP;
@@ -87,7 +87,7 @@ BEGIN
             GROUP by t1.id, t1.strand, t1.transcription_start, t1.transcription_end, t1.refseq
             ORDER by t1.transcription_start ASC'
     LOOP
-        IF trans.id IS NOT NULL THEN
+        IF (trans.id IS NULL) = false THEN
             -- Reset transcript record.
             transcript := NULL;
             transcript.chromosome_id = chr_id;
@@ -339,3 +339,4 @@ END;
 $$ LANGUAGE 'plpgsql';
 
 """.format(genome, cell_type, suffix=suffix)
+print sql('dm3','default','')

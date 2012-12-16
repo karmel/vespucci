@@ -121,7 +121,7 @@ BEGIN
     max_chrom_pos := (SELECT (length - 1) FROM genome_reference_{0}.chromosome WHERE id = chr_id);
     
     -- IF a start_end is passed, use that to limit transcripts
-    IF start_end IS NOT NULL THEN
+    IF (start_end IS NULL) = false THEN
         start_end_clause := ' and start_end && public.make_box(' || (start_end[0])[0] || ',0,' || (start_end[1])[0] || ',0) ';
     END IF;
     
@@ -139,7 +139,7 @@ BEGIN
         LOOP
             -- The tags returned from the sequencing run are shorter than we know them to be biologically
             -- We can therefore extend the mapped tag region by a set number of bp if an extension is passed in
-            IF (tag_extension IS NOT NULL) AND (tag_extension != 0) THEN
+            IF ((tag_extension IS NULL) = false) AND (tag_extension != 0) THEN
                 IF strand = 0 THEN rec.transcription_end := rec.transcription_end + tag_extension;
                 ELSE rec.transcription_start := rec.transcription_start - tag_extension;
                 END IF;
@@ -266,7 +266,7 @@ RETURNS VOID AS $$
     END IF;
     
     -- Allow for strand selection
-    IF one_strand IS NOT NULL THEN
+    IF (one_strand IS NULL) = false THEN
         strand_start := one_strand;
         strand_end := one_strand;
     END IF; 
@@ -276,14 +276,15 @@ RETURNS VOID AS $$
         FOR rec IN 
             SELECT * FROM glass_atlas_{0}_{1}_prep.determine_transcripts_from_sequencing_run(chr_id, strand, source_t, max_gap, tag_extension, start_end)
         LOOP
-            IF rec IS NOT NULL THEN
+            raise exception '%', rec;
+                
+            IF (rec IS NULL) = false THEN
                 -- Save the transcript.
                 
                 -- This transcript has been added for a single run, so we can set density
                 -- as simple tag_count/length.
                 density := (density_multiplier*(rec.tag_count)::numeric)/
                                 (rec.transcription_end - rec.transcription_start + 1)::numeric;
-                
                 EXECUTE 'INSERT INTO glass_atlas_{0}_{1}_prep.glass_transcript_' || rec.chromosome_id
                     || ' ("chromosome_id", "strand", 
                     "transcription_start", "transcription_end", 
@@ -321,7 +322,7 @@ RETURNS VOID AS $$
         FOR rec IN 
             SELECT * FROM glass_atlas_{0}_{1}_prep.determine_transcripts_from_existing(chr_id, strand, max_gap)
         LOOP
-            IF rec IS NOT NULL AND rec.tag_count > 1 THEN            
+            IF (rec IS NULL) = false AND rec.tag_count > 1 THEN            
                 -- Save the transcript. 
                 EXECUTE 'INSERT INTO glass_atlas_{0}_{1}_prep.glass_transcript_' || rec.chromosome_id
                     || ' ("chromosome_id", "strand", '
