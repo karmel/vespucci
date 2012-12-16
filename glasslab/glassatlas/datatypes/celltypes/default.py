@@ -11,7 +11,7 @@ from glasslab.config import current_settings
 
 from django.db import models
 
-print 'Loading default...'
+print 'Loading default'
 CELL_TYPE = 'Default'
 SCHEMA_BASE = 'glass_atlas_{0}_{1}'.format(current_settings.GENOME, CELL_TYPE.lower())
 
@@ -20,25 +20,25 @@ class DefaultBase(CellTypeBase):
     schema_base = SCHEMA_BASE
 
     @property
-    def glass_transcript(self): return GlassTranscriptThioMac
+    def glass_transcript(self): return GlassTranscriptDefault
     @property
-    def glass_transcript_prep(self): return GlassTranscriptPrepThioMac
+    def glass_transcript_prep(self): return GlassTranscriptPrepDefault
     @property
-    def filtered_glass_transcript(self): return FilteredGlassTranscriptThioMac
+    def filtered_glass_transcript(self): return FilteredGlassTranscriptDefault
     @property
-    def glass_transcript_source(self): return GlassTranscriptSourceThioMac
+    def glass_transcript_source(self): return GlassTranscriptSourceDefault
     @property
-    def glass_transcript_source_prep(self): return GlassTranscriptSourcePrepThioMac
+    def glass_transcript_source_prep(self): return GlassTranscriptSourcePrepDefault
     @property
-    def glass_transcript_sequence(self): return GlassTranscriptSequenceThioMac
+    def glass_transcript_sequence(self): return GlassTranscriptSequenceDefault
     @property
-    def glass_transcript_non_coding(self): return GlassTranscriptNonCodingThioMac
+    def glass_transcript_non_coding(self): return GlassTranscriptNonCodingDefault
 
     
-class GlassTranscriptThioMac(GlassTranscript):
+class GlassTranscriptDefault(GlassTranscript):
     cell_base = DefaultBase()
     
-    #labels = models.ManyToManyField(TranscriptClass, through='GlassTranscriptLabelThioMac')
+    #labels = models.ManyToManyField(TranscriptClass, through='GlassTranscriptLabelDefault')
     
     class Meta:
         db_table = '{0}{1}"."glass_transcript'.format(SCHEMA_BASE, current_settings.STAGING)
@@ -46,7 +46,7 @@ class GlassTranscriptThioMac(GlassTranscript):
         verbose_name = 'Unfiltered Glass transcript ({0})'.format(CELL_TYPE)
         verbose_name_plural = 'Unfiltered Glass transcripts ({0})'.format(CELL_TYPE)
 
-class GlassTranscriptPrepThioMac(GlassTranscriptPrep):
+class GlassTranscriptPrepDefault(GlassTranscriptPrep):
     cell_base = DefaultBase()
     class Meta:
         db_table = '{0}_prep"."glass_transcript'.format(SCHEMA_BASE)
@@ -54,7 +54,7 @@ class GlassTranscriptPrepThioMac(GlassTranscriptPrep):
         verbose_name = 'Preparatory Glass transcript ({0})'.format(CELL_TYPE)
         verbose_name_plural = 'Preparatory Glass transcripts ({0})'.format(CELL_TYPE)
 
-class FilteredGlassTranscriptThioMac(GlassTranscriptThioMac, FilteredGlassTranscript):
+class FilteredGlassTranscriptDefault(GlassTranscriptDefault, FilteredGlassTranscript):
     cell_base = DefaultBase()
     objects = FilteredGlassTranscriptManager()
     class Meta:
@@ -63,8 +63,8 @@ class FilteredGlassTranscriptThioMac(GlassTranscriptThioMac, FilteredGlassTransc
         verbose_name = 'Glass transcript ({0})'.format(CELL_TYPE)
         verbose_name_plural = 'Glass transcripts ({0})'.format(CELL_TYPE)
       
-class GlassTranscriptSourcePrepThioMac(GlassTranscriptSourcePrep):
-    glass_transcript = models.ForeignKey(GlassTranscriptPrepThioMac, related_name='glasstranscriptsource')
+class GlassTranscriptSourcePrepDefault(GlassTranscriptSourcePrep):
+    glass_transcript = models.ForeignKey(GlassTranscriptPrepDefault, related_name='glasstranscriptsource')
     cell_base = DefaultBase()
     class Meta:
         db_table = '{0}_prep"."glass_transcript_source'.format(SCHEMA_BASE)
@@ -72,8 +72,8 @@ class GlassTranscriptSourcePrepThioMac(GlassTranscriptSourcePrep):
         verbose_name = 'Preparatory Glass transcript source ({0})'.format(CELL_TYPE)
         verbose_name_plural = 'Preparatory Glass transcript sources ({0})'.format(CELL_TYPE)
 
-class GlassTranscriptSourceThioMac(GlassTranscriptSource):
-    glass_transcript = models.ForeignKey(GlassTranscriptThioMac, related_name='glasstranscriptsource')
+class GlassTranscriptSourceDefault(GlassTranscriptSource):
+    glass_transcript = models.ForeignKey(GlassTranscriptDefault, related_name='glasstranscriptsource')
     cell_base = DefaultBase()
     class Meta:
         db_table = '{0}{1}"."glass_transcript_source'.format(SCHEMA_BASE, current_settings.STAGING)
@@ -81,8 +81,8 @@ class GlassTranscriptSourceThioMac(GlassTranscriptSource):
         verbose_name = 'Glass transcript source ({0})'.format(CELL_TYPE)
         verbose_name_plural = 'Glass transcript sources ({0})'.format(CELL_TYPE)
        
-class GlassTranscriptSequenceThioMac(GlassTranscriptSequence):
-    glass_transcript = models.ForeignKey(GlassTranscriptThioMac)
+class GlassTranscriptSequenceDefault(GlassTranscriptSequence):
+    glass_transcript = models.ForeignKey(GlassTranscriptDefault)
     cell_base = DefaultBase()
     class Meta: 
         db_table = '{0}{1}"."glass_transcript_sequence'.format(SCHEMA_BASE, current_settings.STAGING)
@@ -90,8 +90,8 @@ class GlassTranscriptSequenceThioMac(GlassTranscriptSequence):
         verbose_name = 'Glass transcript sequence region ({0})'.format(CELL_TYPE)
         verbose_name_plural = 'Glass transcript sequence regions ({0})'.format(CELL_TYPE)
            
-class GlassTranscriptNonCodingThioMac(GlassTranscriptNonCoding):
-    glass_transcript = models.ForeignKey(GlassTranscriptThioMac)
+class GlassTranscriptNonCodingDefault(GlassTranscriptNonCoding):
+    glass_transcript = models.ForeignKey(GlassTranscriptDefault)
     cell_base = DefaultBase()
     class Meta: 
         db_table = '{0}{1}"."glass_transcript_non_coding'.format(SCHEMA_BASE, current_settings.STAGING)
