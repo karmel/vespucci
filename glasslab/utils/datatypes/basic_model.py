@@ -10,6 +10,9 @@ from psycopg2.extensions import AsIs
 class GlassModel(models.Model):
     schema_base = 'glass_atlas_{0}_{1}'
     
+    def __new__(cls):
+        cls.set_db_table()
+        
     @classmethod
     def set_db_table(cls):
         cls.schema_name = cls.schema_base.format(current_settings.GENOME, current_settings.CELL_TYPE)
