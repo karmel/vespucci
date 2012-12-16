@@ -37,3 +37,5 @@ class GlassOptionParser(OptionParser):
 def get_glasslab_path():
     import glasslab
     return os.path.dirname(glasslab.__file__)
+
+print 'Done loading option parser'
