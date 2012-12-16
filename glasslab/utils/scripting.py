@@ -18,8 +18,6 @@ class GlassOptionParser(OptionParser):
     def set_cell(self, options):
         cell_type = (options.cell_type and options.cell_type.lower()) or current_settings.CELL_TYPE.lower()
         cell_base = CellTypeBase().get_cell_type_base(cell_type)()
-        for m in cell_base.get_transcript_models():
-            m.set_db_table()
         current_settings.CELL_TYPE = cell_base.cell_type
             
         return cell_type, cell_base

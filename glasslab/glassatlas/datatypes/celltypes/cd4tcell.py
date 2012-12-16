@@ -12,7 +12,7 @@ from glasslab.config import current_settings
 from django.db import models
 
 CELL_TYPE = 'CD4TCell'
-SCHEMA_BASE = 'glass_atlas_{0}_{1}'
+SCHEMA_BASE = 'glass_atlas_{0}_{1}'.format(current_settings.GENOME, CELL_TYPE.lower())
 
 class CD4TCellBase(CellTypeBase):
     cell_type = CELL_TYPE
