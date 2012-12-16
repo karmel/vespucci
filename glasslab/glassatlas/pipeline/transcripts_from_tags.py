@@ -45,9 +45,9 @@ class TranscriptsFromTagsParser(GlassOptionParser):
 
 if __name__ == '__main__':
     print 'Main'
-    parser = TranscriptsFromTagsParser()
+    '''parser = TranscriptsFromTagsParser()
     options, args = parser.parse_args()
-    '''
+    
     if options.processes:
         current_settings.ALLOWED_PROCESSES = int(options.processes)
     
