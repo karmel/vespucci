@@ -9,7 +9,7 @@ from optparse import make_option
 from glasslab.config import current_settings
 from glasslab.utils.database import discard_temp_tables
 from glasslab.utils.scripting import GlassOptionParser
-
+'''
 class TranscriptsFromTagsParser(GlassOptionParser):
     options = [
                make_option('-g', '--genome',action='store', type='string', dest='genome', default='mm9', 
@@ -42,10 +42,10 @@ class TranscriptsFromTagsParser(GlassOptionParser):
                make_option('--staging',action='store_true', dest='staging', default=False,  
                            help='Use the transcript database with the suffix _staging?'),
                 ]
-
+'''
 if __name__ == '__main__':
     print 'Main'
-    parser = TranscriptsFromTagsParser()
+    '''parser = TranscriptsFromTagsParser()
     options, args = parser.parse_args()
     
     if options.processes:
@@ -92,4 +92,4 @@ if __name__ == '__main__':
     if options.output_dir:
         cell_base.filtered_glass_transcript.generate_bed_file(options.output_dir)
         
-    discard_temp_tables()
+    discard_temp_tables()'''
