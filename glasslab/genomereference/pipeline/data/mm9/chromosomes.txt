@@ -20,16 +20,3 @@ chr17	95272652
 chr18	90772032
 chr19	61342431
 chrM	16300
-chr1_random	
-chr3_random	
-chr4_random	
-chr5_random	
-chr7_random	
-chr8_random	
-chr9_random	
-chr13_random	
-chr16_random	
-chr17_random	
-chrX_random	
-chrY_random	
-chrUn_random	
