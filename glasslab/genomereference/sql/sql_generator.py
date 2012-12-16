@@ -193,6 +193,7 @@ class GenomeResourcesSqlGenerator(SqlGenerator):
                     VALUES ('{0}', {1});
                 """.format(fields[0], fields[1] or 'NULL',
                            schema_name=self.schema_name, table_name=table_name))
+        print output
         return '\n'.join(output)
             
     def import_ucsc_sequence_values(self):
