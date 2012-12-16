@@ -44,6 +44,7 @@ class TranscriptsFromTagsParser(GlassOptionParser):
                 ]
 
 if __name__ == '__main__':
+    print 'Main'
     parser = TranscriptsFromTagsParser()
     options, args = parser.parse_args()
     
