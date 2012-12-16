@@ -187,13 +187,12 @@ class GenomeResourcesSqlGenerator(SqlGenerator):
         f = open(path_to_file)
         output = []
         for l in f:
-            fields = l.split('\t')
+            fields = l.strip('\n').split('\t')
             output.append("""
                 INSERT INTO "{schema_name}"."{table_name}" (name, length) 
                     VALUES ('{0}', {1});
                 """.format(fields[0], fields[1] or 'NULL',
                            schema_name=self.schema_name, table_name=table_name))
-        print output
         return '\n'.join(output)
             
     def import_ucsc_sequence_values(self):
@@ -210,7 +209,7 @@ class GenomeResourcesSqlGenerator(SqlGenerator):
         f = open(path_to_file)
         output = []
         for l in f:
-            fields = l.split('\t')
+            fields = l.strip('\n').split('\t')
             output.append("""
                 INSERT into "{schema_name}"."refGene" 
                     ("name","chrom","strand","txStart","txEnd") 
