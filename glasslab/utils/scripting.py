@@ -28,6 +28,7 @@ class GlassOptionParser(OptionParser):
         # Update table names for loaded classes
         from django.db import models
         for m in models.get_models():
+            print m.__name__
             try: m.set_db_table()
             except AttributeError: pass
         return current_settings.GENOME
