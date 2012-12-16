@@ -5,17 +5,16 @@ Created on Feb 23, 2011
 '''
 from glasslab.utils.database import execute_query
 from optparse import make_option
-from glasslab.glassatlas.datatypes.transcript import CellTypeBase
-from glasslab.glassatlas.pipeline.base_parser import GlassAtlasParser
+from glasslab.utils.scripting import GlassOptionParser
 from glasslab.genomereference.sql.sql_generator import GenomeResourcesSqlGenerator
 from glasslab.config import current_settings
 
-class SetUpDatabaseParser(GlassAtlasParser):
+class SetUpDatabaseParser(GlassOptionParser):
     options = [
                make_option('-g', '--genome',action='store', type='string', dest='genome', default='mm9', 
                            help='Currently supported: mm8, mm8r, mm9, hg18, hg18r, dm3'),
                make_option('-c', '--cell_type',action='store', type='string', dest='cell_type', 
-                           help='Cell type for this run? Options are: %s' % ','.join(CellTypeBase.get_correlations().keys())),
+                           help='Cell type for this run?'),
                make_option('--schema_only', action='store_true', dest='schema_only', default=False,
                            help='Only create schema and stop before importing all the data?'),
                 ]

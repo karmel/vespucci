@@ -3,7 +3,6 @@ Created on Nov 8, 2010
 
 @author: karmel
 '''
-from glasslab.glassatlas.datatypes.transcript import CellTypeBase
 from glasslab.sequencing.tag import GlassTag
 from optparse import make_option
 from glasslab.config import current_settings
