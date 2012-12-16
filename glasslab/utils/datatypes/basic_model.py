@@ -17,7 +17,7 @@ class GlassDynamicNameModel(object):
         cls.schema_name = cls.schema_base.format(current_settings.GENOME, current_settings.CELL_TYPE)
         cls._meta.db_table = cls._meta.db_table.format(current_settings.GENOME, current_settings.CELL_TYPE)
     
-class GlassModel(models.Model, GlassDynamicNameModel):
+class GlassModel(GlassDynamicNameModel, models.Model):
     schema_base = 'glass_atlas_{0}_{1}'
     
     def get_absolute_url(self):
