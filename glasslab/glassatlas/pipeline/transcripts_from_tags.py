@@ -10,7 +10,8 @@ from glasslab.config import current_settings
 from glasslab.utils.database import discard_temp_tables
 from glasslab.utils.scripting import GlassOptionParser
 
-class TranscriptsFromTagsParser(GlassOptionParser):
+class TranscriptsFromTagsParser(GlassOptionParser): pass
+'''
     options = [
                make_option('-g', '--genome',action='store', type='string', dest='genome', default='mm9', 
                            help='Currently supported: mm8, mm8r, mm9, hg18, hg18r, dm3'),
@@ -42,7 +43,7 @@ class TranscriptsFromTagsParser(GlassOptionParser):
                make_option('--staging',action='store_true', dest='staging', default=False,  
                            help='Use the transcript database with the suffix _staging?'),
                 ]
-'''
+
 if __name__ == '__main__':
     print 'Main'
     parser = TranscriptsFromTagsParser()
