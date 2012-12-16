@@ -16,12 +16,7 @@ SCHEMA_BASE = 'genome_reference_{0}'
 
 
 class GenomeReferenceBase(GlassModel):
-    schema_name = None
-    @classmethod
-    def set_db_table(cls):
-        cls.schema_name = SCHEMA_BASE.format(current_settings.GENOME)
-        cls._meta.db_table = cls._meta.db_table.format(current_settings.GENOME)
-        
+    schema_base = SCHEMA_BASE
     class Meta:
         abstract = True
         

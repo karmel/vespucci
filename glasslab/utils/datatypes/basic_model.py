@@ -8,12 +8,19 @@ from glasslab.config import current_settings
 from psycopg2.extensions import AsIs
 
 class GlassModel(models.Model):
-    class Meta: abstract = True
+    schema_base = 'glass_atlas_{0}_{1}'
+    
+    @classmethod
+    def set_db_table(cls):
+        cls.schema_name = cls.schema_base.format(current_settings.GENOME, current_settings.CELL_TYPE)
+        cls._meta.db_table = cls._meta.db_table.format(current_settings.GENOME, current_settings.CELL_TYPE)
+        
      
     def get_absolute_url(self):
         return '/admin/%s/%s/%d/' % (self._meta.app_label, 
                                      self.__class__.__name__.lower(),
                                      self.id)
+    class Meta: abstract = True
     
 class DynamicTable(GlassModel):
     '''

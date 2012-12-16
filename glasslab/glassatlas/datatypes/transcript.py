@@ -143,6 +143,7 @@ class CellTypeBase(object):
             
 class TranscriptModelBase(GlassModel):
     cell_base = CellTypeBase()
+    schema_base = 'glass_atlas_{0}_{1}'
     class Meta:
         abstract = True
         

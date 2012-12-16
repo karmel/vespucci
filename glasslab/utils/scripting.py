@@ -7,7 +7,7 @@ from optparse import OptionParser
 import os
 from glasslab.glassatlas.datatypes.transcript import CellTypeBase
 from glasslab.config import current_settings
-print 'Loading option parser'
+
 class GlassOptionParser(OptionParser):
     options = None
     ''' List of optparse make_option objects. '''
@@ -26,16 +26,12 @@ class GlassOptionParser(OptionParser):
         current_settings.GENOME = options.genome
         
         # Update table names for loaded classes
-        from glasslab.genomereference import datatypes
-        for m in (datatypes.Chromosome, datatypes.SequenceIdentifier,
-                  datatypes.SequenceDetail, datatypes.SequenceTranscriptionRegion,
-                  datatypes.NonCodingRna, datatypes.NonCodingTranscriptionRegion,
-                  datatypes.SequencingRun):
-            m.set_db_table()
+        from django.db import models
+        for m in models.get_models():
+            try: m.set_db_table()
+            except AttributeError: pass
         return current_settings.GENOME
     
 def get_glasslab_path():
     import glasslab
     return os.path.dirname(glasslab.__file__)
-
-print 'Done loading option parser'
