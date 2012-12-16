@@ -12,7 +12,7 @@ from glasslab.utils.database import execute_query
 from glasslab.glassatlas.datatypes.transcript import multiprocess_all_chromosomes,\
     wrap_errors
 
-    
+print 'Loading tag'
 def wrap_partition_tables(cls, chr_list): wrap_errors(cls._create_partition_tables, chr_list)
 def wrap_translate_from_prep(cls, chr_list): wrap_errors(cls._translate_from_prep, chr_list)
 def wrap_set_refseq(cls, chr_list): wrap_errors(cls._set_refseq, chr_list)
