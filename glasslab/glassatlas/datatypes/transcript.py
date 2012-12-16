@@ -129,10 +129,7 @@ class CellTypeBase(object):
     def get_transcript_models(self):
         return [self.glass_transcript, self.glass_transcript_prep, 
                 self.glass_transcript_source, self.glass_transcript_source_prep, 
-                self.glass_transcript_nucleotides,
-                self.glass_transcript_sequence, self.glass_transcript_non_coding,
-                self.glass_transcript_patterned, self.glass_transcript_conserved,
-                self.peak_feature]
+                self.glass_transcript_sequence, self.glass_transcript_non_coding]
 
     def get_cell_type_base(self, cell_type):
         correlations = self.__class__.get_correlations()
