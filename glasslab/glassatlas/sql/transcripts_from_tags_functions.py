@@ -276,8 +276,6 @@ RETURNS VOID AS $$
         FOR rec IN 
             SELECT * FROM glass_atlas_{0}_{1}_prep.determine_transcripts_from_sequencing_run(chr_id, strand, source_t, max_gap, tag_extension, start_end)
         LOOP
-            raise exception '%', rec;
-                
             IF (rec IS NULL) = false THEN
                 -- Save the transcript.
                 
@@ -405,3 +403,4 @@ $$ LANGUAGE 'plpgsql';
 
 """.format(genome, cell_type)
 
+print sql('dm3','default')

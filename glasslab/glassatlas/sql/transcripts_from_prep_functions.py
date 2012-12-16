@@ -339,4 +339,3 @@ END;
 $$ LANGUAGE 'plpgsql';
 
 """.format(genome, cell_type, suffix=suffix)
-print sql('dm3','default','')
