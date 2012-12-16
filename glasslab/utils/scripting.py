@@ -7,7 +7,7 @@ from optparse import OptionParser
 import os
 from glasslab.glassatlas.datatypes.transcript import CellTypeBase
 from glasslab.config import current_settings
-
+print 'Loading option parser'
 class GlassOptionParser(OptionParser):
     options = None
     ''' List of optparse make_option objects. '''

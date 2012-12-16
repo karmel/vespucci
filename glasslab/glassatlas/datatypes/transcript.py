@@ -17,7 +17,6 @@ from django.db.models.aggregates import Max
 from datetime import datetime
 import traceback
 
-print 'Loading transcript'
 # The tags returned from the sequencing run are shorter than we know them to be biologically
 # We can therefore extend the mapped tag region by a set number of bp if an extension is passed in
 TAG_EXTENSION = 0
