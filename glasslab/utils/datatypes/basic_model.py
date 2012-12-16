@@ -7,9 +7,7 @@ from django.db import models
 from glasslab.config import current_settings
 from psycopg2.extensions import AsIs
 
-class GlassModel(models.Model):
-    schema_base = 'glass_atlas_{0}_{1}'
-    
+class GlassDynamicNameModel(object):
     def __new__(cls):
         cls.set_db_table()
         
@@ -18,8 +16,10 @@ class GlassModel(models.Model):
         print 'Calling set_db for {0}'.format(cls.__name__)
         cls.schema_name = cls.schema_base.format(current_settings.GENOME, current_settings.CELL_TYPE)
         cls._meta.db_table = cls._meta.db_table.format(current_settings.GENOME, current_settings.CELL_TYPE)
-        
-     
+    
+class GlassModel(models.Model, GlassDynamicNameModel):
+    schema_base = 'glass_atlas_{0}_{1}'
+    
     def get_absolute_url(self):
         return '/admin/%s/%s/%d/' % (self._meta.app_label, 
                                      self.__class__.__name__.lower(),
