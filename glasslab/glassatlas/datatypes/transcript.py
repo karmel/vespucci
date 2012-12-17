@@ -23,8 +23,8 @@ TAG_EXTENSION = 0
 
 MAX_GAP = 0 # Max gap between transcripts from the same run
 MAX_STITCHING_GAP = MAX_GAP # Max gap between transcripts being stitched together
-MAX_EDGE = 20 # Max edge length of transcript graph subgraphs to be created
-EDGE_SCALING_FACTOR = 20 # Number of transcripts per DENSITY_MULTIPLIER bp required to get full allowed edge length
+MAX_EDGE = 100 # Max edge length of transcript graph subgraphs to be created
+EDGE_SCALING_FACTOR = 5 # Number of tags per DENSITY_MULTIPLIER bp required to get full allowed edge length
 DENSITY_MULTIPLIER = 1000 # Scaling factor on density-- think of as bps worth of tags to consider
 MIN_SCORE = 0.01 # Hide transcripts with scores below this threshold.
 
