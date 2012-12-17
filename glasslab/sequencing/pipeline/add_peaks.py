@@ -16,7 +16,7 @@ from glasslab.sequencing.pipeline.add_short_reads import check_input, \
     create_schema, _print
 from pandas.io.parsers import read_csv
 
-class FastqOptionParser(GlassOptionParser):
+class PeakFileParser(GlassOptionParser):
     options = [
                make_option('-f', '--file_name',action='store', type='string', dest='file_name', 
                            help='Path to FASTQ file for processing.'),
@@ -57,13 +57,13 @@ def import_peaks(options, file_name, peaks_file_name):
 if __name__ == '__main__': 
     run_from_command_line = True # Useful for debugging in Eclipse
     
-    parser = FastqOptionParser()
+    parser = PeakFileParser()
     options, args = parser.parse_args()
     
     
     file_name = check_input(options)
-    
     peaks_file_name = options.file_name
+    parser.set_genome(options)
     
     _print('Creating schema if necessary.')
     create_schema()
