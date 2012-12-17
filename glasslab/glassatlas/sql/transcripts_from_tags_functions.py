@@ -85,21 +85,20 @@ CREATE OR REPLACE FUNCTION glass_atlas_{0}_{1}_prep.determine_transcripts_from_s
 RETURNS SETOF glass_atlas_{0}_{1}_prep.glass_transcript_row AS $$
 BEGIN 
 
-    RETURN QUERY SELECT * FROM glass_atlas_{0}_{1}_prep.determine_transcripts_from_table(chr_id, strand, source_t, max_gap, tag_extension,'', false, start_end);
+    RETURN QUERY SELECT * FROM glass_atlas_{0}_{1}_prep.determine_transcripts_from_table(chr_id, strand, source_t, max_gap, tag_extension,'', start_end);
 END;
 $$ LANGUAGE 'plpgsql';
 
 CREATE OR REPLACE FUNCTION glass_atlas_{0}_{1}_prep.determine_transcripts_from_existing(chr_id integer, strand integer, max_gap integer)
 RETURNS SETOF glass_atlas_{0}_{1}_prep.glass_transcript_row AS $$
 BEGIN 
-    RETURN QUERY SELECT * FROM glass_atlas_{0}_{1}_prep.determine_transcripts_from_table(chr_id, strand, 'glass_atlas_{0}_{1}_prep"."glass_transcript', max_gap, 0,'transcription_', false, NULL);
+    RETURN QUERY SELECT * FROM glass_atlas_{0}_{1}_prep.determine_transcripts_from_table(chr_id, strand, 'glass_atlas_{0}_{1}_prep"."glass_transcript', max_gap, 0,'transcription_', NULL);
 END;
 $$ LANGUAGE 'plpgsql';
 
 CREATE OR REPLACE FUNCTION glass_atlas_{0}_{1}_prep.determine_transcripts_from_table(
         chr_id integer, strand integer, source_t text, max_gap integer, 
-        tag_extension integer, field_prefix text, span_repeats boolean, 
-        start_end box)
+        tag_extension integer, field_prefix text, start_end box)
 RETURNS SETOF glass_atlas_{0}_{1}_prep.glass_transcript_row AS $$
  DECLARE
     max_chrom_pos bigint;
