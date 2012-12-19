@@ -41,7 +41,7 @@ def import_peaks(options, file_name, peaks_file_name):
     GlassPeak.create_table(file_name)
     #GlassPeak.set_table_name('peak_' + file_name)
     
-    data = read_csv(peaks_file_name, sep='\t', header=None)
+    data = read_csv(peaks_file_name, sep='\t', header=None, escapechar='#')
     
     for _, row in data.iterrows():
         if not options.not_homer:
