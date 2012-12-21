@@ -158,4 +158,4 @@ if __name__ == '__main__':
     else:
         _print('Skipping creation of tag table')
         GlassTag.set_table_name('tag_' + file_name)
-        
+        GlassTag.set_refseq()

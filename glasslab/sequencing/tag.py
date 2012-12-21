@@ -203,7 +203,7 @@ class GlassTag(DynamicTable):
 
             UPDATE "{0}_{1}" tag 
             SET refseq = true 
-            FROM glass_atlas_{2}_refseq.glass_transcript_{1} ref
+            FROM glass_atlas_{2}_refseq_prep.glass_transcript_{1} ref
             WHERE ref.start_end && tag.start_end
             AND ref.strand = tag.strand
             AND tag.refseq IS NULL;

@@ -16,6 +16,8 @@ class SetUpDatabaseParser(GlassOptionParser):
                            help='Cell type for this run?'),
                make_option('-f', '--final', action='store_true', dest='final', default=False,
                            help='Generate only the final schema and tables, without the prep schema?'),
+               make_option('-f', '--prep', action='store_true', dest='prep', default=False,
+                           help='Generate only the prep schema and tables, without the final schema?'),
                 ]
 
 if __name__ == '__main__':
@@ -28,6 +30,6 @@ if __name__ == '__main__':
     generator = GlassAtlasSqlGenerator(cell_type=cell_type, genome=genome)
     
     print 'Creating database schema and tables...'
-    q = (options.final and generator.final_set()) or generator.all_sql()
+    q = (options.final and generator.final_set()) or (options.prep and generator.prep_set()) or generator.all_sql()
     execute_query(q)
     

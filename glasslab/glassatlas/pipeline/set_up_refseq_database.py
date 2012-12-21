@@ -26,7 +26,7 @@ if __name__ == '__main__':
     options, args = parser.parse_args()
     
     genome = parser.set_genome(options)
-    '''
+    
     print 'Creating tables for refseq data...'
     chr_ids = Chromosome.objects.values_list('id', flat=True)
     q = ''
@@ -38,32 +38,25 @@ if __name__ == '__main__':
                 ALTER TABLE "{0}_{chr_id}" ADD COLUMN "refseq" bool DEFAULT true;
                     """.format(SequenceTranscriptionRegion._meta.db_table, chr_id=chr_id)
     execute_query(q)
-    '''
+    
     try:
         print 'Adding data...'
         path = os.path.join(get_glasslab_path(), 'glassatlas/pipeline/scripts')
-        '''
         print subprocess.check_output(path + 
-                    '/set_up_database.sh -g {0} -c refseq'.format(current_settings.GENOME), shell=True)
+                    '/set_up_database.sh -g {0} -c refseq --prep'.format(current_settings.GENOME), shell=True)
         print subprocess.check_output(path + '/transcripts_from_tags.sh -g {0} -c refseq '.format(current_settings.GENOME)
                                       + ' --schema_name=genome_reference_{0} '.format(current_settings.GENOME)
                                       + ' --tag_table=sequence_transcription_region '
                                       + ' --stitch --stitch_processes=2 --set_density '
                                       + ' --no_extended_gaps'
                                       , shell=True)
-        '''
-        print subprocess.check_output(path + '/transcripts_from_tags.sh -g {0} -c refseq '.format(current_settings.GENOME)
-                                      + ' --draw_edges'
-                                      , shell=True)
         
     except Exception, e: 
         print e
     finally:
-        '''
         print 'Deleting tables...'
         q = ''
         for chr_id in chr_ids:
             q += """DROP TABLE "{0}_{chr_id}";
                         """.format(SequenceTranscriptionRegion._meta.db_table, chr_id=chr_id)
         execute_query(q)
-        '''
