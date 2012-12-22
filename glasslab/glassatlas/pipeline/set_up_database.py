@@ -16,7 +16,7 @@ class SetUpDatabaseParser(GlassOptionParser):
                            help='Cell type for this run?'),
                make_option('-f', '--final', action='store_true', dest='final', default=False,
                            help='Generate only the final schema and tables, without the prep schema?'),
-               make_option('-f', '--prep', action='store_true', dest='prep', default=False,
+               make_option('-p', '--prep', action='store_true', dest='prep', default=False,
                            help='Generate only the prep schema and tables, without the final schema?'),
                 ]
 
