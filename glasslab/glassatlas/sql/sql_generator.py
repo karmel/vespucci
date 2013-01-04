@@ -196,6 +196,7 @@ class GlassAtlasSqlGenerator(SqlGenerator):
             "transcription_start" int8 DEFAULT NULL,
             "transcription_end" int8 DEFAULT NULL,
             "start_end" box DEFAULT NULL,
+            "start_end_tss" box DEFAULT NULL,
             "refseq" boolean DEFAULT NULL,
             "distal" boolean DEFAULT NULL,
             "score" numeric DEFAULT NULL,
@@ -218,6 +219,7 @@ class GlassAtlasSqlGenerator(SqlGenerator):
         CREATE INDEX glass_transcript_{chr_id}_score_idx ON "{schema_name_prefix}{suffix}"."glass_transcript_{chr_id}" USING btree (score);
         CREATE INDEX glass_transcript_{chr_id}_distal_idx ON "{schema_name_prefix}{suffix}"."glass_transcript_{chr_id}" USING btree (distal);
         CREATE INDEX glass_transcript_{chr_id}_start_end_idx ON "{schema_name_prefix}{suffix}"."glass_transcript_{chr_id}" USING gist (start_end);
+        CREATE INDEX glass_transcript_{chr_id}_start_end_tss_idx ON "{schema_name_prefix}{suffix}"."glass_transcript_{chr_id}" USING gist (start_end_tss);
         """.format(schema_name_prefix=self.schema_name_prefix, chr_id=chr_id, suffix=self.staging)
         
     def table_trigger_transcript(self):
