@@ -135,11 +135,11 @@ if __name__ == '__main__':
     from glasslab.sequencing.tag import GlassTag
 
     if not options.skip_tag_table:
-        # First, convert the mapped file to the desired format.
-        converter = TagFileConverter()
-        converted_file = converter.guess_file_type(options.file_name, options.input_file_type)
-            
         if not options.prep_table:
+            # First, convert the mapped file to the desired format.
+            converter = TagFileConverter()
+            converted_file = converter.guess_file_type(options.file_name, options.input_file_type)
+            
             _print('Creating schema if necessary.')
             create_schema()
             _print('Uploading tag file into table.')
