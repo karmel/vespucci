@@ -89,8 +89,6 @@ def wrap_errors(func, *args):
         raise
    
 def wrap_add_transcripts_from_groseq(cls, chr_list, *args): wrap_errors(cls._add_transcripts_from_groseq, chr_list, *args)
-def wrap_remove_rogue_run(cls, chr_list): wrap_errors(cls._remove_rogue_run, chr_list)
-
 def wrap_stitch_together_transcripts(cls, chr_list, *args): wrap_errors(cls._stitch_together_transcripts, chr_list, *args)
 def wrap_set_density(cls, chr_list, *args): wrap_errors(cls._set_density, chr_list, *args)
 def wrap_draw_transcript_edges(cls, chr_list): wrap_errors(cls._draw_transcript_edges, chr_list)
