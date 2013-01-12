@@ -215,8 +215,6 @@ BEGIN
         ON transcript.id = source.glass_transcript_id
         JOIN genome_reference_{0}.sequencing_run run
         ON source.sequencing_run_id = run.id
-        WHERE run.use_for_scoring = true
-            AND transcript.score IS NULL
         GROUP BY transcript.id, transcript.transcription_end, transcript.transcription_start';
     EXECUTE 'CREATE INDEX ' || temp_table || '_idx ON ' || temp_table || ' USING btree(id)';
     
@@ -256,7 +254,6 @@ BEGIN
         ON transcript.id = source.glass_transcript_id
         JOIN genome_reference_{0}.sequencing_run run
         ON source.sequencing_run_id = run.id
-        WHERE transcript.score IS NULL
         GROUP BY transcript.id, transcript.transcription_end, transcript.transcription_start';
     EXECUTE 'CREATE INDEX ' || temp_table || '_idx ON ' || temp_table || ' USING btree(id)';
     
@@ -292,7 +289,6 @@ BEGIN
         ON transcript.id = source.glass_transcript_id
         JOIN genome_reference_{0}.sequencing_run run
         ON source.sequencing_run_id = run.id
-        WHERE transcript.score IS NULL
         GROUP BY transcript.id, transcript.transcription_end, transcript.transcription_start';
     EXECUTE 'CREATE INDEX ' || temp_table || '_idx ON ' || temp_table || ' USING btree(id)';
     
