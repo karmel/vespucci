@@ -266,56 +266,6 @@ BEGIN
 END;
 $$ LANGUAGE 'plpgsql';
 
-CREATE OR REPLACE FUNCTION glass_atlas_{0}_{1}{suffix}.calculate_scores_rnaseq(chr_id integer)
-RETURNS VOID AS $$
-DECLARE
-    millions_of_tags float;
-    temp_table text;
-BEGIN 
-    -- RPKM. Can be modified as necessary.
-    -- Only uses exonic distance, where available.
-    
-    -- Use prep tables to determine raw runs and tag counts
-    millions_of_tags := (SELECT sum(tag_count)::numeric/1000000 FROM glass_atlas_{0}_{1}_prep.glass_transcript_source);
-    
-    temp_table = 'score_table_' || chr_id || '_' || (1000*RANDOM())::int;
-    EXECUTE 'CREATE TEMP TABLE ' || temp_table || ' AS
-        SELECT 
-            transcript.id,
-            SUM(source.tag_count) as sum_tags, 
-            (transcript.transcription_end - transcript.transcription_start + 1) as width
-        FROM glass_atlas_{0}_{1}{suffix}.glass_transcript_' || chr_id || ' transcript 
-        JOIN glass_atlas_{0}_{1}{suffix}.glass_transcript_source_' || chr_id || ' source
-        ON transcript.id = source.glass_transcript_id
-        JOIN genome_reference_{0}.sequencing_run run
-        ON source.sequencing_run_id = run.id
-        GROUP BY transcript.id, transcript.transcription_end, transcript.transcription_start';
-    EXECUTE 'CREATE INDEX ' || temp_table || '_idx ON ' || temp_table || ' USING btree(id)';
-    
-    -- Update with exonic width.
-    EXECUTE 'UPDATE ' || temp_table || ' t
-        SET width = max_width
-        FROM (SELECT sequence.glass_transcript_id, max(exons.width) as max_width
-            FROM
-            (SELECT sequence_transcription_region_id, sum(width(start_end)) as width
-            FROM genome_reference_{0}.sequence_exon
-            GROUP BY sequence_transcription_region_id) exons
-            JOIN glass_atlas_{0}_{1}{suffix}.glass_transcript_sequence sequence
-            ON exons.sequence_transcription_region_id = sequence.sequence_transcription_region_id
-            WHERE sequence.major = true
-            GROUP BY sequence.glass_transcript_id) seq
-        WHERE t.id = seq.glass_transcript_id
-        AND t.width > max_width';
-        
-    EXECUTE 'UPDATE glass_atlas_{0}_{1}{suffix}.glass_transcript_' || chr_id || ' transcript
-        SET score = temp_t.sum_tags::numeric/temp_t.width/' || millions_of_tags || '::numeric
-        FROM ' || temp_table || ' temp_t
-        WHERE transcript.id = temp_t.id';
-
-    RETURN;
-END;
-$$ LANGUAGE 'plpgsql';
-
 CREATE OR REPLACE FUNCTION glass_atlas_{0}_{1}{suffix}.calculate_scores(chr_id integer)
 RETURNS VOID AS $$
     BEGIN
