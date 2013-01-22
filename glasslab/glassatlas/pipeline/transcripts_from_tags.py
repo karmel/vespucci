@@ -40,6 +40,8 @@ class TranscriptsFromTagsParser(GlassOptionParser):
                            help='What percent of a RefSeq gene body can be automatically stitched over? Expects float, default: .2 (20%)'),
                make_option('--staging',action='store_true', dest='staging', default=False,  
                            help='Use the transcript database with the suffix _staging?'),
+               make_option('--max_edge',action='store', dest='max_edge',  
+                           help='What value of MAX_EDGE should be used for drawing transcript edges?'),
                 ]
 
 if __name__ == '__main__':
@@ -80,6 +82,7 @@ if __name__ == '__main__':
                                                extension_percent=options.extension_percent)
     
     if options.draw_edges:
+        if options.max_edge is not None: current_settings.MAX_EDGE = options.max_edge
         cell_base.glass_transcript.draw_transcript_edges()
     
     if options.score:

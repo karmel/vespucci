@@ -23,7 +23,6 @@ TAG_EXTENSION = 0
 
 MAX_GAP = 0 # Max gap between transcripts from the same run
 MAX_STITCHING_GAP = MAX_GAP # Max gap between transcripts being stitched together
-MAX_EDGE = 20 # Max edge length of transcript graph subgraphs to be created
 EDGE_SCALING_FACTOR = 5 # Number of tags per DENSITY_MULTIPLIER bp required to get full allowed edge length
 DENSITY_MULTIPLIER = 1000 # Scaling factor on density-- think of as bps worth of tags to consider
 MIN_SCORE = 4 # Hide transcripts with scores below this threshold.
@@ -212,7 +211,7 @@ class GlassTranscript(TranscriptBase):
                        sequencing_run.id, chr_id, 
                        sequencing_run.source_table.strip(), 
                        MAX_GAP, TAG_EXTENSION, 
-                       MAX_EDGE, EDGE_SCALING_FACTOR, DENSITY_MULTIPLIER)
+                       current_settings.MAX_EDGE, EDGE_SCALING_FACTOR, DENSITY_MULTIPLIER)
             execute_query(query)
     
     ################################################
@@ -244,7 +243,7 @@ class GlassTranscript(TranscriptBase):
                     SELECT glass_atlas_{0}_{1}_prep.set_density({2},{3},{4},{5},{6},{7},{8});
                     """.format(current_settings.GENOME, 
                                current_settings.CELL_TYPE.lower(),
-                               chr_id, MAX_EDGE, EDGE_SCALING_FACTOR, 
+                               chr_id, current_settings.MAX_EDGE, EDGE_SCALING_FACTOR, 
                                DENSITY_MULTIPLIER, 
                                allow_extended_gaps and 'true' or 'false',
                                extension_percent,
@@ -266,7 +265,7 @@ class GlassTranscript(TranscriptBase):
                 SELECT glass_atlas_{0}_{1}_prep.set_density({2},{3},{4},{5},{6},{7},{8});
                 """.format(current_settings.GENOME, 
                            current_settings.CELL_TYPE.lower(),
-                           chr_id, MAX_EDGE, EDGE_SCALING_FACTOR, 
+                           chr_id, current_settings.MAX_EDGE, EDGE_SCALING_FACTOR, 
                            DENSITY_MULTIPLIER, 
                            allow_extended_gaps and 'true' or 'false',
                            extension_percent,
