@@ -274,10 +274,10 @@ RETURNS VOID AS $$
 END;
 $$ LANGUAGE 'plpgsql';
 
-CREATE OR REPLACE FUNCTION glass_atlas_{0}_{1}{suffix}.calculate_scores(chr_id integer)
+CREATE OR REPLACE FUNCTION glass_atlas_{0}_{1}{suffix}.calculate_rpkm(chr_id integer)
 RETURNS VOID AS $$
     BEGIN
-        PERFORM glass_atlas_{0}_{1}{suffix}.calculate_scores_glassatlas(chr_id);
+        PERFORM glass_atlas_{0}_{1}{suffix}.calculate_scores_rpkm(chr_id, 'rpkm');
     RETURN;
 END;
 $$ LANGUAGE 'plpgsql';
@@ -345,4 +345,3 @@ $$ LANGUAGE 'plpgsql';
 
 """.format(genome, cell_type, suffix=suffix)
 
-print sql('mm9','default','')
