@@ -232,7 +232,7 @@ $$ LANGUAGE 'plpgsql';
 
 
 
-CREATE OR REPLACE FUNCTION glass_atlas_{0}_{1}{suffix}.calculate_scores_rpkm(chr_id integer)
+CREATE OR REPLACE FUNCTION glass_atlas_{0}_{1}{suffix}.calculate_scores_rpkm(chr_id integer, field text)
 RETURNS VOID AS $$
 DECLARE
     millions_of_tags float;
@@ -248,7 +248,7 @@ BEGIN
         SELECT 
             transcript.id,
             SUM(source.tag_count) as sum_tags, 
-            (transcript.transcription_end - transcript.transcription_start + 1) as width
+            (transcript.transcription_end - transcript.transcription_start + 1)::numeric/1000 as kb_width
         FROM glass_atlas_{0}_{1}{suffix}.glass_transcript_' || chr_id || ' transcript 
         JOIN glass_atlas_{0}_{1}{suffix}.glass_transcript_source_' || chr_id || ' source
         ON transcript.id = source.glass_transcript_id
@@ -258,11 +258,19 @@ BEGIN
     EXECUTE 'CREATE INDEX ' || temp_table || '_idx ON ' || temp_table || ' USING btree(id)';
     
 	EXECUTE 'UPDATE glass_atlas_{0}_{1}{suffix}.glass_transcript_' || chr_id || ' transcript
-	    SET score = temp_t.sum_tags::numeric/temp_t.width/' || millions_of_tags || '::numeric
+	    SET ' || field || ' = temp_t.sum_tags::numeric/temp_t.kb_width/' || millions_of_tags || '::numeric
 	    FROM ' || temp_table || ' temp_t
 	    WHERE transcript.id = temp_t.id';
 
 	RETURN;
+END;
+$$ LANGUAGE 'plpgsql';
+
+CREATE OR REPLACE FUNCTION glass_atlas_{0}_{1}{suffix}.calculate_scores(chr_id integer)
+RETURNS VOID AS $$
+    BEGIN
+        PERFORM glass_atlas_{0}_{1}{suffix}.calculate_scores_glassatlas(chr_id);
+    RETURN;
 END;
 $$ LANGUAGE 'plpgsql';
 
@@ -337,3 +345,4 @@ $$ LANGUAGE 'plpgsql';
 
 """.format(genome, cell_type, suffix=suffix)
 
+print sql('mm9','default','')

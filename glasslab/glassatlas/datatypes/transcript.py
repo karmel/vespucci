@@ -297,14 +297,12 @@ class GlassTranscript(TranscriptBase):
         for chr_id in chr_list:
             print 'Scoring transcripts for chromosome %d' % chr_id
             query = """
-                --SELECT glass_atlas_%s_%s%s.calculate_scores(%d);
-                SELECT glass_atlas_%s_%s%s.calculate_standard_error(%d);
-                """ % (current_settings.GENOME,
+                SELECT glass_atlas_{0}_{1}{2}.calculate_rpkm({chr_id});
+                SELECT glass_atlas_{0}_{1}{2}.calculate_scores({chr_id});
+                SELECT glass_atlas_{0}_{1}{2}.calculate_standard_error({chr_id});
+                """.format(current_settings.GENOME,
                        current_settings.CELL_TYPE.lower(),
-                       current_settings.STAGING, chr_id,
-                       current_settings.GENOME,
-                       current_settings.CELL_TYPE.lower(),
-                       current_settings.STAGING, chr_id)
+                       current_settings.STAGING, chr_id=chr_id)
             execute_query(query) 
     
         

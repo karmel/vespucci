@@ -200,6 +200,7 @@ class GlassAtlasSqlGenerator(SqlGenerator):
             "refseq" boolean DEFAULT NULL,
             "distal" boolean DEFAULT NULL,
             "score" numeric DEFAULT NULL,
+            "rpkm" numeric DEFAULT NULL,
             "standard_error" numeric DEFAULT NULL,
             "modified" timestamp(6) NULL DEFAULT NULL,
             "created" timestamp(6) NULL DEFAULT NULL
