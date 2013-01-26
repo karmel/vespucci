@@ -48,14 +48,6 @@ class SequenceIdentifier(GenomeReferenceBase):
     
     def __unicode__(self): return self.sequence_identifier
     
-    _sequence_detail = None
-    @property 
-    def sequence_detail(self):
-        if not self._sequence_detail:
-            detail = SequenceDetail.objects.filter(sequence_identifier=self).order_by('-gene_name')[:1]
-            if detail: self._sequence_detail =  detail[0]
-        return self._sequence_detail
-    
     _sequence_transcription_region = None
     @property 
     def sequence_transcription_region(self):
@@ -64,22 +56,6 @@ class SequenceIdentifier(GenomeReferenceBase):
             if reg: self._sequence_transcription_region =  reg[0]
         return self._sequence_transcription_region
 
-class SequenceDetail(GenomeReferenceBase):
-    '''
-    Gene details, keyed to unique sequences.
-    '''
-    sequence_identifier = models.ForeignKey(SequenceIdentifier)
-    gene_name           = models.CharField(max_length=100, blank=True)
-    description         = models.CharField(max_length=255, blank=True)
-    ensembl_id          = models.CharField(max_length=100, blank=True)
-    pfam_id             = models.CharField(max_length=100, blank=True)
-    
-    class Meta: 
-        db_table    = '{0}"."sequence_detail'.format(SCHEMA_BASE)
-        app_label   = 'Genome_Reference'
-    
-    def __unicode__(self): 
-        return '{0} ({1})'.format(self.gene_name, self.sequence_identifier.sequence_identifier)
 
 class NonCodingRna(GenomeReferenceBase):
     '''
