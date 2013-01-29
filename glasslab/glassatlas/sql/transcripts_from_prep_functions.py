@@ -221,7 +221,7 @@ BEGIN
     EXECUTE 'UPDATE glass_atlas_{0}_{1}{suffix}.glass_transcript_' || chr_id || ' transcript
         SET score = GREATEST(0,
                 SQRT((temp_t.sum_tags::numeric/' || total_runs || ')*temp_t.max_tags)
-                /LEAST(GREATEST(500, temp_t.width)::numeric/LEAST(temp_t.width::numeric,500), 2*LOG(temp_t.width))
+                /LEAST(GREATEST(1000, temp_t.width)::numeric*LOG(2, GREATEST(200 - temp_t.width,2))/1000, 2*LOG(2, temp_t.width))
             )
         FROM ' || temp_table || ' temp_t
         WHERE transcript.id = temp_t.id';
