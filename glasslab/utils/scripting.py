@@ -28,7 +28,7 @@ class GlassOptionParser(OptionParser):
         # Update table names for loaded classes
         from glasslab.genomereference import datatypes
         for m in (datatypes.Chromosome, datatypes.SequenceIdentifier,
-                  datatypes.SequenceDetail, datatypes.SequenceTranscriptionRegion,
+                  datatypes.SequenceTranscriptionRegion,
                   datatypes.NonCodingRna, datatypes.NonCodingTranscriptionRegion,
                   datatypes.SequencingRun):
             m.set_db_table()
