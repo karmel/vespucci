@@ -63,7 +63,9 @@ if __name__ == '__main__':
         GlassTag._meta.db_table = options.schema_name and '%s"."%s' % (options.schema_name, options.tag_table) \
                                     or options.tag_table
         cell_base.glass_transcript.add_from_tags(GlassTag._meta.db_table)
-        
+    
+    if options.max_edge is not None: current_settings.MAX_EDGE = options.max_edge
+          
     if options.stitch_processes:
         curr_processes = current_settings.ALLOWED_PROCESSES 
         current_settings.ALLOWED_PROCESSES = int(options.stitch_processes)
@@ -81,7 +83,6 @@ if __name__ == '__main__':
         current_settings.ALLOWED_PROCESSES = curr_processes
    
     if options.draw_edges:
-        if options.max_edge is not None: current_settings.MAX_EDGE = options.max_edge
         cell_base.glass_transcript.draw_transcript_edges()
     
     if options.score:
