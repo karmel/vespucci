@@ -238,6 +238,8 @@ class GlassAtlasSqlGenerator(SqlGenerator):
                 || quote_literal(NEW.transcription_end) || ', 0),'
             || coalesce(quote_literal(NEW.start_end_density),'NULL') || ','
             || coalesce(quote_literal(NEW.score),'NULL') || ','
+            || coalesce(quote_literal(NEW.rpkm),'NULL') || ','
+            || coalesce(quote_literal(NEW.standard_error),'NULL') || ','
             || quote_literal(NEW.modified) || ','
             || quote_literal(NEW.created) || ')';
             RETURN NULL;
