@@ -345,4 +345,3 @@ $$ LANGUAGE 'plpgsql';
 
 """.format(genome, cell_type, suffix=suffix)
 
-print sql('mm9','thiomac','')
