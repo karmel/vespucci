@@ -35,6 +35,8 @@ class FastqOptionParser(GlassOptionParser):
                make_option('-f', '--file_name',action='store', type='string', dest='file_name', 
                            help='Path to SAM, BAM, or Bowtie file for processing.'),
                make_option('-o', '--output_dir',action='store', type='string', dest='output_dir'),
+               make_option('-p','--processes',action='store', dest='processes', default=None,  
+                           help='How many processes can be used?'),
                make_option('--project_name',action='store', type='string', dest='project_name',  
                            help='Optional name to be used as file prefix for created files.'),
                
@@ -131,7 +133,10 @@ if __name__ == '__main__':
     file_name = check_input(options)
     parser.set_genome(options)
     cell_type, cell_base = parser.set_cell(options)
-    
+
+    if options.processes:
+        current_settings.ALLOWED_PROCESSES = int(options.processes)
+        
     from glasslab.sequencing.tag import GlassTag
 
     if not options.skip_tag_table:
