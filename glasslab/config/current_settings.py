@@ -21,7 +21,7 @@ CELL_TYPE = 'Default'
 STAGING = '' # Set to the appropriate suffix during DB staging.
 STAGING_SUFFIX = '_staging'
 
-MAX_EDGE = 50 # Max edge length of transcript graph subgraphs to be created
+MAX_EDGE = 100 # Max edge length in 2D between two proto-transcripts
 
 #####################################
 # Databases
