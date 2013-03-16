@@ -9,7 +9,7 @@ Created on Sep 24, 2010
 
 '''
 from django.db import models
-from glasslab.utils.datatypes.basic_model import BoxField, GlassModel
+from glasslab.utils.datatypes.basic_model import Int8RangeField, GlassModel
 
 SCHEMA_BASE = 'genome_reference_{0}'
 
@@ -97,7 +97,7 @@ class SequenceTranscriptionRegion(GenomeReferenceBase):
     coding_start        = models.IntegerField(max_length=12)
     coding_end          = models.IntegerField(max_length=12)
     
-    start_end           = BoxField(null=True, default=None, help_text='This is a placeholder for the PostgreSQL box type.')
+    start_end           = Int8RangeField(null=True, default=None, help_text='This is a placeholder for the PostgreSQL range type.')
     
     table_name = 'sequence_transcription_region'
     class Meta: 

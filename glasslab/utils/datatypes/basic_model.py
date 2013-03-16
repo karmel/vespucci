@@ -38,6 +38,38 @@ class DynamicTable(GlassModel):
         cls._meta.db_table = '%s"."%s' % (current_settings.CURRENT_SCHEMA, table_name)
         cls.name = table_name 
     
+class RangeField(models.Field):
+    '''
+    Field for the PostgreSQL type range. 
+    
+    .. warning:: 
+        This is not designed to be a full implementation of a Django field.
+        This is merely for display convenience, and does not translate
+        exclusivity versus inclusivity, datatypes, etc.
+    '''
+    range_type = 'range'
+    def from_db_val_to_ints(self, value):
+        # Comes in as '(1234,40596)' from DB
+        # Note that we lose
+        try: 
+            values = value.strip('(').strip(')').split(',')
+            l = []
+            for value in values:
+                l = l + map(lambda x: float(x.strip('(').strip(')')), value.split(','))
+            return l
+        except Exception: return value
+        
+    def get_prep_value(self, value):
+        if not value:
+            return None
+        try: return AsIs(self.range_type + '(%d,%d)' % tuple(value))
+        except TypeError:
+            # The value is a string from the DB
+            return AsIs(self.range_type + '(%d,%d)' % tuple(self.from_db_val_to_ints(value)))
+
+class Int8RangeField(RangeField):
+    range_type = 'int8range'
+    
 class BoxField(models.Field):
     '''
     Field for the PostgreSQL type box.

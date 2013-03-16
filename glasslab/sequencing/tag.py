@@ -7,7 +7,7 @@ from __future__ import division
 from django.db import models, connection
 from glasslab.genomereference.datatypes import Chromosome, SequencingRun
 from glasslab.config import current_settings
-from glasslab.utils.datatypes.basic_model import DynamicTable, BoxField
+from glasslab.utils.datatypes.basic_model import DynamicTable, Int8RangeField
 from glasslab.utils.database import execute_query
 from glasslab.glassatlas.datatypes.transcript import multiprocess_all_chromosomes,\
     wrap_errors
@@ -35,7 +35,7 @@ class GlassTag(DynamicTable):
     start                   = models.IntegerField(max_length=12)
     end                     = models.IntegerField(max_length=12)
     
-    start_end               = BoxField(max_length=255, help_text='This is a placeholder for the PostgreSQL box type.', null=True)
+    start_end               = Int8RangeField(max_length=255, help_text='This is a placeholder for the PostgreSQL range type.', null=True)
     
     refseq                  = models.NullBooleanField(default=None)
     

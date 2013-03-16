@@ -9,7 +9,7 @@ from django.db import models, connection, utils
 from glasslab.genomereference.datatypes import Chromosome,\
     SequenceTranscriptionRegion, NonCodingTranscriptionRegion
 from glasslab.genomereference.datatypes import SequencingRun
-from glasslab.utils.datatypes.basic_model import BoxField, GlassModel
+from glasslab.utils.datatypes.basic_model import Int8RangeField, GlassModel
 from multiprocessing import Pool
 from glasslab.utils.database import execute_query, fetch_rows
 import os
@@ -148,7 +148,7 @@ class TranscriptionRegionBase(TranscriptModelBase):
     transcription_start     = models.IntegerField(max_length=12)
     transcription_end       = models.IntegerField(max_length=12)
     
-    start_end               = BoxField(null=True, default=None, help_text='This is a placeholder for the PostgreSQL box type.')
+    start_end               = Int8RangeField(null=True, default=None, help_text='This is a placeholder for the PostgreSQL range type.')
     
     class Meta:
         abstract = True
