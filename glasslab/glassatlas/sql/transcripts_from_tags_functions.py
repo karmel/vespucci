@@ -121,7 +121,7 @@ BEGIN
     
     -- IF a start_end is passed, use that to limit transcripts
     IF start_end IS NOT NULL THEN
-        start_end_clause := ' and start_end && int8range(' || (start_end[0])[0] || ',' || (start_end[1])[0] || ') ';
+        start_end_clause := ' and start_end && int8range(' || start_end[0] || ',' || start_end[1] || ', ''[]'') ';
     END IF;
     
     -- Select each tag set, grouped by start.
@@ -289,7 +289,7 @@ RETURNS VOID AS $$
                     "start_end", "start_density", "refseq")
                     VALUES (' || rec.chromosome_id || ' , ' || rec.strand || ' , '
                     || rec.transcription_start || ' , ' || rec.transcription_end || ' , 
-                    int8range(' || rec.transcription_start || ', ' || rec.transcription_end || '),
+                    int8range(' || rec.transcription_start || ', ' || rec.transcription_end || ', ''[]''),
                     point(' || rec.transcription_start || ',' || density || '),
                     ' || rec.refseq || '
                         ) RETURNING *' INTO transcript;
@@ -328,7 +328,7 @@ RETURNS VOID AS $$
                     || ' "start_end", "refseq")'
                     || ' VALUES (' || rec.chromosome_id || ' , ' || rec.strand || ' , '
                     || rec.transcription_start || ' , ' || rec.transcription_end || ' , '
-                    || ' int8range(' || rec.transcription_start || ',' ||  rec.transcription_end || '), '
+                    || ' int8range(' || rec.transcription_start || ',' ||  rec.transcription_end || ', ''[]''), '
                     || rec.refseq || ' 
                     ) RETURNING *' INTO transcript;
                 

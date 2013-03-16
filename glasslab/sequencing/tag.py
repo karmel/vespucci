@@ -136,7 +136,7 @@ class GlassTag(DynamicTable):
                     start_end_string := 'NULL';
                 ELSE
                     start_end_string := 'int8range(' || quote_literal(NEW.start) || ',' 
-                    || quote_literal(NEW."end") || ')';
+                    || quote_literal(NEW."end") || ', ''[]'')';
                 END IF;
                 EXECUTE 'INSERT INTO "%s_' || NEW.chromosome_id || '" VALUES ('
                 || quote_literal(NEW.id) || ','
@@ -176,7 +176,7 @@ class GlassTag(DynamicTable):
             SELECT * FROM (
                 SELECT {chr_id}, (CASE WHEN prep.strand_char = '-' THEN 1 ELSE 0 END), 
                 prep."start", (prep."start" + char_length(prep.sequence_matched)),
-                int8range(prep."start", (prep."start" + char_length(prep.sequence_matched))),
+                int8range(prep."start", (prep."start" + char_length(prep.sequence_matched)), '[]'),
                 NULL::boolean
             FROM "{1}" prep
             JOIN "{2}" chr ON chr.name = prep.chromosome

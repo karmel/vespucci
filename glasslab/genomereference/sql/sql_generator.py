@@ -254,15 +254,15 @@ class GenomeResourcesSqlGenerator(SqlGenerator):
             AND ref."chrom" = chr."name";
         
         UPDATE "{schema_name}"."{table_name}"  
-        SET start_end = int8range("transcription_start","transcription_end"),
-            start_site_1000 = int8range(("transcription_start" - 1000),("transcription_start" + 1000)),
-            start_end_1000 = int8range(("transcription_start" - 1000),("transcription_end" + 1000))
+        SET start_end = int8range("transcription_start","transcription_end",'[]'),
+            start_site_1000 = int8range(("transcription_start" - 1000),("transcription_start" + 1000),'[]'),
+            start_end_1000 = int8range(("transcription_start" - 1000),("transcription_end" + 1000),'[]')
          WHERE strand = 0;
         
         UPDATE "{schema_name}"."{table_name}"  
-        SET start_end = int8range("transcription_start","transcription_end",0),
-            start_site_1000 = int8range(("transcription_end" - 1000),("transcription_end" + 1000)),
-            start_end_1000 = int8range(("transcription_start" - 1000),("transcription_end" + 1000))
+        SET start_end = int8range("transcription_start","transcription_end",'[]'),
+            start_site_1000 = int8range(("transcription_end" - 1000),("transcription_end" + 1000),'[]'),
+            start_end_1000 = int8range(("transcription_start" - 1000),("transcription_end" + 1000),'[]')
         WHERE strand = 1;
         """.format(schema_name=self.schema_name, table_name=table_name)
 
@@ -385,7 +385,7 @@ class GenomeResourcesSqlGenerator(SqlGenerator):
             nc_rna.id, chr.id, 
             (CASE WHEN bed.strand = '-' THEN '1' ELSE 0 END),
             bed.start, bed."end",
-            int8range(bed."start",bed."end")
+            int8range(bed."start",bed."end",'[]')
         FROM "{schema_name}"."bed" bed, 
             "{schema_name}"."summary" summary, 
             "{schema_name}"."non_coding_rna" nc_rna, 
