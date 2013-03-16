@@ -113,8 +113,7 @@ BEGIN
             start_end, refseq, modified, created) 
         VALUES (' || rec.chromosome_id || ',' || rec.strand || ','
         || rec.transcription_start || ',' || rec.transcription_end || ',' 
-        || ' public.make_box(' || rec.transcription_start || ', 0' 
-            || ',' ||  rec.transcription_end || ', 0),'
+        || ' int8range(' || rec.transcription_start || ',' ||  rec.transcription_end || '),'
          || rec.refseq || ', NOW(), NOW()) RETURNING *' INTO transcript;
     RETURN transcript;
 END;

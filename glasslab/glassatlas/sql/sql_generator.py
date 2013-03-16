@@ -83,7 +83,7 @@ class GlassAtlasSqlGenerator(SqlGenerator):
             "strand" int2 DEFAULT NULL,
             "transcription_start" int8 DEFAULT NULL,
             "transcription_end" int8 DEFAULT NULL,
-            "start_end" box DEFAULT NULL,
+            "start_end" int8range DEFAULT NULL,
             "density" float DEFAULT NULL, -- RPKM per run, essentially. But number of bp is configurable.
             "edge" float DEFAULT NULL, -- Length of the allowed edge for joining transcripts.
             "start_density" point DEFAULT NULL,
@@ -117,14 +117,15 @@ class GlassAtlasSqlGenerator(SqlGenerator):
             || quote_literal(NEW.strand) || ','
             || quote_literal(NEW.transcription_start) || ','
             || quote_literal(NEW.transcription_end) || ','
-            || 'public.make_box(' || quote_literal(NEW.transcription_start) || ', 0, ' 
-                || quote_literal(NEW.transcription_end) || ', 0)'
+            || 'int8range(' || quote_literal(NEW.transcription_start) || ', ' 
+                || quote_literal(NEW.transcription_end) || ')'
             || '),'
-            || 'public.make_box(' || quote_literal((NEW.start_density[1])[0]) || ', ' || quote_literal((NEW.start_density[1])[1]) || ', ' 
-                || quote_literal((NEW.start_density[0])[0]) || ', ' || quote_literal((NEW.start_density[0])[1]) || '),'
-            || 'circle(' || quote_literal(center(NEW.density_circle)) || ', ' || quote_literal(radius(NEW.density_circle)) || ')'
-            || '),'
+            || quote_literal(NEW.density) || ','
+            || quote_literal(NEW.edge) || ','
+            || 'point(' || quote_literal(NEW.transcription_start) || ', ' || quote_literal(NEW.density) || '),'
+            || 'circle(' || quote_literal(center(NEW.density_circle)) || ', ' || quote_literal(radius(NEW.density_circle)) || '),'
             || quote_literal(NEW.refseq)
+            || ')'
             ;
             RETURN NULL;
         END;
@@ -195,8 +196,8 @@ class GlassAtlasSqlGenerator(SqlGenerator):
             "strand" int2 DEFAULT NULL,
             "transcription_start" int8 DEFAULT NULL,
             "transcription_end" int8 DEFAULT NULL,
-            "start_end" box DEFAULT NULL,
-            "start_end_tss" box DEFAULT NULL,
+            "start_end" int8range DEFAULT NULL,
+            "start_end_tss" int8range DEFAULT NULL,
             "refseq" boolean DEFAULT NULL,
             "distal" boolean DEFAULT NULL,
             "score" numeric DEFAULT NULL,
@@ -234,9 +235,11 @@ class GlassAtlasSqlGenerator(SqlGenerator):
             || quote_literal(NEW.strand) || ','
             || quote_literal(NEW.transcription_start) || ','
             || quote_literal(NEW.transcription_end) || ','
-            || 'public.make_box(' || quote_literal(NEW.transcription_start) || ', 0, ' 
-                || quote_literal(NEW.transcription_end) || ', 0),'
-            || coalesce(quote_literal(NEW.start_end_density),'NULL') || ','
+            || 'int8range(' || quote_literal(NEW.transcription_start) || ',' 
+                || quote_literal(NEW.transcription_end) || '),'
+            || 'NULL,' 
+            || coalesce(quote_literal(NEW.refseq),'NULL') || ','
+            || coalesce(quote_literal(NEW.distal),'NULL') || ','
             || coalesce(quote_literal(NEW.score),'NULL') || ','
             || coalesce(quote_literal(NEW.rpkm),'NULL') || ','
             || coalesce(quote_literal(NEW.standard_error),'NULL') || ','

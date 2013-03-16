@@ -83,7 +83,7 @@ class GlassTag(DynamicTable):
             strand smallint default NULL,
             "start" bigint,
             "end" bigint,
-            start_end box,
+            start_end int8range,
             refseq boolean default false
         );
         CREATE SEQUENCE "%s_id_seq"
@@ -135,8 +135,8 @@ class GlassTag(DynamicTable):
                 IF NEW.start_end IS NULL THEN
                     start_end_string := 'NULL';
                 ELSE
-                    start_end_string := 'public.make_box(' || quote_literal(NEW.start) || ', 0, ' 
-                    || quote_literal(NEW."end") || ', 0)';
+                    start_end_string := 'int8range(' || quote_literal(NEW.start) || ',' 
+                    || quote_literal(NEW."end") || ')';
                 END IF;
                 EXECUTE 'INSERT INTO "%s_' || NEW.chromosome_id || '" VALUES ('
                 || quote_literal(NEW.id) || ','
@@ -176,7 +176,7 @@ class GlassTag(DynamicTable):
             SELECT * FROM (
                 SELECT {chr_id}, (CASE WHEN prep.strand_char = '-' THEN 1 ELSE 0 END), 
                 prep."start", (prep."start" + char_length(prep.sequence_matched)),
-                public.make_box(prep."start", 0, (prep."start" + char_length(prep.sequence_matched)), 0),
+                int8range(prep."start", (prep."start" + char_length(prep.sequence_matched))),
                 NULL::boolean
             FROM "{1}" prep
             JOIN "{2}" chr ON chr.name = prep.chromosome
@@ -193,7 +193,8 @@ class GlassTag(DynamicTable):
     @classmethod
     def _set_refseq(cls, chr_list):
         '''
-        Create type box field for faster interval searching with the PostgreSQL box.
+        Set refseq status for segmentation during stitching later on by 
+        overlapping with consolodated refseq transcripts.
         '''
         for chr_id in chr_list:
             print 'Setting Refseq status for chromosome {0}'.format(chr_id)

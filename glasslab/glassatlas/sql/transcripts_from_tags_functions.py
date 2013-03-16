@@ -81,7 +81,7 @@ BEGIN
 END;
 $$ LANGUAGE 'plpgsql';
 
-CREATE OR REPLACE FUNCTION glass_atlas_{0}_{1}_prep.determine_transcripts_from_sequencing_run(chr_id integer, strand integer, source_t text, max_gap integer, tag_extension integer, start_end box)
+CREATE OR REPLACE FUNCTION glass_atlas_{0}_{1}_prep.determine_transcripts_from_sequencing_run(chr_id integer, strand integer, source_t text, max_gap integer, tag_extension integer, start_end int8range)
 RETURNS SETOF glass_atlas_{0}_{1}_prep.glass_transcript_row AS $$
 BEGIN 
 
@@ -98,7 +98,7 @@ $$ LANGUAGE 'plpgsql';
 
 CREATE OR REPLACE FUNCTION glass_atlas_{0}_{1}_prep.determine_transcripts_from_table(
         chr_id integer, strand integer, source_t text, max_gap integer, 
-        tag_extension integer, field_prefix text, start_end box)
+        tag_extension integer, field_prefix text, start_end int8range)
 RETURNS SETOF glass_atlas_{0}_{1}_prep.glass_transcript_row AS $$
  DECLARE
     max_chrom_pos bigint;
@@ -121,7 +121,7 @@ BEGIN
     
     -- IF a start_end is passed, use that to limit transcripts
     IF start_end IS NOT NULL THEN
-        start_end_clause := ' and start_end && public.make_box(' || (start_end[0])[0] || ',0,' || (start_end[1])[0] || ',0) ';
+        start_end_clause := ' and start_end && int8range(' || (start_end[0])[0] || ',' || (start_end[1])[0] || ') ';
     END IF;
     
     -- Select each tag set, grouped by start.
@@ -250,7 +250,7 @@ $$ LANGUAGE 'plpgsql';
 CREATE OR REPLACE FUNCTION glass_atlas_{0}_{1}_prep.save_transcripts_from_sequencing_run(
     seq_run_id integer, chr_id integer, source_t text, max_gap integer, 
     tag_extension integer, allowed_edge integer, edge_scaling_factor integer, density_multiplier integer, 
-    start_end box, one_strand integer)
+    start_end int8range, one_strand integer)
 RETURNS VOID AS $$
  DECLARE
     rec glass_atlas_{0}_{1}_prep.glass_transcript_row;
@@ -289,7 +289,7 @@ RETURNS VOID AS $$
                     "start_end", "start_density", "refseq")
                     VALUES (' || rec.chromosome_id || ' , ' || rec.strand || ' , '
                     || rec.transcription_start || ' , ' || rec.transcription_end || ' , 
-                    public.make_box(' || rec.transcription_start || ', 0, ' || rec.transcription_end || ', 0),
+                    int8range(' || rec.transcription_start || ', ' || rec.transcription_end || '),
                     point(' || rec.transcription_start || ',' || density || '),
                     ' || rec.refseq || '
                         ) RETURNING *' INTO transcript;
@@ -328,8 +328,7 @@ RETURNS VOID AS $$
                     || ' "start_end", "refseq")'
                     || ' VALUES (' || rec.chromosome_id || ' , ' || rec.strand || ' , '
                     || rec.transcription_start || ' , ' || rec.transcription_end || ' , '
-                    || ' public.make_box(' || rec.transcription_start || ', 0' 
-                        || ',' ||  rec.transcription_end || ', 0), '
+                    || ' int8range(' || rec.transcription_start || ',' ||  rec.transcription_end || '), '
                     || rec.refseq || ' 
                     ) RETURNING *' INTO transcript;
                 
