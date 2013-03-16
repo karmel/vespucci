@@ -93,9 +93,9 @@ class GenomeResourcesSqlGenerator(SqlGenerator):
             strand smallint,
             transcription_start bigint,
             transcription_end bigint,
-            start_end box,
-            start_site_1000 box,
-            start_end_1000 box
+            start_end int8range,
+            start_site_1000 int8range,
+            start_end_1000 int8range
         );
         CREATE INDEX {table_name}_chr_idx ON "{schema_name}"."{table_name}" USING btree (chromosome_id);
         CREATE INDEX {table_name}_strand_idx ON "{schema_name}"."{table_name}" USING btree (strand);
@@ -127,7 +127,7 @@ class GenomeResourcesSqlGenerator(SqlGenerator):
             strand smallint,
             transcription_start bigint,
             transcription_end bigint,
-            start_end box
+            start_end int8range
         );
         CREATE INDEX {table_name}_chr_idx ON "{schema_name}"."{table_name}" USING btree (chromosome_id);
         CREATE INDEX {table_name}_strand_idx ON "{schema_name}"."{table_name}" USING btree (strand);
@@ -254,15 +254,15 @@ class GenomeResourcesSqlGenerator(SqlGenerator):
             AND ref."chrom" = chr."name";
         
         UPDATE "{schema_name}"."{table_name}"  
-        SET start_end = public.make_box("transcription_start",0,"transcription_end",0),
-            start_site_1000 = public.make_box(("transcription_start" - 1000),0,("transcription_start" + 1000),0),
-            start_end_1000 = public.make_box(("transcription_start" - 1000),0,("transcription_end" + 1000),0)
+        SET start_end = int8range("transcription_start","transcription_end"),
+            start_site_1000 = int8range(("transcription_start" - 1000),("transcription_start" + 1000)),
+            start_end_1000 = int8range(("transcription_start" - 1000),("transcription_end" + 1000))
          WHERE strand = 0;
         
         UPDATE "{schema_name}"."{table_name}"  
-        SET start_end = public.make_box("transcription_start",0,"transcription_end",0),
-            start_site_1000 = public.make_box(("transcription_end" - 1000),0,("transcription_end" + 1000),0),
-            start_end_1000 = public.make_box(("transcription_start" - 1000),0,("transcription_end" + 1000),0)
+        SET start_end = int8range("transcription_start","transcription_end",0),
+            start_site_1000 = int8range(("transcription_end" - 1000),("transcription_end" + 1000)),
+            start_end_1000 = int8range(("transcription_start" - 1000),("transcription_end" + 1000))
         WHERE strand = 1;
         """.format(schema_name=self.schema_name, table_name=table_name)
 
@@ -385,7 +385,7 @@ class GenomeResourcesSqlGenerator(SqlGenerator):
             nc_rna.id, chr.id, 
             (CASE WHEN bed.strand = '-' THEN '1' ELSE 0 END),
             bed.start, bed."end",
-            public.make_box(bed."start",0,bed."end",0)
+            int8range(bed."start",bed."end")
         FROM "{schema_name}"."bed" bed, 
             "{schema_name}"."summary" summary, 
             "{schema_name}"."non_coding_rna" nc_rna, 
