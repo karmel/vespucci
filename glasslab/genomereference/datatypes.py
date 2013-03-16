@@ -121,7 +121,7 @@ class NonCodingTranscriptionRegion(GenomeReferenceBase):
     transcription_end   = models.IntegerField(max_length=12)    
     score               = models.IntegerField(max_length=5)
     
-    start_end           = BoxField(null=True, default=None, help_text='This is a placeholder for the PostgreSQL box type.')
+    start_end           = Int8RangeField(null=True, default=None, help_text='This is a placeholder for the PostgreSQL range type.')
     
     class Meta: 
         db_table    = '{0}"."non_coding_transcription_region'.format(SCHEMA_BASE)
