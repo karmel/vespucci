@@ -7,34 +7,6 @@ from django.db import models
 from glasslab.config import current_settings
 from psycopg2.extensions import AsIs
 
-class GlassMeta(object):
-    '''
-    To be used for the Django Meta classes on Glass Models.
-    Has methods for getting and setting that pesky db_table name
-    dynamically.
-    '''
-    db_table = ''
-    
-    db_table_base = ''
-    
-    @classmethod
-    def get_db_table(cls): return cls.db_table
-    @classmethod
-    def get_db_table_from_base(cls): 
-        return cls.db_table_base.format(current_settings.GENOME, current_settings.CELL_TYPE)
-    
-    @classmethod
-    def set_db_table(cls, val): cls.db_table = val
-    @classmethod
-    def set_db_table_from_base(cls, val): 
-        '''
-        Expects list of formatting vars.
-        '''
-        cls.db_table = cls.db_table_base.format(*val)
-    
-    @classmethod
-    def del_db_table(cls): cls.db_table = ''
-        
 class GlassModel(models.Model):
     schema_base = 'glass_atlas_{0}_{1}'
     
@@ -47,7 +19,7 @@ class GlassModel(models.Model):
         return '/admin/%s/%s/%d/' % (self._meta.app_label, 
                                      self.__class__.__name__.lower(),
                                      self.id)
-    class Meta(GlassMeta): abstract = True
+    class Meta(object): abstract = True
 
  
 class DynamicTable(GlassModel):
@@ -57,7 +29,7 @@ class DynamicTable(GlassModel):
     name = None
     table_created = None
     
-    class Meta(GlassMeta): abstract = True
+    class Meta(object): abstract = True
     
     @classmethod
     def set_table_name(cls, table_name):
