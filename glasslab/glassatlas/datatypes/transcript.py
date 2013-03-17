@@ -128,12 +128,14 @@ class CellTypeBase(object):
                 self.glass_transcript_source, self.glass_transcript_source_prep, 
                 self.glass_transcript_sequence, self.glass_transcript_non_coding]
 
-    def get_cell_type_base(self, cell_type):
+    def get_cell_type_base(self, cell_type, fail_if_not_found=False):
         correlations = self.__class__.get_correlations()
         try: return correlations[cell_type.lower()]
         except KeyError:
-            raise Exception('Could not find models to match cell type {0}.'.format(cell_type)
+            if fail_if_not_found:
+                raise Exception('Could not find models to match cell type {0}.'.format(cell_type)
                             + '\nOptions are: {0}'.format(','.join(correlations.keys())))
+            return correlations['default']
             
 class TranscriptModelBase(GlassModel):
     cell_base = CellTypeBase()
