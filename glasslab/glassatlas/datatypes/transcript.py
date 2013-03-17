@@ -99,13 +99,14 @@ class CellTypeBase(object):
     
     @classmethod
     def get_correlations(cls):
-        from glasslab.glassatlas.datatypes.celltypes.thiomac import ThioMacBase
+        '''
+        This is where you add in custom cell type classes if desired.
+        CD4TCell is provided as an example.
+        '''
         from glasslab.glassatlas.datatypes.celltypes.cd4tcell import CD4TCellBase
-        from glasslab.glassatlas.datatypes.celltypes.default import DefaultBase, RefSeqBase
+        from glasslab.glassatlas.datatypes.celltypes.default import DefaultBase
         return {'default': DefaultBase,
-                'thiomac': ThioMacBase,
-                'cd4tcell': CD4TCellBase,
-                'refseq': RefSeqBase}
+                'cd4tcell': CD4TCellBase,}
       
     @property
     def glass_transcript(self): return GlassTranscript
@@ -130,7 +131,6 @@ class CellTypeBase(object):
 
     def get_cell_type_base(self, cell_type, fail_if_not_found=False):
         correlations = self.__class__.get_correlations()
-        print correlations
         try: 
             cell_base = correlations[cell_type.lower()]
             current_settings.CELL_TYPE = cell_base.cell_type
