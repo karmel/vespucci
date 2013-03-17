@@ -130,17 +130,27 @@ class CellTypeBase(object):
 
     def get_cell_type_base(self, cell_type, fail_if_not_found=False):
         correlations = self.__class__.get_correlations()
-        try: return correlations[cell_type.lower()]
+        print correlations
+        try: 
+            cell_base = correlations[cell_type.lower()]
+            current_settings.CELL_TYPE = cell_base.cell_type
+            return cell_base
         except KeyError:
             if fail_if_not_found:
                 raise Exception('Could not find models to match cell type {0}.'.format(cell_type)
                             + '\nOptions are: {0}'.format(','.join(correlations.keys())))
-            return correlations['default']
+                
+            # We want to use the Default template models,
+            # But we reload here to ensure all db_tables are correct
+            current_settings.CELL_TYPE = cell_type.lower()
+            from glasslab.glassatlas.datatypes.celltypes import default
+            reload(default)
+            return default.DefaultBase
             
 class TranscriptModelBase(GlassModel):
     cell_base = CellTypeBase()
     schema_base = 'glass_atlas_{0}_{1}'
-    class Meta:
+    class Meta(object):
         abstract = True
         
 class TranscriptionRegionBase(TranscriptModelBase):
@@ -152,7 +162,7 @@ class TranscriptionRegionBase(TranscriptModelBase):
     
     start_end               = Int8RangeField(null=True, default=None, help_text='This is a placeholder for the PostgreSQL range type.')
     
-    class Meta:
+    class Meta(object):
         abstract = True
     
     def __unicode__(self):
@@ -175,12 +185,12 @@ class TranscriptBase(TranscriptionRegionBase):
     '''   
     refseq              = models.BooleanField(help_text='Does this transcript overlap with RefSeq transcripts (strand-specific)?')
     
-    class Meta:
+    class Meta(object):
         abstract = True
         
 class GlassTranscriptPrep(TranscriptBase):
     
-    class Meta:
+    class Meta(object):
         abstract    = True
 
 class GlassTranscript(TranscriptBase):
@@ -191,7 +201,7 @@ class GlassTranscript(TranscriptBase):
     modified        = models.DateTimeField(auto_now=True)
     created         = models.DateTimeField(auto_now_add=True)
     
-    class Meta:
+    class Meta(object):
         abstract    = True
           
     ################################################
@@ -368,7 +378,7 @@ class TranscriptSourceBase(TranscriptModelBase):
     tag_count               = models.IntegerField(max_length=12)
     gaps                    = models.IntegerField(max_length=12)
     
-    class Meta:
+    class Meta(object):
         abstract = True
         
     def __unicode__(self):
@@ -377,11 +387,11 @@ class TranscriptSourceBase(TranscriptModelBase):
                                           self.sequencing_run.source_table.strip())
         
 class GlassTranscriptSourcePrep(TranscriptSourceBase):
-    class Meta:
+    class Meta(object):
         abstract = True
 
 class GlassTranscriptSource(TranscriptSourceBase):
-    class Meta:
+    class Meta(object):
         abstract = True
         
 class GlassTranscriptTranscriptionRegionTable(TranscriptModelBase):
@@ -391,7 +401,7 @@ class GlassTranscriptTranscriptionRegionTable(TranscriptModelBase):
     table_type      = None
     related_class   = None    
     
-    class Meta: 
+    class Meta(object): 
         abstract = True        
     
     def __unicode__(self):
@@ -411,7 +421,7 @@ class GlassTranscriptSequence(GlassTranscriptTranscriptionRegionTable):
     table_type = 'sequence'
     related_class = SequenceTranscriptionRegion
     
-    class Meta: 
+    class Meta(object): 
         abstract = True
            
 class GlassTranscriptNonCoding(GlassTranscriptTranscriptionRegionTable):
@@ -423,6 +433,6 @@ class GlassTranscriptNonCoding(GlassTranscriptTranscriptionRegionTable):
     table_type = 'non_coding'
     related_class = NonCodingTranscriptionRegion
 
-    class Meta: 
+    class Meta(object): 
         abstract = True
             

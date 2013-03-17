@@ -9,14 +9,15 @@ Created on Sep 24, 2010
 
 '''
 from django.db import models
-from glasslab.utils.datatypes.basic_model import Int8RangeField, GlassModel
+from glasslab.utils.datatypes.basic_model import Int8RangeField, GlassModel,\
+    GlassMeta
 
 SCHEMA_BASE = 'genome_reference_{0}'
 
 
 class GenomeReferenceBase(GlassModel):
     schema_base = SCHEMA_BASE
-    class Meta:
+    class Meta(GlassMeta):
         abstract = True
         
 #######################################################
@@ -29,7 +30,7 @@ class Chromosome(GenomeReferenceBase):
     name = models.CharField(max_length=25, blank=False)
     length = models.IntegerField(max_length=25, blank=False)
     
-    class Meta:
+    class Meta(GlassMeta):
         db_table = '{0}"."chromosome'.format(SCHEMA_BASE)
         app_label   = 'Genome_Reference'
     
@@ -42,7 +43,7 @@ class SequenceIdentifier(GenomeReferenceBase):
     '''
     sequence_identifier = models.CharField(max_length=50, blank=False)
     
-    class Meta: 
+    class Meta(GlassMeta): 
         db_table = '{0}"."sequence_identifier'.format(SCHEMA_BASE)
         app_label   = 'Genome_Reference'
     
@@ -65,7 +66,7 @@ class NonCodingRna(GenomeReferenceBase):
     type                = models.CharField(max_length=20)
     description         = models.CharField(max_length=100)
     
-    class Meta: 
+    class Meta(GlassMeta): 
         db_table    = '{0}"."non_coding_rna'.format(SCHEMA_BASE)
         app_label   = 'Genome_Reference'
         verbose_name = 'Non coding RNA'
@@ -100,7 +101,7 @@ class SequenceTranscriptionRegion(GenomeReferenceBase):
     start_end           = Int8RangeField(null=True, default=None, help_text='This is a placeholder for the PostgreSQL range type.')
     
     table_name = 'sequence_transcription_region'
-    class Meta: 
+    class Meta(GlassMeta): 
         db_table    = '{0}"."sequence_transcription_region'.format(SCHEMA_BASE)
         app_label   = 'Genome_Reference'
 
@@ -123,7 +124,7 @@ class NonCodingTranscriptionRegion(GenomeReferenceBase):
     
     start_end           = Int8RangeField(null=True, default=None, help_text='This is a placeholder for the PostgreSQL range type.')
     
-    class Meta: 
+    class Meta(GlassMeta): 
         db_table    = '{0}"."non_coding_transcription_region'.format(SCHEMA_BASE)
         app_label   = 'Genome_Reference'
 
@@ -139,7 +140,7 @@ class SequencingRun(GenomeReferenceBase):
     '''
     source_table    = models.CharField(max_length=100)
     
-    class Meta:
+    class Meta(GlassMeta):
         db_table = '{0}"."sequencing_run'.format(SCHEMA_BASE)
         app_label   = 'Genome_Reference'
         
