@@ -133,7 +133,7 @@ class CellTypeBase(object):
         correlations = self.__class__.get_correlations()
         try: 
             cell_base = correlations[cell_type.lower()]
-            current_settings.CELL_TYPE = cell_base.cell_type
+            current_settings.CELL_TYPE = cell_base.cell_type.lower()
             return cell_base
         except KeyError:
             if fail_if_not_found:
