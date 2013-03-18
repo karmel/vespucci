@@ -65,8 +65,7 @@ BEGIN
                         FROM genome_reference_{0}.sequence_transcription_region reg
                         WHERE reg.chromosome_id = trans.chromosome_id
                             AND reg.strand = trans.strand
-                            AND reg.start_end @>
-                                point(trans.transcription_end, 0)
+                            AND reg.start_end @> trans.transcription_end
                         ORDER BY LEAST(reg.transcription_end - trans.transcription_end + 1,
                                     (reg.transcription_end - reg.transcription_start + 1)*extension_percent) DESC
                         LIMIT 1);
