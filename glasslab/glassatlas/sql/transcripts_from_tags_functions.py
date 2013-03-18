@@ -121,7 +121,7 @@ BEGIN
     
     -- IF a start_end is passed, use that to limit transcripts
     IF start_end IS NOT NULL THEN
-        start_end_clause := ' and start_end && int8range(' || start_end[0] || ',' || start_end[1] || ', ''[]'') ';
+        start_end_clause := ' and start_end && int8range(' || lower(start_end) || ',' || upper(start_end) || ', ''[]'') ';
     END IF;
     
     -- Select each tag set, grouped by start.
