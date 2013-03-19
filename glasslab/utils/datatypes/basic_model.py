@@ -20,8 +20,7 @@ class GlassModel(models.Model):
                                      self.__class__.__name__.lower(),
                                      self.id)
     class Meta(object): abstract = True
-
- 
+    
 class DynamicTable(GlassModel):
     '''
     Dynamically named table.
