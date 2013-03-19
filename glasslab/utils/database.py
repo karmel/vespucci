@@ -27,7 +27,7 @@ def execute_query_without_transaction(query, using='default', return_cursor=Fals
     connection.isolation_level = isolation_level
     if return_cursor: return cursor
     connection.close()
-    
+
 def fetch_rows(query, return_cursor=False, using='default'):
     connection = connections[using]
     connection.close()
@@ -67,4 +67,3 @@ class SqlGenerator(object):
         ALTER TABLE "{0}"."{1}" ALTER COLUMN id SET DEFAULT nextval('"{0}"."{1}_id_seq"'::regclass);
         ALTER TABLE ONLY "{0}"."{1}" ADD CONSTRAINT {1}_pkey PRIMARY KEY (id);
         """.format(schema_name, table_name, user=self.user)
-        
