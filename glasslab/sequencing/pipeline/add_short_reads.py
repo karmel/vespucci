@@ -7,7 +7,6 @@ from glasslab.config import current_settings
 from django.db import utils
 from datetime import datetime
 import os
-from glasslab.config.current_settings import DATABASES
 from glasslab.utils.database import execute_query
 
 def _print(string):
@@ -43,6 +42,6 @@ def create_schema():
                         GRANT Create,Usage ON SCHEMA "%s" TO  "%s";
                         """ % (current_settings.CURRENT_SCHEMA,
                                 current_settings.CURRENT_SCHEMA,
-                                DATABASES['default']['USER']))
+                                current_settings.DATABASES['default']['USER']))
     except utils.DatabaseError:
         _print('Schema already created.')
