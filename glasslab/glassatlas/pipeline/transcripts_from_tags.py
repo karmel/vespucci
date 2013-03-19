@@ -3,7 +3,7 @@ Created on Nov 8, 2010
 
 @author: karmel
 '''
-from glasslab.sequencing.tag import GlassTag
+from glasslab.sequencing.datatypes.tag import GlassTag
 from optparse import make_option
 from glasslab.config import current_settings
 from glasslab.utils.database import discard_temp_tables

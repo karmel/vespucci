@@ -11,7 +11,7 @@ Run from the command line.
 '''
 from glasslab.utils.scripting import GlassOptionParser
 from optparse import make_option
-from glasslab.sequencing.peak import GlassPeak
+from glasslab.sequencing.datatypes.peak import GlassPeak
 from glasslab.sequencing.pipeline.add_short_reads import check_input, \
     create_schema, _print
 from pandas.io.parsers import read_csv

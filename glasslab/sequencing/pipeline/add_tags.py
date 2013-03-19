@@ -137,7 +137,7 @@ if __name__ == '__main__':
     if options.processes:
         current_settings.ALLOWED_PROCESSES = int(options.processes)
         
-    from glasslab.sequencing.tag import GlassTag
+    from glasslab.sequencing.datatypes.tag import GlassTag
 
     if not options.skip_tag_table:
         if not options.prep_table:
