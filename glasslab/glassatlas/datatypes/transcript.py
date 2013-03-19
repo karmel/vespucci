@@ -25,6 +25,7 @@ MAX_GAP = 0 # Max gap between transcripts from the same run
 MAX_STITCHING_GAP = MAX_GAP # Max gap between transcripts being stitched together
 EDGE_SCALING_FACTOR = 5 # Number of tags per DENSITY_MULTIPLIER bp required to get full allowed edge length
 DENSITY_MULTIPLIER = 1000 # Scaling factor on density-- think of as bps worth of tags to consider
+MIN_ONE_RUN_TAGS = 1 # Minimum tags required for transcripts that only appear in one run to be included in edge drawing
 MIN_SCORE = 2 # Hide transcripts with scores below this threshold.
 
 def multiprocess_all_chromosomes(func, cls, *args, **kwargs):
@@ -293,11 +294,11 @@ class GlassTranscript(TranscriptBase):
         for chr_id in chr_list:
             print 'Drawing edges for transcripts for chromosome %d' % chr_id
             query = """
-                SELECT glass_atlas_%s_%s%s.draw_transcript_edges(%d);
-                """ % (current_settings.GENOME, 
+                SELECT glass_atlas_{0}_{1}{2}.draw_transcript_edges({chr_id},{3});
+                """.format(current_settings.GENOME,
                        current_settings.CELL_TYPE.lower(),
-                       current_settings.STAGING,
-                       chr_id)
+                       current_settings.STAGING, 
+                       MIN_ONE_RUN_TAGS, chr_id=chr_id)
             execute_query(query)           
             
     @classmethod

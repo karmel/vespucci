@@ -8,7 +8,7 @@ Prep table functions, extracted for ease of reading.
 def sql(genome, cell_type, suffix):
     return """
 
-CREATE OR REPLACE FUNCTION glass_atlas_{0}_{1}{suffix}.draw_transcript_edges(chr_id integer)
+CREATE OR REPLACE FUNCTION glass_atlas_{0}_{1}{suffix}.draw_transcript_edges(chr_id integer, min_one_run_tags)
 RETURNS VOID AS $$
 DECLARE
     strand integer;
@@ -20,7 +20,7 @@ BEGIN
     LOOP
         last_trans := NULL;
         FOR trans IN 
-            SELECT * FROM glass_atlas_{0}_{1}{suffix}.get_close_transcripts(chr_id, strand)
+            SELECT * FROM glass_atlas_{0}_{1}{suffix}.get_close_transcripts(chr_id, strand, min_one_run_tags)
         LOOP
             -- Initialize the transcript to be saved if necessary
             IF last_trans IS NULL THEN 
@@ -50,7 +50,7 @@ BEGIN
 END;
 $$ LANGUAGE 'plpgsql';
 
-CREATE OR REPLACE FUNCTION glass_atlas_{0}_{1}{suffix}.get_close_transcripts(chr_id integer, strand integer)
+CREATE OR REPLACE FUNCTION glass_atlas_{0}_{1}{suffix}.get_close_transcripts(chr_id integer, strand integer, min_one_run_tags integer)
 RETURNS SETOF glass_atlas_{0}_{1}{suffix}.glass_transcript AS $$
 DECLARE
     above_thresh_table text;
@@ -70,7 +70,7 @@ BEGIN
                 WHERE t.strand = ' || strand || '
                 GROUP BY t.id, t.strand, t.transcription_start, t.transcription_end, t.refseq, t.density, t.edge  
                 -- Omit one-tag-wonders and one-run wonders unless they have at least 5 tags
-                HAVING avg(s.tag_count) > 1 AND (count(s.sequencing_run_id) > 1 OR avg(s.tag_count) > 5)
+                HAVING avg(s.tag_count) > 1 AND (count(s.sequencing_run_id) > 1 OR avg(s.tag_count) >= ' || min_one_run_tags || ')
             ';
     EXECUTE 'CREATE INDEX ' || above_thresh_table || '_density_circle_idx ON ' || above_thresh_table || ' USING gist(density_circle)';
     EXECUTE 'CREATE INDEX ' || above_thresh_table || '_start_density_idx ON ' || above_thresh_table || ' USING gist(start_density)';
