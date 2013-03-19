@@ -167,7 +167,8 @@ BEGIN
                 WHEN reg.start_end @> trans.start_end THEN 
                 glass_atlas_{0}_{1}{suffix}.glass_transcript_transcription_region_relationship(''is contained by'') 
                 ELSE glass_atlas_{0}_{1}{suffix}.glass_transcript_transcription_region_relationship(''overlaps with'') END),
-                (CASE WHEN width(reg.start_end # trans.start_end) > width(reg.start_end)::numeric/2 THEN true
+                (CASE WHEN (upper(reg.start_end * trans.start_end) - lower(reg.start_end * trans.start_end)) 
+                    > (upper(reg.start_end) - lower(reg.start_end))::numeric/2 THEN true
                 ELSE false END)
             FROM glass_atlas_{0}_{1}{suffix}.glass_transcript_' || chr_id || ' trans
             JOIN genome_reference_{0}.' || table_type || '_transcription_region reg
