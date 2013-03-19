@@ -160,7 +160,7 @@ BEGIN
         || table_type || ' (glass_transcript_id, '
         || table_type || '_transcription_region_id, relationship, major)
             (SELECT trans.id, reg.id, 
-                (CASE WHEN reg.start_end ~= trans.start_end THEN 
+                (CASE WHEN reg.start_end = trans.start_end THEN 
                 glass_atlas_{0}_{1}{suffix}.glass_transcript_transcription_region_relationship(''is equal to'') 
                 WHEN reg.start_end <@ trans.start_end THEN 
                 glass_atlas_{0}_{1}{suffix}.glass_transcript_transcription_region_relationship(''contains'') 
