@@ -7,8 +7,8 @@ from __future__ import division
 from glasslab.config import current_settings
 from django.db import models, connection, utils
 from glasslab.genomereference.datatypes import Chromosome,\
-    SequenceTranscriptionRegion, NonCodingTranscriptionRegion
-from glasslab.genomereference.datatypes import SequencingRun
+    SequenceTranscriptionRegion, NonCodingTranscriptionRegion,\
+    SequencingRun
 from glasslab.utils.datatypes.basic_model import Int8RangeField, GlassModel
 from multiprocessing import Pool
 from glasslab.utils.database import execute_query, fetch_rows
@@ -198,6 +198,7 @@ class GlassTranscript(TranscriptBase):
     distal              = models.BooleanField(help_text='Is this transcript at least 1000 bp away from RefSeq transcripts (not strand-specific)?')
     standard_error      = models.FloatField(null=True, default=None)
     score               = models.FloatField(null=True, default=None)
+    rpkm                = models.FloatField(null=True, default=None)
     
     modified        = models.DateTimeField(auto_now=True)
     created         = models.DateTimeField(auto_now_add=True)
