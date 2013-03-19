@@ -8,7 +8,7 @@ Prep table functions, extracted for ease of reading.
 def sql(genome, cell_type, suffix):
     return """
 
-CREATE OR REPLACE FUNCTION glass_atlas_{0}_{1}{suffix}.draw_transcript_edges(chr_id integer, min_one_run_tags)
+CREATE OR REPLACE FUNCTION glass_atlas_{0}_{1}{suffix}.draw_transcript_edges(chr_id integer, min_one_run_tags integer)
 RETURNS VOID AS $$
 DECLARE
     strand integer;
