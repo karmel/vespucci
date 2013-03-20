@@ -25,8 +25,8 @@ MAX_GAP = 0 # Max gap between transcripts from the same run
 MAX_STITCHING_GAP = MAX_GAP # Max gap between transcripts being stitched together
 EDGE_SCALING_FACTOR = 5 # Number of tags per DENSITY_MULTIPLIER bp required to get full allowed edge length
 DENSITY_MULTIPLIER = 1000 # Scaling factor on density-- think of as bps worth of tags to consider
-MIN_ONE_RUN_TAGS = 1 # Minimum tags required for transcripts that only appear in one run to be included in edge drawing
-MIN_SCORE = 2 # Hide transcripts with scores below this threshold.
+MIN_ONE_RUN_TAGS = 5 # Tags in transcripts that only appear in one run must be greater than this to be included in edge drawing
+MIN_SCORE = 10 # Hide transcripts with scores below this threshold.
 
 def multiprocess_all_chromosomes(func, cls, *args, **kwargs):
     ''' 
