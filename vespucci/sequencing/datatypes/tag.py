@@ -204,7 +204,7 @@ class AtlasTag(DynamicTable):
 
             UPDATE "{0}_{1}" tag 
             SET refseq = true 
-            FROM atlas_atlas_{2}_refseq_prep.atlas_transcript_{1} ref
+            FROM atlas_{2}_refseq_prep.atlas_transcript_{1} ref
             WHERE ref.start_end && tag.start_end
             AND ref.strand = tag.strand
             AND tag.refseq IS NULL;
