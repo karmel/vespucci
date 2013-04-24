@@ -6,7 +6,8 @@ Created on Dec 22, 2010
 from vespucci.atlas.datatypes.transcript import AtlasTranscript, \
     FilteredAtlasTranscript, AtlasTranscriptSource, \
     AtlasTranscriptSequence, AtlasTranscriptNonCoding, CellTypeBase, \
-    AtlasTranscriptSourcePrep, AtlasTranscriptPrep, FilteredAtlasTranscriptManager
+    AtlasTranscriptSourcePrep, AtlasTranscriptPrep, \
+    FilteredAtlasTranscriptManager
 from vespucci.config import current_settings
 
 from django.db import models
@@ -38,7 +39,8 @@ class AtlasTranscriptThioMac(AtlasTranscript):
     cell_base = CD4TCellBase()
     
     class Meta(object):
-        db_table = '{0}{1}"."atlas_transcript'.format(SCHEMA_BASE, current_settings.STAGING)
+        db_table = '{0}{1}"."atlas_transcript'.format(SCHEMA_BASE, 
+                                                      current_settings.STAGING)
         app_label = 'Transcription_{0}'.format(CELL_TYPE)
         verbose_name = 'Unfiltered Atlas transcript ({0})'.format(CELL_TYPE)
         verbose_name_plural = 'Unfiltered Atlas transcripts ({0})'.format(CELL_TYPE)
@@ -61,7 +63,8 @@ class FilteredAtlasTranscriptThioMac(AtlasTranscriptThioMac, FilteredAtlasTransc
         verbose_name_plural = 'Atlas transcripts ({0})'.format(CELL_TYPE)
       
 class AtlasTranscriptSourcePrepThioMac(AtlasTranscriptSourcePrep):
-    atlas_transcript = models.ForeignKey(AtlasTranscriptPrepThioMac, related_name='atlastranscriptsource')
+    atlas_transcript = models.ForeignKey(AtlasTranscriptPrepThioMac, 
+                                         related_name='atlastranscriptsource')
     cell_base = CD4TCellBase()
     class Meta(object):
         db_table = '{0}_prep"."atlas_transcript_source'.format(SCHEMA_BASE)
@@ -70,10 +73,12 @@ class AtlasTranscriptSourcePrepThioMac(AtlasTranscriptSourcePrep):
         verbose_name_plural = 'Preparatory Atlas transcript sources ({0})'.format(CELL_TYPE)
 
 class AtlasTranscriptSourceThioMac(AtlasTranscriptSource):
-    atlas_transcript = models.ForeignKey(AtlasTranscriptThioMac, related_name='atlastranscriptsource')
+    atlas_transcript = models.ForeignKey(AtlasTranscriptThioMac, 
+                                         related_name='atlastranscriptsource')
     cell_base = CD4TCellBase()
     class Meta(object):
-        db_table = '{0}{1}"."atlas_transcript_source'.format(SCHEMA_BASE, current_settings.STAGING)
+        db_table = '{0}{1}"."atlas_transcript_source'.format(SCHEMA_BASE, 
+                                                    current_settings.STAGING)
         app_label = 'Transcription_{0}'.format(CELL_TYPE)
         verbose_name = 'Atlas transcript source ({0})'.format(CELL_TYPE)
         verbose_name_plural = 'Atlas transcript sources ({0})'.format(CELL_TYPE)
@@ -82,7 +87,8 @@ class AtlasTranscriptSequenceThioMac(AtlasTranscriptSequence):
     atlas_transcript = models.ForeignKey(AtlasTranscriptThioMac)
     cell_base = CD4TCellBase()
     class Meta(object): 
-        db_table = '{0}{1}"."atlas_transcript_sequence'.format(SCHEMA_BASE, current_settings.STAGING)
+        db_table = '{0}{1}"."atlas_transcript_sequence'.format(SCHEMA_BASE, 
+                                                    current_settings.STAGING)
         app_label = 'Transcription_{0}'.format(CELL_TYPE)
         verbose_name = 'Atlas transcript sequence region ({0})'.format(CELL_TYPE)
         verbose_name_plural = 'Atlas transcript sequence regions ({0})'.format(CELL_TYPE)
@@ -91,7 +97,8 @@ class AtlasTranscriptNonCodingThioMac(AtlasTranscriptNonCoding):
     atlas_transcript = models.ForeignKey(AtlasTranscriptThioMac)
     cell_base = CD4TCellBase()
     class Meta(object): 
-        db_table = '{0}{1}"."atlas_transcript_non_coding'.format(SCHEMA_BASE, current_settings.STAGING)
+        db_table = '{0}{1}"."atlas_transcript_non_coding'.format(SCHEMA_BASE, 
+                                                    current_settings.STAGING)
         app_label = 'Transcription_{0}'.format(CELL_TYPE)
         verbose_name = 'Atlas transcript non-coding region ({0})'.format(CELL_TYPE)
         verbose_name_plural = 'Atlas transcript non-coding regions ({0})'.format(CELL_TYPE)

@@ -17,16 +17,25 @@ from django.db.models.aggregates import Max
 from datetime import datetime
 import traceback
 
-# The tags returned from the sequencing run are shorter than we know them to be biologically
-# We can therefore extend the mapped tag region by a set number of bp if an extension is passed in
+# The tags returned from the sequencing run are shorter 
+# than we know them to be biologically
+# We can therefore extend the mapped tag region by a set number 
+# of bp if an extension is passed in
 TAG_EXTENSION = 0
 
-MAX_GAP = 0 # Max gap between transcripts from the same run
-MAX_STITCHING_GAP = MAX_GAP # Max gap between transcripts being stitched together
-EDGE_SCALING_FACTOR = 5 # Number of tags per DENSITY_MULTIPLIER bp required to get full allowed edge length
-DENSITY_MULTIPLIER = 1000 # Scaling factor on density-- think of as bps worth of tags to consider
-MIN_ONE_RUN_TAGS = 5 # Tags in transcripts that only appear in one run must be greater than this to be included in edge drawing
-MIN_SCORE = 2 # Hide transcripts with scores below this threshold.
+# Max gap between transcripts from the same run
+MAX_GAP = 0
+# Max gap between transcripts being stitched together
+MAX_STITCHING_GAP = MAX_GAP
+# Number of tags per DENSITY_MULTIPLIER bp to get full allowed edge length
+EDGE_SCALING_FACTOR = 5
+# Scaling factor on density-- think of as bps worth of tags to consider
+DENSITY_MULTIPLIER = 1000
+# Tags in transcripts that only appear in one run must be 
+# greater than this to be included in edge drawing
+MIN_ONE_RUN_TAGS = 5
+# Hide transcripts with scores below this threshold. 
+MIN_SCORE = 2
 
 def multiprocess_all_chromosomes(func, cls, *args, **kwargs):
     ''' 
@@ -41,22 +50,25 @@ def multiprocess_all_chromosomes(func, cls, *args, **kwargs):
                 all_chr = fetch_rows('''
                     SELECT chromosome_id as id
                     FROM "{0}" 
-                    GROUP BY chromosome_id ORDER BY COUNT(chromosome_id) DESC;'''.format(
-                                    kwargs.get('use_table',None) or cls._meta.db_table))
+                    GROUP BY chromosome_id 
+                    ORDER BY COUNT(chromosome_id) DESC;'''.format(
+                                    kwargs.get('use_table',None) 
+                                    or cls._meta.db_table))
             except utils.DatabaseError:
                 # Prep table instead?
                 all_chr = fetch_rows('''
                     SELECT chromosome_id as id
                     FROM "{0}" 
-                    GROUP BY chromosome_id ORDER BY COUNT(chromosome_id) DESC;'''.format(
-                                    getattr(cls,'prep_table',None)
-                                        or cls.cell_base.atlas_transcript_prep._meta.db_table))
+                    GROUP BY chromosome_id 
+                    ORDER BY COUNT(chromosome_id) DESC;'''.format(
+                        getattr(cls,'prep_table',None)
+                        or cls.cell_base.atlas_transcript_prep._meta.db_table))
                 
             all_chr = zip(*all_chr)[0]
             if not all_chr: raise Exception
             
         except Exception:
-            # cls in question does not have explicit relation to chromosomes; get all
+            # cls in question does not have relation to chromosomes; get all
             all_chr = current_settings.GENOME_CHOICES[current_settings.GENOME]['chromosomes']
 
         # Chromosomes are sorted by count descending, so we want to snake them
@@ -71,7 +83,8 @@ def multiprocess_all_chromosomes(func, cls, *args, **kwargs):
             if i % 2 == 0: chr_set.reverse()
             
         current_settings.CHR_LISTS = chr_sets
-        print 'Determined chromosome sets:\n{0}'.format(str(current_settings.CHR_LISTS))
+        print 'Determined chromosome sets:\n{0}'.format(
+                                        str(current_settings.CHR_LISTS))
     
     p = Pool(processes)
     for chr_list in current_settings.CHR_LISTS:
@@ -85,15 +98,22 @@ def multiprocess_all_chromosomes(func, cls, *args, **kwargs):
 def wrap_errors(func, *args):
     try: func(*args)
     except Exception:
-        print 'Encountered exception in wrapped function:\n{0}'.format(traceback.format_exc())
+        print 'Encountered exception in wrapped function:\n{0}'.format(
+                                                    traceback.format_exc())
         raise
    
-def wrap_add_transcripts_from_groseq(cls, chr_list, *args): wrap_errors(cls._add_transcripts_from_groseq, chr_list, *args)
-def wrap_stitch_together_transcripts(cls, chr_list, *args): wrap_errors(cls._stitch_together_transcripts, chr_list, *args)
-def wrap_set_density(cls, chr_list, *args): wrap_errors(cls._set_density, chr_list, *args)
-def wrap_draw_transcript_edges(cls, chr_list): wrap_errors(cls._draw_transcript_edges, chr_list)
-def wrap_set_scores(cls, chr_list): wrap_errors(cls._set_scores, chr_list)
-def wrap_force_vacuum(cls, chr_list): wrap_errors(cls._force_vacuum, chr_list)
+def wrap_add_transcripts_from_groseq(cls, chr_list, *args): 
+    wrap_errors(cls._add_transcripts_from_groseq, chr_list, *args)
+def wrap_stitch_together_transcripts(cls, chr_list, *args): 
+    wrap_errors(cls._stitch_together_transcripts, chr_list, *args)
+def wrap_set_density(cls, chr_list, *args): 
+    wrap_errors(cls._set_density, chr_list, *args)
+def wrap_draw_transcript_edges(cls, chr_list): 
+    wrap_errors(cls._draw_transcript_edges, chr_list)
+def wrap_set_scores(cls, chr_list): 
+    wrap_errors(cls._set_scores, chr_list)
+def wrap_force_vacuum(cls, chr_list): 
+    wrap_errors(cls._force_vacuum, chr_list)
 
 class CellTypeBase(object):
     cell_type = ''
@@ -138,8 +158,9 @@ class CellTypeBase(object):
             return cell_base
         except KeyError:
             if fail_if_not_found:
-                raise Exception('Could not find models to match cell type {0}.'.format(cell_type)
-                            + '\nOptions are: {0}'.format(','.join(correlations.keys())))
+                raise Exception('Cell type {} not recognized.'.format(cell_type)
+                            + '\nOptions are: {}'.format(
+                                                ','.join(correlations.keys())))
                 
             # We want to use the Default template models,
             # But we reload here to ensure all db_tables are correct
@@ -156,12 +177,12 @@ class TranscriptModelBase(VespucciModel):
         
 class TranscriptionRegionBase(TranscriptModelBase):
                        
-    chromosome              = models.ForeignKey(Chromosome)
-    strand                  = models.IntegerField(max_length=1, help_text='0 for +, 1 for -')
-    transcription_start     = models.IntegerField(max_length=12)
-    transcription_end       = models.IntegerField(max_length=12)
+    chromosome = models.ForeignKey(Chromosome)
+    strand = models.IntegerField(max_length=1, help_text='0 for +, 1 for -')
+    transcription_start = models.IntegerField(max_length=12)
+    transcription_end = models.IntegerField(max_length=12)
     
-    start_end               = Int8RangeField(null=True, default=None, help_text='This is a placeholder for the PostgreSQL range type.')
+    start_end = Int8RangeField(null=True, default=None)
     
     class Meta(object):
         abstract = True
@@ -184,7 +205,8 @@ class TranscriptBase(TranscriptionRegionBase):
     '''
     Unique transcribed regions in the genome, as determined via GRO-Seq.
     '''   
-    refseq              = models.BooleanField(help_text='Does this transcript overlap with RefSeq transcripts (strand-specific)?')
+    refseq = models.BooleanField(help_text='Does this transcript overlap ' \
+                            + ' with RefSeq transcripts (strand-specific)?')
     
     class Meta(object):
         abstract = True
@@ -195,13 +217,14 @@ class AtlasTranscriptPrep(TranscriptBase):
         abstract    = True
 
 class AtlasTranscript(TranscriptBase):
-    distal              = models.BooleanField(help_text='Is this transcript at least 1000 bp away from RefSeq transcripts (not strand-specific)?')
-    standard_error      = models.FloatField(null=True, default=None)
-    score               = models.FloatField(null=True, default=None)
-    rpkm                = models.FloatField(null=True, default=None)
+    distal = models.BooleanField(help_text='Is this transcript at least 1000' \
+                    + ' bp away from RefSeq transcripts (not strand-specific)?')
+    standard_error = models.FloatField(null=True, default=None)
+    score = models.FloatField(null=True, default=None)
+    rpkm = models.FloatField(null=True, default=None)
     
-    modified        = models.DateTimeField(auto_now=True)
-    created         = models.DateTimeField(auto_now_add=True)
+    modified = models.DateTimeField(auto_now=True)
+    created = models.DateTimeField(auto_now_add=True)
     
     class Meta(object):
         abstract    = True
@@ -219,45 +242,63 @@ class AtlasTranscript(TranscriptBase):
         for chr_id in chr_list:
             print 'Adding transcripts for chromosome %d' % chr_id
             query = """
-                SELECT atlas_%s_%s_prep.save_transcripts_from_sequencing_run(%d, %d,'%s', %d, %d, %d, %d, %d, NULL, NULL);
-                """ % (current_settings.GENOME,
-                       current_settings.CELL_TYPE.lower(),
-                       sequencing_run.id, chr_id, 
-                       sequencing_run.source_table.strip(), 
-                       MAX_GAP, TAG_EXTENSION, 
-                       current_settings.MAX_EDGE, EDGE_SCALING_FACTOR, DENSITY_MULTIPLIER)
+                SELECT atlas_%s_%s_prep.save_transcripts_from_sequencing_run(
+                    {}, {},'{}', {}, {}, {}, {}, {}, NULL, NULL);
+                """.format(current_settings.GENOME,
+                           current_settings.CELL_TYPE.lower(),
+                           sequencing_run.id, 
+                           chr_id, 
+                           sequencing_run.source_table.strip(), 
+                           MAX_GAP, 
+                           TAG_EXTENSION, 
+                           current_settings.MAX_EDGE, 
+                           EDGE_SCALING_FACTOR, 
+                           DENSITY_MULTIPLIER)
             execute_query(query)
     
     ################################################
     # Transcript cleanup and refinement
     ################################################
     @classmethod
-    def stitch_together_transcripts(cls, allow_extended_gaps=True, extension_percent='.2', 
-                                    set_density=False, null_only=True):
-        multiprocess_all_chromosomes(wrap_stitch_together_transcripts, cls, 
-                                     allow_extended_gaps, extension_percent, set_density, null_only)
+    def stitch_together_transcripts(cls, 
+                                    allow_extended_gaps=True, 
+                                    extension_percent='.2', 
+                                    set_density=False, 
+                                    null_only=True):
+        multiprocess_all_chromosomes(wrap_stitch_together_transcripts, 
+                                     cls, 
+                                     allow_extended_gaps, 
+                                     extension_percent, 
+                                     set_density, 
+                                     null_only)
     
     @classmethod
-    def _stitch_together_transcripts(cls, chr_list, allow_extended_gaps=True, extension_percent='.2', 
-                                     set_density=False, null_only=True):
+    def _stitch_together_transcripts(cls, chr_list, 
+                                     allow_extended_gaps=True, 
+                                     extension_percent='.2', 
+                                     set_density=False, 
+                                     null_only=True):
         '''
         This is tag-level agnostic, stitching based on gap size alone.
         '''
         for chr_id  in chr_list:
-            print 'Stitching together transcripts for chromosome %d' % chr_id
+            print 'Stitching together transcripts for chr_id %d' % chr_id
             query = """
-                SELECT atlas_%s_%s_prep.save_transcripts_from_existing(%d, %d);
-                """ % (current_settings.GENOME, 
-                       current_settings.CELL_TYPE.lower(),
-                       chr_id, MAX_STITCHING_GAP)
+                SELECT atlas_{}_{}_prep.save_transcripts_from_existing({}, {});
+                """.format(current_settings.GENOME, 
+                           current_settings.CELL_TYPE.lower(),
+                           chr_id, 
+                           MAX_STITCHING_GAP)
             execute_query(query)
             if set_density:
-                print 'Setting average tags for preparatory transcripts for chromosome %d' % chr_id
+                print 'Setting density for transcripts for chr_id %d' % chr_id
                 query = """
-                    SELECT atlas_{0}_{1}_prep.set_density({2},{3},{4},{5},{6},{7},{8});
+                    SELECT atlas_{}_{}_prep.set_density({},{},{},{},{},{},{});
                     """.format(current_settings.GENOME, 
                                current_settings.CELL_TYPE.lower(),
-                               chr_id, current_settings.MAX_EDGE, EDGE_SCALING_FACTOR, 
+                               chr_id, 
+                               current_settings.MAX_EDGE, 
+                               EDGE_SCALING_FACTOR, 
                                DENSITY_MULTIPLIER, 
                                allow_extended_gaps and 'true' or 'false',
                                extension_percent,
@@ -265,21 +306,32 @@ class AtlasTranscript(TranscriptBase):
                 execute_query(query)
     
     @classmethod
-    def set_density(cls, allow_extended_gaps=True, extension_percent='.2', null_only=True):
-        multiprocess_all_chromosomes(wrap_set_density, cls, allow_extended_gaps, extension_percent, null_only)
+    def set_density(cls, 
+                    allow_extended_gaps=True, 
+                    extension_percent='.2', 
+                    null_only=True):
+        multiprocess_all_chromosomes(wrap_set_density, 
+                                     cls, 
+                                     allow_extended_gaps, 
+                                     extension_percent, 
+                                     null_only)
     
     @classmethod
-    def _set_density(cls, chr_list, allow_extended_gaps=True, extension_percent='.2', null_only=True):
+    def _set_density(cls, chr_list, 
+                     allow_extended_gaps=True, 
+                     extension_percent='.2', 
+                     null_only=True):
         '''
         Force reset average tags for prep DB.
         '''
         for chr_id  in chr_list:
-            print 'Setting average tags for preparatory transcripts for chromosome %d' % chr_id
+            print 'Setting density for transcripts for chr_id %d' % chr_id
             query = """
-                SELECT atlas_{0}_{1}_prep.set_density({2},{3},{4},{5},{6},{7},{8});
+                SELECT atlas_{}_{}_prep.set_density({},{},{},{},{},{},{});
                 """.format(current_settings.GENOME, 
                            current_settings.CELL_TYPE.lower(),
-                           chr_id, current_settings.MAX_EDGE, EDGE_SCALING_FACTOR, 
+                           chr_id, current_settings.MAX_EDGE, 
+                           EDGE_SCALING_FACTOR, 
                            DENSITY_MULTIPLIER, 
                            allow_extended_gaps and 'true' or 'false',
                            extension_percent,
@@ -293,7 +345,7 @@ class AtlasTranscript(TranscriptBase):
     @classmethod
     def _draw_transcript_edges(cls, chr_list):
         for chr_id in chr_list:
-            print 'Drawing edges for transcripts for chromosome %d' % chr_id
+            print 'Drawing edges for transcripts for chr_id %d' % chr_id
             query = """
                 SELECT atlas_{0}_{1}{2}.draw_transcript_edges({chr_id},{3});
                 """.format(current_settings.GENOME,
@@ -322,7 +374,8 @@ class AtlasTranscript(TranscriptBase):
         
 class FilteredAtlasTranscriptManager(models.Manager):
     def get_query_set(self):
-        return super(FilteredAtlasTranscriptManager, self).get_query_set().filter(score__gte=MIN_SCORE)
+        qset = super(FilteredAtlasTranscriptManager, self).get_query_set()
+        return qset.filter(score__gte=MIN_SCORE)
     
 class FilteredAtlasTranscript(object):
     '''
@@ -339,24 +392,28 @@ class FilteredAtlasTranscript(object):
     def generate_bed_file(cls, output_dir):
         '''
         Generates a BED file (http://genome.ucsc.edu/FAQ/FAQformat.html#format1)
-        of all the transcripts and their exons for viewing in the UCSC Genome Browser.
+        of all the transcripts for viewing in the UCSC Genome Browser.
         '''
         max_score = cls.objects.aggregate(max=Max('score'))['max']
-        transcripts = cls.objects.order_by('chromosome__id','transcription_start')
+        transcripts = cls.objects.order_by('chromosome__id',
+                                           'transcription_start')
         
         cls._generate_bed_file(output_dir, transcripts, max_score, strand=0)
         cls._generate_bed_file(output_dir,transcripts, max_score, strand=1)
         
     @classmethod
     def _generate_bed_file(cls, output_dir, transcripts, max_score, strand=0):
-        file_name = 'Atlas_Transcripts_%s_%d.bed' % (datetime.now().strftime('%Y_%m_%d'), strand)
+        file_name = 'Atlas_Transcripts_{}_{}.bed'.format(
+                                            datetime.now().strftime('%Y_%m_%d'), 
+                                            strand)
         file_path = os.path.join(output_dir, file_name)
         
         transcripts = transcripts.filter(strand=strand)
         
         strand_char = strand and '-' or '+'
-        output = ('track name=vespucci_atlas_transcripts_{}_{}_{strand} description=' \
-                    + '"Vespucci Atlas Transcripts {strand_char} strand" useScore=1 itemRgb=On\n'\
+        output = ('track name=vespucci_atlas_transcripts_{}_{}_{strand} ' \
+                    + 'description="Vespucci Atlas Transcripts {strand_char} ' \
+                    + 'strand" useScore=1 itemRgb=On\n'\
                     ).format(current_settings.GENOME, 
                              current_settings.CELL_TYPE,
                              strand=strand, 
@@ -365,12 +422,18 @@ class FilteredAtlasTranscript(object):
         for trans in transcripts:
             # chrom start end name score strand thick_start thick_end colors?
             # Make sure we don't go beyond the length of the chromosome.
-            # Transcripts shouldn't due to previous processing, but just in case, we check here as well.
+            # Transcripts shouldn't due to previous processing, 
+            # but just in case, we check here as well.
             start = max(0,trans.transcription_start)
             end = min(trans.chromosome.length,trans.transcription_end)
-            row = [trans.chromosome.name, str(start), str(end), 
-                   'Transcript_' + str(trans.id), str((float(trans.score)/max_score)*1000),
-                   trans.strand and '-' or '+', str(start), str(end), 
+            row = [trans.chromosome.name, 
+                   str(start), 
+                   str(end), 
+                   'Transcript_' + str(trans.id), 
+                   str((float(trans.score)/max_score)*1000),
+                   trans.strand and '-' or '+', 
+                   str(start), 
+                   str(end), 
                    trans.strand and '0,255,0' or '0,0,255']
             
             output += '\t'.join(row) + '\n'
@@ -389,8 +452,8 @@ class TranscriptSourceBase(TranscriptModelBase):
         
     def __unicode__(self):
         return '%s: %d tags from %s' % (self.__class__.__name__,
-                                          self.tag_count,
-                                          self.sequencing_run.source_table.strip())
+                                      self.tag_count,
+                                      self.sequencing_run.source_table.strip())
         
 class AtlasTranscriptSourcePrep(TranscriptSourceBase):
     class Meta(object):
@@ -401,11 +464,12 @@ class AtlasTranscriptSource(TranscriptSourceBase):
         abstract = True
         
 class AtlasTranscriptTranscriptionRegionTable(TranscriptModelBase):
-    relationship    = models.CharField(max_length=100, choices=[(x,x) 
-                                                    for x in ('contains','is contained by','overlaps with','is equal to')])
+    REL_CHOICES = ('contains','is contained by','overlaps with','is equal to')
+    relationship = models.CharField(max_length=100, choices=[(x,x) 
+                                                    for x in REL_CHOICES])
     
-    table_type      = None
-    related_class   = None    
+    table_type = None
+    related_class = None    
     
     class Meta(object): 
         abstract = True        
@@ -422,7 +486,7 @@ class AtlasTranscriptSequence(AtlasTranscriptTranscriptionRegionTable):
     '''
     Relationship between AtlasTranscript and the sequence record it maps to.
     '''
-    sequence_transcription_region   = models.ForeignKey(SequenceTranscriptionRegion)
+    sequence_transcription_region = models.ForeignKey(SequenceTranscriptionRegion)
     
     table_type = 'sequence'
     related_class = SequenceTranscriptionRegion
