@@ -79,7 +79,9 @@ class GenomeResourcesSqlGenerator(SqlGenerator):
             "sequence_identifier" varchar(50),
             "type" "{schema_name}"."{table_name}_type" DEFAULT NULL
         );
-        ALTER TABLE ONLY "{schema_name}"."{table_name}" ADD CONSTRAINT {table_name}_sequence_identifier_key UNIQUE (sequence_identifier);
+        ALTER TABLE ONLY "{schema_name}"."{table_name}" 
+            ADD CONSTRAINT {table_name}_sequence_identifier_key 
+            UNIQUE (sequence_identifier);
         """.format(schema_name=self.schema_name, table_name=table_name)\
         + self.pkey_sequence_sql(self.schema_name, table_name)
         
@@ -97,10 +99,14 @@ class GenomeResourcesSqlGenerator(SqlGenerator):
             start_site_1000 int8range,
             start_end_1000 int8range
         );
-        CREATE INDEX {table_name}_chr_idx ON "{schema_name}"."{table_name}" USING btree (chromosome_id);
-        CREATE INDEX {table_name}_strand_idx ON "{schema_name}"."{table_name}" USING btree (strand);
-        CREATE INDEX {table_name}_start_end_idx ON "{schema_name}"."{table_name}" USING gist (start_end);
-        CREATE INDEX {table_name}_start_end_1000_idx ON "{schema_name}"."{table_name}" USING gist (start_end_1000);
+        CREATE INDEX {table_name}_chr_idx ON "{schema_name}"."{table_name}" 
+            USING btree (chromosome_id);
+        CREATE INDEX {table_name}_strand_idx ON "{schema_name}"."{table_name}" 
+            USING btree (strand);
+        CREATE INDEX {table_name}_start_end_idx ON "{schema_name}"."{table_name}" 
+            USING gist (start_end);
+        CREATE INDEX {table_name}_start_end_1000_idx ON "{schema_name}"."{table_name}" 
+            USING gist (start_end_1000);
         """.format(schema_name=self.schema_name, table_name=table_name)\
         + self.pkey_sequence_sql(self.schema_name, table_name)
     
@@ -113,7 +119,9 @@ class GenomeResourcesSqlGenerator(SqlGenerator):
             description varchar(255),
             source varchar(255)
         );
-        CREATE UNIQUE INDEX {table_name}_type_name_idx ON "{schema_name}"."{table_name}" USING btree ("type","description");
+        CREATE UNIQUE INDEX {table_name}_type_name_idx 
+            ON "{schema_name}"."{table_name}" 
+            USING btree ("type","description");
         """.format(schema_name=self.schema_name, table_name=table_name)\
         + self.pkey_sequence_sql(self.schema_name, table_name)
     
@@ -129,9 +137,12 @@ class GenomeResourcesSqlGenerator(SqlGenerator):
             transcription_end bigint,
             start_end int8range
         );
-        CREATE INDEX {table_name}_chr_idx ON "{schema_name}"."{table_name}" USING btree (chromosome_id);
-        CREATE INDEX {table_name}_strand_idx ON "{schema_name}"."{table_name}" USING btree (strand);
-        CREATE INDEX {table_name}_start_end_idx ON "{schema_name}"."{table_name}" USING gist (start_end);
+        CREATE INDEX {table_name}_chr_idx ON "{schema_name}"."{table_name}" 
+            USING btree (chromosome_id);
+        CREATE INDEX {table_name}_strand_idx ON "{schema_name}"."{table_name}" 
+            USING btree (strand);
+        CREATE INDEX {table_name}_start_end_idx ON "{schema_name}"."{table_name}" 
+            USING gist (start_end);
         """.format(schema_name=self.schema_name, table_name=table_name)\
         + self.pkey_sequence_sql(self.schema_name, table_name)
          
@@ -147,13 +158,16 @@ class GenomeResourcesSqlGenerator(SqlGenerator):
             "modified" timestamp(6) NULL DEFAULT NULL,
             "created" timestamp(6) NULL DEFAULT NULL
         );
-        CREATE UNIQUE INDEX {table_name}_source_table_idx ON "{schema_name}"."{table_name}" USING btree (source_table);
+        CREATE UNIQUE INDEX {table_name}_source_table_idx 
+            ON "{schema_name}"."{table_name}" 
+            USING btree (source_table);
         """.format(schema_name=self.schema_name, table_name=table_name) \
         + self.pkey_sequence_sql(schema_name=self.schema_name, table_name=table_name)
     
     def convenience_functions(self):
         return """
-        CREATE OR REPLACE FUNCTION public.make_box(x1 numeric, y1 numeric, x2 numeric, y2 numeric)
+        CREATE OR REPLACE FUNCTION public.make_box(x1 numeric, y1 numeric, 
+                                                    x2 numeric, y2 numeric)
         RETURNS box AS $$
         DECLARE
             s text;
@@ -183,7 +197,7 @@ class GenomeResourcesSqlGenerator(SqlGenerator):
         '''
         table_name = 'chromosome'
         path_to_file = os.path.join(get_vespucci_path(),
-                                    'genomereference/pipeline/data/{0}/chromosomes.txt'.format(self.genome))
+                       'genomereference/pipeline/data/{0}/chromosomes.txt'.format(self.genome))
         f = open(path_to_file)
         output = []
         for l in f:
@@ -199,13 +213,14 @@ class GenomeResourcesSqlGenerator(SqlGenerator):
         '''
         Create a temp table to be normalized and associated appropriately.
         
-        File downloaded at: http://hgdownload.soe.ucsc.edu/goldenPath/mm9/database/refGene.txt.gz
+        File downloaded at: 
+        http://hgdownload.soe.ucsc.edu/goldenPath/mm9/database/refGene.txt.gz
         
         This is hardcoded to work with the UCSC download as it is. 
         More flexible import logic can be created here.
         '''
         path_to_file = os.path.join(get_vespucci_path(),
-                                    'genomereference/pipeline/data/{0}/refGene.txt'.format(self.genome))
+                       'genomereference/pipeline/data/{0}/refGene.txt'.format(self.genome))
         f = open(path_to_file)
         output = []
         for l in f:
@@ -231,10 +246,13 @@ class GenomeResourcesSqlGenerator(SqlGenerator):
     def insert_sequence_values(self):
         table_name = 'sequence_identifier'
         return """
-        INSERT INTO "{schema_name}"."{table_name}" ("sequence_identifier", "type") 
+        INSERT INTO "{schema_name}"."{table_name}" 
+            ("sequence_identifier", "type") 
             SELECT DISTINCT "name", 
-            (CASE WHEN substring("name" from 1 for 2) = 'NM' THEN "{schema_name}".sequence_identifier_type('mRNA')
-            WHEN  substring("name" from 1 for 2) = 'NR' THEN "{schema_name}".sequence_identifier_type('RNA')
+            (CASE WHEN substring("name" from 1 for 2) = 'NM' 
+                THEN "{schema_name}".sequence_identifier_type('mRNA')
+            WHEN  substring("name" from 1 for 2) = 'NR' 
+                THEN "{schema_name}".sequence_identifier_type('RNA')
             ELSE NULL END)
          from "{schema_name}"."refGene";
         """.format(schema_name=self.schema_name, table_name=table_name)
@@ -243,26 +261,32 @@ class GenomeResourcesSqlGenerator(SqlGenerator):
         table_name = 'sequence_transcription_region'
         return """
         INSERT INTO "{schema_name}"."{table_name}" 
-            (sequence_identifier_id, chromosome_id, strand, transcription_start, transcription_end)
+            (sequence_identifier_id, chromosome_id, strand, 
+            transcription_start, transcription_end)
         SELECT 
             seq.id, chr.id,
             (CASE WHEN ref.strand = '-' THEN 1 ELSE 0 END),
             ref."txStart"::bigint, ref."txEnd"::bigint
-        FROM "{schema_name}"."sequence_identifier" seq, "{schema_name}"."refGene" ref, 
+        FROM "{schema_name}"."sequence_identifier" seq, 
+            "{schema_name}"."refGene" ref, 
             "{schema_name}"."chromosome" chr
         WHERE ref."name" = seq.sequence_identifier
             AND ref."chrom" = chr."name";
         
         UPDATE "{schema_name}"."{table_name}"  
         SET start_end = int8range("transcription_start","transcription_end",'[]'),
-            start_site_1000 = int8range(("transcription_start" - 1000),("transcription_start" + 1000),'[]'),
-            start_end_1000 = int8range(("transcription_start" - 1000),("transcription_end" + 1000),'[]')
+            start_site_1000 = int8range(("transcription_start" - 1000),
+                                        ("transcription_start" + 1000),'[]'),
+            start_end_1000 = int8range(("transcription_start" - 1000),
+                                        ("transcription_end" + 1000),'[]')
          WHERE strand = 0;
         
         UPDATE "{schema_name}"."{table_name}"  
         SET start_end = int8range("transcription_start","transcription_end",'[]'),
-            start_site_1000 = int8range(("transcription_end" - 1000),("transcription_end" + 1000),'[]'),
-            start_end_1000 = int8range(("transcription_start" - 1000),("transcription_end" + 1000),'[]')
+            start_site_1000 = int8range(("transcription_end" - 1000),
+                                        ("transcription_end" + 1000),'[]'),
+            start_end_1000 = int8range(("transcription_start" - 1000),
+                                        ("transcription_end" + 1000),'[]')
         WHERE strand = 1;
         """.format(schema_name=self.schema_name, table_name=table_name)
 
@@ -294,7 +318,7 @@ class GenomeResourcesSqlGenerator(SqlGenerator):
         More flexible import logic can be created here.
         '''
         path_to_file = os.path.join(get_vespucci_path(),
-                                    'genomereference/pipeline/data/summary.csv')
+                       'genomereference/pipeline/data/summary.csv')
         f_summary = csv.reader(open(path_to_file, 'rb'))
         output = []
         for fields in f_summary:
@@ -327,7 +351,7 @@ class GenomeResourcesSqlGenerator(SqlGenerator):
     
     def import_ncrna_org_regions(self):
         path_to_file = os.path.join(get_vespucci_path(),
-                                    'genomereference/pipeline/data/{0}/{0}.bed'.format(self.genome))
+                       'genomereference/pipeline/data/{0}/{0}.bed'.format(self.genome))
         f_bed = open(path_to_file)
         output = []
         for l in f_bed:
@@ -379,7 +403,8 @@ class GenomeResourcesSqlGenerator(SqlGenerator):
         '''
         table_name = 'non_coding_transcription_region'
         return """
-        INSERT INTO "{schema_name}"."{table_name}" (non_coding_rna_id, chromosome_id, strand, 
+        INSERT INTO "{schema_name}"."{table_name}" 
+        (non_coding_rna_id, chromosome_id, strand, 
         transcription_start, transcription_end, start_end) 
         SELECT 
             nc_rna.id, chr.id, 

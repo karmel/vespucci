@@ -20,7 +20,8 @@ class AtlasSqlGenerator(SqlGenerator):
         self.cell_type = cell_type or current_settings.CELL_TYPE.lower()
         self.staging = staging or current_settings.STAGING
         
-        self.schema_name_prefix = 'atlas_{0}_{1}'.format(self.genome, self.cell_type)
+        self.schema_name_prefix = 'atlas_{0}_{1}'.format(self.genome, 
+                                                         self.cell_type)
         super(AtlasSqlGenerator, self).__init__()
     
     def all_sql(self):
@@ -66,13 +67,17 @@ class AtlasSqlGenerator(SqlGenerator):
         return transcripts_from_tags_functions.sql(self.genome, self.cell_type)
     
     def from_prep_functions(self):
-        return transcripts_from_prep_functions.sql(self.genome, self.cell_type, self.staging)
+        return transcripts_from_prep_functions.sql(self.genome, 
+                                                   self.cell_type, 
+                                                   self.staging)
     
     # Tables
     def schema(self, suffix=''):
         return """
         CREATE SCHEMA "{schema_name_prefix}{suffix}" AUTHORIZATION "{user}";
-        """.format(schema_name_prefix=self.schema_name_prefix, suffix=suffix, user=self.user)
+        """.format(schema_name_prefix=self.schema_name_prefix, 
+                   suffix=suffix, 
+                   user=self.user)
         
     def prep_table_main_transcript(self):
         table_name = 'atlas_transcript'
@@ -90,7 +95,9 @@ class AtlasSqlGenerator(SqlGenerator):
             "density_circle" circle DEFAULT NULL,
             "refseq" boolean DEFAULT NULL
         );
-        """.format(schema_name_prefix=self.schema_name_prefix, table_name=table_name, user=self.user)\
+        """.format(schema_name_prefix=self.schema_name_prefix,
+                   table_name=table_name, 
+                   user=self.user)\
         + self.pkey_sequence_sql(self.schema_name_prefix + '_prep', table_name)
         
     def prep_table_chrom_transcript(self, chr_id):   
@@ -98,20 +105,34 @@ class AtlasSqlGenerator(SqlGenerator):
         CREATE TABLE "{schema_name_prefix}_prep"."atlas_transcript_{chr_id}" (
             CHECK ( chromosome_id = {chr_id} )
         ) INHERITS ("{schema_name_prefix}_prep"."atlas_transcript");
-        CREATE INDEX atlas_transcript_{chr_id}_pkey_idx ON "{schema_name_prefix}_prep"."atlas_transcript_{chr_id}" USING btree (id);
-        CREATE INDEX atlas_transcript_{chr_id}_chr_idx ON "{schema_name_prefix}_prep"."atlas_transcript_{chr_id}" USING btree (chromosome_id);
-        CREATE INDEX atlas_transcript_{chr_id}_strand_idx ON "{schema_name_prefix}_prep"."atlas_transcript_{chr_id}" USING btree (strand);
-        CREATE INDEX atlas_transcript_{chr_id}_start_end_idx ON "{schema_name_prefix}_prep"."atlas_transcript_{chr_id}" USING gist (start_end);
-        CREATE INDEX atlas_transcript_{chr_id}_start_density_idx ON "{schema_name_prefix}_prep"."atlas_transcript_{chr_id}" USING gist (start_density);
-        CREATE INDEX atlas_transcript_{chr_id}_density_circle_idx ON "{schema_name_prefix}_prep"."atlas_transcript_{chr_id}" USING gist (density_circle);
-        """.format(schema_name_prefix=self.schema_name_prefix, chr_id=chr_id)
+        CREATE INDEX atlas_transcript_{chr_id}_pkey_idx 
+            ON "{schema_name_prefix}_prep"."atlas_transcript_{chr_id}" 
+            USING btree (id);
+        CREATE INDEX atlas_transcript_{chr_id}_chr_idx 
+            ON "{schema_name_prefix}_prep"."atlas_transcript_{chr_id}" 
+            USING btree (chromosome_id);
+        CREATE INDEX atlas_transcript_{chr_id}_strand_idx 
+            ON "{schema_name_prefix}_prep"."atlas_transcript_{chr_id}" 
+            USING btree (strand);
+        CREATE INDEX atlas_transcript_{chr_id}_start_end_idx 
+            ON "{schema_name_prefix}_prep"."atlas_transcript_{chr_id}" 
+            USING gist (start_end);
+        CREATE INDEX atlas_transcript_{chr_id}_start_density_idx 
+            ON "{schema_name_prefix}_prep"."atlas_transcript_{chr_id}" 
+            USING gist (start_density);
+        CREATE INDEX atlas_transcript_{chr_id}_density_circle_idx 
+            ON "{schema_name_prefix}_prep"."atlas_transcript_{chr_id}" 
+            USING gist (density_circle);
+        """.format(schema_name_prefix=self.schema_name_prefix, 
+                   chr_id=chr_id)
         
     def prep_table_trigger_transcript(self):
         return """
         CREATE OR REPLACE FUNCTION {schema_name_prefix}_prep.atlas_transcript_insert_trigger()
         RETURNS TRIGGER AS $$
         BEGIN
-            EXECUTE 'INSERT INTO {schema_name_prefix}_prep.atlas_transcript_' || NEW.chromosome_id || ' VALUES ('
+            EXECUTE 'INSERT INTO {schema_name_prefix}_prep.atlas_transcript_' 
+            || NEW.chromosome_id || ' VALUES ('
             || quote_literal(NEW.id) || ','
             || quote_literal(NEW.chromosome_id) || ','
             || quote_literal(NEW.strand) || ','
@@ -122,8 +143,10 @@ class AtlasSqlGenerator(SqlGenerator):
             || '),'
             || quote_literal(NEW.density) || ','
             || quote_literal(NEW.edge) || ','
-            || 'point(' || quote_literal(NEW.transcription_start) || ', ' || quote_literal(NEW.density) || '),'
-            || 'circle(' || quote_literal(center(NEW.density_circle)) || ', ' || quote_literal(radius(NEW.density_circle)) || '),'
+            || 'point(' || quote_literal(NEW.transcription_start) || ', ' 
+                || quote_literal(NEW.density) || '),'
+            || 'circle(' || quote_literal(center(NEW.density_circle)) || ', ' 
+                || quote_literal(radius(NEW.density_circle)) || '),'
             || quote_literal(NEW.refseq)
             || ')'
             ;
@@ -135,7 +158,8 @@ class AtlasSqlGenerator(SqlGenerator):
         -- Trigger function for inserts on main table
         CREATE TRIGGER atlas_transcript_trigger
             BEFORE INSERT ON "{schema_name_prefix}_prep"."atlas_transcript"
-            FOR EACH ROW EXECUTE PROCEDURE {schema_name_prefix}_prep.atlas_transcript_insert_trigger();
+            FOR EACH ROW 
+                EXECUTE PROCEDURE {schema_name_prefix}_prep.atlas_transcript_insert_trigger();
         """.format(schema_name_prefix=self.schema_name_prefix)
         
     def table_main_source(self, suffix=''):
@@ -149,7 +173,9 @@ class AtlasSqlGenerator(SqlGenerator):
             "tag_count" int4 DEFAULT NULL,
             "gaps" int4 DEFAULT NULL
         );
-        """.format(schema_name_prefix=self.schema_name_prefix, table_name=table_name, suffix=suffix)\
+        """.format(schema_name_prefix=self.schema_name_prefix, 
+                   table_name=table_name, 
+                   suffix=suffix)\
         + self.pkey_sequence_sql(self.schema_name_prefix + suffix, table_name)
         
     def table_chrom_source(self, chr_id, suffix=''):
@@ -157,17 +183,27 @@ class AtlasSqlGenerator(SqlGenerator):
         CREATE TABLE "{schema_name_prefix}{suffix}"."atlas_transcript_source_{chr_id}" (
             CHECK ( chromosome_id = {chr_id} )
         ) INHERITS ("{schema_name_prefix}{suffix}"."atlas_transcript_source");
-        CREATE INDEX atlas_transcript_source_{chr_id}_pkey_idx ON "{schema_name_prefix}{suffix}"."atlas_transcript_source_{chr_id}" USING btree (id);
-        CREATE INDEX atlas_transcript_source_{chr_id}_transcript_idx ON "{schema_name_prefix}{suffix}"."atlas_transcript_source_{chr_id}" USING btree (atlas_transcript_id);
-        CREATE INDEX atlas_transcript_source_{chr_id}_sequencing_run_idx ON "{schema_name_prefix}{suffix}"."atlas_transcript_source_{chr_id}" USING btree (sequencing_run_id);
-        """.format(schema_name_prefix=self.schema_name_prefix, chr_id=chr_id, suffix=suffix)
+        CREATE INDEX atlas_transcript_source_{chr_id}_pkey_idx 
+            ON "{schema_name_prefix}{suffix}"."atlas_transcript_source_{chr_id}" 
+            USING btree (id);
+        CREATE INDEX atlas_transcript_source_{chr_id}_transcript_idx 
+            ON "{schema_name_prefix}{suffix}"."atlas_transcript_source_{chr_id}" 
+            USING btree (atlas_transcript_id);
+        CREATE INDEX atlas_transcript_source_{chr_id}_sequencing_run_idx 
+            ON "{schema_name_prefix}{suffix}"."atlas_transcript_source_{chr_id}" 
+            USING btree (sequencing_run_id);
+        """.format(schema_name_prefix=self.schema_name_prefix, 
+                   chr_id=chr_id, 
+                   suffix=suffix)
         
     def table_trigger_source(self, suffix=''):
         return """
         CREATE OR REPLACE FUNCTION {schema_name_prefix}{suffix}.atlas_transcript_source_insert_trigger()
         RETURNS TRIGGER AS $$
         BEGIN
-            EXECUTE 'INSERT INTO {schema_name_prefix}{suffix}.atlas_transcript_source_' || NEW.chromosome_id || ' VALUES ('
+            EXECUTE 'INSERT INTO 
+            {schema_name_prefix}{suffix}.atlas_transcript_source_' 
+            || NEW.chromosome_id || ' VALUES ('
             || quote_literal(NEW.id) || ','
             || quote_literal(NEW.chromosome_id) || ','
             || quote_literal(NEW.atlas_transcript_id) || ','
@@ -184,8 +220,10 @@ class AtlasSqlGenerator(SqlGenerator):
         -- Trigger function for inserts on main table
         CREATE TRIGGER atlas_transcript_source_trigger
             BEFORE INSERT ON "{schema_name_prefix}{suffix}"."atlas_transcript_source"
-            FOR EACH ROW EXECUTE PROCEDURE {schema_name_prefix}{suffix}.atlas_transcript_source_insert_trigger();
-        """.format(schema_name_prefix=self.schema_name_prefix, suffix=suffix)
+            FOR EACH ROW 
+                EXECUTE PROCEDURE {schema_name_prefix}{suffix}.atlas_transcript_source_insert_trigger();
+        """.format(schema_name_prefix=self.schema_name_prefix, 
+                   suffix=suffix)
         
     def table_main_transcript(self):
         table_name = 'atlas_transcript'
@@ -206,8 +244,11 @@ class AtlasSqlGenerator(SqlGenerator):
             "modified" timestamp(6) NULL DEFAULT NULL,
             "created" timestamp(6) NULL DEFAULT NULL
         );
-        """.format(schema_name_prefix=self.schema_name_prefix, table_name=table_name, suffix=self.staging)\
-        + self.pkey_sequence_sql(self.schema_name_prefix + self.staging, table_name)
+        """.format(schema_name_prefix=self.schema_name_prefix, 
+                   table_name=table_name, 
+                   suffix=self.staging)\
+        + self.pkey_sequence_sql(self.schema_name_prefix + self.staging, 
+                                 table_name)
         
     
     def table_chrom_transcript(self, chr_id):
@@ -215,21 +256,38 @@ class AtlasSqlGenerator(SqlGenerator):
         CREATE TABLE "{schema_name_prefix}{suffix}"."atlas_transcript_{chr_id}" (
             CHECK ( chromosome_id = {chr_id} )
         ) INHERITS ("{schema_name_prefix}{suffix}"."atlas_transcript");
-        CREATE INDEX atlas_transcript_{chr_id}_pkey_idx ON "{schema_name_prefix}{suffix}"."atlas_transcript_{chr_id}" USING btree (id);
-        CREATE INDEX atlas_transcript_{chr_id}_chr_idx ON "{schema_name_prefix}{suffix}"."atlas_transcript_{chr_id}" USING btree (chromosome_id);
-        CREATE INDEX atlas_transcript_{chr_id}_strand_idx ON "{schema_name_prefix}{suffix}"."atlas_transcript_{chr_id}" USING btree (strand);
-        CREATE INDEX atlas_transcript_{chr_id}_score_idx ON "{schema_name_prefix}{suffix}"."atlas_transcript_{chr_id}" USING btree (score);
-        CREATE INDEX atlas_transcript_{chr_id}_distal_idx ON "{schema_name_prefix}{suffix}"."atlas_transcript_{chr_id}" USING btree (distal);
-        CREATE INDEX atlas_transcript_{chr_id}_start_end_idx ON "{schema_name_prefix}{suffix}"."atlas_transcript_{chr_id}" USING gist (start_end);
-        CREATE INDEX atlas_transcript_{chr_id}_start_end_tss_idx ON "{schema_name_prefix}{suffix}"."atlas_transcript_{chr_id}" USING gist (start_end_tss);
-        """.format(schema_name_prefix=self.schema_name_prefix, chr_id=chr_id, suffix=self.staging)
+        CREATE INDEX atlas_transcript_{chr_id}_pkey_idx 
+            ON "{schema_name_prefix}{suffix}"."atlas_transcript_{chr_id}" 
+            USING btree (id);
+        CREATE INDEX atlas_transcript_{chr_id}_chr_idx 
+            ON "{schema_name_prefix}{suffix}"."atlas_transcript_{chr_id}" 
+            USING btree (chromosome_id);
+        CREATE INDEX atlas_transcript_{chr_id}_strand_idx 
+            ON "{schema_name_prefix}{suffix}"."atlas_transcript_{chr_id}" 
+            USING btree (strand);
+        CREATE INDEX atlas_transcript_{chr_id}_score_idx 
+            ON "{schema_name_prefix}{suffix}"."atlas_transcript_{chr_id}" 
+            USING btree (score);
+        CREATE INDEX atlas_transcript_{chr_id}_distal_idx 
+            ON "{schema_name_prefix}{suffix}"."atlas_transcript_{chr_id}" 
+            USING btree (distal);
+        CREATE INDEX atlas_transcript_{chr_id}_start_end_idx 
+            ON "{schema_name_prefix}{suffix}"."atlas_transcript_{chr_id}" 
+            USING gist (start_end);
+        CREATE INDEX atlas_transcript_{chr_id}_start_end_tss_idx 
+            ON "{schema_name_prefix}{suffix}"."atlas_transcript_{chr_id}" 
+            USING gist (start_end_tss);
+        """.format(schema_name_prefix=self.schema_name_prefix, 
+                   chr_id=chr_id, 
+                   suffix=self.staging)
         
     def table_trigger_transcript(self):
         return """
         CREATE OR REPLACE FUNCTION {schema_name_prefix}{suffix}.atlas_transcript_insert_trigger()
         RETURNS TRIGGER AS $$
         BEGIN
-            EXECUTE 'INSERT INTO {schema_name_prefix}{suffix}.atlas_transcript_' || NEW.chromosome_id || ' VALUES ('
+            EXECUTE 'INSERT INTO {schema_name_prefix}{suffix}.atlas_transcript_' 
+            || NEW.chromosome_id || ' VALUES ('
             || quote_literal(NEW.id) || ','
             || quote_literal(NEW.chromosome_id) || ','
             || quote_literal(NEW.strand) || ','
@@ -255,14 +313,16 @@ class AtlasSqlGenerator(SqlGenerator):
             BEFORE INSERT ON "{schema_name_prefix}{suffix}"."atlas_transcript"
             FOR EACH ROW EXECUTE PROCEDURE {schema_name_prefix}{suffix}.atlas_transcript_insert_trigger();
 
-        """.format(schema_name_prefix=self.schema_name_prefix, suffix=self.staging)
+        """.format(schema_name_prefix=self.schema_name_prefix, 
+                   suffix=self.staging)
         
         
     def region_relationship_types(self):
         return """
         CREATE TYPE "{schema_name_prefix}{suffix}"."atlas_transcript_transcription_region_relationship" 
         AS ENUM('contains','is contained by','overlaps with','is equal to');
-        """.format(schema_name_prefix=self.schema_name_prefix, suffix=self.staging)
+        """.format(schema_name_prefix=self.schema_name_prefix, 
+                   suffix=self.staging)
         
     def table_region_association(self, region_type):
         table_name = 'atlas_transcript_{type}'.format(type=region_type)
@@ -274,11 +334,18 @@ class AtlasSqlGenerator(SqlGenerator):
             relationship "{schema_name_prefix}{suffix}"."atlas_transcript_transcription_region_relationship",
             major boolean
         );
-        CREATE INDEX {table_name}_transcript_idx ON "{schema_name_prefix}{suffix}"."{table_name}" USING btree (atlas_transcript_id);
-        CREATE INDEX {table_name}_major_idx ON "{schema_name_prefix}{suffix}"."{table_name}" USING btree (major);
+        CREATE INDEX {table_name}_transcript_idx 
+            ON "{schema_name_prefix}{suffix}"."{table_name}" 
+            USING btree (atlas_transcript_id);
+        CREATE INDEX {table_name}_major_idx 
+            ON "{schema_name_prefix}{suffix}"."{table_name}" 
+            USING btree (major);
         """.format(schema_name_prefix=self.schema_name_prefix, 
-                   table_name=table_name, suffix=self.staging, type=region_type) \
-        + self.pkey_sequence_sql(self.schema_name_prefix + self.staging, table_name)
+                   table_name=table_name, 
+                   suffix=self.staging, 
+                   type=region_type) \
+        + self.pkey_sequence_sql(self.schema_name_prefix + self.staging, 
+                                 table_name)
         
     
     
