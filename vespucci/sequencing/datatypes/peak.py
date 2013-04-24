@@ -11,34 +11,37 @@ from vespucci.utils.database import execute_query
        
 class AtlasPeak(DynamicTable):
     '''
-    From MACS::
-        
-        chr     start   end     length  summit  tags    -10*log10(pvalue)       fold_enrichment
-        
-    From SICER::
-    
-        chrom, start, end, ChIP_island_read_count, CONTROL_island_read_count, p_value, fold_change, FDR_threshold
-    
+    Peaks derived from HOMER, MACS, or Sicer peak-finding software
+    can be loaded in to be compared to transcripts.
     '''
     
-    chromosome      = models.ForeignKey(Chromosome)
-    start           = models.IntegerField(max_length=12)
-    end             = models.IntegerField(max_length=12)
+    chromosome = models.ForeignKey(Chromosome)
+    start = models.IntegerField(max_length=12)
+    end = models.IntegerField(max_length=12)
     
-    start_end       = Int8RangeField(max_length=255, help_text='This is a placeholder for the PostgreSQL range type.') 
+    start_end = Int8RangeField(max_length=255) 
     
-    length          = models.IntegerField(max_length=12)
-    summit          = models.IntegerField(max_length=12)
-    tag_count       = models.DecimalField(max_digits=8, decimal_places=2, null=True, default=None)
-    raw_tag_count   = models.DecimalField(max_digits=8, decimal_places=2, null=True, default=None)
+    length = models.IntegerField(max_length=12)
+    summit = models.IntegerField(max_length=12)
+    tag_count = models.DecimalField(max_digits=8, decimal_places=2, 
+                                    null=True, default=None)
+    raw_tag_count = models.DecimalField(max_digits=8, decimal_places=2, 
+                                        null=True, default=None)
     
-    score               = models.DecimalField(max_digits=8, decimal_places=2, null=True, default=None)
-    p_value             = models.DecimalField(max_digits=6, decimal_places=4, null=True, default=None)
-    p_value_exp         = models.IntegerField(max_length=12, null=True, default=None, help_text='Exponent of 10 in p_value x 10^y')
-    log_ten_p_value     = models.DecimalField(max_digits=10, decimal_places=2, null=True, default=None)
-    fold_enrichment     = models.DecimalField(max_digits=10, decimal_places=2, null=True, default=None)
-    fdr_threshold       = models.DecimalField(max_digits=6, decimal_places=4, null=True, default=None)
-    fdr_threshold_exp   = models.IntegerField(max_length=12, null=True, default=None, help_text='Exponent of 10 in fdr_threshold x 10^y')
+    score = models.DecimalField(max_digits=8, decimal_places=2, 
+                                null=True, default=None)
+    p_value = models.DecimalField(max_digits=6, decimal_places=4, 
+                                  null=True, default=None)
+    p_value_exp = models.IntegerField(max_length=12, null=True, default=None, 
+                            help_text='Exponent of 10 in p_value x 10^y')
+    log_ten_p_value = models.DecimalField(max_digits=10, decimal_places=2, 
+                                          null=True, default=None)
+    fold_enrichment = models.DecimalField(max_digits=10, decimal_places=2, 
+                                          null=True, default=None)
+    fdr_threshold = models.DecimalField(max_digits=6, decimal_places=4, 
+                                        null=True, default=None)
+    fdr_threshold_exp = models.IntegerField(max_length=12, null=True, default=None, 
+                            help_text='Exponent of 10 in fdr_threshold x 10^y')
     
     
     @classmethod        
@@ -75,7 +78,8 @@ class AtlasPeak(DynamicTable):
             NO MAXVALUE
             CACHE 1;
         ALTER SEQUENCE "%s_id_seq" OWNED BY "%s".id;
-        ALTER TABLE "%s" ALTER COLUMN id SET DEFAULT nextval('"%s_id_seq"'::regclass);
+        ALTER TABLE "%s" ALTER COLUMN id 
+            SET DEFAULT nextval('"%s_id_seq"'::regclass);
         ALTER TABLE ONLY "%s" ADD CONSTRAINT %s_pkey PRIMARY KEY (id);
         """ % (cls._meta.db_table, 
                cls._meta.db_table,

@@ -13,11 +13,16 @@ from vespucci.atlas.datatypes.transcript import multiprocess_all_chromosomes,\
     wrap_errors
 
     
-def wrap_partition_tables(cls, chr_list): wrap_errors(cls._create_partition_tables, chr_list)
-def wrap_translate_from_prep(cls, chr_list): wrap_errors(cls._translate_from_prep, chr_list)
-def wrap_set_refseq(cls, chr_list): wrap_errors(cls._set_refseq, chr_list)
-def wrap_insert_matching_tags(cls, chr_list): wrap_errors(cls._insert_matching_tags, chr_list)
-def wrap_add_indices(cls, chr_list): wrap_errors(cls._add_indices, chr_list)        
+def wrap_partition_tables(cls, chr_list): 
+    wrap_errors(cls._create_partition_tables, chr_list)
+def wrap_translate_from_prep(cls, chr_list): 
+    wrap_errors(cls._translate_from_prep, chr_list)
+def wrap_set_refseq(cls, chr_list): 
+    wrap_errors(cls._set_refseq, chr_list)
+def wrap_insert_matching_tags(cls, chr_list): 
+    wrap_errors(cls._insert_matching_tags, chr_list)
+def wrap_add_indices(cls, chr_list): 
+    wrap_errors(cls._add_indices, chr_list)        
     
 class AtlasTag(DynamicTable):
     '''
@@ -30,14 +35,14 @@ class AtlasTag(DynamicTable):
     '''
     prep_table = None
     
-    chromosome              = models.ForeignKey(Chromosome)
-    strand                  = models.IntegerField(max_length=1)
-    start                   = models.IntegerField(max_length=12)
-    end                     = models.IntegerField(max_length=12)
+    chromosome = models.ForeignKey(Chromosome)
+    strand = models.IntegerField(max_length=1)
+    start = models.IntegerField(max_length=12)
+    end = models.IntegerField(max_length=12)
     
-    start_end               = Int8RangeField(max_length=255, help_text='This is a placeholder for the PostgreSQL range type.', null=True)
+    start_end = Int8RangeField(max_length=255, null=True)
     
-    refseq                  = models.NullBooleanField(default=None)
+    refseq = models.NullBooleanField(default=None)
     
      
     @classmethod        
@@ -93,7 +98,8 @@ class AtlasTag(DynamicTable):
             NO MAXVALUE
             CACHE 1;
         ALTER SEQUENCE "%s_id_seq" OWNED BY "%s".id;
-        ALTER TABLE "%s" ALTER COLUMN id SET DEFAULT nextval('"%s_id_seq"'::regclass);
+        ALTER TABLE "%s" ALTER COLUMN id 
+            SET DEFAULT nextval('"%s_id_seq"'::regclass);
         ALTER TABLE ONLY "%s" ADD CONSTRAINT %s_pkey PRIMARY KEY (id);
         """ % (cls._meta.db_table, 
                cls._meta.db_table,
@@ -172,11 +178,19 @@ class AtlasTag(DynamicTable):
         '''
         for chr_id in chr_list:
             update_query = """
-            INSERT INTO "{0}_{chr_id}" (chromosome_id, strand, "start", "end", start_end, refseq)
+            INSERT INTO "{0}_{chr_id}" (chromosome_id, 
+                                        strand, 
+                                        "start", 
+                                        "end", 
+                                        start_end, 
+                                        refseq)
             SELECT * FROM (
-                SELECT {chr_id}, (CASE WHEN prep.strand_char = '-' THEN 1 ELSE 0 END), 
-                prep."start", (prep."start" + char_length(prep.sequence_matched)),
-                int8range(prep."start", (prep."start" + char_length(prep.sequence_matched)), '[]'),
+                SELECT {chr_id}, 
+                (CASE WHEN prep.strand_char = '-' THEN 1 ELSE 0 END), 
+                prep."start", 
+                (prep."start" + char_length(prep.sequence_matched)),
+                int8range(prep."start", 
+                (prep."start" + char_length(prep.sequence_matched)), '[]'),
                 NULL::boolean
             FROM "{1}" prep
             JOIN "{2}" chr ON chr.name = prep.chromosome

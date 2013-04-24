@@ -4,7 +4,8 @@ Created on Sep 24, 2010
 
 @author: karmel
 
-A script capable of reading in a peak file and appropriately denormalizing into DB tables.
+A script capable of reading in a peak file 
+and appropriately denormalizing into DB tables.
 
 Run from the command line.
 
@@ -18,17 +19,22 @@ from pandas.io.parsers import read_csv
 
 class PeakFileParser(VespucciOptionParser):
     options = [
-               make_option('-f', '--file_name',action='store', type='string', dest='file_name', 
+               make_option('-f', '--file_name', action='store', 
+                           type='string', dest='file_name', 
                            help='Path to FASTQ file for processing.'),
-               make_option('-g', '--genome',action='store', type='string', dest='genome', default='mm9', 
-                           help='Currently supported: mm8, mm8r, mm9, hg18, hg18r'),
-               make_option('--project_name',action='store', type='string', dest='project_name',  
+               make_option('-g', '--genome', action='store', 
+                           type='string', dest='genome', default='mm9', 
+                           help='Currently supported: mm9, dm3'),
+               make_option('--project_name', action='store', 
+                           type='string', dest='project_name',  
                            help='Optional name to be used as file prefix for created files.'),
             
-               make_option('--schema_name',action='store', type='string', dest='schema_name',  
+               make_option('--schema_name', action='store', 
+                           type='string', dest='schema_name',  
                            help='Optional name to be used as schema for created DB tables.'),
                
-               make_option('--not_homer',action='store', dest='not_homer', default=False, 
+               make_option('--not_homer', action='store', 
+                           dest='not_homer', default=False, 
                            help='If the input file is not a HOMER peaks file, what is it? (bed, macs, sicer)'),
                            
                ]
@@ -49,7 +55,8 @@ def import_peaks(options, file_name, peaks_file_name):
         if not options.not_homer:
             peak = AtlasPeak.init_from_homer_row(row)
         else:
-            peak = getattr(AtlasPeak, 'init_from_{0}_row'.format(options.not_homer))(row)
+            peak = getattr(AtlasPeak, 
+                           'init_from_{0}_row'.format(options.not_homer))(row)
 
         peak.save()
 
