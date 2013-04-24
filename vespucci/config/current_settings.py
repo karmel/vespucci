@@ -10,8 +10,10 @@ should be set on a run-wide basis.
 #####################################
 # Genomes
 #####################################
-GENOME_CHOICES = {'mm9': {'name':'Mus musculus', 'chromosomes': range(1,23)},
-                  'dm3': {'name':'Drosophila melanogaster', 'chromosomes': range(1,15)}}
+GENOME_CHOICES = {'mm9': {'name':'Mus musculus', 
+                          'chromosomes': range(1,23)},
+                  'dm3': {'name':'Drosophila melanogaster', 
+                          'chromosomes': range(1,15)}}
 
 GENOME = 'mm9'
 

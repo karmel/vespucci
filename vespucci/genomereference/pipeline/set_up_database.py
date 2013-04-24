@@ -11,11 +11,14 @@ from vespucci.config import current_settings
 
 class SetUpDatabaseParser(VespucciOptionParser):
     options = [
-               make_option('-g', '--genome',action='store', type='string', dest='genome', default='mm9', 
-                           help='Currently supported: mm8, mm8r, mm9, hg18, hg18r, dm3'),
-               make_option('-c', '--cell_type',action='store', type='string', dest='cell_type', 
+               make_option('-g', '--genome', action='store', 
+                           type='string', dest='genome', default='mm9', 
+                           help='Currently supported: mm9, dm3'),
+               make_option('-c', '--cell_type', action='store', 
+                           type='string', dest='cell_type', 
                            help='Cell type for this run?'),
-               make_option('--schema_only', action='store_true', dest='schema_only', default=False,
+               make_option('--schema_only', action='store_true', 
+                           dest='schema_only', default=False,
                            help='Only create schema and stop before importing all the data?'),
                 ]
 
