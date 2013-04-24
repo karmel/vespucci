@@ -6,7 +6,10 @@ Created on Nov 15, 2010
 from django.db import transaction, connections
 from vespucci.config import current_settings
 
-def execute_query(query, using='default', return_cursor=False, discard_temp=False):
+def execute_query(query, 
+                  using='default', 
+                  return_cursor=False, 
+                  discard_temp=False):
     connection = connections[using]
     connection.close()
     cursor = connection.cursor()
@@ -16,7 +19,9 @@ def execute_query(query, using='default', return_cursor=False, discard_temp=Fals
     if discard_temp: discard_temp_tables(using=using)
     connection.close()
 
-def execute_query_without_transaction(query, using='default', return_cursor=False):
+def execute_query_without_transaction(query, 
+                                      using='default', 
+                                      return_cursor=False):
     connection = connections[using]
     isolation_level = connection.isolation_level
     connection.close()
@@ -64,6 +69,7 @@ class SqlGenerator(object):
             NO MAXVALUE
             CACHE 1;
         ALTER SEQUENCE "{0}"."{1}_id_seq" OWNED BY "{0}"."{1}".id;
-        ALTER TABLE "{0}"."{1}" ALTER COLUMN id SET DEFAULT nextval('"{0}"."{1}_id_seq"'::regclass);
+        ALTER TABLE "{0}"."{1}" ALTER COLUMN id 
+            SET DEFAULT nextval('"{0}"."{1}_id_seq"'::regclass);
         ALTER TABLE ONLY "{0}"."{1}" ADD CONSTRAINT {1}_pkey PRIMARY KEY (id);
         """.format(schema_name, table_name, user=self.user)

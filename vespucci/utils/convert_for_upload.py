@@ -25,8 +25,12 @@ class TagFileConverter(object):
 		'''
 		Use samtools to convert BAM to SAM first if necessary.
 		'''
-		output = output_file or (file_name[-4:] == '.bam' and file_name.replace('bam', 'sam')) or (file_name + '.sam')
-		subprocess.check_call('samtools view -h -o {0} {1}'.format(output, file_name), shell=True)
+		output = output_file or (file_name[-4:] == '.bam' \
+								and file_name.replace('bam', 'sam')) \
+				or (file_name + '.sam')
+		subprocess.check_call('samtools view -h -o {0} {1}'.format(
+														output, file_name), 
+							shell=True)
 		return output
 	
 	def convert_sam_file(self, file_name, output_file=None, min_map_quality=10):
@@ -87,7 +91,8 @@ class TagFileConverter(object):
 			
 			pos = int(fields[3]) - 1
 			
-			to_write = map(str, [strand, fields[2], pos, fields[9]]) # Strand, chr, position, matched sequence
+			# Strand, chr, position, matched sequence
+			to_write = map(str, [strand, fields[2], pos, fields[9]]) 
 			self.write_line(to_write, o1)
 			
 		o1.close()
@@ -113,12 +118,15 @@ class TagFileConverter(object):
 		return output
 	
 	def write_line(self, line_to_write, output):
-		if line_to_write: output.write('\t'.join(line_to_write).strip('\n') + '\n')
+		if line_to_write: 
+			output.write('\t'.join(line_to_write).strip('\n') + '\n')
 	
 
 if __name__ == '__main__':
 	try: file_name = sys.argv[1]
-	except IndexError: raise Exception('Please provide a file name for your mapped tag file. It should be a BOWTIE, BAM, or SAM file.')
+	except IndexError: 
+		raise Exception('Please provide a file name for your mapped tag file. '\
+					+ 'It should be a BOWTIE, BAM, or SAM file.')
 	converter = TagFileConverter()
 	output_file = converter.guess_file_type(file_name)
 
