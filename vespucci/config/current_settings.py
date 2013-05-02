@@ -23,7 +23,7 @@ CELL_TYPE = 'Default'
 STAGING = '' # Set to the appropriate suffix during DB staging.
 STAGING_SUFFIX = '_staging'
 
-MAX_EDGE = 100 # Max edge length in 2D between two proto-transcripts
+MAX_EDGE = 500 # Max edge length in 2D between two proto-transcripts
 
 #####################################
 # Databases
