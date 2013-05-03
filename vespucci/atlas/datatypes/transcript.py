@@ -30,7 +30,7 @@ MAX_STITCHING_GAP = MAX_GAP
 # Number of tags per DENSITY_MULTIPLIER bp to get full allowed edge length
 EDGE_SCALING_FACTOR = 5
 # Scaling factor on density-- think of as bps worth of tags to consider
-DENSITY_MULTIPLIER = 5000
+DENSITY_MULTIPLIER = 50000
 # Tags in transcripts that only appear in one run must be 
 # greater than this to be included in edge drawing
 MIN_ONE_RUN_TAGS = 3
