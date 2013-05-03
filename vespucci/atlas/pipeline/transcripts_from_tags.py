@@ -97,7 +97,8 @@ if __name__ == '__main__':
     elif options.set_density:
         cell_base.atlas_transcript.set_density(
                                 allow_extended_gaps=allow_extended_gaps,
-                                extension_percent=options.extension_percent)
+                                extension_percent=options.extension_percent,
+                                null_only=False)
 
     if options.stitch_processes:
         current_settings.ALLOWED_PROCESSES = curr_processes
