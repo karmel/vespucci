@@ -6,6 +6,7 @@ Created on Sep 24, 2010
 This module serves as a singleton settings object, for settings that
 should be set on a run-wide basis.
 '''
+import os
 
 #####################################
 # Genomes
@@ -28,13 +29,18 @@ MAX_EDGE = 500 # Max edge length in 2D between two proto-transcripts
 #####################################
 # Databases
 #####################################
+# Password should be stored in directory above main package,
+# in a file called .database_password
+current_dir = os.path.dirname(__file__)
+password = file(os.path.join(current_dir, '../../.database_password')).read()
+password = password.strip('\n').strip()
 CURRENT_SCHEMA = 'current_projects'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': 'vespucci',
         'USER': 'vespucci_user',
-        'PASSWORD': 'I#found#Waldo',
+        'PASSWORD': password,
         'HOST': 'localhost',
         'PORT': '5432',
     },
