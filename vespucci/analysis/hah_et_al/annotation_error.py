@@ -40,13 +40,13 @@ class TranscriptEvaluator(object):
         ref = data[range(len(self.colnames))]
         ref.columns = self.colnames
         # Chr in first col?
-        if ref['chr'][0] != 'chr':
+        if ref['chr'][0][:3] != 'chr':
             raise Exception('First column is missing chromosome data.')
         # Convert strand to int.
         if ref['strand'][0] in ('+','-'):
             ref['strand'] = map(int, ref['strand'] == '-')
         
-        ref = ref.sort['chr','start','end','strand']
+        ref = ref.sort(['chr','start','end','strand'])
         
         # Separated by chr, strand 
         return ref.groupby(['chr','strand'])
@@ -97,16 +97,17 @@ class TranscriptEvaluator(object):
         count = 0
         for (chr, strand), group in broken:
             # Retrieve relevant targets
-            targets = breaking[(chr, strand)]
+            try: targets = breaking.get_group((chr, strand))
+            except KeyError: continue # No target transcripts to count 
             
             for _, ref in group.iterrows():
                 # Get first transcript end after reference transcript start
-                end_past_start = targets[targets['end'] >= ref['start']][-1:]
+                end_past_start = targets[targets['end'] >= ref['start']][:1]
                 # Get last transcript start before reference transcript end
-                start_before_end = targets[targets['start'] <= ref['end']][:1]
+                start_before_end = targets[targets['start'] <= ref['end']][-1:]
                 
                 # If they don't exist, we're safe; pass to next loop.
-                if not end_past_start or start_before_end: continue
+                if end_past_start.empty or start_before_end.empty: continue
                 
                 # If first start and last end are same transcript, we're safe.
                 #     [----------------------]
@@ -118,9 +119,9 @@ class TranscriptEvaluator(object):
                 #     [----------------------]
                 # [-------------] [-------------]
                 
-                if end_past_start['end'][0] <= ref['end'] \
-                    and start_before_end['start'][0] >= ref['start']:
+                if end_past_start['end'].values[0] <= ref['end'] \
+                    and start_before_end['start'].values[0] >= ref['start']:
                         count += 1
                 
-        
+        return count
     
