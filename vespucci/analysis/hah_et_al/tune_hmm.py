@@ -27,8 +27,8 @@ import sys
 
 class HMMTuner(object):
     r_path = os.path.abspath('scripts/run_hmm.R')
-    lts_probs = [-100, -150,]# -200, -250, -300, -500]
-    uts = [5, 10,]# 15, 20]
+    lts_probs = [-100, -150, -200, -250, -300, -500]
+    uts = [5, 10, 15, 20]
     reference = None    
         
     def loop_eval_hmm(self):
