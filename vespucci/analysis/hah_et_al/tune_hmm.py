@@ -46,7 +46,11 @@ class HMMTuner(object):
         for prob in self.lts_probs:
             for shape in self.uts:
                 path = 'data/output/hmm_transcripts_{}_{}.txt'.format(prob, shape)
-                data = pandas.read_csv(path, sep='\t', header=True)
+                data = pandas.read_csv(path, sep='\t', header=None)
+                data = data[[0,1,2,5]]
+                data.columns = TranscriptEvaluator.colnames
+                print data.columns
+                print data.head()
                 error = self.eval_transcripts(data)
                 error_matrix[prob].ix[shape] = error
         print error_matrix
@@ -61,6 +65,7 @@ class HMMTuner(object):
         
         # Bed has chr, start, end, ., ., strand
         refseq = refseq[[0,1,2,5]]
+        refseq.columns = TranscriptEvaluator.colnames
         self.reference = refseq
         
     def eval_transcripts(self, data):
@@ -71,7 +76,7 @@ class HMMTuner(object):
         evaluator = TranscriptEvaluator()
         evaluator.set_reference(self.reference)
         evaluator.set_target(data)
-        evaluator.get_summed_error()
+        return evaluator.get_summed_error()
         
     def loop_run_hmm(self):
         '''
