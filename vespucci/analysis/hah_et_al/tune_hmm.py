@@ -20,14 +20,54 @@ R library is called GROseq, and is run from an R script here.
 from __future__ import division
 import os
 import subprocess
+from vespucci.analysis.hah_et_al.annotation_error import TranscriptEvaluator
+from vespucci.utils.scripting import get_vespucci_path
+import pandas
 
 class HMMTuner(object):
     r_path = os.path.abspath('scripts/run_hmm.R')
     lts_probs = [50, 100, 150, 200, 250, 300, 500]
     uts = [1, 5, 10, 15, 20]
+    reference = None
     
-    
-    def loop_hmm(self):
+    def setup(self):
+        self.set_reference_data()
+        
+        
+    def loop_eval_hmm(self):
+        rows = [pandas.Series([0]*len(self.lts_probs), name=shape)
+                    for shape in xrange(len(self.uts))]
+        error_matrix = pandas.DataFrame(rows, columns=self.lts_probs)
+        for prob in self.lts_probs:
+            for shape in self.uts:
+                path = 'data/output/hmm_transcripts_{}_{}.txt'.format(prob, shape)
+                data = pandas.read_csv(path, sep='\t', header=True)
+                error = self.eval_transcripts(data)
+                error_matrix[prob].ix[shape]
+                
+    def set_reference_data(self):
+        '''
+        Use mm9.bed as reference data for all comparisons.
+        '''
+        path_to_file = os.path.join(get_vespucci_path(),
+                       'genomereference/pipeline/data/mm9/mm9.bed')
+        refseq = pandas.read_csv(path_to_file, header=None, sep='\t')
+        
+        # Bed has chr, start, end, ., ., strand
+        refseq = refseq[[0,1,2,5]]
+        self.reference = refseq
+        
+    def eval_transcripts(self, data):
+        '''
+        For passed set of transcripts, evaluate using error
+        methods defined in Hah et al. 
+        '''
+        evaluator = TranscriptEvaluator()
+        evaluator.set_reference(self.reference)
+        evaluator.set_target(data)
+        evaluator.get_summed_error()
+        
+    def loop_run_hmm(self):
         '''
         Loop over set of parameters for -log transition prob and shape.
         Run HMM with m x n parameter possibilities.
@@ -42,7 +82,8 @@ class HMMTuner(object):
         '''
         subprocess.check_call('{} --args {} {}'.format(self.r_path, 
                                                        lt_prob, 
-                                                       uts), shell=True)
+                                                       uts), 
+                              shell=True)
     
 if __name__ == '__main__':
     
