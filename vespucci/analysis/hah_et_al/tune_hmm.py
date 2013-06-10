@@ -47,4 +47,4 @@ class HMMTuner(object):
 if __name__ == '__main__':
     
     tuner = HMMTuner()
-    tuner.run_hmm(100, 10)
+    tuner.loop_hmm()
