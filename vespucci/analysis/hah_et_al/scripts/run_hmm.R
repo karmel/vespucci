@@ -4,11 +4,13 @@ library(GROseq)
 
 # Get parameters
 args = commandArgs(trailing=TRUE)
-lt_prob = args[1]
-uts = args[2]
+lt_prob = as.integer(args[2])
+uts = as.integer(args[3])
+print(paste('Using LtProbB:', lt_prob, sep=' '))
+print(paste('Using UTS:', uts, sep=' '))
 
 # Get data
-data_path = '../data/notx_chrX.txt'
+data_path = 'data/notx_chrX.txt'
 data = read.table(data_path, header=TRUE, sep='\t')
 
 # Run HMM with passed params
