@@ -1,3 +1,5 @@
+#!/usr/bin/Rscript
+
 library(GROseq)
 
 # Get parameters

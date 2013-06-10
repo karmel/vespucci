@@ -17,10 +17,28 @@ a shape setting of 5 and a –log transition probability of 200."
 
 R library is called GROseq, and is run from an R script here.
 '''
+import subprocess
 
 class HMMTuner(object):
     r_path = 'scripts/run_hmm.R'
     lts_probs = [50, 100, 150, 200, 250, 300, 500]
     uts = [1, 5, 10, 15, 20]
     
+    
+    def loop_hmm(self):
+        '''
+        Loop over set of parameters for -log transition prob and shape.
+        Run HMM with m x n parameter possibilities.
+        '''
+        for prob in self.lts_probs:
+            for shape in self.uts:
+                self.run_hmm(prob, shape)
+    
+    def run_hmm(self, lt_prob, uts):
+        ''' 
+        Run R script with passed args. Output is saved in data dir.
+        '''
+        subprocess.check_call('{} --args {} {}'.format(self.r_path, 
+                                                       lt_prob, 
+                                                       uts))
     
