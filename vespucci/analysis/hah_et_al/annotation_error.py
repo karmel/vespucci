@@ -92,6 +92,8 @@ class TranscriptEvaluator(object):
             [--------------------------------] Broken
         [-----------] [---------] [--------]   Breaking
         
+        Note that this is a naive loop, and not efficient.
+        Will suffice for now.
         '''
         count = 0
         for (chr, strand), group in broken:

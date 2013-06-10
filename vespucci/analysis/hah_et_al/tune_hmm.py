@@ -26,8 +26,8 @@ import pandas
 
 class HMMTuner(object):
     r_path = os.path.abspath('scripts/run_hmm.R')
-    lts_probs = [50, 100,]# 150, 200, 250, 300, 500]
-    uts = [1, 5, ] #10, 15, 20]
+    lts_probs = [-100, -150,]# -200, -250, -300, -500]
+    uts = [5, 10,]# 15, 20]
     reference = None    
         
     def loop_eval_hmm(self):
@@ -90,13 +90,13 @@ class HMMTuner(object):
         ''' 
         Run R script with passed args. Output is saved in data dir.
         '''
-        subprocess.check_call('{} --args {} {}'.format(self.r_path, 
-                                                       lt_prob, 
-                                                       uts), 
+        cmd = '{} --args {} {}'.format(self.r_path, lt_prob, uts)
+        print 'Running ', cmd
+        subprocess.check_call(cmd, 
                               shell=True)
     
 if __name__ == '__main__':
     
     tuner = HMMTuner()
-    #tuner.loop_run_hmm()
-    tuner.loop_eval_hmm()
+    tuner.loop_run_hmm()
+    #tuner.loop_eval_hmm()
