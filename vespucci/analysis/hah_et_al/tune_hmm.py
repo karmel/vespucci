@@ -26,24 +26,30 @@ import pandas
 
 class HMMTuner(object):
     r_path = os.path.abspath('scripts/run_hmm.R')
-    lts_probs = [50, 100, 150, 200, 250, 300, 500]
-    uts = [1, 5, 10, 15, 20]
-    reference = None
-    
-    def setup(self):
-        self.set_reference_data()
-        
+    lts_probs = [50, 100,]# 150, 200, 250, 300, 500]
+    uts = [1, 5, ] #10, 15, 20]
+    reference = None    
         
     def loop_eval_hmm(self):
-        rows = [pandas.Series([0]*len(self.lts_probs), name=shape)
-                    for shape in xrange(len(self.uts))]
+        '''
+        Read in generated HMM transcript files and evaluate
+        with summed error. Return error matrix.
+        '''
+        if not self.reference:
+            self.set_reference_data()
+            
+        # Create error matrix, with uts as rows and lt_probs as cols
+        rows = [pandas.Series([0], name=shape) for shape in self.uts]
         error_matrix = pandas.DataFrame(rows, columns=self.lts_probs)
+        
+        # Iterate through all parameters, m x n
         for prob in self.lts_probs:
             for shape in self.uts:
                 path = 'data/output/hmm_transcripts_{}_{}.txt'.format(prob, shape)
                 data = pandas.read_csv(path, sep='\t', header=True)
                 error = self.eval_transcripts(data)
-                error_matrix[prob].ix[shape]
+                error_matrix[prob].ix[shape] = error
+        print error_matrix
                 
     def set_reference_data(self):
         '''
@@ -88,4 +94,5 @@ class HMMTuner(object):
 if __name__ == '__main__':
     
     tuner = HMMTuner()
-    tuner.loop_hmm()
+    #tuner.loop_run_hmm()
+    tuner.loop_eval_hmm()
