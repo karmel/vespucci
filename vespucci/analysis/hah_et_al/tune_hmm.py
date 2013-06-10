@@ -46,11 +46,10 @@ class HMMTuner(object):
         for prob in self.lts_probs:
             for shape in self.uts:
                 path = 'data/output/hmm_transcripts_{}_{}.txt'.format(prob, shape)
-                data = pandas.read_csv(path, sep='\t', header=None)
+                data = pandas.read_csv(path, sep='\t', header=True)
                 data = data[[0,1,2,5]]
                 data.columns = TranscriptEvaluator.colnames
-                print data.columns
-                print data.head()
+
                 error = self.eval_transcripts(data)
                 error_matrix[prob].ix[shape] = error
         print error_matrix
@@ -61,7 +60,7 @@ class HMMTuner(object):
         '''
         path_to_file = os.path.join(get_vespucci_path(),
                        'genomereference/pipeline/data/mm9/mm9.bed')
-        refseq = pandas.read_csv(path_to_file, header=None, sep='\t')
+        refseq = pandas.read_csv(path_to_file, header=True, sep='\t')
         
         # Bed has chr, start, end, ., ., strand
         refseq = refseq[[0,1,2,5]]

@@ -92,19 +92,18 @@ class TranscriptEvaluator(object):
             [--------------------------------] Broken
         [-----------] [---------] [--------]   Breaking
         
-        @todo: Test cases...
         '''
         count = 0
         for (chr, strand), group in broken:
             # Retrieve relevant targets
-            try: targets = breaking.get_group((chr, strand))
+            try: breakers = breaking.get_group((chr, strand))
             except KeyError: continue # No target transcripts to count 
             
             for _, ref in group.iterrows():
                 # Get first transcript end after reference transcript start
-                end_past_start = targets[targets['end'] >= ref['start']][:1]
+                end_past_start = breakers[breakers['end'] >= ref['start']][:1]
                 # Get last transcript start before reference transcript end
-                start_before_end = targets[targets['start'] <= ref['end']][-1:]
+                start_before_end = breakers[breakers['start'] <= ref['end']][-1:]
                 
                 # If they don't exist, we're safe; pass to next loop.
                 if end_past_start.empty or start_before_end.empty: continue
