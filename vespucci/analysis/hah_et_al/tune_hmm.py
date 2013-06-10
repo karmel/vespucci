@@ -23,6 +23,7 @@ import subprocess
 from vespucci.analysis.hah_et_al.annotation_error import TranscriptEvaluator
 from vespucci.utils.scripting import get_vespucci_path
 import pandas
+import sys
 
 class HMMTuner(object):
     r_path = os.path.abspath('scripts/run_hmm.R')
@@ -98,5 +99,5 @@ class HMMTuner(object):
 if __name__ == '__main__':
     
     tuner = HMMTuner()
-    tuner.loop_run_hmm()
-    #tuner.loop_eval_hmm()
+    if 'build' in sys.argv: tuner.loop_run_hmm()
+    tuner.loop_eval_hmm()
