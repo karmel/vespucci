@@ -19,11 +19,12 @@ R library is called GROseq, and is run from an R script here.
 '''
 from __future__ import division
 import os
+import sys
+import pandas
 import subprocess
 from vespucci.analysis.hah_et_al.annotation_error import TranscriptEvaluator
 from vespucci.utils.scripting import get_vespucci_path
-import pandas
-import sys
+
 
 class HMMTuner(object):
     r_path = os.path.abspath('scripts/run_hmm.R')
