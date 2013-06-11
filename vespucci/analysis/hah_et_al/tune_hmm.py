@@ -28,8 +28,9 @@ from vespucci.utils.scripting import get_vespucci_path
 
 class HMMTuner(object):
     r_path = os.path.abspath('scripts/run_hmm.R')
-    lts_probs = [-100, -150, -200, -250, -300, -500]
-    uts = [5, 10, 15, 20]
+    data_path = 'data/notx_chr1.txt'
+    lts_probs = [-50, -100, -150, -200, -250, -300]
+    uts = [1, 5, 10, 15]
     reference = None    
         
     def loop_eval_hmm(self):
@@ -92,7 +93,10 @@ class HMMTuner(object):
         ''' 
         Run R script with passed args. Output is saved in data dir.
         '''
-        cmd = '{} --args {} {}'.format(self.r_path, lt_prob, uts)
+        cmd = '{} --args "{}" {} {}'.format(self.r_path, 
+                                          self.data_path,
+                                          lt_prob, 
+                                          uts)
         print 'Running ', cmd
         subprocess.check_call(cmd, 
                               shell=True)

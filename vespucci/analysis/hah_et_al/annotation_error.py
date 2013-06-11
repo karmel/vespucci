@@ -59,9 +59,16 @@ class TranscriptEvaluator(object):
         # the fraction of target transcripts that run together references.
         
         '''
+        total_targets = self.target.size().sum()
+        # We only want to count reference chr, strands for which we have targets.
+        # This is to ensure the two error elements are equally weighted.
+        total_ref = self.reference.size()[self.target.groups.keys()].sum()
         
-        broken_frac = self.count_broken_reference()#/self.reference.size().sum()
-        run_frac = self.count_run_together_reference()#/self.target.size().sum()
+        broken = self.count_broken_reference()
+        broken_frac = broken/total_ref
+        run_together = self.count_run_together_reference()
+        run_frac = run_together/total_targets
+        print broken, broken_frac, total_ref, run_together, run_frac, total_targets
         return broken_frac + run_frac
     
     def count_broken_reference(self):
