@@ -60,8 +60,8 @@ class TranscriptEvaluator(object):
         
         '''
         
-        broken_frac = self.count_broken_reference()/self.reference.size().sum()
-        run_frac = self.count_run_together_reference()/self.target.size().sum()
+        broken_frac = self.count_broken_reference()#/self.reference.size().sum()
+        run_frac = self.count_run_together_reference()#/self.target.size().sum()
         return broken_frac + run_frac
     
     def count_broken_reference(self):
