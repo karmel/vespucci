@@ -23,14 +23,14 @@ import sys
 import pandas
 import subprocess
 from vespucci.analysis.hah_et_al.annotation_error import TranscriptEvaluator
-from vespucci.utils.scripting import get_vespucci_path
 
 
 class HMMTuner(object):
     r_path = os.path.abspath('scripts/run_hmm.R')
+    refseq_path = 'data/refseq_mm9.bed'
     data_path = 'data/notx_chr1.txt'
-    lts_probs = [-50, -100, -150, -200, -250, -300]
-    uts = [1, 5, 10, 15]
+    lts_probs = [-100, -150, -200, -250, -300, -500]
+    uts = [5, 10, 15, 20]
     reference = None    
         
     def loop_eval_hmm(self):
@@ -61,9 +61,7 @@ class HMMTuner(object):
         '''
         Use mm9.bed as reference data for all comparisons.
         '''
-        path_to_file = os.path.join(get_vespucci_path(),
-                       'genomereference/pipeline/data/mm9/mm9.bed')
-        refseq = pandas.read_csv(path_to_file, header=True, sep='\t')
+        refseq = pandas.read_csv(self.refseq_path, header=True, sep='\t')
         
         # Bed has chr, start, end, ., ., strand
         refseq = refseq[[0,1,2,5]]
