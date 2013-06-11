@@ -77,7 +77,7 @@ class HMMTuner(TranscriptComparer):
 
                 error = self.eval_transcripts(data)
                 error_matrix[prob].ix[shape] = error
-        print error_matrix
+        return error_matrix
                 
         
     def loop_run_hmm(self):
@@ -97,7 +97,6 @@ class HMMTuner(TranscriptComparer):
                                           self.data_path,
                                           lt_prob, 
                                           uts)
-        print 'Running ', cmd
         subprocess.check_call(cmd, 
                               shell=True)
     
@@ -105,4 +104,4 @@ if __name__ == '__main__':
     
     tuner = HMMTuner()
     if 'build' in sys.argv: tuner.loop_run_hmm()
-    tuner.loop_eval_hmm()
+    print tuner.loop_eval_hmm()

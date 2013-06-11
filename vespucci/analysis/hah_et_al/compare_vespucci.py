@@ -28,7 +28,7 @@ class HMMTuner(TranscriptComparer):
         data = self.get_data(chr)
         
         error = self.eval_transcripts(data)
-        print error
+        return error
         
     def get_data(self, chr='chr1'):
         data = pandas.read_csv(self.data_path, header=0, sep='\t')
@@ -38,4 +38,4 @@ class HMMTuner(TranscriptComparer):
 if __name__ == '__main__':
     
     tuner = HMMTuner()
-    tuner.compare_to_refseq()
+    print tuner.compare_to_refseq()
