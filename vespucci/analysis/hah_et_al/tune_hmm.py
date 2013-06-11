@@ -24,14 +24,36 @@ import pandas
 import subprocess
 from vespucci.analysis.hah_et_al.annotation_error import TranscriptEvaluator
 
+class TranscriptComparer(object):
+    reference = None
+    def set_reference_data(self):
+        '''
+        Use mm9.bed as reference data for all comparisons.
+        '''
+        refseq = pandas.read_csv(self.refseq_path, header=0, sep='\t')
+        
+        # Bed has chr, start, end, ., ., strand
+        refseq = refseq[[0,1,2,5]]
+        refseq.columns = TranscriptEvaluator.colnames
+        self.reference = refseq
+        
+    def eval_transcripts(self, data):
+        '''
+        For passed set of transcripts, evaluate using error
+        methods defined in Hah et al. 
+        '''
+        evaluator = TranscriptEvaluator()
+        evaluator.set_reference(self.reference)
+        evaluator.set_target(data)
+        return evaluator.get_summed_error()
 
-class HMMTuner(object):
+    
+class HMMTuner(TranscriptComparer):
     r_path = os.path.abspath('scripts/run_hmm.R')
     refseq_path = 'data/refseq_mm9.bed'
     data_path = 'data/notx_chr1.txt'
     lts_probs = [-100, -150, -200, -250, -300, -500]
-    uts = [5, 10, 15, 20]
-    reference = None    
+    uts = [5, 10, 15, 20]    
         
     def loop_eval_hmm(self):
         '''
@@ -49,7 +71,7 @@ class HMMTuner(object):
         for prob in self.lts_probs:
             for shape in self.uts:
                 path = 'data/output/hmm_transcripts_{}_{}.txt'.format(prob, shape)
-                data = pandas.read_csv(path, sep='\t', header=True)
+                data = pandas.read_csv(path, sep='\t', header=0)
                 data = data[[0,1,2,5]]
                 data.columns = TranscriptEvaluator.colnames
 
@@ -57,26 +79,6 @@ class HMMTuner(object):
                 error_matrix[prob].ix[shape] = error
         print error_matrix
                 
-    def set_reference_data(self):
-        '''
-        Use mm9.bed as reference data for all comparisons.
-        '''
-        refseq = pandas.read_csv(self.refseq_path, header=True, sep='\t')
-        
-        # Bed has chr, start, end, ., ., strand
-        refseq = refseq[[0,1,2,5]]
-        refseq.columns = TranscriptEvaluator.colnames
-        self.reference = refseq
-        
-    def eval_transcripts(self, data):
-        '''
-        For passed set of transcripts, evaluate using error
-        methods defined in Hah et al. 
-        '''
-        evaluator = TranscriptEvaluator()
-        evaluator.set_reference(self.reference)
-        evaluator.set_target(data)
-        return evaluator.get_summed_error()
         
     def loop_run_hmm(self):
         '''
