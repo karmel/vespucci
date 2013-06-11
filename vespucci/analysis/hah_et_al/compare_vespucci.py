@@ -32,10 +32,10 @@ class HMMTuner(TranscriptComparer):
         
     def get_data(self, chr='chr1'):
         data = pandas.read_csv(self.data_path, header=0, sep='\t')
-        data = data[data['chr'] == chr]
+        if chr is not None: data = data[data['chr'] == chr]
         return data
     
 if __name__ == '__main__':
     
     tuner = HMMTuner()
-    print tuner.compare_to_refseq()
+    print tuner.compare_to_refseq(None)

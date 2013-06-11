@@ -40,10 +40,10 @@ class TranscriptEvaluator(object):
         ref = data[range(len(self.colnames))]
         ref.columns = self.colnames
         # Chr in first col?
-        if ref['chr'][0][:3] != 'chr':
+        if ref['chr'].values[0][:3] != 'chr':
             raise Exception('First column is missing chromosome data.')
         # Convert strand to int.
-        if ref['strand'][0] in ('+','-'):
+        if ref['strand'].values[0] in ('+','-'):
             ref['strand'] = map(int, ref['strand'] == '-')
         
         ref = ref.sort(['chr','start','end','strand'])
