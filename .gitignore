@@ -1,3 +1,4 @@
 *.pyc
 .database_password
 output/
+input/
