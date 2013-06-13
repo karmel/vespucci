@@ -7,6 +7,12 @@ Run with:
 
 Create SQL queries, then run with:
 for f in *.sql; do psql -U vespucci_user vespucci < $f > ${f}.txt; done;
+for f in *.sql.txt; do sed -i '.clean' -e 's/ //g' $f; done;
+for f in *.clean; do sed -i  -e 's/|/  /g' $f; done;
+# Change spaces in next line to tabs!
+echo  'CHR START END STRAND' >  notx_tags.txt
+for f in *.clean; do sed '$d' < $f | sed '$d' | tail -n +3 >> notx_tags.txt; done;
+rm *.txt
 
 Note that it helps to have a ~/.pgpass file setup.
 
