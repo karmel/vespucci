@@ -52,8 +52,8 @@ class HMMTuner(TranscriptComparer):
     r_path = os.path.abspath('scripts/run_hmm.R')
     refseq_path = 'data/refseq_mm9.bed'
     data_path = 'data/input/notx_tags.txt'
-    lts_probs = [-200, -250]#[-100, -150, -200, -250, -300, -500]
-    uts = [25,30]#[5, 10, 15, 20]    
+    lts_probs = [-100, -150, -200, -250, -300, -500]
+    uts = [5, 10, 15, 20, 25, 30]    
         
     def loop_eval_hmm(self):
         '''
@@ -71,12 +71,16 @@ class HMMTuner(TranscriptComparer):
         for prob in self.lts_probs:
             for shape in self.uts:
                 path = 'data/output/hmm_transcripts_{}_{}.txt'.format(prob, shape)
-                data = pandas.read_csv(path, sep='\t', header=0)
-                data = data[[0,1,2,5]]
-                data.columns = TranscriptEvaluator.colnames
-
-                error = self.eval_transcripts(data)
-                error_matrix[prob].ix[shape] = error
+                try: 
+                    data = pandas.read_csv(path, sep='\t', header=None)
+                    data = data[[0,1,2,5]]
+                    data.columns = TranscriptEvaluator.colnames
+    
+                    error = self.eval_transcripts(data)
+                    error_matrix[prob].ix[shape] = error
+                except IOError:
+                    # No file for this. Skip.
+                    error_matrix[prob].ix[shape] = None
         return error_matrix
                 
         
