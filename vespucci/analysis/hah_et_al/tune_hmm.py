@@ -52,8 +52,9 @@ class HMMTuner(TranscriptComparer):
     r_path = os.path.abspath('scripts/run_hmm.R')
     refseq_path = 'data/refseq_mm9.bed'
     data_path = 'data/input/notx_tags.txt'
-    lts_probs = [-100, -150, -200, -250, -300, -500]
-    uts = [5, 10, 15, 20, 25, 30]    
+    data_path = 'data/input/chr1_tags.sql.txt.clean'
+    lts_probs = [-100, -150, -200, -250, -300]#, -500]
+    uts = [5, 10, 15, 20, 25, 30]# 
         
     def loop_eval_hmm(self):
         '''

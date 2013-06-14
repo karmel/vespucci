@@ -39,6 +39,7 @@ class HMMTuner(TranscriptComparer):
         hmm_data = pandas.read_csv(path, sep='\t', header=None)
         hmm_data = hmm_data[[0,1,2,5]]
         hmm_data.columns = TranscriptEvaluator.colnames
+
         self.reference = hmm_data
         data = self.get_data()
         
@@ -57,4 +58,6 @@ if __name__ == '__main__':
     print 'Error versus HMM (-200, 5):'
     print tuner.compare_to_hmm(-200, 5)
     print 'Error versus HMM (-200, 20):'
-    print tuner.compare_to_hmm(-200, 20)
+    print tuner.compare_to_hmm(-200, 25)
+    print 'Error versus HMM (-100, 5):'
+    print tuner.compare_to_hmm(-100, 5)

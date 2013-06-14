@@ -9,10 +9,11 @@ Create SQL queries, then run with:
 for f in *.sql; do psql -U vespucci_user vespucci < $f > ${f}.txt; done;
 for f in *.sql.txt; do sed -i '.clean' -e 's/ //g' $f; done;
 for f in *.clean; do sed -i  -e 's/|/  /g' $f; done;
+rm *-e
 # Change spaces in next line to tabs!
 echo  'CHR START END STRAND' >  notx_tags.txt
 for f in *.clean; do sed '$d' < $f | sed '$d' | tail -n +3 >> notx_tags.txt; done;
-rm *.txt
+rm *.sql.txt
 
 Note that it helps to have a ~/.pgpass file setup.
 
@@ -63,6 +64,6 @@ ON tag.chromosome_id = chr.id)
 ORDER BY "START" asc;
 '''
 
-for x in xrange(2,23): 
+for x in xrange(1,23): 
     f = open('chr{0}_tags.sql'.format(x), 'w+')
     f.write(s.format(x))
