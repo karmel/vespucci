@@ -30,7 +30,7 @@ class HMMTuner(TranscriptComparer):
         error = self.eval_transcripts(data)
         return error
     
-    def compare_to_hmm(self, lt_prob=-200, uts=5):
+    def compare_vespucci_to_hmm(self, lt_prob=-200, uts=5):
         '''
         Take Vespucci data for passed chromosome and calculate error versus
         HMM transcripts for passed lt_prob and uts.
@@ -45,6 +45,21 @@ class HMMTuner(TranscriptComparer):
         
         error = self.eval_transcripts(data)
         return error
+    
+    def compare_hmm_to_vespucci(self, lt_prob=-200, uts=5):
+        '''
+        Take Vespucci data for passed chromosome and calculate error versus
+        HMM transcripts for passed lt_prob and uts.
+        '''
+        path = 'data/output/hmm_transcripts_{}_{}.txt'.format(lt_prob, uts)
+        hmm_data = pandas.read_csv(path, sep='\t', header=None)
+        hmm_data = hmm_data[[0,1,2,5]]
+        hmm_data.columns = TranscriptEvaluator.colnames
+
+        self.reference = self.get_data()
+        
+        error = self.eval_transcripts(hmm_data)
+        return error
         
     def get_data(self):
         return pandas.read_csv(self.data_path, header=0, sep='\t')
@@ -55,9 +70,16 @@ if __name__ == '__main__':
     tuner = HMMTuner()
     print 'Error versus Refseq:'
     print tuner.compare_to_refseq()
-    print 'Error versus HMM (-200, 5):'
-    print tuner.compare_to_hmm(-200, 5)
-    print 'Error versus HMM (-200, 20):'
-    print tuner.compare_to_hmm(-200, 25)
-    print 'Error versus HMM (-100, 5):'
-    print tuner.compare_to_hmm(-100, 5)
+    print 'Vespucci error versus HMM (-200, 5):'
+    print tuner.compare_vespucci_to_hmm(-200, 5)
+    print 'Vespucci error versus HMM (-200, 25):'
+    print tuner.compare_vespucci_to_hmm(-200, 25)
+    print 'Vespucci error versus HMM (-200, 20):'
+    print tuner.compare_vespucci_to_hmm(-200, 20)
+
+    print 'Hmm error versus Vespucci (-200, 5):'
+    print tuner.compare_hmm_to_vespucci(-200, 5)
+    print 'Hmm error versus Vespucci (-200, 25):'
+    print tuner.compare_hmm_to_vespucci(-200, 25)
+    print 'Hmm error versus Vespucci (-200, 20):'
+    print tuner.compare_hmm_to_vespucci(-200, 20)
