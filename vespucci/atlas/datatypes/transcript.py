@@ -242,8 +242,8 @@ class AtlasTranscript(TranscriptBase):
         for chr_id in chr_list:
             print 'Adding transcripts for chromosome %d' % chr_id
             query = """
-                SELECT atlas_%s_%s_prep.save_transcripts_from_sequencing_run(
-                    {}, {},'{}', {}, {}, {}, {}, {}, NULL, NULL);
+                SELECT atlas_{}_{}_prep.save_transcripts_from_sequencing_run(
+                    {}, {}, '{}', {}, {}, {}, {}, {}, NULL, NULL);
                 """.format(current_settings.GENOME,
                            current_settings.CELL_TYPE.lower(),
                            sequencing_run.id, 
