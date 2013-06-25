@@ -14,7 +14,10 @@ import os
 GENOME_CHOICES = {'mm9': {'name':'Mus musculus', 
                           'chromosomes': range(1,23)},
                   'dm3': {'name':'Drosophila melanogaster', 
-                          'chromosomes': range(1,15)}}
+                          'chromosomes': range(1,15)},
+                  'hg19': {'name':'Homo sapiens', 
+                          'chromosomes': range(1,25)},
+                  }
 
 GENOME = 'mm9'
 
