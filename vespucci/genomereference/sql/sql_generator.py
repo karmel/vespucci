@@ -205,7 +205,7 @@ class GenomeResourcesSqlGenerator(SqlGenerator):
             
             # We want length inclusive, not last basepair,
             # so add 1 to the value from UCSC, which is last basepair
-            fields[1] = fields[1] + 1
+            fields[1] = int(fields[1]) + 1
             output.append("""
                 INSERT INTO "{schema_name}"."{table_name}" (name, length) 
                     VALUES ('{0}', {1});
