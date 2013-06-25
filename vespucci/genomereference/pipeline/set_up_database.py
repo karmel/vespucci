@@ -36,7 +36,8 @@ if __name__ == '__main__':
     execute_query(q)
     if not options.schema_only and genome in current_settings.GENOME_CHOICES.keys(): 
         q_set = generator.fill_tables()
-        for q in q_set: execute_query(q)
+        for q in q_set: 
+            if q: execute_query(q)
     
     # And cleanup the import tables:
     execute_query(generator.cleanup())

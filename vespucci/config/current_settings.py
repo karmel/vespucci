@@ -16,7 +16,7 @@ GENOME_CHOICES = {'mm9': {'name':'Mus musculus',
                   'dm3': {'name':'Drosophila melanogaster', 
                           'chromosomes': range(1,15)},
                   'hg19': {'name':'Homo sapiens', 
-                          'chromosomes': range(1,25)},
+                          'chromosomes': range(1,26)},
                   }
 
 GENOME = 'mm9'
