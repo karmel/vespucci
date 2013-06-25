@@ -356,9 +356,14 @@ class GenomeResourcesSqlGenerator(SqlGenerator):
     def import_ncrna_org_regions(self):
         path_to_file = os.path.join(get_vespucci_path(),
                        'genomereference/pipeline/data/{0}/{0}.bed'.format(self.genome))
+        
+        output = []
         try: 
             f_bed = open(path_to_file)
-            output = []
+        except IOError: 
+            # No ncRNA regions for this genome. Silently skip.
+            pass
+        else:
             for l in f_bed:
                 fields = l.split('\t')
                 #chr8    119597933       119597953       FR408228        1000    +       
@@ -368,10 +373,6 @@ class GenomeResourcesSqlGenerator(SqlGenerator):
                         VALUES ('{0}', '{1}', '{2}', {3}, {4});
                     """.format(fields[3], fields[0], fields[5], fields[1], fields[2],
                                schema_name=self.schema_name))
-            
-        except IOError: 
-            # No ncRNA regions for this genome. Silently skip.
-            pass
         
         s = """
         CREATE TABLE "{schema_name}"."bed" (
