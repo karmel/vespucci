@@ -108,7 +108,8 @@ def _copy_into_table(bowtie_split_dir, f_name):
     except Exception:
         _print('Encountered exception while trying to copy data:\n' 
                + traceback.format_exc())
-        raise
+        _print('Passing silently.')
+        pass
     
 def upload_tag_files(options, file_name, tag_split_dir):
     AtlasTag.create_prep_table(file_name)
