@@ -55,7 +55,7 @@ class AtlasTag(DynamicTable):
         table_sql = """
         CREATE TABLE "%s" (
             strand_char character(1) default NULL,
-            chromosome varchar(20),
+            chromosome varchar(50),
             "start" bigint,
             sequence_matched varchar(100)
         );
