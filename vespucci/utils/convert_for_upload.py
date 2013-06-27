@@ -77,24 +77,28 @@ class TagFileConverter(object):
 		for line in f:
 			fields = line.split('\t')
 			
-			if fields[0][0] == '@': continue # Header line
-			if int(fields[1]) == 4: continue # Read did not match
-			
-			bitwise_flag = int(fields[1])
-			if bitwise_flag & 0x100: continue # Not primary alignment
-			# Filter for quality
-			if min_map_quality and int(fields[4]) < min_map_quality: continue
-			
-			strand = '+'
-			if bitwise_flag & 0x10: strand = '-'
-			
-			
-			pos = int(fields[3]) - 1
-			
-			# Strand, chr, position, matched sequence
-			to_write = map(str, [strand, fields[2], pos, fields[9]]) 
-			self.write_line(to_write, o1)
-			
+			try:
+				if fields[0][0] == '@': continue # Header line
+				if int(fields[1]) == 4: continue # Read did not match
+				
+				bitwise_flag = int(fields[1])
+				if bitwise_flag & 0x100: continue # Not primary alignment
+				# Filter for quality
+				if min_map_quality and int(fields[4]) < min_map_quality: continue
+				
+				strand = '+'
+				if bitwise_flag & 0x10: strand = '-'
+				
+				
+				pos = int(fields[3]) - 1
+				
+				# Strand, chr, position, matched sequence
+				to_write = map(str, [strand, fields[2], pos, fields[9]]) 
+				self.write_line(to_write, o1)
+			except IndexError:
+				# Corrupted line. Skip.
+				print('Caught index error with line:\n{}'.format(line))
+				continue
 		o1.close()
 		return output
 	
