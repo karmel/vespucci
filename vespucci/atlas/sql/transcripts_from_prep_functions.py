@@ -192,45 +192,6 @@ BEGIN
 END;
 $$ LANGUAGE 'plpgsql';
 
-CREATE OR REPLACE FUNCTION atlas_{0}_{1}{suffix}.calculate_scores_atlasatlas(chr_id integer)
-RETURNS VOID AS $$
-DECLARE
-    total_runs integer;
-    temp_table text;
-BEGIN 
-    -- Tag count is scaled avg and max tags: sqrt(avg_tags * max_tags)
-    -- Score is tag count divided by the lesser of length/1000 and 2*log(length),
-    -- which allows lower tag counts per bp for longer transcripts.
-    
-    total_runs := (SELECT count(DISTINCT sequencing_run_id) FROM atlas_{0}_{1}{suffix}.atlas_transcript_source);
-    
-    temp_table = 'score_table_' || chr_id || '_' || (1000*RANDOM())::int;
-    EXECUTE 'CREATE TEMP TABLE ' || temp_table || ' AS
-        SELECT 
-            transcript.id,
-            SUM(source.tag_count) as sum_tags, MAX(source.tag_count) as max_tags,
-            (transcript.transcription_end - transcript.transcription_start + 1) as width
-        FROM atlas_{0}_{1}{suffix}.atlas_transcript_' || chr_id || ' transcript 
-        JOIN atlas_{0}_{1}{suffix}.atlas_transcript_source_' || chr_id || ' source
-        ON transcript.id = source.atlas_transcript_id
-        JOIN genome_reference_{0}.sequencing_run run
-        ON source.sequencing_run_id = run.id
-        GROUP BY transcript.id, transcript.transcription_end, transcript.transcription_start';
-    EXECUTE 'CREATE INDEX ' || temp_table || '_idx ON ' || temp_table || ' USING btree(id)';
-    
-    EXECUTE 'UPDATE atlas_{0}_{1}{suffix}.atlas_transcript_' || chr_id || ' transcript
-        SET score = GREATEST(0,
-                SQRT((temp_t.sum_tags::numeric/' || total_runs || ')*temp_t.max_tags)
-                /LEAST(GREATEST(1000, temp_t.width)::numeric*LOG(2, GREATEST(200 - temp_t.width,2))/1000, 2*LOG(2, temp_t.width))
-            )
-        FROM ' || temp_table || ' temp_t
-        WHERE transcript.id = temp_t.id';
-
-    RETURN;
-END;
-$$ LANGUAGE 'plpgsql';
-
-
 
 CREATE OR REPLACE FUNCTION atlas_{0}_{1}{suffix}.calculate_scores_rpkm(chr_id integer, field text)
 RETURNS VOID AS $$
@@ -266,18 +227,29 @@ BEGIN
 END;
 $$ LANGUAGE 'plpgsql';
 
-CREATE OR REPLACE FUNCTION atlas_{0}_{1}{suffix}.calculate_scores(chr_id integer)
+
+CREATE OR REPLACE FUNCTION atlas_{0}_{1}{suffix}.calculate_scores_atlas(chr_id integer)
 RETURNS VOID AS $$
-    BEGIN
-        PERFORM atlas_{0}_{1}{suffix}.calculate_scores_atlasatlas(chr_id);
+BEGIN 
+    -- Transformation of RPKM.
+    -- Severely penalizes transcripts less than 200bp long,
+    -- and scales RPKM by log100 of length, such that very long,
+    -- lowly transcribed transcripts get a boost.
+    
+    EXECUTE 'UPDATE atlas_{0}_{1}{suffix}.atlas_transcript_' || chr_id || ' transcript
+        SET score = rpkm*log(100, 
+                            greatest(1,(transcript.transcription_end 
+                                        - transcript.transcription_start + 1) - 200))';
+
     RETURN;
 END;
 $$ LANGUAGE 'plpgsql';
 
-CREATE OR REPLACE FUNCTION atlas_{0}_{1}{suffix}.calculate_rpkm(chr_id integer)
+CREATE OR REPLACE FUNCTION atlas_{0}_{1}{suffix}.calculate_scores(chr_id integer)
 RETURNS VOID AS $$
     BEGIN
         PERFORM atlas_{0}_{1}{suffix}.calculate_scores_rpkm(chr_id, 'rpkm');
+        PERFORM atlas_{0}_{1}{suffix}.calculate_scores_atlas(chr_id);
     RETURN;
 END;
 $$ LANGUAGE 'plpgsql';
