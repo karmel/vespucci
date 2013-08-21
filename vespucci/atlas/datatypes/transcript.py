@@ -35,7 +35,7 @@ DENSITY_MULTIPLIER = 20000
 # greater than this to be included in edge drawing
 MIN_ONE_RUN_TAGS = 3
 # Hide transcripts with scores below this threshold. 
-MIN_SCORE = 2
+MIN_SCORE = 1
 
 def multiprocess_all_chromosomes(func, cls, *args, **kwargs):
     ''' 
