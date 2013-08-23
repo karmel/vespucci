@@ -318,6 +318,9 @@ class GenomeResourcesSqlGenerator(SqlGenerator):
         This can easily be added by downloading the file dm3.bed,
         but is not included in the codebase to avoid bloat.
         
+        The hg19 file was derived from the fRNAdb hg18 file using UCSC's
+        liftOver utility.
+        
         This is hardcoded to work with the fRNAdb download as it is. 
         More flexible import logic can be created here.
         '''

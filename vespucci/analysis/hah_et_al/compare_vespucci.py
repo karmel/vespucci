@@ -68,6 +68,8 @@ class HMMTuner(TranscriptComparer):
 if __name__ == '__main__':
     
     tuner = HMMTuner()
+    # Run for Vespucci data derived as in manuscript
+    print 'Against Vespucci data as designed:'
     print 'Error versus Refseq:'
     print tuner.compare_to_refseq()
     print 'Vespucci error versus HMM (-200, 5):'
@@ -76,3 +78,16 @@ if __name__ == '__main__':
     print tuner.compare_vespucci_to_hmm(-200, 20)
     print 'Vespucci error versus HMM (-100, 5):'
     print tuner.compare_vespucci_to_hmm(-100, 5)
+    
+    # Run for Vespucci data derived without knowledge of RefSeq boundaries
+    tuner.data_path = 'data/notx_vespucci_no_refseq.txt'
+    print 'Against Vespucci data without RefSeq:'
+    print 'Error versus Refseq:'
+    print tuner.compare_to_refseq()
+    print 'Vespucci error versus HMM (-200, 5):'
+    print tuner.compare_vespucci_to_hmm(-200, 5)
+    print 'Vespucci error versus HMM (-200, 20):'
+    print tuner.compare_vespucci_to_hmm(-200, 20)
+    print 'Vespucci error versus HMM (-100, 5):'
+    print tuner.compare_vespucci_to_hmm(-100, 5)
+    

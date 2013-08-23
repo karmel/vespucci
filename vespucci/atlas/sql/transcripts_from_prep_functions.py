@@ -213,8 +213,6 @@ BEGIN
         FROM atlas_{0}_{1}{suffix}.atlas_transcript_' || chr_id || ' transcript 
         JOIN atlas_{0}_{1}{suffix}.atlas_transcript_source_' || chr_id || ' source
         ON transcript.id = source.atlas_transcript_id
-        JOIN genome_reference_{0}.sequencing_run run
-        ON source.sequencing_run_id = run.id
         GROUP BY transcript.id, transcript.transcription_end, transcript.transcription_start';
     EXECUTE 'CREATE INDEX ' || temp_table || '_idx ON ' || temp_table || ' USING btree(id)';
     
