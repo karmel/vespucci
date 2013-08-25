@@ -13,6 +13,7 @@ from __future__ import division
 import pandas
 from vespucci.analysis.hah_et_al.annotation_error import TranscriptEvaluator
 from vespucci.analysis.hah_et_al.tune_hmm import TranscriptComparer
+import sys
 
 
 class HMMTuner(TranscriptComparer):
@@ -68,20 +69,13 @@ class HMMTuner(TranscriptComparer):
 if __name__ == '__main__':
     
     tuner = HMMTuner()
-    # Run for Vespucci data derived as in manuscript
-    print 'Against Vespucci data as designed:'
-    print 'Error versus Refseq:'
-    print tuner.compare_to_refseq()
-    print 'Vespucci error versus HMM (-200, 5):'
-    print tuner.compare_vespucci_to_hmm(-200, 5)
-    print 'Vespucci error versus HMM (-200, 20):'
-    print tuner.compare_vespucci_to_hmm(-200, 20)
-    print 'Vespucci error versus HMM (-100, 5):'
-    print tuner.compare_vespucci_to_hmm(-100, 5)
     
-    # Run for Vespucci data derived without knowledge of RefSeq boundaries
-    tuner.data_path = 'data/notx_vespucci_no_refseq.txt'
-    print 'Against Vespucci data without RefSeq:'
+    try:  tuner.data_path = 'data/' + sys.argv[1]
+    except IndexError: pass
+    
+    # Run for Vespucci data derived with or 
+    # without knowledge of RefSeq boundaries
+    print 'Against Vespucci data in ' + tuner.data_path
     print 'Error versus Refseq:'
     print tuner.compare_to_refseq()
     print 'Vespucci error versus HMM (-200, 5):'

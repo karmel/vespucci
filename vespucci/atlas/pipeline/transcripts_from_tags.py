@@ -88,6 +88,7 @@ if __name__ == '__main__':
     if options.stitch_processes:
         curr_processes = current_settings.ALLOWED_PROCESSES 
         current_settings.ALLOWED_PROCESSES = int(options.stitch_processes)
+        current_settings.CHR_LISTS = None
     if options.stitch:
         cell_base.atlas_transcript.stitch_together_transcripts(
                         allow_extended_gaps=allow_extended_gaps, 
@@ -102,7 +103,8 @@ if __name__ == '__main__':
 
     if options.stitch_processes:
         current_settings.ALLOWED_PROCESSES = curr_processes
-   
+        current_settings.CHR_LISTS = None
+        
     if options.draw_edges:
         cell_base.atlas_transcript.draw_transcript_edges()
     
