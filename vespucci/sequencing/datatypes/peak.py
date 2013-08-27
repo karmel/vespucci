@@ -18,6 +18,7 @@ class AtlasPeak(DynamicTable):
     chromosome = models.ForeignKey(Chromosome)
     start = models.IntegerField(max_length=12)
     end = models.IntegerField(max_length=12)
+    strand = models.IntegerField(max_length=2)
     
     start_end = Int8RangeField(max_length=255) 
     
@@ -58,6 +59,7 @@ class AtlasPeak(DynamicTable):
             chromosome_id int4,
             "start" int8,
             "end" int8,
+            "strand" int2,
             start_end int8range,
             "length" int4,
             summit int8,
@@ -125,6 +127,7 @@ class AtlasPeak(DynamicTable):
         return cls(chromosome=Chromosome.objects.get(name=str(row[1]).strip()),
                      start=int(row[2]),
                      end=int(row[3]),
+                     strand=int(row[4] == '-'),
                      start_end=(int(row[2]), int(row[3])),
                      length=int(row[3]) - int(row[2]),
                      tag_count=str(row[5]),
