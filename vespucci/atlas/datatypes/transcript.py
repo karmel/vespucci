@@ -29,8 +29,6 @@ MAX_GAP = 0
 MAX_STITCHING_GAP = MAX_GAP
 # Number of tags per DENSITY_MULTIPLIER bp to get full allowed edge length
 EDGE_SCALING_FACTOR = 5
-# Scaling factor on density-- think of as bps worth of tags to consider
-DENSITY_MULTIPLIER = 20000
 # Tags in transcripts that only appear in one run must be 
 # greater than this to be included in edge drawing
 MIN_ONE_RUN_TAGS = 3
@@ -253,7 +251,7 @@ class AtlasTranscript(TranscriptBase):
                            TAG_EXTENSION, 
                            current_settings.MAX_EDGE, 
                            EDGE_SCALING_FACTOR, 
-                           DENSITY_MULTIPLIER)
+                           current_settings.DENSITY_MULTIPLIER)
             execute_query(query)
     
     ################################################
@@ -299,7 +297,7 @@ class AtlasTranscript(TranscriptBase):
                                chr_id, 
                                current_settings.MAX_EDGE, 
                                EDGE_SCALING_FACTOR, 
-                               DENSITY_MULTIPLIER, 
+                               current_settings.DENSITY_MULTIPLIER, 
                                allow_extended_gaps and 'true' or 'false',
                                extension_percent,
                                null_only and 'true' or 'false')
@@ -332,7 +330,7 @@ class AtlasTranscript(TranscriptBase):
                            current_settings.CELL_TYPE.lower(),
                            chr_id, current_settings.MAX_EDGE, 
                            EDGE_SCALING_FACTOR, 
-                           DENSITY_MULTIPLIER, 
+                           current_settings.DENSITY_MULTIPLIER, 
                            allow_extended_gaps and 'true' or 'false',
                            extension_percent,
                            null_only and 'true' or 'false')

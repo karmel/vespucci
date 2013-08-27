@@ -57,6 +57,9 @@ class TranscriptsFromTagsParser(VespucciOptionParser):
                make_option('--max_edge', action='store', 
                            dest='max_edge',  
                            help='What value of MAX_EDGE should be used for drawing transcript edges?'),
+               make_option('--density_multiplier', action='store', 
+                           dest='density_multiplier',  
+                           help='What value of DENSITY_MULTIPLIER should be used for scaling density?'),
                 ]
 
 if __name__ == '__main__':
