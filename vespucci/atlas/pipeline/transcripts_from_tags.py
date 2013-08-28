@@ -87,6 +87,8 @@ if __name__ == '__main__':
     
     if options.max_edge is not None: 
         current_settings.MAX_EDGE = options.max_edge
+    if options.density_multiplier is not None: 
+        current_settings.DENSITY_MULTIPLIER = options.density_multiplier
           
     if options.stitch_processes:
         curr_processes = current_settings.ALLOWED_PROCESSES 
