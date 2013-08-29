@@ -28,7 +28,7 @@ STAGING = '' # Set to the appropriate suffix during DB staging.
 STAGING_SUFFIX = '_staging'
 
 MAX_EDGE = 500 # Max edge length in 2D between two proto-transcripts
-DENSITY_MULTIPLIER = 20000 # Scaling factor on density-- bps worth of tags to consider
+DENSITY_MULTIPLIER = 10000 # Scaling factor on density-- bps worth of tags to consider
 
 #####################################
 # Databases
