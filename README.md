@@ -1,4 +1,6 @@
-# Vespucci: a system for building annotated databases of nascent transcripts
+# Vespucci
+
+### A system for building annotated databases of nascent transcripts
 
 Code written by Karmel Allison. Questions? Comments? Concerns? Email karmel@arcaio.com.
 
