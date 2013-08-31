@@ -120,7 +120,7 @@ Once the genome schemas are set up, you can proceed to process and build Vespucc
 	* --project_name: a descriptive label of the experiment in question for your future reference; this will be used in the naming of tag tables, so it should be Postgres-friendly (i.e., no spaces or unusual characters)
 	* --processes: the number of daughter processes to use; three is good for an m1.small Amazon instance
 	
-	Too see other available options, run the add_tags.sh script with --help.
+	Too see other available options, run the add_tags.sh script with `--help`.
 	
 1. Repeat the two steps above for all separate sequencing files. The `groseq` schema that has been added will then have numerous tables-- one for each sequencing run added, with separate partitions for each chromosome.
 
@@ -136,7 +136,7 @@ Once the genome schemas are set up, you can proceed to process and build Vespucc
 	~/Repositories/vespucci/vespucci/vespucci/atlas/pipeline/scripts/transcripts_from_tags.sh -g mm9 -c default --schema_name=groseq --tag_table=tag_groseq_2 --processes=5
 	```
 
-	Importantly, in the usual case, the --tag_table is the same as the --project_name supplied above with "tag_" prepended. However, if for some reason you had manually named tables, --tag_table will work with whatever name you pass it.
+	Importantly, in the usual case, the `--tag_table` is the same as the `--project_name` supplied above with "tag_" prepended. However, if for some reason you had manually named tables, `--tag_table` will work with whatever name you pass it.
 	
 1. Stitch together proto-transcripts. If you are adding a great number of sequencing runs, I recommend running this command at least every ~30 million tags (i.e., after three runs with ten million tags each are added). This helps keep the size of the proto-transcript tables down, which helps Postgres run more efficiently.
 
@@ -144,7 +144,7 @@ Once the genome schemas are set up, you can proceed to process and build Vespucc
 	~/Repositories/vespucci/vespucci/vespucci/atlas/pipeline/scripts/transcripts_from_tags.sh -g mm9 -c default --stitch --stitch_processes=1
 	```
 	
-	The option --stitch_processes indicates how many processes should be used during stitching. Stitching is a very RAM-intensive procedure, so we recommend using only one process at a time on an m1.small node.
+	The option `--stitch_processes` indicates how many processes should be used during stitching. Stitching is a very RAM-intensive procedure, so we recommend using only one process at a time on an m1.small node.
 	
 1. After all runs have been added and stitched, calculate the density for each of the assembled proto-transcripts:
 
@@ -158,7 +158,7 @@ Once the genome schemas are set up, you can proceed to process and build Vespucc
 	~/Repositories/vespucci/vespucci/vespucci/atlas/pipeline/scripts/transcripts_from_tags.sh -g mm9 -c default --draw_edges --score
 	```
 
-	As with all the scripts above, run with --help to see other available options.
+	As with all the scripts above, run with `--help` to see other available options.
 
 
 #### E. Etc.
@@ -169,7 +169,7 @@ You now have database tables built with assembled GRO-seq transcripts, which can
 	
 The **assembled transcripts are in the atlas_mm9_default schema**, in the set of atlas_transcript tables. Please see the publication referenced above for more detail on schema layouts and sample queries in the Supplementary Information.
 
-You can **output a track for viewing on the [UCSC Genome Browser](http://genome.ucsc.edu/)** with the following command, where --output_dir is the location the output files should be stored:
+You can **output a track for viewing on the [UCSC Genome Browser](http://genome.ucsc.edu/)** with the following command, where `--output_dir` is the location the output files should be stored:
 
 	~/Repositories/vespucci/vespucci/vespucci/atlas/pipeline/scripts/transcripts_from_tags.sh -g mm9 -c default --output_dir=/data/www/ucsc/
 
@@ -184,4 +184,4 @@ The generated files will be suffixed with the date. They can then be added as cu
 
 	~/Repositories/vespucci/vespucci/vespucci/sequencing/pipeline/scripts/add_peaks.sh -g mm9 -f /data/sequencing/chipseq_1.txt --schema_name=chipseq --project_name=chipseq_1
 
-Other genomic data types can be added as new tables using the standard PostgreSQL import functionality. In order to allow for easy querying, we suggest adding an indexed column with a chromosome_id that refers back to the `id` column of genome_reference_mm9.chromsome, 
+Other genomic data types can be added as new tables using the standard PostgreSQL import functionality. In order to allow for easy querying, we suggest adding a btree indexed column with a chromosome_id that refers back to the `id` column of `genome_reference_mm9.chromosome` and a gist indexed column that is an `intrange` datatype encompassing the start and end of the genomic entity in question.
