@@ -43,9 +43,9 @@ Notes:
 	* 22 (SSH): 0.0.0.0/0
 	* 80 (HTTP): 0.0.0.0/0
 	* 5432 (Postgres): 0.0.0.0/0
-* When in doubt, the Wizard's default option should suffice.
+* When in doubt, the Wizard's default options should suffice.
 
-#### B. Setting up the Image
+#### B. Setting up your instance
 
 1. Once your instance has been launched, log in as root:
 
@@ -80,6 +80,26 @@ Notes:
 #### C. Installing genome data
 
 Note: skip this section if using an Image with the hg19 or mm9 genomes already installed.
+
+The base image of Vespucci comes with the database set up, but no genome-specific schemas installed. **To install existing genome-specific schemas (hg19, mm9, or dm3):**
+
+1. Log in as the vespucci user:
+
+    ```
+    su -l vespucci
+    ```
+
+1. Install the genome of interest. In this example, I am using 'mm9'; simply replace that with 'hg19' or 'dm3' as desired. The option '-c default' here will use a default schema name; if you wanted to specify cell type or some other option of interest, you could use any label here (i.e., '-c es_cell').
+
+    ```
+    ~/Repositories/vespucci/vespucci/vespucci/genomereference/pipeline/scripts/set_up_database.sh -g mm9 
+	~/Repositories/vespucci/vespucci/vespucci/atlas/pipeline/scripts/set_up_refseq_database.sh -g mm9
+	~/Repositories/vespucci/vespucci/vespucci/atlas/pipeline/scripts/set_up_database.sh -g mm9 -c default
+    ```
+
+If you want **to install a genome that is not included with Vespucci**, do the following:
+
+@todo
 
 #### D. Processing experimental data
 
