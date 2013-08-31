@@ -73,9 +73,9 @@ Notes:
 
 1. Change Vespucci's record of the PostgreSQL password to match the one you set for vespucci_user:
 
-    ```
-    echo '[password for vespucci_user in psql]' > /home/vespucci/Repositories/vespucci/vespucci/.database_password
-    ```
+	```
+	echo '[password for vespucci_user in psql]' > /home/vespucci/Repositories/vespucci/vespucci/.database_password
+	```
 
 #### C. Installing genome data
 
@@ -85,21 +85,21 @@ The base image of Vespucci comes with the database set up, but no genome-specifi
 
 1. Log in as the vespucci user:
 
-    ```
-    su -l vespucci
-    ```
+	```
+	su -l vespucci
+	```
 
 1. Install the genome of interest. In this example, I am using 'mm9'; simply replace that with 'hg19' or 'dm3' as desired. The option '-c default' here will use a default schema name; if you wanted to specify cell type or some other option of interest, you could use any label here (i.e., '-c es_cell').
 
-    ```
-    ~/Repositories/vespucci/vespucci/vespucci/genomereference/pipeline/scripts/set_up_database.sh -g mm9 
+	```
+	~/Repositories/vespucci/vespucci/vespucci/genomereference/pipeline/scripts/set_up_database.sh -g mm9 
 	~/Repositories/vespucci/vespucci/vespucci/atlas/pipeline/scripts/set_up_refseq_database.sh -g mm9
 	~/Repositories/vespucci/vespucci/vespucci/atlas/pipeline/scripts/set_up_database.sh -g mm9 -c default
-    ```
+	```
 
-    After running the above three commands, your vespucci database will have four schemas, each with its own set of tables: genome_reference_mm9, atlas_mm9_refseq_prep, atlas_mm9_default_prep, and atlas_mm9_default.
+	After running the above three commands, your vespucci database will have four schemas, each with its own set of tables: genome_reference_mm9, atlas_mm9_refseq_prep, atlas_mm9_default_prep, and atlas_mm9_default.
 
-    Note that if you want to see the full set of options for any of the Vespucci scripts used above, simply run the script with the '--help' option.
+	Note that if you want to see the full set of options for any of the Vespucci scripts used above, simply run the script with the '--help' option.
 
 If you want **to install a genome that is not included with Vespucci**, do the following:
 
@@ -111,17 +111,17 @@ Once the genome schemas are set up, you can proceed to process and build Vespucc
 
 1. Transfer over the mapped SAM or BAM GRO-seq files you will be using. I suggest putting these files, which can be rather large, in the /data directory, which is the mounted Amazon EBS volume.
 
-    ```
-    scp me@my-local-server.com:/path/to/my/data/groseq_1.sam /data/sequencing
-    ```
+	```
+	scp me@my-local-server.com:/path/to/my/data/groseq_1.sam /data/sequencing
+	```
 
 1. For each separate experiment file, add the raw tags to the Vespucci database:
 
-    ```
-    ~/Repositories/vespucci/vespucci/vespucci/sequencing/pipeline/scripts/add_tags.sh -g mm9 -c default -f /data/sequencing/groseq_1.sam  --output_dir=/data/sequencing/  --schema_name=groseq --project_name=groseq_1 --processes=3 
-    ```
+	```
+	~/Repositories/vespucci/vespucci/vespucci/sequencing/pipeline/scripts/add_tags.sh -g mm9 -c default -f /data/sequencing/groseq_1.sam  --output_dir=/data/sequencing/  --schema_name=groseq --project_name=groseq_1 --processes=3 
+	```
 
-    Some advisements on the options:
+	Some advisements on the options:
 
 	* -f: the path to the SAM file
 	* --output_dir: the path to a location that Vespucci can place some output data while processing tags
@@ -135,14 +135,14 @@ Once the genome schemas are set up, you can proceed to process and build Vespucc
 
 1. For each sequencing run added above, assemble proto-transcripts:
 
-    ```
+	```
 
-    ```
+	```
 
 
-    ```
+	```
 
-    ```
+	```
 
 
 
