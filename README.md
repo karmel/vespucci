@@ -18,7 +18,7 @@ If you use Vespucci, please cite:
 
 ## Installation
 
-There are several ways to install and run Vespucci. The **easy way** is to use one of the **pre-built Amazon AWS instances** (described in section I below). The hard way is to install the dependencies from scratch. Installing from scratch is described in section II below, but I make no guarantees for results in environments other than a standard Ubuntu box.
+There are several ways to install and run Vespucci. The **easy way** is to use the **pre-built Amazon AWS Image** (described in section I below). The hard way is to install the dependencies from scratch. Installing from scratch is described in section II below, but I make no guarantees for results in environments other than a standard Ubuntu box.
 
 ### I. Installing from a pre-built Amazon AWS instance
 
@@ -185,3 +185,119 @@ The generated files will be suffixed with the date. They can then be added as cu
 	~/Repositories/vespucci/vespucci/vespucci/sequencing/pipeline/scripts/add_peaks.sh -g mm9 -f /data/sequencing/chipseq_1.txt --schema_name=chipseq --project_name=chipseq_1
 
 Other genomic data types can be added as new tables using the standard PostgreSQL import functionality. In order to allow for easy querying, we suggest adding a btree indexed column with a chromosome_id that refers back to the `id` column of `genome_reference_mm9.chromosome` and a gist indexed column that is an `intrange` datatype encompassing the start and end of the genomic entity in question.
+
+### II. Installing from scratch
+
+If you are comfortable at the command line, you may want to install Vespucci and its dependencies from scratch. Here are notes on how I have done this on Ubuntu Linux boxes in Amazon's EC2 cloud; modify as necessary!
+
+<pre>
+	# All as root unless otherwise indicated.
+	
+	apt-get update
+	apt-get -y install gcc git
+	
+	######################
+	# Install python + pkgs
+	######################
+	mkdir /software
+	chmod -R 775 /software/
+	chown :ubuntu /software
+	cd /software
+	wget http://09c8d0b2229f813c1b93-c95ac804525aac4b6dba79b00b39d1d3.r79.cf1.rackcdn.com/Anaconda-1.5.0-Linux-x86_64.sh
+	chmod +x Anaconda*.sh
+	./Anaconda*.sh
+	# install in /software/anaconda
+	echo "PATH=/software/anaconda/bin:$PATH" >> /etc/profile
+	source /etc/profile
+	
+	easy_install django
+	
+	######################
+	# Install Postgres
+	######################
+	
+	add-apt-repository -y ppa:pitti/postgresql
+	apt-get update
+	apt-get -y install postgresql-9.2 postgresql-server-dev-all
+	easy_install psycopg2
+
+	# DB setup
+	sudo -u postgres psql postgres
+	\password postgres
+	\q
+	
+	# May not be necessary for your case;
+	# But for Amazon instance, move DB to EBS volume
+	mkdir -p /data/postgresql/9.2
+	mv /var/lib/postgresql/9.2/main /data/postgresql/9.2
+
+	vim /etc/postgresql/9.2/main/postgresql.conf 
+	# Change location of data directory
+	# data_directory = '/data/postgresql/9.2/main'
+	# Open to outside world
+	# listen_addresses = '*'
+	# Turn off SSL
+	# ssl    = false
+	
+	vim /etc/postgresql/9.2/main/pg_hba.conf 
+	# Add TCP/IP for remote hosts if desired
+	
+	/etc/init.d/postgresql restart
+	
+	######################
+	# Vespucci user setup
+	######################
+	
+	export USER_NAME='vespucci'
+	
+	sudo -u postgres createuser -D -A -R -P ${USER_NAME}_user
+	sudo -u postgres createdb -O ${USER_NAME}_user ${USER_NAME}
+
+	useradd -d /home/${USER_NAME} -m ${USER_NAME} -s /bin/bash
+	passwd ${USER_NAME}
+	
+	mkdir -p /data/sequencing
+	chmod 775 /data/sequencing
+	chown ${USER_NAME}:${USER_NAME} /data/sequencing
+	mkdir -p /data/www/ucsc/
+	chown -R ${USER_NAME}:${USER_NAME} /data/www/
+	chmod -R 777 /data/www/
+
+	######################
+	# Install Nginx
+	######################
+	
+	# If you want to host UCSC browser files
+	# ${SERVER_NAME} below should be your hostname, i.e., sub.example.com
+	apt-get -y install nginx
+	echo "server {
+	    listen   80;
+	    server_name ${SERVER_NAME};
+	    root /data/www;
+
+	    access_log  /var/log/nginx/${USER_NAME}-access.log;
+	    error_log  /var/log/nginx/${USER_NAME}-error.log info;
+
+	    # what to serve if upstream is not available or crashes
+	    error_page 500 502 503 504 /document_root/media/50x.html;
+	}
+	" > /etc/nginx/sites-available/${USER_NAME}.conf
+	ln -s /etc/nginx/sites-available/${USER_NAME}.conf /etc/nginx/sites-enabled/
+	/etc/init.d/nginx restart
+
+	######################
+	# Install Vespucci repo
+	######################
+	
+	# Note that we drop into the vespucci user now
+	su -l ${USER_NAME}
+	mkdir -p ~/Repositories/${USER}
+	cd ~/Repositories/${USER}
+	git clone git://github.com/karmel/${USER}.git
+
+	echo "export CURRENT_PATH=/home/${USER}/Repositories/${USER}/${USER}/" >> ~/.bash_profile
+	source ~/.bash_profile
+	
+	# And then continue with section I, part C above.
+	
+</pre>
