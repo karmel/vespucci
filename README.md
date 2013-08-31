@@ -89,7 +89,7 @@ The base image of Vespucci comes with the database set up, but no genome-specifi
 	~/Repositories/vespucci/vespucci/vespucci/atlas/pipeline/scripts/set_up_database.sh -g mm9 -c default
 	```
 
-	After running the above three commands, your vespucci database will have four schemas, each with its own set of tables: genome_reference_mm9, atlas_mm9_refseq_prep, atlas_mm9_default_prep, and atlas_mm9_default.
+	After running the above three commands, your vespucci database will have four schemas, each with its own set of tables: `genome_reference_mm9`, `atlas_mm9_refseq_prep`, `atlas_mm9_default_prep`, and `atlas_mm9_default`.
 
 	Note that if you want to see the full set of options for any of the Vespucci scripts used above, simply run the script with the `--help` option.
 
@@ -114,11 +114,11 @@ Once the genome schemas are set up, you can proceed to process and build Vespucc
 	```
 
 	Some advisements on the options:
-	* -f: the path to the SAM file
-	* --output_dir: the path to a location that Vespucci can place some output data while processing tags
-	* --schema_name: a name for the schema you would like all the tag tables to be placed in; should be Postgres-friendly (i.e., no spaces or unusual characters)
-	* --project_name: a descriptive label of the experiment in question for your future reference; this will be used in the naming of tag tables, so it should be Postgres-friendly (i.e., no spaces or unusual characters)
-	* --processes: the number of daughter processes to use; three is good for an m1.small Amazon instance
+	* `-f`: the path to the SAM file
+	* `--output_dir`: the path to a location that Vespucci can place some output data while processing tags
+	* `--schema_name`: a name for the schema you would like all the tag tables to be placed in; should be Postgres-friendly (i.e., no spaces or unusual characters)
+	* `--project_name`: a descriptive label of the experiment in question for your future reference; this will be used in the naming of tag tables, so it should be Postgres-friendly (i.e., no spaces or unusual characters)
+	* `--processes`: the number of daughter processes to use; three is good for an m1.small Amazon instance
 	
 	Too see other available options, run the add_tags.sh script with `--help`.
 	
