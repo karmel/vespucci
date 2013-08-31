@@ -97,6 +97,8 @@ The base image of Vespucci comes with the database set up, but no genome-specifi
 	~/Repositories/vespucci/vespucci/vespucci/atlas/pipeline/scripts/set_up_database.sh -g mm9 -c default
     ```
 
+    After running the above three commands, your vespucci database will have four schemas, each with its own set of tables: genome_reference_mm9, atlas_mm9_refseq_prep, atlas_mm9_default_prep, and atlas_mm9_default.
+
 If you want **to install a genome that is not included with Vespucci**, do the following:
 
 @todo
