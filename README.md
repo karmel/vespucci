@@ -22,15 +22,9 @@ There are several ways to install and run Vespucci. The **easy way** is to use o
 
 ### I. Installing from a pre-built Amazon AWS instance
 
-Amazon Images are available for Vespucci pre-built with the hg19 or mm9 genome data. For other genomes, we provide a pre-built Image with the base Vespucci databases and all dependencies installed, awaiting installation of data for a specific genome. 
+An Amazon Image is available for Vespucci with the base Vespucci databases and all dependencies installed, awaiting installation of data for a specific genome. 
 
-Images are available at: @todo
-
-* Base: 
-* hg19: 
-* mm9: 
-
-For all three Image types, follow steps in sections A and B below. For the hg19 and mm9 Images, skip section C, and continue with sections D and E.
+The Image is available at: @todo
 
 #### A. Launching the Image 
 
@@ -78,8 +72,6 @@ Notes:
 	```
 
 #### C. Installing genome data
-
-Note: skip this section if using an Image with the hg19 or mm9 genomes already installed.
 
 The base image of Vespucci comes with the database set up, but no genome-specific schemas installed. **To install existing genome-specific schemas (hg19, mm9, or dm3):**
 
