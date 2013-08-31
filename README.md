@@ -45,29 +45,28 @@ For all three Image types, follow steps in sections A and B below. For the hg19 
 	sudo su -
 	```
 
-2. Make sure the instance is all up-to-date:
-
-	```
-	apt-get update
-	conda update
-	```
-
-3. Change the vespucci user password, so that I can't get in:
+1. Change the vespucci user password:
 
 	```
 	passwd vespucci
 	```
 
-4. Change the PostgreSQL user passwords, so that I can't get in:
+1. Change the PostgreSQL user passwords:
 
 	```
-	
+	sudo -u postgres psql postgres
+
+	# At the psql prompt:
+	\password postgres
+	\password vespucci_user
+	\q
 	```
 
-5. Change the git repository's record of the PostgreSQL password to match the one you set for vespucci_user:
+1. Change the git repository's record of the PostgreSQL password to match the one you set for vespucci_user:
 
-
-
+    ```
+    echo '[password for vespucci_user in psql]' > /home/vespucci/Repositories/vespucci/vespucci/.database_password
+    ```
 
 #### C. Installing genome data
 
