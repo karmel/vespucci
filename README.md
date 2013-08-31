@@ -99,11 +99,52 @@ The base image of Vespucci comes with the database set up, but no genome-specifi
 
     After running the above three commands, your vespucci database will have four schemas, each with its own set of tables: genome_reference_mm9, atlas_mm9_refseq_prep, atlas_mm9_default_prep, and atlas_mm9_default.
 
+    Note that if you want to see the full set of options for any of the Vespucci scripts used above, simply run the script with the '--help' option.
+
 If you want **to install a genome that is not included with Vespucci**, do the following:
 
 @todo
 
 #### D. Processing experimental data
+
+Once the genome schemas are set up, you can proceed to process and build Vespucci transcripts for your experimental data. In these examples, I am using 'mm9'; simply replace that with 'hg19' or 'dm3' as desired. The option '-c default' here indicates that the default schema should be used; if you set up cell-type-specific schemas (i.e., '-c es_cell') in section C, simply replace the 'default' with the appropriate identifier.
+
+1. Transfer over the mapped SAM or BAM GRO-seq files you will be using. I suggest putting these files, which can be rather large, in the /data directory, which is the mounted Amazon EBS volume.
+
+    ```
+    scp me@my-local-server.com:/path/to/my/data/groseq_1.sam /data/sequencing
+    ```
+
+1. For each separate experiment file, add the raw tags to the Vespucci database:
+
+    ```
+    ~/Repositories/vespucci/vespucci/vespucci/sequencing/pipeline/scripts/add_tags.sh -g mm9 -c default -f /data/sequencing/groseq_1.sam  --output_dir=/data/sequencing/  --schema_name=groseq --project_name=groseq_1 --processes=3 
+    ```
+
+    Some advisements on the options:
+
+	* -f: the path to the SAM file
+	* --output_dir: the path to a location that Vespucci can place some output data while processing tags
+	* --schema_name: a name for the schema you would like all the tag tables to be placed in; should be Postgres-friendly (i.e., no spaces or unusual characters)
+	* --project_name: a descriptive label of the experiment in question for your future reference; this will be used in the naming of tag tables, so it should be Postgres-friendly (i.e., no spaces or unusual characters)
+	* --processes: the number of daughter processes to use; three is good for an m1.small Amazon instance
+	
+	Too see other available options, run the add_tags.sh script with --help.
+	
+1. Repeat the two steps above for all separate sequencing files. The 'groseq' schema that has been added will then have numerous tables-- one for each sequencing run added, with separate partitions for each chromosome.
+
+1. For each sequencing run added above, assemble proto-transcripts:
+
+    ```
+
+    ```
+
+
+    ```
+
+    ```
+
+
 
 #### E. Etc.
 
