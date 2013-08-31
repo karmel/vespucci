@@ -163,3 +163,25 @@ Once the genome schemas are set up, you can proceed to process and build Vespucc
 
 #### E. Etc.
 
+You now have database tables built with assembled GRO-seq transcripts, which can be accessed with any number of [Postgres client GUIs](http://wiki.postgresql.org/wiki/Community_Guide_to_PostgreSQL_GUI_Tools), or from the psql command line: 
+
+	```
+	psql -U vespucci_user vespucci
+	```
+	
+The assembled transcripts are in the atlas_mm9_default schema, in the set of atlas_transcript tables. Please see the publication referenced above for more detail on schema layouts and sample queries in the Supplementary Information.
+
+You can output a track for viewing on the [UCSC Genome Browser](http://genome.ucsc.edu/) with the following command, where --output_dir is the location the output files should be stored:
+
+	```
+	~/Repositories/vespucci/vespucci/vespucci/atlas/pipeline/scripts/transcripts_from_tags.sh -g mm9 -c default --output_dir=/data/www/ucsc/
+	```
+
+The generated files will be suffixed with the date. They can then be added as custom tracks to the Genome Browser using the URLs:
+
+	```
+	# Sense strand:
+	http://ec2-11-111-11-11.compute-1.amazonaws.com/ucsc/Atlas_Transcripts_YYYY_mm_dd_0.bed
+	# Anti-sense strand:
+	http://ec2-11-111-11-11.compute-1.amazonaws.com/ucsc/Atlas_Transcripts_YYYY_mm_dd_1.bed
+	```
