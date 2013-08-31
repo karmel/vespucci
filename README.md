@@ -34,7 +34,16 @@ For all three Image types, follow steps in sections A and B below. For the hg19 
 
 #### A. Launching the Image 
 
+Use the Amazon AWS Launch Wizard to launch an instance using the selected Image. Vespucci should run on minimally an m1.small instance, and that is what was used for all of the data described in the paper.
 
+Notes:
+
+* If you are unfamiliar with Amazon EC2, I suggest looking first at Amazon's [Getting Started Guide](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EC2_GetStarted.html).
+* When setting up the firewall, you will minimally want SSH access to your instance. I also recommend allowing access at port 5432 if you would like to use a local client to view and manage your database, and access at port 80 if you would like to host browser sessions from your instance. The Security Group I use opens three ports:
+	* 22 (SSH): 0.0.0.0/0
+	* 80 (HTTP): 0.0.0.0/0
+	* 5432 (Postgres): 0.0.0.0/0
+* When in doubt, the Wizard's default option should suffice.
 
 #### B. Setting up the Image
 
@@ -62,7 +71,7 @@ For all three Image types, follow steps in sections A and B below. For the hg19 
 	\q
 	```
 
-1. Change the git repository's record of the PostgreSQL password to match the one you set for vespucci_user:
+1. Change Vespucci's record of the PostgreSQL password to match the one you set for vespucci_user:
 
     ```
     echo '[password for vespucci_user in psql]' > /home/vespucci/Repositories/vespucci/vespucci/.database_password
