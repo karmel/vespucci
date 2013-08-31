@@ -81,7 +81,7 @@ The base image of Vespucci comes with the database set up, but no genome-specifi
 	su -l vespucci
 	```
 
-1. Install the genome of interest. In this example, I am using 'mm9'; simply replace that with 'hg19' or 'dm3' as desired. The option '-c default' here will use a default schema name; if you wanted to specify cell type or some other option of interest, you could use any label here (i.e., '-c es_cell').
+1. Install the genome of interest. In this example, I am using `mm9`; simply replace that with `hg19` or `dm3` as desired. The option `-c default` here will use a default schema name; if you wanted to specify cell type or some other option of interest, you could use any label here (i.e., `-c es_cell`).
 
 	```
 	~/Repositories/vespucci/vespucci/vespucci/genomereference/pipeline/scripts/set_up_database.sh -g mm9 
@@ -91,7 +91,7 @@ The base image of Vespucci comes with the database set up, but no genome-specifi
 
 	After running the above three commands, your vespucci database will have four schemas, each with its own set of tables: genome_reference_mm9, atlas_mm9_refseq_prep, atlas_mm9_default_prep, and atlas_mm9_default.
 
-	Note that if you want to see the full set of options for any of the Vespucci scripts used above, simply run the script with the '--help' option.
+	Note that if you want to see the full set of options for any of the Vespucci scripts used above, simply run the script with the `--help` option.
 
 If you want **to install a genome that is not included with Vespucci**, do the following:
 
@@ -99,7 +99,7 @@ If you want **to install a genome that is not included with Vespucci**, do the f
 
 #### D. Processing experimental data
 
-Once the genome schemas are set up, you can proceed to process and build Vespucci transcripts for your experimental data. In these examples, I am using 'mm9'; simply replace that with 'hg19' or 'dm3' as desired. The option '-c default' here indicates that the default schema should be used; if you set up cell-type-specific schemas (i.e., '-c es_cell') in section C, simply replace the 'default' with the appropriate identifier.
+Once the genome schemas are set up, you can proceed to process and build Vespucci transcripts for your experimental data. In these examples, I am using `mm9`; simply replace that with `hg19` or `dm3` as desired. The option `-c default` here indicates that the default schema should be used; if you set up cell-type-specific schemas (i.e., `-c es_cell`) in section C, simply replace the `default` with the appropriate identifier.
 
 1. Transfer over the mapped SAM or BAM GRO-seq files you will be using. I suggest putting these files, which can be rather large, in the /data directory, which is the mounted Amazon EBS volume.
 
@@ -122,7 +122,7 @@ Once the genome schemas are set up, you can proceed to process and build Vespucc
 	
 	Too see other available options, run the add_tags.sh script with --help.
 	
-1. Repeat the two steps above for all separate sequencing files. The 'groseq' schema that has been added will then have numerous tables-- one for each sequencing run added, with separate partitions for each chromosome.
+1. Repeat the two steps above for all separate sequencing files. The `groseq` schema that has been added will then have numerous tables-- one for each sequencing run added, with separate partitions for each chromosome.
 
 	```
 	scp me@my-local-server.com:/path/to/my/data/groseq_2.sam /data/sequencing
@@ -167,9 +167,9 @@ You now have database tables built with assembled GRO-seq transcripts, which can
 
 	psql -U vespucci_user vespucci
 	
-The assembled transcripts are in the atlas_mm9_default schema, in the set of atlas_transcript tables. Please see the publication referenced above for more detail on schema layouts and sample queries in the Supplementary Information.
+The **assembled transcripts are in the atlas_mm9_default schema**, in the set of atlas_transcript tables. Please see the publication referenced above for more detail on schema layouts and sample queries in the Supplementary Information.
 
-You can output a track for viewing on the [UCSC Genome Browser](http://genome.ucsc.edu/) with the following command, where --output_dir is the location the output files should be stored:
+You can **output a track for viewing on the [UCSC Genome Browser](http://genome.ucsc.edu/)** with the following command, where --output_dir is the location the output files should be stored:
 
 	~/Repositories/vespucci/vespucci/vespucci/atlas/pipeline/scripts/transcripts_from_tags.sh -g mm9 -c default --output_dir=/data/www/ucsc/
 
@@ -179,3 +179,9 @@ The generated files will be suffixed with the date. They can then be added as cu
 	http://ec2-11-111-11-11.compute-1.amazonaws.com/ucsc/Atlas_Transcripts_YYYY_mm_dd_0.bed
 	# Anti-sense strand:
 	http://ec2-11-111-11-11.compute-1.amazonaws.com/ucsc/Atlas_Transcripts_YYYY_mm_dd_1.bed
+
+**Peak files generated using the [Homer analysis suite](http://biowhat.ucsd.edu/homer/)** can be added automatically with the following command:
+
+	~/Repositories/vespucci/vespucci/vespucci/sequencing/pipeline/scripts/add_peaks.sh -g mm9 -f /data/sequencing/chipseq_1.txt --schema_name=chipseq --project_name=chipseq_1
+
+Other genomic data types can be added as new tables using the standard PostgreSQL import functionality. In order to allow for easy querying, we suggest adding an indexed column with a chromosome_id that refers back to the `id` column of genome_reference_mm9.chromsome, 
