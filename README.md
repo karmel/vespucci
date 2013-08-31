@@ -132,17 +132,41 @@ Once the genome schemas are set up, you can proceed to process and build Vespucc
 	
 1. Repeat the two steps above for all separate sequencing files. The 'groseq' schema that has been added will then have numerous tables-- one for each sequencing run added, with separate partitions for each chromosome.
 
+	```
+	scp me@my-local-server.com:/path/to/my/data/groseq_2.sam /data/sequencing
+	~/Repositories/vespucci/vespucci/vespucci/sequencing/pipeline/scripts/add_tags.sh -g mm9 -c default -f /data/sequencing/groseq_2.sam  --output_dir=/data/sequencing/  --schema_name=groseq --project_name=groseq_2 --processes=3 
+	```
+
 1. For each sequencing run added above, assemble proto-transcripts:
 
 	```
-
+	~/Repositories/vespucci/vespucci/vespucci/atlas/pipeline/scripts/transcripts_from_tags.sh -g mm9 -c default --schema_name=groseq --tag_table=tag_groseq_1 --processes=5
+	~/Repositories/vespucci/vespucci/vespucci/atlas/pipeline/scripts/transcripts_from_tags.sh -g mm9 -c default --schema_name=groseq --tag_table=tag_groseq_2 --processes=5
 	```
 
+	Importantly, in the usual case, the --tag_table is the same as the --project_name supplied above with "tag_" prepended. However, if for some reason you had manually named tables, --tag_table will work with whatever name you pass it.
+	
+1. Stitch together proto-transcripts. If you are adding a great number of sequencing runs, I recommend running this command at least every ~30 million tags (i.e., after three runs with ten million tags each are added). This helps keep the size of the proto-transcript tables down, which helps Postgres run more efficiently.
 
 	```
+	~/Repositories/vespucci/vespucci/vespucci/atlas/pipeline/scripts/transcripts_from_tags.sh -g mm9 -c default --stitch --stitch_processes=1
+	```
+	
+	The option --stitch_processes indicates how many processes should be used during stitching. Stitching is a very RAM-intensive procedure, so we recommend using only one process at a time on an m1.small node.
+	
+1. After all runs have been added and stitched, calculate the density for each of the assembled proto-transcripts:
 
 	```
+	~/Repositories/vespucci/vespucci/vespucci/atlas/pipeline/scripts/transcripts_from_tags.sh -g mm9 -c default --set_density --stitch_processes=1
+	```
 
+1. Finally, build and score the tables of assembled transcripts:
+
+	```
+	~/Repositories/vespucci/vespucci/vespucci/atlas/pipeline/scripts/transcripts_from_tags.sh -g mm9 -c default --draw_edges --score
+	```
+
+	As with all the scripts above, run with --help to see other available options.
 
 
 #### E. Etc.
