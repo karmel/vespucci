@@ -93,9 +93,7 @@ The base image of Vespucci comes with the database set up, but no genome-specifi
 
 	Note that if you want to see the full set of options for any of the Vespucci scripts used above, simply run the script with the `--help` option.
 
-If you want **to install a genome that is not included with Vespucci**, do the following:
-
-@todo
+To install a genome that is not included with Vespucci, see section III below.
 
 #### D. Processing experimental data
 
@@ -190,7 +188,6 @@ Other genomic data types can be added as new tables using the standard PostgreSQ
 
 If you are comfortable at the command line, you may want to install Vespucci and its dependencies from scratch. Here are notes on how I have done this on Ubuntu Linux boxes in Amazon's EC2 cloud; modify as necessary!
 
-<pre>
 	# All as root unless otherwise indicated.
 	
 	apt-get update
@@ -300,4 +297,22 @@ If you are comfortable at the command line, you may want to install Vespucci and
 	
 	# And then continue with section I, part C above.
 	
-</pre>
+### III. Installing a new genome
+
+If you are working with a genome other than hg19, mm9, or dm3, you can install the necessary reference databases for that genome as follows. For ease of demonstration, we will use the Rat genome, rn3.
+
+1. Create and navigate to a new directory to hold the genome data.
+
+	mkdir ~/Repositories/vespucci/vespucci/vespucci/genomereference/pipeline/data/rn3
+	cd ~/Repositories/vespucci/vespucci/vespucci/genomereference/pipeline/data/rn3
+
+1. Download the necessary chromosome, RefSeq, and ncRNA files:
+
+	wget http://hgdownload.soe.ucsc.edu/goldenPath/rnJun2003/database/refGene.txt.gz
+	wget 
+	wget http://www.ncrna.org/frnadb/catalog_taxonomy/files/rn3_bed.zip
+
+1. Unzip and extract necessary files.
+1. Add the genome and chromosomes to the set of available options:
+
+1. Build the databases.

@@ -191,13 +191,13 @@ class GenomeResourcesSqlGenerator(SqlGenerator):
         
     def insert_chromosome_values(self):
         '''
-        Pulls from chromosomes.txt file, which has been created manually
-        as a tab-delimited file with names and lengths.
+        Pulls from chromInfo.txt file, which is the UCSC
+        list at http://hgdownload.soe.ucsc.edu/goldenPath/mm9/database/chromInfo.txt.gz
         
         '''
         table_name = 'chromosome'
         path_to_file = os.path.join(get_vespucci_path(),
-                       'genomereference/pipeline/data/{0}/chromosomes.txt'.format(self.genome))
+                       'genomereference/pipeline/data/{0}/chromInfo.txt'.format(self.genome))
         f = open(path_to_file)
         output = []
         for l in f:
