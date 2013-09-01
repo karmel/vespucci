@@ -303,16 +303,46 @@ If you are working with a genome other than hg19, mm9, or dm3, you can install t
 
 1. Create and navigate to a new directory to hold the genome data.
 
+	```
 	mkdir ~/Repositories/vespucci/vespucci/vespucci/genomereference/pipeline/data/rn3
 	cd ~/Repositories/vespucci/vespucci/vespucci/genomereference/pipeline/data/rn3
-
+	```
+	
 1. Download the necessary chromosome, RefSeq, and ncRNA files:
 
+	```
 	wget http://hgdownload.soe.ucsc.edu/goldenPath/rnJun2003/database/refGene.txt.gz
-	wget 
+	wget http://hgdownload.soe.ucsc.edu/goldenPath/rnJun2003/database/chromInfo.txt.gz
 	wget http://www.ncrna.org/frnadb/catalog_taxonomy/files/rn3_bed.zip
+	```
+	
+1. Unzip and extract necessary files. Note that you may also want to manually remove the "random" chromosomes from the chromInfo.txt file, depending on whether you are interested in that data.
 
-1. Unzip and extract necessary files.
+	```
+	gunzip *.gz
+	unzip *.zip
+	mv rn3_bed/rn3.bed .
+	rm -rf rn3_bed
+	```
+	
 1. Add the genome and chromosomes to the set of available options:
 
+	```
+	vim ~/Repositories/vespucci/vespucci/vespucci/config/current_settings.py
+	```
+
+	To that file, add to the GENOME_CHOICES dictionary, at line 20, the symbolic name, full name, and range of chromosome values, which in the case of rn3 with random chromosomes removed, is 1 - 22:
+
+	```
+	'rn3': {'name':'Rattus norvegicus', 'chromosomes': range(1,23)},
+	```
+
 1. Build the databases.
+
+	```
+	~/Repositories/vespucci/vespucci/vespucci/genomereference/pipeline/scripts/set_up_database.sh -g rn3 
+	~/Repositories/vespucci/vespucci/vespucci/atlas/pipeline/scripts/set_up_refseq_database.sh -g rn3
+	~/Repositories/vespucci/vespucci/vespucci/atlas/pipeline/scripts/set_up_database.sh -g rn3 -c default
+	```
+
+The new genome database is now installed, and you can continue loading your data as described beginning in section I, part D above.
