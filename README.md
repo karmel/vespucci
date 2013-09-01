@@ -291,7 +291,8 @@ If you are comfortable at the command line, you may want to install Vespucci and
 	mkdir -p ~/Repositories/${USER}
 	cd ~/Repositories/${USER}
 	git clone git://github.com/karmel/${USER}.git
-
+	git checkout v0.9
+	
 	echo "export CURRENT_PATH=/home/${USER}/Repositories/${USER}/${USER}/" >> ~/.bash_profile
 	source ~/.bash_profile
 	
