@@ -24,7 +24,7 @@ There are several ways to install and run Vespucci. The **easy way** is to use t
 
 An Amazon Machine Image (AMI) is available for Vespucci with the base Vespucci databases and all dependencies installed, awaiting installation of data for a specific genome. 
 
-The current AMI is available here: [Vespucci v0.9, AMI ID ami-4b85c922](https://console.aws.amazon.com/ec2/home?region=us-east-1#launchAmi=ami-4b85c922).
+The current AMI is available here: <a href="https://console.aws.amazon.com/ec2/home?region=us-east-1#launchAmi=ami-4b85c922" target="_blank">Vespucci v0.9, AMI ID ami-4b85c922</a>.
 
 #### A. Launching the Image 
 
@@ -32,7 +32,7 @@ Use the Amazon AWS Launch Wizard to launch an instance using the selected Image.
 
 Notes:
 
-* If you are unfamiliar with Amazon EC2, I suggest looking first at Amazon's [Getting Started Guide](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EC2_GetStarted.html).
+* If you are unfamiliar with Amazon EC2, I suggest looking first at Amazon's <a href="http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EC2_GetStarted.html" target="_blank">Getting Started Guide</a>.
 * When setting up the firewall, you will minimally want SSH access to your instance. I also recommend allowing access at port 5432 if you would like to use a local client to view and manage your database, and access at port 80 if you would like to host browser sessions from your instance. The Security Group I use opens three ports:
 	* 22 (SSH): 0.0.0.0/0
 	* 80 (HTTP): 0.0.0.0/0
