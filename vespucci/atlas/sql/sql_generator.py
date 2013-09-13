@@ -238,6 +238,7 @@ class AtlasSqlGenerator(SqlGenerator):
             "start_end_tss" int8range DEFAULT NULL,
             "refseq" boolean DEFAULT NULL,
             "distal" boolean DEFAULT NULL,
+            "parent_id" int4 DEFAULT NULL,
             "score" numeric DEFAULT NULL,
             "rpkm" numeric DEFAULT NULL,
             "standard_error" numeric DEFAULT NULL,
