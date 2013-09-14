@@ -64,6 +64,10 @@ class FastqOptionParser(VespucciOptionParser):
                            dest='skip_tag_table',
                            help='Skip transferring tags to table; tag table will be used directly.'),
                
+               make_option('--no_refseq_segmentation', action='store_true', 
+                           dest='no_refseq_segmentation',
+                           help='Do not mark RefSeq tags as separate, preventing forced segmentation at RefSeq genes.'),
+               
                ]
     
 def split_tag_file(options, file_name, tag_file_path):
@@ -141,13 +145,13 @@ def translate_prep_columns(file_name):
     AtlasTag.create_partition_tables()
     AtlasTag.translate_from_prep()
     
-def add_indices():
+def add_indices(set_refseq=True):
     # Execute after all the ends have been calculated,
     # as otherwise the insertion of ends takes far too long.
     AtlasTag.add_indices()
     execute_query_without_transaction('VACUUM ANALYZE "{}";'.format(
                                                     AtlasTag._meta.db_table))
-    AtlasTag.set_refseq()
+    if set_refseq: AtlasTag.set_refseq()
     AtlasTag.add_record_of_tags()
     
 if __name__ == '__main__':    
@@ -183,9 +187,9 @@ if __name__ == '__main__':
         translate_prep_columns(file_name)
         _print('Adding indices.')
         AtlasTag.set_table_name('tag_' + file_name)
-        add_indices()
+        add_indices(set_refseq=(not options.no_refseq_segmentation))
         AtlasTag.delete_prep_table()
     else:
         _print('Skipping creation of tag table')
         AtlasTag.set_table_name('tag_' + file_name)
-        AtlasTag.set_refseq()
+        if not options.no_refseq_segmentation: AtlasTag.set_refseq()
