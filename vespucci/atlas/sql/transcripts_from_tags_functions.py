@@ -328,7 +328,7 @@ RETURNS VOID AS $$
                     || ' VALUES (' || rec.chromosome_id || ' , ' || rec.strand || ' , '
                     || rec.transcription_start || ' , ' || rec.transcription_end || ' , '
                     || ' int8range(' || rec.transcription_start || ',' ||  rec.transcription_end || ', ''[]''), '
-                    || rec.refseq || ' 
+                    || COALESCE(rec.refseq, 'NULL') || ' 
                     ) RETURNING *' INTO transcript;
                 
                 -- Remove existing records
