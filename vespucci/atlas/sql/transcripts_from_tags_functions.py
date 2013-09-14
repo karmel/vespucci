@@ -10,7 +10,7 @@ def sql(genome, cell_type):
     return """
 
 CREATE TYPE atlas_{0}_{1}_prep.atlas_transcript_row AS ("chromosome_id" integer, "strand" smallint, 
-    transcription_start bigint, transcription_end bigint, refseq boolean, tag_count integer, gaps integer, ids integer[]);
+    transcription_start bigint, transcription_end bigint, refseq boolean default NULL, tag_count integer, gaps integer, ids integer[]);
 
 CREATE OR REPLACE FUNCTION atlas_{0}_{1}_prep.update_transcript_source_records(trans atlas_{0}_{1}_prep.atlas_transcript, old_id integer)
 RETURNS VOID AS $$
