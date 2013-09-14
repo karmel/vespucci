@@ -8,7 +8,7 @@ Prep table functions, extracted for ease of reading.
 def sql(genome, cell_type, suffix):
     return """
 
-CREATE OR REPLACE FUNCTION atlas_{0}_{1}{suffix}.draw_transcript_edges(chr_id integer, min_one_run_tags integer)
+CREATE OR REPLACE FUNCTION atlas_{0}_{1}{suffix}.draw_transcript_edges(chr_id integer, min_one_run_tags integer, max_edge integer)
 RETURNS VOID AS $$
 DECLARE
     strand integer;
@@ -46,6 +46,7 @@ BEGIN
         
     PERFORM atlas_{0}_{1}{suffix}.insert_transcript_source_records(chr_id);
     PERFORM atlas_{0}_{1}{suffix}.insert_associated_transcript_regions(chr_id);
+    PERFORM atlas_{0}_{1}{suffix}.link_post_gene_transcripts(chr_id, max_edge);
     RETURN;
 END;
 $$ LANGUAGE 'plpgsql';
@@ -349,4 +350,3 @@ END;
 $$ LANGUAGE 'plpgsql';
 
 """.format(genome, cell_type, suffix=suffix)
-

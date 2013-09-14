@@ -345,11 +345,12 @@ class AtlasTranscript(TranscriptBase):
         for chr_id in chr_list:
             print 'Drawing edges for transcripts for chr_id %d' % chr_id
             query = """
-                SELECT atlas_{0}_{1}{2}.draw_transcript_edges({chr_id},{3});
+                SELECT atlas_{0}_{1}{2}.draw_transcript_edges({chr_id},{3},{4});
                 """.format(current_settings.GENOME,
                        current_settings.CELL_TYPE.lower(),
                        current_settings.STAGING, 
-                       MIN_ONE_RUN_TAGS, chr_id=chr_id)
+                       MIN_ONE_RUN_TAGS, current_settings.MAX_EDGE,
+                       chr_id=chr_id)
             execute_query(query)           
             
     @classmethod
