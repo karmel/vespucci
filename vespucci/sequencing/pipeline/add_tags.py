@@ -86,18 +86,18 @@ def split_tag_file(options, file_name, tag_file_path):
     try: subprocess.check_call(split_command, shell=True)
     except Exception:
         raise Exception('Exception encountered while trying ' \
-                        + 'to split bowtie file. Traceback:\n'
+                        + 'to split tag file. Traceback:\n'
                         + traceback.format_exc())
     
     return output_dir
 
-def copy_into_table_from_range(bowtie_split_dir, file_names):
+def copy_into_table_from_range(tag_split_dir, file_names):
     for f_name in file_names:
-        _copy_into_table(bowtie_split_dir, f_name)
+        _copy_into_table(tag_split_dir, f_name)
          
-def _copy_into_table(bowtie_split_dir, f_name):
-    full_path = os.path.join(bowtie_split_dir,f_name)
-    bowtie_file = file(full_path)
+def _copy_into_table(tag_split_dir, f_name):
+    full_path = os.path.join(tag_split_dir,f_name)
+    tag_file = file(full_path)
     try:
         connection.close()
         cursor = connection.cursor()
@@ -107,7 +107,7 @@ def _copy_into_table(bowtie_split_dir, f_name):
                             sequence_matched)
                             FROM STDIN WITH CSV DELIMITER E'\t';""".format(
                                                     AtlasTag.prep_table), 
-                            bowtie_file)
+                            tag_file)
         transaction.commit_unless_managed()
     except Exception:
         _print('Encountered exception while trying to copy data:\n' 
@@ -135,6 +135,7 @@ def upload_tag_files(options, file_name, tag_split_dir):
     
     connection.close()
     shutil.rmtree(tag_split_dir)
+
 
 def translate_prep_columns(file_name):
     '''
@@ -179,6 +180,9 @@ if __name__ == '__main__':
             _print('Uploading tag file into table.')
             tag_split_dir = split_tag_file(options, file_name, converted_file)
             upload_tag_files(options, file_name, tag_split_dir)
+            
+            # Remove 4column file to conserve space.
+            os.remove(converted_file)
         else:
             _print('Skipping upload of tag rows into table.')
             AtlasTag.set_prep_table(options.prep_table)
@@ -189,6 +193,7 @@ if __name__ == '__main__':
         AtlasTag.set_table_name('tag_' + file_name)
         add_indices(set_refseq=(not options.no_refseq_segmentation))
         AtlasTag.delete_prep_table()
+        
     else:
         _print('Skipping creation of tag table')
         AtlasTag.set_table_name('tag_' + file_name)
