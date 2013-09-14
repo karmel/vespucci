@@ -115,7 +115,7 @@ BEGIN
         VALUES (' || rec.chromosome_id || ',' || rec.strand || ','
         || rec.transcription_start || ',' || rec.transcription_end || ',' 
         || ' int8range(' || rec.transcription_start || ',' ||  rec.transcription_end || ', ''[]''),'
-         || COALESCE(rec.refseq, 'NULL') || ', NOW(), NOW()) RETURNING *' INTO transcript;
+         || COALESCE(rec.refseq, false) || ', NOW(), NOW()) RETURNING *' INTO transcript;
     RETURN transcript;
 END;
 $$ LANGUAGE 'plpgsql';
