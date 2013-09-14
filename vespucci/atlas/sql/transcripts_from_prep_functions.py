@@ -204,10 +204,11 @@ BEGIN
      
     temp_table = 'post_gene_table_' || chr_id || '_' || (1000*RANDOM())::int;
     EXECUTE 'CREATE TEMP TABLE ' || temp_table || ' AS
-        SELECT distinct ON (t.id) t.id as post_gene_id,
-        t2.id as gene_id
-        FROM atlas_{0}_{1}{suffix}.atlas_transcript t
-        JOIN atlas_{0}_{1}{suffix}.atlas_transcript t2
+        SELECT distinct ON (t.id) 
+            t.id as post_gene_id,
+            t2.id as gene_id
+        FROM atlas_{0}_{1}{suffix}.atlas_transcript_' || chr_id || ' t
+        JOIN atlas_{0}_{1}{suffix}.atlas_transcript_' || chr_id || ' t2
         ON t.chromosome_id = t2.chromosome_id
         AND t.start_end && int8range(t2.strand*(t2.transcription_start - ' || distance || '
                 ) + abs(t2.strand - 1)*t2.transcription_end, 
@@ -216,12 +217,12 @@ BEGIN
         AND t.strand = t2.strand
         WHERE t.refseq = false
         AND t2.refseq = true;';
-    EXECUTE 'CREATE INDEX ' || temp_table || '_idx ON ' || temp_table || ' USING btree(id)';
+    EXECUTE 'CREATE INDEX ' || temp_table || '_idx ON ' || temp_table || ' USING btree(post_gene_id)';
     
     EXECUTE 'UPDATE atlas_{0}_{1}{suffix}.atlas_transcript_' || chr_id || ' transcript
-        SET ' || field || ' = temp_t.sum_tags::numeric/temp_t.kb_width/' || millions_of_tags || '::numeric
+        SET parent_id = temp_t.gene_id
         FROM ' || temp_table || ' temp_t
-        WHERE transcript.id = temp_t.id';
+        WHERE transcript.id = temp_t.post_gene_id';
 
     RETURN;
 END;
