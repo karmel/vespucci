@@ -35,7 +35,7 @@ def check_input(options):
         
     # Get a file name prefix for use with generated files, 
     # using input file as base
-    generated_name = '.'.join(os.path.basename(options.file_name).split('.')[:-1])
+    generated_name = '.'.join(os.path.basename(options.file_name or '').split('.')[:-1])
     file_name = options.project_name or generated_name
     
     return file_name
