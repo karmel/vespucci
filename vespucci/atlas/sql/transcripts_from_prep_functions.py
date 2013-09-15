@@ -70,7 +70,7 @@ BEGIN
                     ON t.id = s.atlas_transcript_id
                 WHERE t.strand = ' || strand || '
                 GROUP BY t.id, t.strand, t.transcription_start, t.transcription_end, t.refseq, t.density, t.edge  
-                -- Omit one-tag-wonders and one-run wonders unless they have at least 5 tags
+                -- Omit one-tag-wonders and one-run wonders unless they have at least X tags
                 HAVING avg(s.tag_count) > 1 AND (count(s.sequencing_run_id) > 1 OR avg(s.tag_count) >= ' || min_one_run_tags || ')
             ';
     EXECUTE 'CREATE INDEX ' || above_thresh_table || '_density_circle_idx ON ' || above_thresh_table || ' USING gist(density_circle)';
@@ -83,7 +83,7 @@ BEGIN
             LEFT OUTER JOIN ' || above_thresh_table  || ' t2 
             ON t1.density_circle @> t2.start_density 
                 AND t1.strand = t2.strand 
-                AND t1.refseq = t2.refseq
+                AND COALESCE(t1.refseq, false) = COALESCE(t2.refseq, false)
                 AND t1.transcription_start <= t2.transcription_start -- Omit upstream transcripts in the circle 
             GROUP by t1.id, t1.strand, t1.transcription_start, t1.transcription_end, t1.refseq
             ORDER by t1.transcription_start ASC'
