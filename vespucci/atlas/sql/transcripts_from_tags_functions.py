@@ -153,7 +153,7 @@ BEGIN
                 last_end := rec.transcription_end;
             END IF;
             IF (current_refseq IS NULL) THEN
-                current_refseq := rec.refseq;
+                current_refseq := COALESCE(rec.refseq, false);
             END IF;
 
             -- Include this tag if it doesn't violate a refseq boundary,
@@ -166,9 +166,10 @@ BEGIN
             -- rec.transcription_end = 11, and rec.transcription_start gets set to 
             -- last_end + 1, rendering a 0-bp transcript. Checking for last_end + 1
             -- means that any clipped transcript is at least 1bp long.
-            IF ((current_refseq = rec.refseq) OR (last_end + 1 >= rec.transcription_end)) THEN
-                IF ((last_end + max_gap) >= rec.transcription_start) THEN should_merge := true; 
-                END IF;
+            IF ((COALESCE(current_refseq, false) = COALESCE(rec.refseq, false)) 
+                OR (last_end + 1 >= rec.transcription_end)) THEN
+                    IF ((last_end + max_gap) >= rec.transcription_start) THEN should_merge := true; 
+                    END IF;
             END IF;
             
             IF should_merge = true THEN
@@ -197,7 +198,7 @@ BEGIN
             row.transcription_start := last_start;
             row.transcription_end := last_end;
             row.tag_count := tag_count;
-            row.refseq := current_refseq;
+            row.refseq := COALESCE(current_refseq, false);
             row.gaps := gaps;
             row.ids := ids;
             
@@ -220,7 +221,7 @@ BEGIN
                 last_start := (SELECT GREATEST(last_end + 1, rec.transcription_start));
                 last_end := rec.transcription_end;
                 tag_count := rec.tag_count;
-                current_refseq = rec.refseq;
+                current_refseq = COALESCE(rec.refseq, false);
                 gaps := 0;
                 ids := rec.ids::integer[];
                 finish_row := false;
@@ -231,7 +232,7 @@ BEGIN
                 row.transcription_start := last_start;
                 row.transcription_end := last_end;
                 row.tag_count := tag_count;
-                row.refseq := current_refseq;
+                row.refseq := COALESCE(current_refseq, false);
                 row.gaps := gaps;
                 row.ids := ids;
                 
