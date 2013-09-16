@@ -208,14 +208,11 @@ class AtlasTag(DynamicTable):
     def _set_refseq(cls, chr_list):
         '''
         Set refseq status for segmentation during stitching later on by 
-        overlapping with consolodated refseq transcripts.
+        overlapping with consolidated refseq transcripts.
         '''
         for chr_id in chr_list:
             print 'Setting Refseq status for chromosome {0}'.format(chr_id)
             update_query = """
-            UPDATE "{0}_{1}" tag 
-            SET refseq = NULL; 
-
             UPDATE "{0}_{1}" tag 
             SET refseq = true 
             FROM atlas_{2}_refseq_prep.atlas_transcript_{1} ref
