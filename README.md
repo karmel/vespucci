@@ -117,7 +117,8 @@ Once the genome schemas are set up, you can proceed to process and build Vespucc
 	* `--output_dir`: the path to a location that Vespucci can place some output data while processing tags
 	* `--schema_name`: a name for the schema you would like all the tag tables to be placed in; should be Postgres-friendly (i.e., no spaces or unusual characters)
 	* `--project_name`: a descriptive label of the experiment in question for your future reference; this will be used in the naming of tag tables, so it should be Postgres-friendly (i.e., no spaces or unusual characters)
-	* `--processes`: the number of daughter processes to use; three is good for an m1.small Amazon instance
+	* `--processes`: the number of daughter processes to use; three is reasonable for a dedicated m1.small Amazon instance
+	* `--no_refseq_segmentation`: this option specifies that when transcripts are stitched together, RefSeq boundaries should not be enforced, and instead the full nascent transcript lengths should be respected (see referenced paper for full detail).
 	
 	Too see other available options, run the add_tags.sh script with `--help`.
 	
