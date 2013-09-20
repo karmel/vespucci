@@ -2,3 +2,4 @@
 .database_password
 output/
 input/
+.DS_Store
