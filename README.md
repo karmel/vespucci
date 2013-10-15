@@ -34,7 +34,7 @@ Notes:
 
 * If you are unfamiliar with Amazon EC2, I suggest looking first at Amazon's <a href="http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EC2_GetStarted.html" target="_blank">Getting Started Guide</a>.
 * The images are EBS backed volumes. We recommend a minimum of 100 GB of mounted space, which is sufficient for a dataset of the size discussed in the publication, but more space is recommended if you will be loading lots of data.
-* When setting up the firewall, you will minimally want SSH access to your instance. I also recommend allowing access at port 5432 if you would like to use a local client to view and manage your database, and access at port 80 if you would like to host browser sessions from your instance. The Security Group I use opens three ports:
+* When setting up the firewall, you will minimally want SSH access to your instance. I also recommend allowing access at port 5432 if you would like to use a local client to view and manage your database, access at port 80 if you would like to host browser sessions from your instance, and access at port 8080 if you would like to use the pre-installed PostgreSQL Studio GUI. The Security Group I use opens four ports:
 	* 22 (SSH): 0.0.0.0/0
 	* 80 (HTTP): 0.0.0.0/0
 	* 5432 (Postgres): 0.0.0.0/0
