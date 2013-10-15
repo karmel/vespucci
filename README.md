@@ -38,6 +38,7 @@ Notes:
 	* 22 (SSH): 0.0.0.0/0
 	* 80 (HTTP): 0.0.0.0/0
 	* 5432 (Postgres): 0.0.0.0/0
+	* 8080 (Tomcat for PostgreSQL Studio): 0.0.0.0/0
 * When in doubt, the Wizard's default options should suffice.
 
 #### B. Setting up your instance
@@ -163,13 +164,25 @@ Once the genome schemas are set up, you can proceed to process and build Vespucc
 
 #### E. Etc.
 
-You now have database tables built with assembled GRO-seq transcripts, which can be accessed with any number of [Postgres client GUIs](http://wiki.postgresql.org/wiki/Community_Guide_to_PostgreSQL_GUI_Tools), or from the psql command line: 
+You now have database tables built with assembled GRO-seq transcripts, which can be accessed with any number of <a href="http://wiki.postgresql.org/wiki/Community_Guide_to_PostgreSQL_GUI_Tools" target="_blank">Postgres client GUIs</a>, or from the psql command line: 
 
 	psql -U vespucci_user vespucci
-	
+
+The Amazon instance also comes **pre-loaded with <a href="http://www.postgresqlstudio.org" target="_blank">PostgreSQL Studio</a>**, a web-based GUI that makes viewing your databases very simple. You can connect to the web interface by directing your web browser to:
+
+	http://ec2-11-111-11-11.compute-1.amazonaws.com:8080/pgstudio
+
+And entering the appropriate Postgres credentials:
+
+	Database Host: localhost
+	Database Port: 5432
+	Database Name: vespucci
+	Username: vespucci_user
+	Password: <password you set for vespucci_user at psql prompt>
+
 The **assembled transcripts are in the atlas_mm9_default schema**, in the set of atlas_transcript tables. Please see the publication referenced above for more detail on schema layouts and sample queries in the Supplementary Information.
 
-You can **output a track for viewing on the [UCSC Genome Browser](http://genome.ucsc.edu/)** with the following command, where `--output_dir` is the location the output files should be stored:
+You can **output a track for viewing on the <a href="http://genome.ucsc.edu/" target="_blank">UCSC Genome Browser</a>** with the following command, where `--output_dir` is the location the output files should be stored:
 
 	~/Repositories/vespucci/vespucci/vespucci/atlas/pipeline/scripts/transcripts_from_tags.sh -g mm9 -c default --output_dir=/data/www/ucsc/
 
@@ -180,7 +193,7 @@ The generated files will be suffixed with the date. They can then be added as cu
 	# Anti-sense strand:
 	http://ec2-11-111-11-11.compute-1.amazonaws.com/ucsc/Atlas_Transcripts_YYYY_mm_dd_1.bed
 
-**Peak files generated using the [Homer analysis suite](http://biowhat.ucsd.edu/homer/)** can be added automatically with the following command:
+**Peak files generated using the <a href="http://biowhat.ucsd.edu/homer/" target="_blank">Homer analysis suite</a>** can be added automatically with the following command:
 
 	~/Repositories/vespucci/vespucci/vespucci/sequencing/pipeline/scripts/add_peaks.sh -g mm9 -f /data/sequencing/chipseq_1.txt --schema_name=chipseq --project_name=chipseq_1
 
