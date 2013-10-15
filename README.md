@@ -283,6 +283,16 @@ If you are comfortable at the command line, you may want to install Vespucci and
 	" > /etc/nginx/sites-available/${USER_NAME}.conf
 	ln -s /etc/nginx/sites-available/${USER_NAME}.conf /etc/nginx/sites-enabled/
 	/etc/init.d/nginx restart
+	
+	######################
+	# Install PostgreSQL Studio
+	######################
+	apt-get -y install tomcat7
+	mkdir /software/pgstudio
+	cd /software/pgstudio
+	wget http://www.postgresqlstudio.org/?ddownload=838
+	tar -xzvf index.html?ddownload=838
+	cp pgstudio.war /var/lib/tomcat7/webapps/	
 
 	######################
 	# Install Vespucci repo
