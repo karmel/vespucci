@@ -239,6 +239,9 @@ BEGIN
     
     -- Use prep tables to determine raw runs and tag counts
     millions_of_tags := (SELECT sum(tag_count)::numeric/1000000 FROM atlas_{0}_{1}_prep.atlas_transcript_source);
+    IF (millions_of_tags IS NULL) THEN
+        RAISE EXCEPTION 'There are no records in the Atlas Transcript Prep DB!';
+    END IF;
     
     temp_table = 'score_table_' || chr_id || '_' || (1000*RANDOM())::int;
     EXECUTE 'CREATE TEMP TABLE ' || temp_table || ' AS
