@@ -28,11 +28,12 @@ The current AMI is available here: <a href="https://console.aws.amazon.com/ec2/h
 
 #### A. Launching the Image 
 
-Use the Amazon AWS Launch Wizard to launch an instance using the selected Image. Vespucci should run on minimally an m1.small instance, and that is what was used for all of the data described in the paper.
+Use the Amazon AWS Launch Wizard to launch an instance using the selected Image. 
 
 Notes:
 
 * If you are unfamiliar with Amazon EC2, I suggest looking first at Amazon's <a href="http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EC2_GetStarted.html" target="_blank">Getting Started Guide</a>.
+* Vespucci should run on minimally an **m1.small** instance, and that is what was used for all of the data described in the paper.
 * The images are EBS backed volumes. We recommend a minimum of 100 GB of mounted space, which is sufficient for a dataset of the size discussed in the publication, but more space is recommended if you will be loading lots of data.
 * When setting up the firewall, you will minimally want SSH access to your instance. I also recommend allowing access at port 5432 if you would like to use a local client to view and manage your database, access at port 80 if you would like to host browser sessions from your instance, and access at port 8080 if you would like to use the pre-installed PostgreSQL Studio GUI. The Security Group I use opens four ports:
 	* 22 (SSH): 0.0.0.0/0
@@ -49,6 +50,7 @@ Notes:
 	ssh -i my_security_key.pem ubuntu@ec2-11-111-11-11.compute-1.amazonaws.com
 	sudo su -
 	```
+	Note that the image launches pre-loaded with the username ubuntu as a sudoer. The URL for your instance can be found on the Amazon AWS web listing for your instance as the **Public DNS**, and should look like the example above.
 
 1. Change the vespucci user password:
 
@@ -101,10 +103,11 @@ To install a genome that is not included with Vespucci, see section III below.
 
 Once the genome schemas are set up, you can proceed to process and build Vespucci transcripts for your experimental data. In these examples, I am using `mm9`; simply replace that with `hg19` or `dm3` as desired. The option `-c default` here indicates that the default schema should be used; if you set up cell-type-specific schemas (i.e., `-c es_cell`) in section C, simply replace the `default` with the appropriate identifier.
 
-1. Transfer over the mapped SAM or BAM GRO-seq files you will be using. I suggest putting these files, which can be rather large, in the /data directory, which is the mounted Amazon EBS volume.
+1. Transfer over the mapped SAM or BAM GRO-seq files you will be using. I suggest putting these files, which can be rather large, in the /data directory, which is the mounted Amazon EBS volume. Note that you must decompress SAM and BAM files if necessary.
 
 	```
-	scp me@my-local-server.com:/path/to/my/data/groseq_1.sam /data/sequencing
+	scp me@my-local-server.com:/path/to/my/data/groseq_1.sam.gz /data/sequencing
+	gunzip /data/sequencing/groseq_1.sam.gz
 	```
 
 1. For each separate experiment file, add the raw tags to the Vespucci database:
@@ -126,7 +129,8 @@ Once the genome schemas are set up, you can proceed to process and build Vespucc
 1. Repeat the two steps above for all separate sequencing files. The `groseq` schema that has been added will then have numerous tables-- one for each sequencing run added, with separate partitions for each chromosome.
 
 	```
-	scp me@my-local-server.com:/path/to/my/data/groseq_2.sam /data/sequencing
+	scp me@my-local-server.com:/path/to/my/data/groseq_2.sam.gz /data/sequencing
+	gunzip /data/sequencing/groseq_2.sam.gz
 	~/Repositories/vespucci/vespucci/vespucci/sequencing/pipeline/scripts/add_tags.sh -g mm9 -c default -f /data/sequencing/groseq_2.sam  --output_dir=/data/sequencing/  --schema_name=groseq --project_name=groseq_2 --processes=3 
 	```
 
