@@ -6,3 +6,4 @@
 
 The URL for your instance can be found on the Amazon AWS web listing for your instance as the **Public DNS**:
 
+<a href="/documentation/images/finding_AWS_URL_large.png" target="_blank">![Screenshot of AWS interface](/documentation/images/finding_AWS_URL.png)</a>
