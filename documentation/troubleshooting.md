@@ -20,6 +20,8 @@ There are many possible causes for this, but the one that we have seen during Ve
 
 #### I want to try building Vespucci with different parameters. Do I have to restart?
 
+#### I killed a process while it was in the middle of running. What do I do?
+
 
 ## Using Vespucci
 
