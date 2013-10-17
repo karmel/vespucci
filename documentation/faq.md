@@ -45,4 +45,4 @@ Yes; once the raw tag tables have been converted to proto-transcripts, they are 
 
 <a href="/documentation/images/drop_table_large.png" target="_blank"><img alt="Dropping a tag table in pgstudio" src="/images/drop_table.png" /></a>
 
-#### I loaded all my data. Now what?
+#### I loaded all my data. Now what? 
