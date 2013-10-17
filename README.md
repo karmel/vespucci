@@ -103,6 +103,8 @@ To install a genome that is not included with Vespucci, see section III below.
 
 Once the genome schemas are set up, you can proceed to process and build Vespucci transcripts for your experimental data. In these examples, I am using `mm9`; simply replace that with `hg19` or `dm3` as desired. The option `-c default` here indicates that the default schema should be used; if you set up cell-type-specific schemas (i.e., `-c es_cell`) in section C, simply replace the `default` with the appropriate identifier.
 
+**Note: Some of the data loading can take a very long time. We recommend backgrounding processes by adding an ampersand (&) to the end of the command line, or running processes in a <a href="http://www.gnu.org/software/screen/manual/screen.html" target="_blank">screen</a>.**
+
 1. Transfer over the mapped SAM or BAM GRO-seq files you will be using. I suggest putting these files, which can be rather large, in the /data directory, which is the mounted Amazon EBS volume. Note that you must decompress SAM and BAM files if necessary.
 
 	```
@@ -211,6 +213,9 @@ If you are comfortable at the command line, you may want to install Vespucci and
 	
 	apt-get update
 	apt-get -y install gcc git
+	
+	# Enable screen for all users
+	chmod a+rw /dev/pts/0
 	
 	######################
 	# Install python + pkgs
