@@ -4,6 +4,10 @@
 
 Code written by Karmel Allison. Questions? Comments? Concerns? Email karmel@arcaio.com.
 
+* (About)[#about]
+* (Installation)[#Installation]
+* (Troubleshooting)[#Troubleshooting]
+
 ## About
 
 What does Vespucci do? Briefly, it **analyzes GRO-sequencing data and allows the integration of many different genomic data types**, including ChIP-seq data, annotated databases, repeats, and so on. For the complete story, read the paper at @todo.
