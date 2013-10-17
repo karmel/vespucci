@@ -41,7 +41,7 @@ No. You can simply delete (or rename) the final Vespucci schema you built. (For 
 
 #### All these raw tag tables take up a lot of space. Can I delete them?
 
-Yes; once the raw tag tables have been converted to proto-transcripts, they are no longer used. We find keeping raw tag tables around can be useful for other purposes, but if you don't need them, feel free to drop them. This is easy to do using the PostgresSQL Studio interface that comes with the Amazon instance:
+Yes; once the raw tag tables have been converted to proto-transcripts, they are no longer used. We find keeping raw tag tables around can be useful for other purposes, but if you don't need them, feel free to drop them. This is easy to do using the <a href="/README.md#pgstudio_link" target="_blank">PostgresSQL Studio interface that comes with the Amazon instance</a>:
 
 <a href="/documentation/images/drop_table_large.png" target="_blank"><img alt="Dropping a tag table in pgstudio" src="/images/drop_table.png" /></a>
 
