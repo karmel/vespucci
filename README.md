@@ -4,9 +4,9 @@
 
 Code written by Karmel Allison. Questions? Comments? Concerns? Email karmel@arcaio.com.
 
-* (About)[#about]
-* (Installation)[#Installation]
-* (Troubleshooting)[#Troubleshooting]
+* [About](#about)
+* [Installation](#Installation)
+* [Troubleshooting](#Troubleshooting)
 
 ## About
 
