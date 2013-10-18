@@ -14,7 +14,6 @@ def signal_handler(signal, frame):
     rollback_savepoint(current_settings.LAST_SAVEPOINT)
     
 signal.signal(signal.SIGINT, signal_handler)
-signal.signal(signal.SIGKILL, signal_handler)
 
 def execute_query(query, 
                   using='default', 
