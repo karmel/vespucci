@@ -313,13 +313,13 @@ class AtlasTranscript(TranscriptBase):
                     allow_extended_gaps=True, 
                     extension_percent='.2', 
                     null_only=True):
-        set_savepoint()
+        set_savepoint('set_density')
         multiprocess_all_chromosomes(wrap_set_density, 
                                      cls, 
                                      allow_extended_gaps, 
                                      extension_percent, 
                                      null_only)
-        release_savepoint()
+        release_savepoint('set_density')
     
     @classmethod
     def _set_density(cls, chr_list, 
