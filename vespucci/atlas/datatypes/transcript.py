@@ -11,8 +11,8 @@ from vespucci.genomereference.datatypes import Chromosome,\
     SequencingRun
 from vespucci.utils.datatypes.basic_model import Int8RangeField, VespucciModel
 from multiprocessing import Pool
-from vespucci.utils.database import execute_query, fetch_rows, begin_transaction,\
-    commit_transaction, execute_query_without_transaction
+from vespucci.utils.database import execute_query, fetch_rows, set_savepoint,\
+    release_savepoint, execute_query_without_transaction, rollback_savepoint
 import os
 from django.db.models.aggregates import Max
 from datetime import datetime
@@ -233,10 +233,10 @@ class AtlasTranscript(TranscriptBase):
     ################################################
     @classmethod 
     def add_transcripts_from_groseq(cls,  tag_table, sequencing_run):
-        begin_transaction()
+        set_savepoint()
         multiprocess_all_chromosomes(wrap_add_transcripts_from_groseq, cls, 
                                      sequencing_run, use_table=tag_table)
-        commit_transaction()
+        release_savepoint()
          
     @classmethod
     def _add_transcripts_from_groseq(cls, chr_list, sequencing_run):
@@ -266,14 +266,14 @@ class AtlasTranscript(TranscriptBase):
                                     extension_percent='.2', 
                                     set_density=False, 
                                     null_only=True):
-        begin_transaction()
+        set_savepoint()
         multiprocess_all_chromosomes(wrap_stitch_together_transcripts, 
                                      cls, 
                                      allow_extended_gaps, 
                                      extension_percent, 
                                      set_density, 
                                      null_only)
-        commit_transaction()
+        release_savepoint()
     
     @classmethod
     def _stitch_together_transcripts(cls, chr_list, 
@@ -313,13 +313,13 @@ class AtlasTranscript(TranscriptBase):
                     allow_extended_gaps=True, 
                     extension_percent='.2', 
                     null_only=True):
-        begin_transaction()
+        set_savepoint()
         multiprocess_all_chromosomes(wrap_set_density, 
                                      cls, 
                                      allow_extended_gaps, 
                                      extension_percent, 
                                      null_only)
-        commit_transaction()
+        release_savepoint()
     
     @classmethod
     def _set_density(cls, chr_list, 
@@ -341,13 +341,16 @@ class AtlasTranscript(TranscriptBase):
                            allow_extended_gaps and 'true' or 'false',
                            extension_percent,
                            null_only and 'true' or 'false')
-            execute_query_without_transaction(query)
+            execute_query(query)
             
     @classmethod
     def draw_transcript_edges(cls):
-        begin_transaction()
-        multiprocess_all_chromosomes(wrap_draw_transcript_edges, cls)
-        commit_transaction()
+        try:
+            set_savepoint('draw_transcript_edges')
+            multiprocess_all_chromosomes(wrap_draw_transcript_edges, cls)
+            release_savepoint('draw_transcript_edges')
+        except Exception:
+            rollback_savepoint('draw_transcript_edges')
         
     @classmethod
     def _draw_transcript_edges(cls, chr_list):
@@ -364,9 +367,9 @@ class AtlasTranscript(TranscriptBase):
             
     @classmethod
     def set_scores(cls):
-        begin_transaction()
+        set_savepoint()
         multiprocess_all_chromosomes(wrap_set_scores, cls)
-        commit_transaction()
+        release_savepoint()
     
     @classmethod
     def _set_scores(cls, chr_list):

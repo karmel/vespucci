@@ -3,8 +3,18 @@ Created on Nov 15, 2010
 
 @author: karmel
 '''
+import signal
 from django.db import transaction, connections
 from vespucci.config import current_settings
+
+################################
+# Handle user kills gracefully.
+################################
+def signal_handler(signal, frame):
+    rollback_savepoint(current_settings.LAST_SAVEPOINT)
+    
+signal.signal(signal.SIGINT, signal_handler)
+signal.signal(signal.SIGKILL, signal_handler)
 
 def execute_query(query, 
                   using='default', 
@@ -49,10 +59,17 @@ def discard_temp_tables(using='default'):
     '''
     execute_query_without_transaction('DISCARD TEMP;', using=using)
     
-def begin_transaction(using='default'):
-    execute_query_without_transaction('BEGIN;', using)
-def commit_transaction(using='default'):
-    execute_query_without_transaction('COMMIT;', using)
+def set_savepoint(name, using='default'):
+    execute_query('SAVEPOINT {};'.format(name), using)
+    current_settings.LAST_SAVEPOINT = name
+def release_savepoint(name, using='default'):
+    execute_query('RELEASE SAVEPOINT {};'.format(name), using)
+    if current_settings.LAST_SAVEPOINT == name: 
+        current_settings.LAST_SAVEPOINT = None
+def rollback_savepoint(name, using='default'):
+    execute_query('ROLLBACK TO SAVEPOINT {};'.format(name), using)
+    if current_settings.LAST_SAVEPOINT == name: 
+        current_settings.LAST_SAVEPOINT = None
     
 class SqlGenerator(object):
     ''' 
@@ -76,3 +93,4 @@ class SqlGenerator(object):
             SET DEFAULT nextval('"{0}"."{1}_id_seq"'::regclass);
         ALTER TABLE ONLY "{0}"."{1}" ADD CONSTRAINT {1}_pkey PRIMARY KEY (id);
         """.format(schema_name, table_name, user=self.user)
+

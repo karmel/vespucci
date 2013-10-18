@@ -50,6 +50,7 @@ DATABASES = {
     },
 
 }
+LAST_SAVEPOINT = None
 
 #####################################
 # Compute power
