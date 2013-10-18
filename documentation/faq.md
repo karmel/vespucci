@@ -15,7 +15,7 @@ The URL for your instance can be found on the Amazon AWS web listing for your in
 
 Are you sure you uncompressed the file before you loaded it in? Does the file suffix indicate the file type (*.sam)? If not, did you specify --input_file_type=sam when running the `add_tags.sh` command? Is the SAM file corrupted in any way? Vespucci limits reads to those that are uniquely mapped; does your sample include only repeat data?
 
-Once you figure out what the cause is, you can drop the empty tag table and retry the `add_tags.sh` command with the fixed SAM file. This is easy to do using the <a href="/README.md#pgstudio-link" target="_blank">PostgresSQL Studio interface that comes with the Amazon instance</a>:
+Once you figure out what the cause is, you can drop the empty tag table and retry the `add_tags.sh` command with the fixed SAM file. This is easy to do using the <a href="/README.md#e-etc" target="_blank">PostgresSQL Studio interface that comes with the Amazon instance</a>:
 
 <a href="/documentation/images/drop_table_large.png" target="_blank"><img alt="Dropping a tag table in pgstudio" src="/images/drop_table.png" /></a>
 
@@ -31,7 +31,7 @@ If your raw tag tables have data, but that data didn't make it into the preparat
 
 #### I want to try building Vespucci with a different MAX_EDGE or DENSITY_MULTIPLIER. Do I have to restart from the beginning?
 
-No. You can simply delete (or rename) the final Vespucci schema you built. (For example, rename `atlas_mm9_default` to `atlas_mm9_default_max_edge_500` using the <a href="/README.md#pgstudio-link" target="_blank">PostgreSQL Studio interface</a>.) Then, you can set up the new database with the command:
+No. You can simply delete (or rename) the final Vespucci schema you built. (For example, rename `atlas_mm9_default` to `atlas_mm9_default_max_edge_500` using the <a href="/README.md#e-etc" target="_blank">PostgreSQL Studio interface</a>.) Then, you can set up the new database with the command:
 
 	~/Repositories/vespucci/vespucci/vespucci/atlas/pipeline/scripts/set_up_database.sh -g mm9 -c default --final
 
@@ -44,7 +44,7 @@ No. You can simply delete (or rename) the final Vespucci schema you built. (For 
 
 #### All these raw tag tables take up a lot of space. Can I delete them?
 
-Yes; once the raw tag tables have been converted to proto-transcripts, they are no longer used. We find keeping raw tag tables around can be useful for other purposes, but if you don't need them, feel free to drop them. This is easy to do using the <a href="/README.md#pgstudio-link" target="_blank">PostgresSQL Studio interface that comes with the Amazon instance</a>:
+Yes; once the raw tag tables have been converted to proto-transcripts, they are no longer used. We find keeping raw tag tables around can be useful for other purposes, but if you don't need them, feel free to drop them. This is easy to do using the <a href="/README.md#e-etc" target="_blank">PostgresSQL Studio interface that comes with the Amazon instance</a>:
 
 <a href="/documentation/images/drop_table_large.png" target="_blank"><img alt="Dropping a tag table in pgstudio" src="/images/drop_table.png" /></a>
 
