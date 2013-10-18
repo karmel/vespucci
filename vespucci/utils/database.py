@@ -6,7 +6,6 @@ Created on Nov 15, 2010
 from django.db import transaction, connections
 from vespucci.config import current_settings
 
-
 def execute_query(query, 
                   using='default', 
                   return_cursor=False, 
@@ -50,20 +49,7 @@ def discard_temp_tables(using='default'):
     '''
     execute_query_without_transaction('DISCARD TEMP;', using=using)
     
-def set_savepoint(name, using='default'):
-    execute_query('SAVEPOINT {};'.format(name), using)
-    print 'Setting ' + name
-    current_settings.LAST_SAVEPOINT = name
-def release_savepoint(name, using='default'):
-    execute_query('RELEASE SAVEPOINT {};'.format(name), using)
-    print 'Releasing ' + name
-    if current_settings.LAST_SAVEPOINT == name: 
-        current_settings.LAST_SAVEPOINT = None
-def rollback_savepoint(name, using='default'):
-    execute_query('ROLLBACK TO SAVEPOINT {};'.format(name), using)
-    print 'Rolling back to ' + name
-    if current_settings.LAST_SAVEPOINT == name: 
-        current_settings.LAST_SAVEPOINT = None
+    
     
 class SqlGenerator(object):
     ''' 
@@ -87,4 +73,3 @@ class SqlGenerator(object):
             SET DEFAULT nextval('"{0}"."{1}_id_seq"'::regclass);
         ALTER TABLE ONLY "{0}"."{1}" ADD CONSTRAINT {1}_pkey PRIMARY KEY (id);
         """.format(schema_name, table_name, user=self.user)
-
