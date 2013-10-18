@@ -67,6 +67,7 @@ def release_savepoint(name, using='default'):
         current_settings.LAST_SAVEPOINT = None
 def rollback_savepoint(name, using='default'):
     execute_query('ROLLBACK TO SAVEPOINT {};'.format(name), using)
+    print 'Rolled back to ' + name
     if current_settings.LAST_SAVEPOINT == name: 
         current_settings.LAST_SAVEPOINT = None
     
