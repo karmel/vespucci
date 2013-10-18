@@ -179,7 +179,7 @@ You now have database tables built with assembled GRO-seq transcripts, which can
 
 	psql -U vespucci_user vespucci
 
-The Amazon instance also comes **pre-loaded with <a href="http://www.postgresqlstudio.org" target="_blank" id="pgstudio-link">PostgreSQL Studio</a>**, a web-based GUI that makes viewing your databases very simple. You can connect to the web interface by directing your web browser to:
+<span  id="pgstudio-link">The Amazon instance also comes **pre-loaded with <a href="http://www.postgresqlstudio.org" target="_blank">PostgreSQL Studio</a>**, a web-based GUI that makes viewing your databases very simple. You can connect to the web interface by directing your web browser to:</span>
 
 	http://ec2-11-111-11-11.compute-1.amazonaws.com:8080/pgstudio
 
