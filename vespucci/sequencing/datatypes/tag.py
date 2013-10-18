@@ -8,8 +8,7 @@ from django.db import models, connection
 from vespucci.genomereference.datatypes import Chromosome, SequencingRun
 from vespucci.config import current_settings
 from vespucci.utils.datatypes.basic_model import DynamicTable, Int8RangeField
-from vespucci.utils.database import execute_query, begin_transaction,\
-    commit_transaction
+from vespucci.utils.database import execute_query
 from vespucci.atlas.datatypes.transcript import multiprocess_all_chromosomes,\
     wrap_errors
 
@@ -203,9 +202,7 @@ class AtlasTag(DynamicTable):
                             
     @classmethod
     def set_refseq(cls):
-        begin_transaction()
         multiprocess_all_chromosomes(wrap_set_refseq, cls)
-        commit_transaction()
         
     @classmethod
     def _set_refseq(cls, chr_list):
@@ -246,9 +243,7 @@ class AtlasTag(DynamicTable):
 
     @classmethod
     def add_indices(cls):
-        begin_transaction()
         multiprocess_all_chromosomes(wrap_add_indices, cls)
-        commit_transaction()
         
     @classmethod
     def _add_indices(cls, chr_list):
