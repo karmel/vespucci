@@ -50,9 +50,9 @@ def discard_temp_tables(using='default'):
     execute_query_without_transaction('DISCARD TEMP;', using=using)
     
 def begin_transaction(using='default'):
-    execute_query('BEGIN;', using)
+    execute_query_without_transaction('BEGIN;', using)
 def commit_transaction(using='default'):
-    execute_query('COMMIT;', using)
+    execute_query_without_transaction('COMMIT;', using)
     
 class SqlGenerator(object):
     ''' 

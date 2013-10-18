@@ -12,7 +12,7 @@ from vespucci.genomereference.datatypes import Chromosome,\
 from vespucci.utils.datatypes.basic_model import Int8RangeField, VespucciModel
 from multiprocessing import Pool
 from vespucci.utils.database import execute_query, fetch_rows, begin_transaction,\
-    commit_transaction
+    commit_transaction, execute_query_without_transaction
 import os
 from django.db.models.aggregates import Max
 from datetime import datetime
@@ -341,7 +341,7 @@ class AtlasTranscript(TranscriptBase):
                            allow_extended_gaps and 'true' or 'false',
                            extension_percent,
                            null_only and 'true' or 'false')
-            execute_query(query)
+            execute_query_without_transaction(query)
             
     @classmethod
     def draw_transcript_edges(cls):
