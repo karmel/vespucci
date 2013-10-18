@@ -3,21 +3,9 @@ Created on Nov 15, 2010
 
 @author: karmel
 '''
-import signal
 from django.db import transaction, connections
 from vespucci.config import current_settings
 
-################################
-# Handle user kills gracefully.
-################################
-def signal_handler(signal, frame):
-    print 'Caught SIGINT'
-    if current_settings.CURRENT_MULTIPROCESS:
-        current_settings.CURRENT_MULTIPROCESS.terminate()
-    if current_settings.LAST_SAVEPOINT:
-        rollback_savepoint(current_settings.LAST_SAVEPOINT)
-    
-signal.signal(signal.SIGINT, signal_handler)
 
 def execute_query(query, 
                   using='default', 

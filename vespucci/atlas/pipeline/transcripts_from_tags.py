@@ -6,8 +6,9 @@ Created on Nov 8, 2010
 from vespucci.sequencing.datatypes.tag import AtlasTag
 from optparse import make_option
 from vespucci.config import current_settings
-from vespucci.utils.database import discard_temp_tables
+from vespucci.utils.database import discard_temp_tables, rollback_savepoint
 from vespucci.utils.scripting import VespucciOptionParser
+import signal
 
 class TranscriptsFromTagsParser(VespucciOptionParser):
     options = [
@@ -120,3 +121,17 @@ if __name__ == '__main__':
         cell_base.filtered_atlas_transcript.generate_bed_file(options.output_dir)
         
     discard_temp_tables()
+    
+    
+################################
+# Handle user kills gracefully.
+################################
+def signal_handler(signal, frame):
+    
+    print 'Caught SIGINT'
+    if current_settings.CURRENT_MULTIPROCESS:
+        current_settings.CURRENT_MULTIPROCESS.terminate()
+    if current_settings.LAST_SAVEPOINT:
+        rollback_savepoint(current_settings.LAST_SAVEPOINT)
+    
+signal.signal(signal.SIGINT, signal_handler)
