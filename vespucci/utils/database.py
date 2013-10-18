@@ -11,7 +11,10 @@ from vespucci.config import current_settings
 # Handle user kills gracefully.
 ################################
 def signal_handler(signal, frame):
-    rollback_savepoint(current_settings.LAST_SAVEPOINT)
+    if current_settings.CURRENT_MULTIPROCESS:
+        current_settings.CURRENT_MULTIPROCESS.terminate()
+    if current_settings.LAST_SAVEPOINT:
+        rollback_savepoint(current_settings.LAST_SAVEPOINT)
     
 signal.signal(signal.SIGINT, signal_handler)
 
@@ -67,7 +70,6 @@ def release_savepoint(name, using='default'):
         current_settings.LAST_SAVEPOINT = None
 def rollback_savepoint(name, using='default'):
     execute_query('ROLLBACK TO SAVEPOINT {};'.format(name), using)
-    print 'Rolled back to ' + name
     if current_settings.LAST_SAVEPOINT == name: 
         current_settings.LAST_SAVEPOINT = None
     

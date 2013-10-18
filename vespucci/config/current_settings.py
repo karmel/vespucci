@@ -56,6 +56,7 @@ LAST_SAVEPOINT = None
 # Compute power
 #####################################
 ALLOWED_PROCESSES = 5
+CURRENT_MULTIPROCESS = None
 CHR_LISTS = None # Dynamically set during processing
 
 #####################################

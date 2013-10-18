@@ -12,7 +12,7 @@ from vespucci.genomereference.datatypes import Chromosome,\
 from vespucci.utils.datatypes.basic_model import Int8RangeField, VespucciModel
 from multiprocessing import Pool
 from vespucci.utils.database import execute_query, fetch_rows, set_savepoint,\
-    release_savepoint, execute_query_without_transaction, rollback_savepoint
+    release_savepoint, rollback_savepoint
 import os
 from django.db.models.aggregates import Max
 from datetime import datetime
@@ -86,10 +86,12 @@ def multiprocess_all_chromosomes(func, cls, *args, **kwargs):
                                         str(current_settings.CHR_LISTS))
     
     p = Pool(processes)
+    current_settings.CURRENT_MULTIPROCESS = p
     for chr_list in current_settings.CHR_LISTS:
         p.apply_async(func, args=[cls, chr_list,] + list(args))
     p.close()
     p.join()
+    current_settings.CURRENT_MULTIPROCESS = None
 
 # The following methods wrap bound methods. This is necessary
 # for use with multiprocessing. Note that getattr with dynamic function names
