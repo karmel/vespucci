@@ -11,8 +11,7 @@ from vespucci.genomereference.datatypes import Chromosome,\
     SequencingRun
 from vespucci.utils.datatypes.basic_model import Int8RangeField, VespucciModel
 from multiprocessing import Pool
-from vespucci.utils.database import execute_query, fetch_rows, set_savepoint,\
-    release_savepoint, rollback_savepoint
+from vespucci.utils.database import execute_query, fetch_rows
 import os
 from django.db.models.aggregates import Max
 from datetime import datetime
@@ -86,12 +85,10 @@ def multiprocess_all_chromosomes(func, cls, *args, **kwargs):
                                         str(current_settings.CHR_LISTS))
     
     p = Pool(processes)
-    current_settings.CURRENT_MULTIPROCESS = p
     for chr_list in current_settings.CHR_LISTS:
         p.apply_async(func, args=[cls, chr_list,] + list(args))
     p.close()
     p.join()
-    current_settings.CURRENT_MULTIPROCESS = None
 
 # The following methods wrap bound methods. This is necessary
 # for use with multiprocessing. Note that getattr with dynamic function names
@@ -235,10 +232,8 @@ class AtlasTranscript(TranscriptBase):
     ################################################
     @classmethod 
     def add_transcripts_from_groseq(cls,  tag_table, sequencing_run):
-        set_savepoint()
         multiprocess_all_chromosomes(wrap_add_transcripts_from_groseq, cls, 
                                      sequencing_run, use_table=tag_table)
-        release_savepoint()
          
     @classmethod
     def _add_transcripts_from_groseq(cls, chr_list, sequencing_run):
@@ -268,14 +263,12 @@ class AtlasTranscript(TranscriptBase):
                                     extension_percent='.2', 
                                     set_density=False, 
                                     null_only=True):
-        set_savepoint()
         multiprocess_all_chromosomes(wrap_stitch_together_transcripts, 
                                      cls, 
                                      allow_extended_gaps, 
                                      extension_percent, 
                                      set_density, 
                                      null_only)
-        release_savepoint()
     
     @classmethod
     def _stitch_together_transcripts(cls, chr_list, 
@@ -315,13 +308,11 @@ class AtlasTranscript(TranscriptBase):
                     allow_extended_gaps=True, 
                     extension_percent='.2', 
                     null_only=True):
-        set_savepoint('set_density')
         multiprocess_all_chromosomes(wrap_set_density, 
                                      cls, 
                                      allow_extended_gaps, 
                                      extension_percent, 
                                      null_only)
-        release_savepoint('set_density')
     
     @classmethod
     def _set_density(cls, chr_list, 
@@ -347,12 +338,7 @@ class AtlasTranscript(TranscriptBase):
             
     @classmethod
     def draw_transcript_edges(cls):
-        try:
-            set_savepoint('draw_transcript_edges')
-            multiprocess_all_chromosomes(wrap_draw_transcript_edges, cls)
-            release_savepoint('draw_transcript_edges')
-        except Exception:
-            rollback_savepoint('draw_transcript_edges')
+        multiprocess_all_chromosomes(wrap_draw_transcript_edges, cls)
         
     @classmethod
     def _draw_transcript_edges(cls, chr_list):
@@ -369,9 +355,7 @@ class AtlasTranscript(TranscriptBase):
             
     @classmethod
     def set_scores(cls):
-        set_savepoint()
         multiprocess_all_chromosomes(wrap_set_scores, cls)
-        release_savepoint()
     
     @classmethod
     def _set_scores(cls, chr_list):
