@@ -330,19 +330,22 @@ class AtlasTranscript(TranscriptBase):
         '''
         Force reset average tags for prep DB.
         '''
-        for chr_id  in chr_list:
-            print 'Setting density for transcripts for chr_id %d' % chr_id
-            query = """
-                SELECT atlas_{}_{}_prep.set_density({},{},{},{},{},{},{});
-                """.format(current_settings.GENOME, 
-                           current_settings.CELL_TYPE.lower(),
-                           chr_id, current_settings.MAX_EDGE, 
-                           EDGE_SCALING_FACTOR, 
-                           current_settings.DENSITY_MULTIPLIER, 
-                           allow_extended_gaps and 'true' or 'false',
-                           extension_percent,
-                           null_only and 'true' or 'false')
-            execute_query_in_transaction(query)
+        try: 
+            for chr_id  in chr_list:
+                print 'Setting density for transcripts for chr_id %d' % chr_id
+                query = """
+                    SELECT atlas_{}_{}_prep.set_density({},{},{},{},{},{},{});
+                    """.format(current_settings.GENOME, 
+                               current_settings.CELL_TYPE.lower(),
+                               chr_id, current_settings.MAX_EDGE, 
+                               EDGE_SCALING_FACTOR, 
+                               current_settings.DENSITY_MULTIPLIER, 
+                               allow_extended_gaps and 'true' or 'false',
+                               extension_percent,
+                               null_only and 'true' or 'false')
+                execute_query_in_transaction(query)
+        except Exception:
+            rollback_transaction()
             
     @classmethod
     def draw_transcript_edges(cls):
