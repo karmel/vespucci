@@ -319,8 +319,9 @@ class AtlasTranscript(TranscriptBase):
                                          extension_percent, 
                                          null_only)
             commit_transaction()
-        except Exception:
+        except Exception, e:
             rollback_transaction()
+            raise e
     
     @classmethod
     def _set_density(cls, chr_list, 

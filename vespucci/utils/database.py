@@ -51,11 +51,13 @@ def begin_transaction(using='default'):
     connection.close()
     connection.isolation_level = 0
     cursor = connection.cursor()
+    print 'Beginning transaction.'
     cursor.execute('BEGIN;')
 
 def commit_transaction(using='default'):
     connection = connections[using]
     cursor = connection.cursor()
+    print 'Committing transaction.'
     cursor.execute('COMMIT;')
     transaction.commit_unless_managed()
     connection.isolation_level = current_settings.ISOLATION_LEVEL
