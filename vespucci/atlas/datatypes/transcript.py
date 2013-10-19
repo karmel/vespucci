@@ -13,7 +13,7 @@ from vespucci.utils.datatypes.basic_model import Int8RangeField, VespucciModel
 from multiprocessing import Pool
 from vespucci.utils.database import execute_query, fetch_rows,\
     execute_query_without_transaction, begin_transaction, rollback_transaction,\
-    execute_query_in_transaction
+    execute_query_in_transaction, commit_transaction
 import os
 from django.db.models.aggregates import Max
 from datetime import datetime
@@ -311,13 +311,16 @@ class AtlasTranscript(TranscriptBase):
                     extension_percent='.2', 
                     null_only=True):
         
-        begin_transaction()
-        multiprocess_all_chromosomes(wrap_set_density, 
-                                     cls, 
-                                     allow_extended_gaps, 
-                                     extension_percent, 
-                                     null_only)
-        rollback_transaction()
+        try:
+            begin_transaction()
+            multiprocess_all_chromosomes(wrap_set_density, 
+                                         cls, 
+                                         allow_extended_gaps, 
+                                         extension_percent, 
+                                         null_only)
+            commit_transaction()
+        except Exception:
+            rollback_transaction()
     
     @classmethod
     def _set_density(cls, chr_list, 
