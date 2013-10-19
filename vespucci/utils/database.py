@@ -12,8 +12,7 @@ from vespucci.config import current_settings
 ################################
 def signal_handler(signal, frame):
     print 'Caught SIGINT'
-    if current_settings.ISOLATION_LEVEL is not None:
-        rollback_transaction()
+    rollback_transaction()
     
 signal.signal(signal.SIGINT, signal_handler)
 signal.signal(signal.SIGTERM, signal_handler)
@@ -55,24 +54,26 @@ def begin_transaction(using='default'):
     cursor.execute('BEGIN;')
 
 def commit_transaction(using='default'):
-    connection = connections[using]
-    cursor = connection.cursor()
-    print 'Committing transaction.'
-    cursor.execute('COMMIT;')
-    transaction.commit_unless_managed()
-    connection.isolation_level = current_settings.ISOLATION_LEVEL
-    current_settings.ISOLATION_LEVEL = None
-    connection.close()
+    if current_settings.ISOLATION_LEVEL is not None:
+        connection = connections[using]
+        cursor = connection.cursor()
+        print 'Committing transaction.'
+        cursor.execute('COMMIT;')
+        transaction.commit_unless_managed()
+        connection.isolation_level = current_settings.ISOLATION_LEVEL
+        current_settings.ISOLATION_LEVEL = None
+        connection.close()
 
 def rollback_transaction(using='default'):
-    connection = connections[using]
-    cursor = connection.cursor()
-    print 'Rolling back transaction!'
-    cursor.execute('ROLLBACK;')
-    transaction.commit_unless_managed()
-    connection.isolation_level = current_settings.ISOLATION_LEVEL
-    current_settings.ISOLATION_LEVEL = None
-    connection.close()
+    if current_settings.ISOLATION_LEVEL is not None:
+        connection = connections[using]
+        cursor = connection.cursor()
+        print 'Rolling back transaction!'
+        cursor.execute('ROLLBACK;')
+        transaction.commit_unless_managed()
+        connection.isolation_level = current_settings.ISOLATION_LEVEL
+        current_settings.ISOLATION_LEVEL = None
+        connection.close()
 
 def execute_query_in_transaction(query, 
                                   using='default', 
