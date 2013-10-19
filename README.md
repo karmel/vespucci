@@ -86,7 +86,7 @@ Notes:
 
 #### C. Installing genome data
 
-**<a href="https://github.com/karmel/vespucci/blob/vespucci-videos/documentation/videos/03-Loading-data-into-Vespucci?raw=true">Watch the demo video!</a>**
+**<a href="https://github.com/karmel/vespucci/blob/vespucci-videos/documentation/videos/03-Loading-data-into-Vespucci.mp4?raw=true">Watch the demo video!</a>**
 
 The base image of Vespucci comes with the database set up, but no genome-specific schemas installed. **To install existing genome-specific schemas (hg19, mm9, or dm3):**
 
