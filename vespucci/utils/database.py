@@ -35,8 +35,7 @@ def execute_query_without_transaction(query,
     if return_cursor: return cursor
     connection.close()
 
-def begin_transaction(query, 
-                      using='default'):
+def begin_transaction(using='default'):
     connection = connections[using]
     current_settings.ISOLATION_LEVEL = connection.isolation_level
     connection.close()
@@ -44,8 +43,7 @@ def begin_transaction(query,
     cursor = connection.cursor()
     cursor.execute('BEGIN;')
 
-def commit_transaction(query, 
-                      using='default'):
+def commit_transaction(using='default'):
     connection = connections[using]
     cursor = connection.cursor()
     cursor.execute('COMMIT;')
@@ -53,8 +51,7 @@ def commit_transaction(query,
     connection.isolation_level = current_settings.ISOLATION_LEVEL
     connection.close()
 
-def rollback_transaction(query, 
-                         using='default'):
+def rollback_transaction(using='default'):
     connection = connections[using]
     cursor = connection.cursor()
     cursor.execute('ROLLBACK;')
