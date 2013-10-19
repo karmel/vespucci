@@ -54,6 +54,7 @@ def commit_transaction(using='default'):
 def rollback_transaction(using='default'):
     connection = connections[using]
     cursor = connection.cursor()
+    print 'Rolling back transaction!'
     cursor.execute('ROLLBACK;')
     transaction.commit_unless_managed()
     connection.isolation_level = current_settings.ISOLATION_LEVEL
