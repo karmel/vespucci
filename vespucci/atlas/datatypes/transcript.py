@@ -42,7 +42,7 @@ def set_chromosome_lists(cls, *args, **kwargs):
     '''
     Get and set available chromosomes to multiprocess.
     '''
-    current_settings.CHR_LISTS = [[22, 21], [20,19]] 
+    current_settings.CHR_LISTS = [[22, 21,18], [20,19]] 
     if not current_settings.CHR_LISTS:
         processes = current_settings.ALLOWED_PROCESSES
         try:
