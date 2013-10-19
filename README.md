@@ -393,4 +393,4 @@ If you are working with a genome other than hg19, mm9, or dm3, you can install t
 	~/Repositories/vespucci/vespucci/vespucci/atlas/pipeline/scripts/set_up_database.sh -g rn3 -c default
 	```
 
-The new genome database is now installed, and you can continue loading your data as described beginning in section I, part D above.
+The new genome database is now installed, and you can continue loading your data as described beginning in <a href="#d-processing-experimental-data">section I, part D</a> above.
