@@ -5,14 +5,15 @@ Created on Nov 8, 2010
 '''
 from __future__ import division
 from vespucci.config import current_settings
-from django.db import models, connection, utils, transaction
+from django.db import models, connection, utils
 from vespucci.genomereference.datatypes import Chromosome,\
     SequenceTranscriptionRegion, NonCodingTranscriptionRegion,\
     SequencingRun
 from vespucci.utils.datatypes.basic_model import Int8RangeField, VespucciModel
 from multiprocessing import Pool
 from vespucci.utils.database import execute_query, fetch_rows,\
-    execute_query_without_transaction
+    execute_query_without_transaction, begin_transaction, rollback_transaction,\
+    execute_query_in_transaction
 import os
 from django.db.models.aggregates import Max
 from datetime import datetime
@@ -305,20 +306,18 @@ class AtlasTranscript(TranscriptBase):
                 execute_query(query)
     
     @classmethod
-    @transaction.commit_on_success
     def set_density(cls, 
                     allow_extended_gaps=True, 
                     extension_percent='.2', 
                     null_only=True):
         
-        #execute_query_without_transaction('BEGIN;')
+        begin_transaction()
         multiprocess_all_chromosomes(wrap_set_density, 
                                      cls, 
                                      allow_extended_gaps, 
                                      extension_percent, 
                                      null_only)
-        raise Exception
-        #execute_query_without_transaction('ROLLBACK;')
+        rollback_transaction()
     
     @classmethod
     def _set_density(cls, chr_list, 
@@ -340,7 +339,7 @@ class AtlasTranscript(TranscriptBase):
                            allow_extended_gaps and 'true' or 'false',
                            extension_percent,
                            null_only and 'true' or 'false')
-            execute_query_without_transaction(query)
+            execute_query_in_transaction(query)
             
     @classmethod
     def draw_transcript_edges(cls):

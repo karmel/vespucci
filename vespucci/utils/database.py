@@ -35,6 +35,41 @@ def execute_query_without_transaction(query,
     if return_cursor: return cursor
     connection.close()
 
+def begin_transaction(query, 
+                      using='default'):
+    connection = connections[using]
+    current_settings.ISOLATION_LEVEL = connection.isolation_level
+    connection.close()
+    connection.isolation_level = 0
+    cursor = connection.cursor()
+    cursor.execute('BEGIN;')
+
+def commit_transaction(query, 
+                      using='default'):
+    connection = connections[using]
+    cursor = connection.cursor()
+    cursor.execute('COMMIT;')
+    transaction.commit_unless_managed()
+    connection.isolation_level = current_settings.ISOLATION_LEVEL
+    connection.close()
+
+def rollback_transaction(query, 
+                         using='default'):
+    connection = connections[using]
+    cursor = connection.cursor()
+    cursor.execute('ROLLBACK;')
+    transaction.commit_unless_managed()
+    connection.isolation_level = current_settings.ISOLATION_LEVEL
+    connection.close()
+
+def execute_query_in_transaction(query, 
+                                  using='default', 
+                                  return_cursor=False):
+    connection = connections[using]
+    cursor = connection.cursor()
+    cursor.execute(query)
+    if return_cursor: return cursor
+
 def fetch_rows(query, return_cursor=False, using='default'):
     connection = connections[using]
     connection.close()
