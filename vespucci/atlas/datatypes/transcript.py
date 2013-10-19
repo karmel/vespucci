@@ -37,6 +37,55 @@ MIN_ONE_RUN_TAGS = 3
 # Hide transcripts with scores below this threshold. 
 MIN_SCORE = 1
 
+
+def set_chromosome_lists(cls, *args, **kwargs):
+    '''
+    Get and set available chromosomes to multiprocess.
+    '''
+    processes = current_settings.ALLOWED_PROCESSES
+    try:
+        try:
+            # Note that we accept a kwarg use_table
+            all_chr = fetch_rows('''
+                SELECT chromosome_id as id
+                FROM "{0}" 
+                GROUP BY chromosome_id 
+                ORDER BY COUNT(chromosome_id) DESC;'''.format(
+                                kwargs.get('use_table',None) 
+                                or cls._meta.db_table))
+        except utils.DatabaseError:
+            # Prep table instead?
+            all_chr = fetch_rows('''
+                SELECT chromosome_id as id
+                FROM "{0}" 
+                GROUP BY chromosome_id 
+                ORDER BY COUNT(chromosome_id) DESC;'''.format(
+                    getattr(cls,'prep_table',None)
+                    or cls.cell_base.atlas_transcript_prep._meta.db_table))
+            
+        all_chr = zip(*all_chr)[0]
+        if not all_chr: raise Exception
+        
+    except Exception:
+        # cls in question does not have relation to chromosomes; get all
+        all_chr = current_settings.GENOME_CHOICES[current_settings.GENOME]['chromosomes']
+    
+    # Chromosomes are sorted by count descending, so we want to snake them
+    # back and forth to create even-ish groups. 
+    chr_sets = [[] for _ in xrange(0, processes)]
+    for i,chrom in enumerate(all_chr):
+        if i and not i % processes: chr_sets.reverse()
+        chr_sets[i % processes].append(chrom)
+    
+    # Reverse every other group to even out memory requirements.
+    for i, chr_set in enumerate(chr_sets):
+        if i % 2 == 0: chr_set.reverse()
+        
+    current_settings.CHR_LISTS = chr_sets
+    print 'Determined chromosome sets:\n{0}'.format(
+                                    str(current_settings.CHR_LISTS))
+    
+
 def multiprocess_all_chromosomes(func, cls, *args, **kwargs):
     ''' 
     Convenience method for splitting up queries based on tag id.
@@ -44,47 +93,7 @@ def multiprocess_all_chromosomes(func, cls, *args, **kwargs):
     processes = current_settings.ALLOWED_PROCESSES
     
     if not current_settings.CHR_LISTS:
-        try:
-            try:
-                # Note that we accept a kwarg use_table
-                all_chr = fetch_rows('''
-                    SELECT chromosome_id as id
-                    FROM "{0}" 
-                    GROUP BY chromosome_id 
-                    ORDER BY COUNT(chromosome_id) DESC;'''.format(
-                                    kwargs.get('use_table',None) 
-                                    or cls._meta.db_table))
-            except utils.DatabaseError:
-                # Prep table instead?
-                all_chr = fetch_rows('''
-                    SELECT chromosome_id as id
-                    FROM "{0}" 
-                    GROUP BY chromosome_id 
-                    ORDER BY COUNT(chromosome_id) DESC;'''.format(
-                        getattr(cls,'prep_table',None)
-                        or cls.cell_base.atlas_transcript_prep._meta.db_table))
-                
-            all_chr = zip(*all_chr)[0]
-            if not all_chr: raise Exception
-            
-        except Exception:
-            # cls in question does not have relation to chromosomes; get all
-            all_chr = current_settings.GENOME_CHOICES[current_settings.GENOME]['chromosomes']
-
-        # Chromosomes are sorted by count descending, so we want to snake them
-        # back and forth to create even-ish groups. 
-        chr_sets = [[] for _ in xrange(0, processes)]
-        for i,chrom in enumerate(all_chr):
-            if i and not i % processes: chr_sets.reverse()
-            chr_sets[i % processes].append(chrom)
-        
-        # Reverse every other group to even out memory requirements.
-        for i, chr_set in enumerate(chr_sets):
-            if i % 2 == 0: chr_set.reverse()
-            
-        current_settings.CHR_LISTS = chr_sets
-        print 'Determined chromosome sets:\n{0}'.format(
-                                        str(current_settings.CHR_LISTS))
+        set_chromosome_lists(cls, *args, **kwargs)
     
     p = Pool(processes)
     for chr_list in current_settings.CHR_LISTS:
@@ -312,6 +321,7 @@ class AtlasTranscript(TranscriptBase):
                     null_only=True):
         
         try:
+            set_chromosome_lists(cls)
             begin_transaction()
             multiprocess_all_chromosomes(wrap_set_density, 
                                          cls, 
