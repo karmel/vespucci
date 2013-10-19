@@ -16,6 +16,7 @@ def signal_handler(signal, frame):
         rollback_transaction()
     
 signal.signal(signal.SIGINT, signal_handler)
+signal.signal(signal.SIGTERM, signal_handler)
 
 def execute_query(query, 
                   using='default', 
@@ -58,6 +59,7 @@ def commit_transaction(using='default'):
     cursor.execute('COMMIT;')
     transaction.commit_unless_managed()
     connection.isolation_level = current_settings.ISOLATION_LEVEL
+    current_settings.ISOLATION_LEVEL = None
     connection.close()
 
 def rollback_transaction(using='default'):
