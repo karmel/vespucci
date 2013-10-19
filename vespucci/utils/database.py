@@ -75,10 +75,13 @@ def rollback_transaction(using='default'):
 def execute_query_in_transaction(query, 
                                   using='default', 
                                   return_cursor=False):
-    connection = connections[using]
-    cursor = connection.cursor()
-    cursor.execute(query)
-    if return_cursor: return cursor
+    try:
+        connection = connections[using]
+        cursor = connection.cursor()
+        cursor.execute(query)
+        if return_cursor: return cursor
+    except Exception:
+        rollback_transaction()
 
 def fetch_rows(query, return_cursor=False, using='default'):
     connection = connections[using]
