@@ -96,20 +96,23 @@ def multiprocess_all_chromosomes(func, cls, *args, **kwargs):
         set_chromosome_lists(cls, *args, **kwargs)
     
     p = Pool(processes)
-    for chr_list in current_settings.CHR_LISTS:
-        p.apply_async(func, args=[cls, chr_list,] + list(args))
-    p.close()
-    p.join()
+    try:
+        for chr_list in current_settings.CHR_LISTS:
+            p.apply_async(func, args=[cls, chr_list,] + list(args))
+        p.close()
+        p.join()
+    except Exception:
+        p.terminate()
 
 # The following methods wrap bound methods. This is necessary
 # for use with multiprocessing. Note that getattr with dynamic function names
 # doesn't seem to work either.
 def wrap_errors(func, *args):
     try: func(*args)
-    except Exception:
+    except Exception, e:
         print 'Encountered exception in wrapped function:\n{0}'.format(
                                                     traceback.format_exc())
-        raise
+        raise e
    
 def wrap_add_transcripts_from_groseq(cls, chr_list, *args): 
     wrap_errors(cls._add_transcripts_from_groseq, chr_list, *args)
@@ -328,7 +331,7 @@ class AtlasTranscript(TranscriptBase):
                                          allow_extended_gaps, 
                                          extension_percent, 
                                          null_only)
-            #commit_transaction()
+            commit_transaction()
         except Exception, e:
             rollback_transaction()
             raise e
