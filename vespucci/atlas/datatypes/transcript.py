@@ -317,6 +317,7 @@ class AtlasTranscript(TranscriptBase):
                                      allow_extended_gaps, 
                                      extension_percent, 
                                      null_only)
+        raise Exception
         #execute_query_without_transaction('ROLLBACK;')
     
     @classmethod
