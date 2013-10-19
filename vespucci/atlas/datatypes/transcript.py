@@ -318,6 +318,7 @@ class AtlasTranscript(TranscriptBase):
                                          allow_extended_gaps, 
                                          extension_percent, 
                                          null_only)
+            raise Exception
             commit_transaction()
         except Exception:
             rollback_transaction()
