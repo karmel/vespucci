@@ -42,7 +42,7 @@ def multiprocess_all_chromosomes(func, cls, *args, **kwargs):
     Convenience method for splitting up queries based on tag id.
     '''
     processes = current_settings.ALLOWED_PROCESSES
-    current_settings.CHR_LISTS = [[22,21,20]]
+    current_settings.CHR_LISTS = [[22,21]]
     if not current_settings.CHR_LISTS:
         try:
             try:
