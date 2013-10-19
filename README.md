@@ -33,7 +33,7 @@ The current AMI is available here: <a href="https://console.aws.amazon.com/ec2/h
 
 #### A. Launching the Image 
 
-<a href="https://github.com/karmel/vespucci/blob/vespucci-videos/documentation/videos/01-Launching-the-Vespucci-AMI.mp4?raw=true">Watch the demo video!</a>
+**<a href="https://github.com/karmel/vespucci/blob/vespucci-videos/documentation/videos/01-Launching-the-Vespucci-AMI.mp4?raw=true">Watch the demo video!</a>**
 
 Use the Amazon AWS Launch Wizard to launch an instance using the selected Image. 
 
@@ -50,6 +50,8 @@ Notes:
 * When in doubt, the Wizard's default options should suffice.
 
 #### B. Setting up your instance
+
+**<a href="https://github.com/karmel/vespucci/blob/vespucci-videos/documentation/videos/02-Setting-up-the-Vespucci-database.mp4?raw=true">Watch the demo video!</a>**
 
 1. Once your instance has been launched, log in as root:
 
@@ -83,6 +85,8 @@ Notes:
 	```
 
 #### C. Installing genome data
+
+**<a href="https://github.com/karmel/vespucci/blob/vespucci-videos/documentation/videos/03-Loading-data-into-Vespucci?raw=true">Watch the demo video!</a>**
 
 The base image of Vespucci comes with the database set up, but no genome-specific schemas installed. **To install existing genome-specific schemas (hg19, mm9, or dm3):**
 
@@ -176,6 +180,8 @@ Once the genome schemas are set up, you can proceed to process and build Vespucc
 
 
 #### E. Etc.
+
+**<a href="https://github.com/karmel/vespucci/blob/vespucci-videos/documentation/videos/04-Querying-Vespucci.mp4?raw=true">Watch the demo video!</a>**
 
 You now have database tables built with assembled GRO-seq transcripts, which can be accessed with any number of <a href="http://wiki.postgresql.org/wiki/Community_Guide_to_PostgreSQL_GUI_Tools" target="_blank">Postgres client GUIs</a>, or from the psql command line: 
 
