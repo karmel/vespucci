@@ -33,6 +33,8 @@ The current AMI is available here: <a href="https://console.aws.amazon.com/ec2/h
 
 #### A. Launching the Image 
 
+<a href="https://github.com/karmel/vespucci/blob/vespucci-videos/documentation/videos/01-Launching-the-Vespucci-AMI.mp4?raw=true">Watch the demo video!</a>
+
 Use the Amazon AWS Launch Wizard to launch an instance using the selected Image. 
 
 Notes:
