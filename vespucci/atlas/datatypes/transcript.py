@@ -11,7 +11,8 @@ from vespucci.genomereference.datatypes import Chromosome,\
     SequencingRun
 from vespucci.utils.datatypes.basic_model import Int8RangeField, VespucciModel
 from multiprocessing import Pool
-from vespucci.utils.database import execute_query, fetch_rows
+from vespucci.utils.database import execute_query, fetch_rows,\
+    execute_query_without_transaction
 import os
 from django.db.models.aggregates import Max
 from datetime import datetime
@@ -308,11 +309,14 @@ class AtlasTranscript(TranscriptBase):
                     allow_extended_gaps=True, 
                     extension_percent='.2', 
                     null_only=True):
+        
+        execute_query_without_transaction('BEGIN;')
         multiprocess_all_chromosomes(wrap_set_density, 
                                      cls, 
                                      allow_extended_gaps, 
                                      extension_percent, 
                                      null_only)
+        execute_query_without_transaction('ROLLBACK;')
     
     @classmethod
     def _set_density(cls, chr_list, 
@@ -334,7 +338,7 @@ class AtlasTranscript(TranscriptBase):
                            allow_extended_gaps and 'true' or 'false',
                            extension_percent,
                            null_only and 'true' or 'false')
-            execute_query(query)
+            execute_query_without_transaction(query)
             
     @classmethod
     def draw_transcript_edges(cls):
