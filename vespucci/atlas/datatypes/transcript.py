@@ -12,7 +12,7 @@ from vespucci.genomereference.datatypes import Chromosome,\
 from vespucci.utils.datatypes.basic_model import Int8RangeField, VespucciModel
 from multiprocessing import Pool
 from vespucci.utils.database import execute_query, fetch_rows,\
-    execute_query_without_transaction, begin_transaction, rollback_transaction,\
+    begin_transaction, rollback_transaction,\
     execute_query_in_transaction, commit_transaction
 import os
 from django.db.models.aggregates import Max
@@ -42,7 +42,7 @@ def multiprocess_all_chromosomes(func, cls, *args, **kwargs):
     Convenience method for splitting up queries based on tag id.
     '''
     processes = current_settings.ALLOWED_PROCESSES
-    current_settings.CHR_LISTS = [[22,21]]
+    
     if not current_settings.CHR_LISTS:
         try:
             try:
