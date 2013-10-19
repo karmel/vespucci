@@ -5,7 +5,7 @@ Created on Nov 8, 2010
 '''
 from __future__ import division
 from vespucci.config import current_settings
-from django.db import models, connection, utils
+from django.db import models, connection, utils, transaction
 from vespucci.genomereference.datatypes import Chromosome,\
     SequenceTranscriptionRegion, NonCodingTranscriptionRegion,\
     SequencingRun
@@ -305,18 +305,19 @@ class AtlasTranscript(TranscriptBase):
                 execute_query(query)
     
     @classmethod
+    @transaction.commit_on_success
     def set_density(cls, 
                     allow_extended_gaps=True, 
                     extension_percent='.2', 
                     null_only=True):
         
-        execute_query_without_transaction('BEGIN;')
+        #execute_query_without_transaction('BEGIN;')
         multiprocess_all_chromosomes(wrap_set_density, 
                                      cls, 
                                      allow_extended_gaps, 
                                      extension_percent, 
                                      null_only)
-        execute_query_without_transaction('ROLLBACK;')
+        #execute_query_without_transaction('ROLLBACK;')
     
     @classmethod
     def _set_density(cls, chr_list, 
