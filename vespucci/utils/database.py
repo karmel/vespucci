@@ -7,6 +7,15 @@ import signal
 from django.db import transaction, connections
 from vespucci.config import current_settings
 
+################################
+# Handle user kills gracefully.
+################################
+def signal_handler(signal, frame):
+    print 'Caught SIGINT'
+    if current_settings.ISOLATION_LEVEL is not None:
+        rollback_transaction()
+    
+signal.signal(signal.SIGINT, signal_handler)
 
 def execute_query(query, 
                   using='default', 
@@ -58,6 +67,7 @@ def rollback_transaction(using='default'):
     cursor.execute('ROLLBACK;')
     transaction.commit_unless_managed()
     connection.isolation_level = current_settings.ISOLATION_LEVEL
+    current_settings.ISOLATION_LEVEL = None
     connection.close()
 
 def execute_query_in_transaction(query, 
