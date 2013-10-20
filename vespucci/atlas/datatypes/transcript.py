@@ -247,27 +247,38 @@ class AtlasTranscript(TranscriptBase):
     ################################################
     @classmethod 
     def add_transcripts_from_groseq(cls,  tag_table, sequencing_run):
-        multiprocess_all_chromosomes(wrap_add_transcripts_from_groseq, cls, 
-                                     sequencing_run, use_table=tag_table)
+        try:
+            set_chromosome_lists(cls, use_table=tag_table)
+            begin_transaction()
+            multiprocess_all_chromosomes(wrap_add_transcripts_from_groseq, cls, 
+                                         sequencing_run, use_table=tag_table)
+            commit_transaction()
+        except Exception, e:
+            rollback_transaction()
+            raise e
          
     @classmethod
     def _add_transcripts_from_groseq(cls, chr_list, sequencing_run):
-        for chr_id in chr_list:
-            print 'Adding transcripts for chromosome %d' % chr_id
-            query = """
-                SELECT atlas_{}_{}_prep.save_transcripts_from_sequencing_run(
-                    {}, {}, '{}', {}, {}, {}, {}, {}, NULL, NULL);
-                """.format(current_settings.GENOME,
-                           current_settings.CELL_TYPE.lower(),
-                           sequencing_run.id, 
-                           chr_id, 
-                           sequencing_run.source_table.strip(), 
-                           MAX_GAP, 
-                           TAG_EXTENSION, 
-                           current_settings.MAX_EDGE, 
-                           EDGE_SCALING_FACTOR, 
-                           current_settings.DENSITY_MULTIPLIER)
-            execute_query(query)
+        try:
+            for chr_id in chr_list:
+                print 'Adding transcripts for chromosome %d' % chr_id
+                query = """
+                    SELECT atlas_{}_{}_prep.save_transcripts_from_sequencing_run(
+                        {}, {}, '{}', {}, {}, {}, {}, {}, NULL, NULL);
+                    """.format(current_settings.GENOME,
+                               current_settings.CELL_TYPE.lower(),
+                               sequencing_run.id, 
+                               chr_id, 
+                               sequencing_run.source_table.strip(), 
+                               MAX_GAP, 
+                               TAG_EXTENSION, 
+                               current_settings.MAX_EDGE, 
+                               EDGE_SCALING_FACTOR, 
+                               current_settings.DENSITY_MULTIPLIER)
+                execute_query_in_transaction(query)
+        except Exception, e:
+            rollback_transaction()
+            raise e
     
     ################################################
     # Transcript cleanup and refinement
@@ -278,12 +289,19 @@ class AtlasTranscript(TranscriptBase):
                                     extension_percent='.2', 
                                     set_density=False, 
                                     null_only=True):
-        multiprocess_all_chromosomes(wrap_stitch_together_transcripts, 
-                                     cls, 
-                                     allow_extended_gaps, 
-                                     extension_percent, 
-                                     set_density, 
-                                     null_only)
+        try:
+            set_chromosome_lists(cls)
+            begin_transaction()
+            multiprocess_all_chromosomes(wrap_stitch_together_transcripts, 
+                                         cls, 
+                                         allow_extended_gaps, 
+                                         extension_percent, 
+                                         set_density, 
+                                         null_only)
+            commit_transaction()
+        except Exception, e:
+            rollback_transaction()
+            raise e
     
     @classmethod
     def _stitch_together_transcripts(cls, chr_list, 
@@ -294,29 +312,33 @@ class AtlasTranscript(TranscriptBase):
         '''
         This is tag-level agnostic, stitching based on gap size alone.
         '''
-        for chr_id  in chr_list:
-            print 'Stitching together transcripts for chr_id %d' % chr_id
-            query = """
-                SELECT atlas_{}_{}_prep.save_transcripts_from_existing({}, {});
-                """.format(current_settings.GENOME, 
-                           current_settings.CELL_TYPE.lower(),
-                           chr_id, 
-                           MAX_STITCHING_GAP)
-            execute_query(query)
-            if set_density:
-                print 'Setting density for transcripts for chr_id %d' % chr_id
+        try:
+            for chr_id  in chr_list:
+                print 'Stitching together transcripts for chr_id %d' % chr_id
                 query = """
-                    SELECT atlas_{}_{}_prep.set_density({},{},{},{},{},{},{});
+                    SELECT atlas_{}_{}_prep.save_transcripts_from_existing({}, {});
                     """.format(current_settings.GENOME, 
                                current_settings.CELL_TYPE.lower(),
                                chr_id, 
-                               current_settings.MAX_EDGE, 
-                               EDGE_SCALING_FACTOR, 
-                               current_settings.DENSITY_MULTIPLIER, 
-                               allow_extended_gaps and 'true' or 'false',
-                               extension_percent,
-                               null_only and 'true' or 'false')
-                execute_query(query)
+                               MAX_STITCHING_GAP)
+                execute_query_in_transaction(query)
+                if set_density:
+                    print 'Setting density for transcripts for chr_id %d' % chr_id
+                    query = """
+                        SELECT atlas_{}_{}_prep.set_density({},{},{},{},{},{},{});
+                        """.format(current_settings.GENOME, 
+                                   current_settings.CELL_TYPE.lower(),
+                                   chr_id, 
+                                   current_settings.MAX_EDGE, 
+                                   EDGE_SCALING_FACTOR, 
+                                   current_settings.DENSITY_MULTIPLIER, 
+                                   allow_extended_gaps and 'true' or 'false',
+                                   extension_percent,
+                                   null_only and 'true' or 'false')
+                    execute_query_in_transaction(query)
+        except Exception, e:
+            rollback_transaction()
+            raise e
     
     @classmethod
     def set_density(cls, 
@@ -365,36 +387,57 @@ class AtlasTranscript(TranscriptBase):
             
     @classmethod
     def draw_transcript_edges(cls):
-        multiprocess_all_chromosomes(wrap_draw_transcript_edges, cls)
-        
+        try:
+            set_chromosome_lists(cls)
+            begin_transaction()
+            multiprocess_all_chromosomes(wrap_draw_transcript_edges, cls)
+            commit_transaction()
+        except Exception, e:
+            rollback_transaction()
+            raise e
     @classmethod
     def _draw_transcript_edges(cls, chr_list):
-        for chr_id in chr_list:
-            print 'Drawing edges for transcripts for chr_id %d' % chr_id
-            query = """
-                SELECT atlas_{0}_{1}{2}.draw_transcript_edges({chr_id},{3},{4});
-                """.format(current_settings.GENOME,
-                       current_settings.CELL_TYPE.lower(),
-                       current_settings.STAGING, 
-                       MIN_ONE_RUN_TAGS, current_settings.MAX_EDGE,
-                       chr_id=chr_id)
-            execute_query(query)           
+        try:
+            for chr_id in chr_list:
+                print 'Drawing edges for transcripts for chr_id %d' % chr_id
+                query = """
+                    SELECT atlas_{0}_{1}{2}.draw_transcript_edges({chr_id},{3},{4});
+                    """.format(current_settings.GENOME,
+                           current_settings.CELL_TYPE.lower(),
+                           current_settings.STAGING, 
+                           MIN_ONE_RUN_TAGS, current_settings.MAX_EDGE,
+                           chr_id=chr_id)
+                execute_query_in_transaction(query)
+        except Exception, e:
+            rollback_transaction()
+            raise e           
             
     @classmethod
     def set_scores(cls):
-        multiprocess_all_chromosomes(wrap_set_scores, cls)
-    
+        try:
+            set_chromosome_lists(cls)
+            begin_transaction()
+            multiprocess_all_chromosomes(wrap_set_scores, cls)
+            commit_transaction()
+        except Exception, e:
+            rollback_transaction()
+            raise e
+        
     @classmethod
     def _set_scores(cls, chr_list):
-        for chr_id in chr_list:
-            print 'Scoring transcripts for chromosome %d' % chr_id
-            query = """
-                SELECT atlas_{0}_{1}{2}.calculate_scores({chr_id});
-                SELECT atlas_{0}_{1}{2}.calculate_standard_error({chr_id});
-                """.format(current_settings.GENOME,
-                       current_settings.CELL_TYPE.lower(),
-                       current_settings.STAGING, chr_id=chr_id)
-            execute_query(query) 
+        try:
+            for chr_id in chr_list:
+                print 'Scoring transcripts for chromosome %d' % chr_id
+                query = """
+                    SELECT atlas_{0}_{1}{2}.calculate_scores({chr_id});
+                    SELECT atlas_{0}_{1}{2}.calculate_standard_error({chr_id});
+                    """.format(current_settings.GENOME,
+                           current_settings.CELL_TYPE.lower(),
+                           current_settings.STAGING, chr_id=chr_id)
+                execute_query_in_transaction(query)
+        except Exception, e:
+            rollback_transaction()
+            raise e 
     
         
 class FilteredAtlasTranscriptManager(models.Manager):
