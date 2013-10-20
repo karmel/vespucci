@@ -99,11 +99,14 @@ def multiprocess_all_chromosomes(func, cls, *args, **kwargs):
     p = Pool(processes)
     try:
         for chr_list in current_settings.CHR_LISTS:
-            p.apply_async(func, args=[cls, chr_list,] + list(args))
+            result = p.apply_async(func, args=[cls, chr_list,] + list(args))
+            if result != 0: 
+                raise Exception('A child process did not exit normally!')
         p.close()
         p.join()
-    except Exception:
+    except Exception, e:
         p.terminate()
+        raise e
 
 # The following methods wrap bound methods. This is necessary
 # for use with multiprocessing. Note that getattr with dynamic function names
