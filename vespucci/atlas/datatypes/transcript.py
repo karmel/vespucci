@@ -98,7 +98,7 @@ def multiprocess_all_chromosomes(func, cls, *args, **kwargs):
     p = Pool(processes)
     
     def handle_result(result):
-        connection.close()
+        print 'Handling result.'
         result.get()
     try:
         for chr_list in current_settings.CHR_LISTS:
