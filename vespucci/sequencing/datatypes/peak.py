@@ -122,6 +122,7 @@ class AtlasPeak(DynamicTable):
         From a standard tab-delimited Homer peak file, create model instance.
         '''
         connection.close()
+        print row.columns
         try: p_val = str(row['p-value vs Control']).lower().split('e')
         except KeyError: 
             try: p_val = str(row['p-value vs Local']).lower().split('e')
