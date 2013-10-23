@@ -69,7 +69,7 @@ def rollback_transaction(using='default'):
         connection = connections[using]
         cursor = connection.cursor()
         print 'Rolling back transaction!'
-        cursor.execute('ROLLBACK;')
+        cursor.execute('ROLLBACK TO SAVEPOINT draw_transcript_edges;')
         transaction.commit_unless_managed()
         connection.isolation_level = current_settings.ISOLATION_LEVEL
         current_settings.ISOLATION_LEVEL = None
