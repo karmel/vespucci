@@ -399,7 +399,7 @@ class AtlasTranscript(TranscriptBase):
         try:
             set_chromosome_lists(cls)
             begin_transaction()
-            execute_query_in_transaction('SET SAVEPOINT draw_transcript_edges;')
+            execute_query_in_transaction('SAVEPOINT draw_transcript_edges;')
             multiprocess_all_chromosomes(wrap_draw_transcript_edges, cls)
             commit_transaction()
         except Exception, e:
