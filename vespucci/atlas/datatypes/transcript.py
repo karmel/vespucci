@@ -96,12 +96,16 @@ def multiprocess_all_chromosomes(func, cls, *args, **kwargs):
     set_chromosome_lists(cls, *args, **kwargs)
     
     p = Pool(processes)
+    
+    def handle_result(result):
+        connection.close()
+        result.get()
     try:
         for chr_list in current_settings.CHR_LISTS:
             # Use a callback to call the ApplyResult.get() function,
             # which should re-raise any errors encountered in a child process.
             p.apply_async(func, args=[cls, chr_list,] + list(args),
-                          callback=lambda result: result.get())            
+                          callback=handle_result)            
         p.close()
         p.join()
     except Exception, e:
