@@ -203,14 +203,16 @@ class GenomeResourcesSqlGenerator(SqlGenerator):
         for l in f:
             fields = l.strip('\n').split('\t')
             
-            # We want length inclusive, not last basepair,
-            # so add 1 to the value from UCSC, which is last basepair
-            fields[1] = int(fields[1]) + 1
-            output.append("""
-                INSERT INTO "{schema_name}"."{table_name}" (name, length) 
-                    VALUES ('{0}', {1});
-                """.format(fields[0], fields[1] or 'NULL',
-                           schema_name=self.schema_name, table_name=table_name))
+            # Only include non-random chromosomes:
+            if 'random' not in fields[0]:
+                # We want length inclusive, not last basepair,
+                # so add 1 to the value from UCSC, which is last basepair
+                fields[1] = int(fields[1]) + 1
+                output.append("""
+                    INSERT INTO "{schema_name}"."{table_name}" (name, length) 
+                        VALUES ('{0}', {1});
+                    """.format(fields[0], fields[1] or 'NULL',
+                               schema_name=self.schema_name, table_name=table_name))
         return '\n'.join(output)
             
     def import_ucsc_sequence_values(self):

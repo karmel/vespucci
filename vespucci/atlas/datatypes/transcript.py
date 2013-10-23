@@ -379,7 +379,6 @@ class AtlasTranscript(TranscriptBase):
     def draw_transcript_edges(cls):
         try:
             set_chromosome_lists(cls)
-            execute_query('SAVEPOINT draw_transcript_edges;')
             multiprocess_all_chromosomes(wrap_draw_transcript_edges, cls)
         except Exception, e:
             raise e
