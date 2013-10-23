@@ -126,6 +126,10 @@ class AtlasPeak(DynamicTable):
         except KeyError: 
             try: p_val = str(row['p-value vs Local']).lower().split('e')
             except KeyError: p_val = None
+        try: fold_change = str(row['Fold Change vs Control'])
+        except KeyError: 
+            try: fold_change = str(row['Fold Change vs Local'])
+            except KeyError: fold_change = None
         return cls(chromosome=Chromosome.objects.get(name=str(row['chr']).strip()),
                      start=int(row['start']),
                      end=int(row['end']),
@@ -136,7 +140,7 @@ class AtlasPeak(DynamicTable):
                      score=str(row['findPeaks Score']),
                      p_value=p_val and str(p_val[0]) or None,
                      p_value_exp=p_val and len(p_val) > 1 and p_val[1] or 0,
-                     fold_enrichment=str(row['Fold Change vs Control'])
+                     fold_enrichment=fold_change
                      )
         
         
