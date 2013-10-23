@@ -205,7 +205,6 @@ class GenomeResourcesSqlGenerator(SqlGenerator):
             
             # Only include non-random chromosomes:
             if 'random' not in fields[0]:
-                print fields[0]
                 # We want length inclusive, not last basepair,
                 # so add 1 to the value from UCSC, which is last basepair
                 fields[1] = int(fields[1]) + 1
