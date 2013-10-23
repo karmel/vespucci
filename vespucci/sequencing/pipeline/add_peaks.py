@@ -51,7 +51,7 @@ def import_peaks(options, file_name, peaks_file_name):
         # Find header row
         header_row = None
         f = file(peaks_file_name)
-        for i,line in f.enumerate():
+        for i,line in enumerate(f):
             if line[:6] == '#PeakID': header_row = i
         if header_row is None: 
             raise Exception('There is no header in this Homer peak file!') 
