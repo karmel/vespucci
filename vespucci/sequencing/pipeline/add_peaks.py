@@ -57,7 +57,7 @@ def import_peaks(options, file_name, peaks_file_name):
                 break
         if header_row is None: 
             raise Exception('There is no header in this Homer peak file!') 
-        data = read_csv(peaks_file_name, sep='\t', header=i, skiprows=i)
+        data = read_csv(peaks_file_name, sep='\t', header=i)
     else: data = read_csv(peaks_file_name, sep='\t', header=None)
     print data.columns
     for _, row in data.iterrows():
