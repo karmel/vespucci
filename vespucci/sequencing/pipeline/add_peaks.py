@@ -44,8 +44,8 @@ def import_peaks(options, file_name, peaks_file_name):
     '''
     Given a  peak file, save a temp table and store peak data.
     '''
-    AtlasPeak.create_table(file_name)
-    #AtlasPeak.set_table_name('peak_' + file_name)
+    #AtlasPeak.create_table(file_name)
+    AtlasPeak.set_table_name('peak_' + file_name)
     
     if not options.not_homer:
         # Find header row
