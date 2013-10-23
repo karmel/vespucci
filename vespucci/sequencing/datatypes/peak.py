@@ -117,7 +117,7 @@ class AtlasPeak(DynamicTable):
                      fold_enrichment=str(row[7])
                      )
     @classmethod
-    def init_from_homer_row(cls, row, idx):
+    def init_from_homer_row(cls, row):
         '''
         From a standard tab-delimited Homer peak file, create model instance.
         '''

@@ -44,8 +44,8 @@ def import_peaks(options, file_name, peaks_file_name):
     '''
     Given a  peak file, save a temp table and store peak data.
     '''
-    #AtlasPeak.create_table(file_name)
-    AtlasPeak.set_table_name('peak_' + file_name)
+    AtlasPeak.create_table(file_name)
+    #AtlasPeak.set_table_name('peak_' + file_name)
     
     if not options.not_homer:
         # Find header row
@@ -59,7 +59,7 @@ def import_peaks(options, file_name, peaks_file_name):
             raise Exception('There is no header in this Homer peak file!') 
         data = read_csv(peaks_file_name, sep='\t', header=i)
     else: data = read_csv(peaks_file_name, sep='\t', header=None)
-    print data.columns
+    
     for _, row in data.iterrows():
         if not options.not_homer:
             peak = AtlasPeak.init_from_homer_row(row)
