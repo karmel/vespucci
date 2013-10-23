@@ -106,6 +106,7 @@ def multiprocess_all_chromosomes(func, cls, *args, **kwargs):
         p.close()
         p.join()
     except Exception, e:
+        connection.close()
         p.terminate()
         raise e
 
