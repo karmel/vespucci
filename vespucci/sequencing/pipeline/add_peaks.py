@@ -48,7 +48,14 @@ def import_peaks(options, file_name, peaks_file_name):
     #AtlasPeak.set_table_name('peak_' + file_name)
     
     if not options.not_homer:
-        data = read_csv(peaks_file_name, sep='\t', header=None, skiprows=40)
+        # Find header row
+        header_row = None
+        f = file(peaks_file_name)
+        for i,line in f.enumerate():
+            if line[:6] == '#PeakID': header_row = i
+        if header_row is None: 
+            raise Exception('There is no header in this Homer peak file!') 
+        data = read_csv(peaks_file_name, sep='\t', header=i, skiprows=i)
     else: data = read_csv(peaks_file_name, sep='\t', header=None)
     
     for _, row in data.iterrows():
