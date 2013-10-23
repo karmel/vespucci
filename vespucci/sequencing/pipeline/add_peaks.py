@@ -52,8 +52,7 @@ def import_peaks(options, file_name, peaks_file_name):
         header_row = None
         f = file(peaks_file_name)
         for i,line in enumerate(f):
-            print line[:6]
-            if line[:6] == '#PeakID': 
+            if line[:7] == '#PeakID': 
                 header_row = i
                 break
         if header_row is None: 
