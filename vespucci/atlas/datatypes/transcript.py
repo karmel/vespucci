@@ -105,7 +105,6 @@ def multiprocess_all_chromosomes(func, cls, *args, **kwargs):
                           callback=lambda result: result.get())            
         p.close()
         p.join()
-        raise Exception('A child process did not exit normally!')
     except Exception, e:
         p.terminate()
         raise e
