@@ -11,9 +11,7 @@ from vespucci.genomereference.datatypes import Chromosome,\
     SequencingRun
 from vespucci.utils.datatypes.basic_model import Int8RangeField, VespucciModel
 from multiprocessing import Pool
-from vespucci.utils.database import execute_query, fetch_rows,\
-    begin_transaction, rollback_transaction,\
-    execute_query_in_transaction, commit_transaction
+from vespucci.utils.database import execute_query, fetch_rows
 import os
 from django.db.models.aggregates import Max
 from datetime import datetime
@@ -258,12 +256,9 @@ class AtlasTranscript(TranscriptBase):
     def add_transcripts_from_groseq(cls,  tag_table, sequencing_run):
         try:
             set_chromosome_lists(cls, use_table=tag_table)
-            begin_transaction()
             multiprocess_all_chromosomes(wrap_add_transcripts_from_groseq, cls, 
                                          sequencing_run, use_table=tag_table)
-            commit_transaction()
         except Exception, e:
-            rollback_transaction()
             raise e
          
     @classmethod
@@ -284,9 +279,8 @@ class AtlasTranscript(TranscriptBase):
                                current_settings.MAX_EDGE, 
                                EDGE_SCALING_FACTOR, 
                                current_settings.DENSITY_MULTIPLIER)
-                execute_query_in_transaction(query)
+                execute_query(query)
         except Exception, e:
-            rollback_transaction()
             raise e
     
     ################################################
@@ -300,16 +294,13 @@ class AtlasTranscript(TranscriptBase):
                                     null_only=True):
         try:
             set_chromosome_lists(cls)
-            begin_transaction()
             multiprocess_all_chromosomes(wrap_stitch_together_transcripts, 
                                          cls, 
                                          allow_extended_gaps, 
                                          extension_percent, 
                                          set_density, 
                                          null_only)
-            commit_transaction()
         except Exception, e:
-            rollback_transaction()
             raise e
     
     @classmethod
@@ -330,7 +321,7 @@ class AtlasTranscript(TranscriptBase):
                                current_settings.CELL_TYPE.lower(),
                                chr_id, 
                                MAX_STITCHING_GAP)
-                execute_query_in_transaction(query)
+                execute_query(query)
                 if set_density:
                     print 'Setting density for transcripts for chr_id %d' % chr_id
                     query = """
@@ -344,9 +335,8 @@ class AtlasTranscript(TranscriptBase):
                                    allow_extended_gaps and 'true' or 'false',
                                    extension_percent,
                                    null_only and 'true' or 'false')
-                    execute_query_in_transaction(query)
+                    execute_query(query)
         except Exception, e:
-            rollback_transaction()
             raise e
     
     @classmethod
@@ -357,15 +347,12 @@ class AtlasTranscript(TranscriptBase):
         
         try:
             set_chromosome_lists(cls)
-            begin_transaction()
             multiprocess_all_chromosomes(wrap_set_density, 
                                          cls, 
                                          allow_extended_gaps, 
                                          extension_percent, 
                                          null_only)
-            commit_transaction()
         except Exception, e:
-            rollback_transaction()
             raise e
     
     @classmethod
@@ -389,21 +376,17 @@ class AtlasTranscript(TranscriptBase):
                                allow_extended_gaps and 'true' or 'false',
                                extension_percent,
                                null_only and 'true' or 'false')
-                execute_query_in_transaction(query)
+                execute_query(query)
         except Exception, e:
-            rollback_transaction()
             raise e
             
     @classmethod
     def draw_transcript_edges(cls):
         try:
             set_chromosome_lists(cls)
-            begin_transaction()
-            execute_query_in_transaction('SAVEPOINT draw_transcript_edges;')
+            execute_query('SAVEPOINT draw_transcript_edges;')
             multiprocess_all_chromosomes(wrap_draw_transcript_edges, cls)
-            commit_transaction()
         except Exception, e:
-            rollback_transaction()
             raise e
     @classmethod
     def _draw_transcript_edges(cls, chr_list):
@@ -419,18 +402,14 @@ class AtlasTranscript(TranscriptBase):
                            chr_id=chr_id)
                 execute_query(query)
         except Exception, e:
-            rollback_transaction()
             raise e           
             
     @classmethod
     def set_scores(cls):
         try:
             set_chromosome_lists(cls)
-            begin_transaction()
             multiprocess_all_chromosomes(wrap_set_scores, cls)
-            commit_transaction()
         except Exception, e:
-            rollback_transaction()
             raise e
         
     @classmethod
@@ -444,9 +423,8 @@ class AtlasTranscript(TranscriptBase):
                     """.format(current_settings.GENOME,
                            current_settings.CELL_TYPE.lower(),
                            current_settings.STAGING, chr_id=chr_id)
-                execute_query_in_transaction(query)
+                execute_query(query)
         except Exception, e:
-            rollback_transaction()
             raise e 
     
         
