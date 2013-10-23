@@ -42,7 +42,6 @@ def set_chromosome_lists(cls, *args, **kwargs):
     '''
     Get and set available chromosomes to multiprocess.
     '''
-     
     if not current_settings.CHR_LISTS:
         processes = current_settings.ALLOWED_PROCESSES
         try:
@@ -107,6 +106,7 @@ def multiprocess_all_chromosomes(func, cls, *args, **kwargs):
         p.join()
     except Exception, e:
         connection.close()
+        print 'Terminating pool.'
         p.terminate()
         raise e
 
