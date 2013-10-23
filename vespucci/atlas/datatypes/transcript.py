@@ -99,11 +99,13 @@ def multiprocess_all_chromosomes(func, cls, *args, **kwargs):
     p = Pool(processes)
     try:
         for chr_list in current_settings.CHR_LISTS:
-            result = p.apply_async(func, args=[cls, chr_list,] + list(args))
-            if result != 0: 
-                raise Exception('A child process did not exit normally!')
+            # Use a callback to call the ApplyResult.get() function,
+            # which should re-raise any errors encountered in a child process.
+            p.apply_async(func, args=[cls, chr_list,] + list(args),
+                          callback=lambda result: result.get())            
         p.close()
         p.join()
+        raise Exception('A child process did not exit normally!')
     except Exception, e:
         p.terminate()
         raise e

@@ -8,7 +8,6 @@ from optparse import make_option
 from vespucci.config import current_settings
 from vespucci.utils.database import discard_temp_tables
 from vespucci.utils.scripting import VespucciOptionParser
-import signal
 
 class TranscriptsFromTagsParser(VespucciOptionParser):
     options = [
