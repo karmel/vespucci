@@ -117,12 +117,11 @@ class AtlasPeak(DynamicTable):
                      fold_enrichment=str(row[7])
                      )
     @classmethod
-    def init_from_homer_row(cls, row):
+    def init_from_homer_row(cls, row, idx):
         '''
         From a standard tab-delimited Homer peak file, create model instance.
         '''
         connection.close()
-        print row.columns
         try: p_val = str(row['p-value vs Control']).lower().split('e')
         except KeyError: 
             try: p_val = str(row['p-value vs Local']).lower().split('e')
