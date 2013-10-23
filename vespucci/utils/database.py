@@ -82,6 +82,7 @@ def execute_query_in_transaction(query,
     cursor = connection.cursor()
     cursor.execute(query)
     transaction.commit_unless_managed()
+    connection.close()
     if return_cursor: return cursor
 
 def fetch_rows(query, return_cursor=False, using='default'):
