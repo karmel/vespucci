@@ -123,7 +123,9 @@ class AtlasPeak(DynamicTable):
         '''
         connection.close()
         try: p_val = str(row['p-value vs Control']).lower().split('e')
-        except IndexError: p_val = None
+        except KeyError: 
+            try: p_val = str(row['p-value vs Local']).lower().split('e')
+            except KeyError: p_val = None
         return cls(chromosome=Chromosome.objects.get(name=str(row['chr']).strip()),
                      start=int(row['start']),
                      end=int(row['end']),
