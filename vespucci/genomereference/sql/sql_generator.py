@@ -8,6 +8,7 @@ from vespucci.config import current_settings
 from vespucci.utils.database import SqlGenerator
 import csv
 import os
+import re
 from vespucci.utils.scripting import get_vespucci_path
 
 class GenomeResourcesSqlGenerator(SqlGenerator):
@@ -203,8 +204,8 @@ class GenomeResourcesSqlGenerator(SqlGenerator):
         for l in f:
             fields = l.strip('\n').split('\t')
             
-            # Only include non-random chromosomes:
-            if 'random' not in fields[0]:
+            # Only include non-random chromosomes, and those without weird suffixes:
+            if re.match('chr[A-Za-z0-9]+$',fields[0]):
                 # We want length inclusive, not last basepair,
                 # so add 1 to the value from UCSC, which is last basepair
                 fields[1] = int(fields[1]) + 1
