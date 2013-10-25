@@ -18,6 +18,7 @@ import os
 from django.db.models.aggregates import Max
 from datetime import datetime
 import traceback
+from django.db.transaction import commit_on_success
 
 # The tags returned from the sequencing run are shorter 
 # than we know them to be biologically
@@ -399,14 +400,15 @@ class AtlasTranscript(TranscriptBase):
                 execute_query(query)
         except Exception, e:
             raise e           
-            
+    
+    @commit_on_success    
     @classmethod
     def set_scores(cls):
         try:
             set_chromosome_lists(cls)
-            begin_transaction(using='pgbouncer')
+            #begin_transaction(using='pgbouncer')
             multiprocess_all_chromosomes(wrap_set_scores, cls)
-            commit_transaction(using='pgbouncer')
+            #commit_transaction(using='pgbouncer')
         except Exception, e:
             #rollback_transaction(using='pgbouncer')
             raise e
@@ -422,9 +424,9 @@ class AtlasTranscript(TranscriptBase):
                     """.format(current_settings.GENOME,
                            current_settings.CELL_TYPE.lower(),
                            current_settings.STAGING, chr_id=chr_id)
-                execute_query_without_transaction(query, using='pgbouncer')
+                execute_query(query, using='pgbouncer')
         except Exception, e:
-            rollback_transaction()
+            #rollback_transaction()
             raise e  
     
         
