@@ -94,12 +94,10 @@ def multiprocess_all_chromosomes(func, cls, *args, **kwargs):
     processes = current_settings.ALLOWED_PROCESSES
     
     set_chromosome_lists(cls, use_table=kwargs.get('use_table',None))
-    print args
     p = Pool(processes)
     
     try:
         for chr_list in current_settings.CHR_LISTS:
-            print [cls, chr_list,] + list(args)
             p.apply_async(func, args=[cls, chr_list,] + list(args))            
         p.close()
         p.join()
