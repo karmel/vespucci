@@ -11,7 +11,8 @@ from vespucci.genomereference.datatypes import Chromosome,\
     SequencingRun
 from vespucci.utils.datatypes.basic_model import Int8RangeField, VespucciModel
 from multiprocessing import Pool
-from vespucci.utils.database import execute_query, fetch_rows
+from vespucci.utils.database import execute_query, fetch_rows, begin_transaction,\
+    commit_transaction, rollback_transaction, execute_query_in_transaction
 import os
 from django.db.models.aggregates import Max
 from datetime import datetime
@@ -402,8 +403,11 @@ class AtlasTranscript(TranscriptBase):
     def set_scores(cls):
         try:
             set_chromosome_lists(cls)
+            begin_transaction(using='pgbouncer')
             multiprocess_all_chromosomes(wrap_set_scores, cls)
+            commit_transaction(using='pgbouncer')
         except Exception, e:
+            rollback_transaction(using='pgbouncer')
             raise e
         
     @classmethod
@@ -417,9 +421,10 @@ class AtlasTranscript(TranscriptBase):
                     """.format(current_settings.GENOME,
                            current_settings.CELL_TYPE.lower(),
                            current_settings.STAGING, chr_id=chr_id)
-                execute_query(query)
+                execute_query_in_transaction(query, using='pgbouncer')
         except Exception, e:
-            raise e 
+            rollback_transaction()
+            raise e  
     
         
 class FilteredAtlasTranscriptManager(models.Manager):

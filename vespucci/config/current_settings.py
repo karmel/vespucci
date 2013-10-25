@@ -46,7 +46,15 @@ DATABASES = {
         'USER': 'vespucci_user',
         'PASSWORD': password,
         'HOST': 'localhost',
-        'PORT': '5432',
+        'PORT': '5432',  
+    },
+    'pgbouncer': {
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': 'vespucci',
+        'USER': 'vespucci_user',
+        'PASSWORD': password,
+        'HOST': 'localhost',
+        'PORT': '6432',  
     },
 
 }
