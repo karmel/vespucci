@@ -13,7 +13,7 @@ from vespucci.utils.datatypes.basic_model import Int8RangeField, VespucciModel
 from multiprocessing import Pool
 from vespucci.utils.database import execute_query, fetch_rows,\
     commit_transaction, rollback_transaction, execute_query_in_transaction,\
-    execute_query_without_transaction, get_cursor, savepoint,\
+    execute_query_without_transaction, savepoint,\
     rollback_to_savepoint
 import os
 from django.db.models.aggregates import Max
