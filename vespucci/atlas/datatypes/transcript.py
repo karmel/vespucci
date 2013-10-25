@@ -13,7 +13,7 @@ from vespucci.utils.datatypes.basic_model import Int8RangeField, VespucciModel
 from multiprocessing import Pool
 from vespucci.utils.database import execute_query, fetch_rows,\
     commit_transaction, rollback_transaction, execute_query_in_transaction,\
-    execute_query_without_transaction
+    execute_query_without_transaction, get_cursor
 import os
 from django.db.models.aggregates import Max
 from datetime import datetime
@@ -406,14 +406,15 @@ class AtlasTranscript(TranscriptBase):
     def set_scores(cls):
         try:
             set_chromosome_lists(cls)
-            multiprocess_all_chromosomes(wrap_set_scores, cls)
+            cursor = get_cursor()
+            multiprocess_all_chromosomes(wrap_set_scores, cls, cursor)
             commit_transaction()
         except Exception, e:
             rollback_transaction()
             raise e
         
     @classmethod
-    def _set_scores(cls, chr_list):
+    def _set_scores(cls, chr_list, cursor):
         try:
             for chr_id in chr_list:
                 print 'Scoring transcripts for chromosome %d' % chr_id
@@ -423,7 +424,7 @@ class AtlasTranscript(TranscriptBase):
                     """.format(current_settings.GENOME,
                            current_settings.CELL_TYPE.lower(),
                            current_settings.STAGING, chr_id=chr_id)
-                execute_query_in_transaction(query)
+                execute_query_in_transaction(query, cursor=cursor)
         except Exception, e:
             rollback_transaction()
             raise e  
