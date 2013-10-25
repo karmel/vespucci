@@ -407,7 +407,7 @@ class AtlasTranscript(TranscriptBase):
             multiprocess_all_chromosomes(wrap_set_scores, cls)
             commit_transaction(using='pgbouncer')
         except Exception, e:
-            rollback_transaction(using='pgbouncer')
+            #rollback_transaction(using='pgbouncer')
             raise e
         
     @classmethod
