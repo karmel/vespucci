@@ -424,7 +424,7 @@ class AtlasTranscript(TranscriptBase):
                     """.format(current_settings.GENOME,
                            current_settings.CELL_TYPE.lower(),
                            current_settings.STAGING, chr_id=chr_id)
-                execute_query(query, using='pgbouncer')
+                execute_query(query, using='default')
         except Exception, e:
             #rollback_transaction()
             raise e  
