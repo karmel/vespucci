@@ -126,8 +126,8 @@ def wrap_set_density(cls, chr_list, *args):
     wrap_errors(cls._set_density, chr_list, *args)
 def wrap_draw_transcript_edges(cls, chr_list): 
     wrap_errors(cls._draw_transcript_edges, chr_list)
-def wrap_set_scores(cls, chr_list): 
-    wrap_errors(cls._set_scores, chr_list)
+def wrap_set_scores(cls, chr_list, *args): 
+    wrap_errors(cls._set_scores, chr_list, *args)
 def wrap_force_vacuum(cls, chr_list): 
     wrap_errors(cls._force_vacuum, chr_list)
 
@@ -404,7 +404,7 @@ class AtlasTranscript(TranscriptBase):
     def set_scores(cls):
         try:
             set_chromosome_lists(cls)
-            active_cursor = object()#get_cursor()
+            active_cursor = get_cursor()
             print active_cursor
             multiprocess_all_chromosomes(wrap_set_scores, cls, active_cursor)
             commit_transaction()
