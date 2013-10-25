@@ -13,7 +13,8 @@ from vespucci.utils.datatypes.basic_model import Int8RangeField, VespucciModel
 from multiprocessing import Pool
 from vespucci.utils.database import execute_query, fetch_rows,\
     commit_transaction, rollback_transaction, execute_query_in_transaction,\
-    execute_query_without_transaction, get_cursor
+    execute_query_without_transaction, get_cursor, savepoint,\
+    rollback_to_savepoint
 import os
 from django.db.models.aggregates import Max
 from datetime import datetime
@@ -402,9 +403,9 @@ class AtlasTranscript(TranscriptBase):
     def set_scores(cls):
         try:
             set_chromosome_lists(cls)
-            current_settings.CURSOR = get_cursor()
+            db_savepoint = savepoint()
             multiprocess_all_chromosomes(wrap_set_scores, cls)
-            commit_transaction()
+            rollback_to_savepoint(db_savepoint)
         except Exception, e:
             rollback_transaction()
             raise e

@@ -44,35 +44,32 @@ def execute_query_without_transaction(query,
     if return_cursor: return cursor
     connection.close()
 
+def savepoint(using='default'):
+    if transaction.is_managed(using):
+        print 'Creating savepoint.'
+        return transaction.savepoint(using)
+
+def rollback_to_savepoint(sid, using='default'):
+    if transaction.is_managed(using):
+        print 'Rolling back to savepoint!'
+        return transaction.savepoint_rollback(sid)
+    
 def commit_transaction(using='default'):
     if transaction.is_managed(using):
-        print 'Committing transaction!'
+        print 'Committing transaction.'
         transaction.commit(using)
 
 def rollback_transaction(using='default'):
     if transaction.is_managed(using):
         print 'Rolling back transaction!'
         transaction.rollback(using)
-
-def get_cursor(using='default'):
-    print 'Getting cursor'
-    connection = connections[using]
-    active_cursor = connection.cursor()
-    print 'Got cursor'
-    return active_cursor
     
 def execute_query_in_transaction(query, 
-                                  using='default', 
-                                  active_cursor=None):
-    if not active_cursor:
-        active_cursor = current_settings.CURSOR
-        if not active_cursor:
-            connection = connections[using]
-            active_cursor = connection.cursor()
-    print connections[using]
-    print active_cursor
-    active_cursor.execute(query)
-    transaction.commit_unless_managed()
+                                  using='default'):
+    connection = connections[using]
+    cursor = connection.cursor()
+    cursor.execute(query)
+    transaction.commit()
 
 def fetch_rows(query, return_cursor=False, using='default'):
     connection = connections[using]
