@@ -407,7 +407,7 @@ class AtlasTranscript(TranscriptBase):
         try:
             set_chromosome_lists(cls)
             multiprocess_all_chromosomes(wrap_set_scores, cls)
-            rollback_transaction()
+            commit_transaction()
         except Exception, e:
             rollback_transaction()
             raise e
