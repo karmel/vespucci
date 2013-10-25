@@ -59,6 +59,7 @@ DATABASES = {
 
 }
 CONNECTION = None
+CURSOR = None
 
 #####################################
 # Compute power

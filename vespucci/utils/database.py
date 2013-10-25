@@ -60,6 +60,7 @@ def execute_query_in_transaction(query,
     if not current_settings.CONNECTION:
         current_settings.CONNECTION = connections[using]
     #connection.close()
+    print current_settings.CONNECTION
     cursor = current_settings.CONNECTION.cursor()
     cursor.execute(query)
     transaction.commit_unless_managed()
