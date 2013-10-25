@@ -31,7 +31,13 @@ If your raw tag tables have data, but that data didn't make it into the preparat
 
 #### I want to try building Vespucci with a different MAX_EDGE or DENSITY_MULTIPLIER. Do I have to restart from the beginning?
 
-No. You can simply delete (or rename) the final Vespucci schema you built. (For example, rename `atlas_mm9_default` to `atlas_mm9_default_max_edge_500` using the <a href="/README.md#e-etc" target="_blank">PostgreSQL Studio interface</a>.) Then, you can set up the new database with the command:
+No. You can simply delete (or rename) the final Vespucci schema you built. For example, rename `atlas_mm9_default` to `atlas_mm9_default_max_edge_500` using the <a href="/README.md#e-etc" target="_blank">PostgreSQL Studio interface</a>: 
+
+<a href="/documentation/images/drop_schema_large.png" target="_blank"><img alt="Drop schema controls in pgstudio" src="/images/drop_schema.png" /></a>
+
+<a href="/documentation/images/rename_schema_large.png" target="_blank"><img alt="Renaming a schema in pgstudio" src="/images/rename_schema.png" /></a>
+
+Then, you can set up the new database with the command:
 
 	~/Repositories/vespucci/vespucci/vespucci/atlas/pipeline/scripts/set_up_database.sh -g mm9 -c default --final
 
@@ -49,3 +55,4 @@ Yes; once the raw tag tables have been converted to proto-transcripts, they are 
 <a href="/documentation/images/drop_table_large.png" target="_blank"><img alt="Dropping a tag table in pgstudio" src="/images/drop_table.png" /></a>
 
 #### I loaded all my data. Now what? 
+
