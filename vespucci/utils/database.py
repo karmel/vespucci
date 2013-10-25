@@ -57,9 +57,10 @@ def rollback_transaction(using='default'):
 def execute_query_in_transaction(query, 
                                   using='default', 
                                   return_cursor=False):
-    connection = connections[using]
+    if not current_settings.CONNECTION:
+        current_settings.CONNECTION = connections[using]
     #connection.close()
-    cursor = connection.cursor()
+    cursor = current_settings.CONNECTION.cursor()
     cursor.execute(query)
     transaction.commit_unless_managed()
     if return_cursor: return cursor

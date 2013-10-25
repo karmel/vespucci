@@ -58,7 +58,7 @@ DATABASES = {
     },
 
 }
-ISOLATION_LEVEL = None
+CONNECTION = None
 
 #####################################
 # Compute power
