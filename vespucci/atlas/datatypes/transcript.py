@@ -416,6 +416,7 @@ class AtlasTranscript(TranscriptBase):
         
     @classmethod
     def _set_scores(cls, chr_list, active_cursor=None):
+        print active_cursor
         try:
             for chr_id in chr_list:
                 print 'Scoring transcripts for chromosome %d' % chr_id
