@@ -403,11 +403,11 @@ class AtlasTranscript(TranscriptBase):
     def set_scores(cls):
         try:
             set_chromosome_lists(cls)
-            #begin_transaction(using='pgbouncer')
+            begin_transaction(using='pgbouncer')
             multiprocess_all_chromosomes(wrap_set_scores, cls)
-            #commit_transaction(using='pgbouncer')
+            commit_transaction(using='pgbouncer')
         except Exception, e:
-            #rollback_transaction(using='pgbouncer')
+            rollback_transaction(using='pgbouncer')
             raise e
         
     @classmethod
@@ -421,7 +421,7 @@ class AtlasTranscript(TranscriptBase):
                     """.format(current_settings.GENOME,
                            current_settings.CELL_TYPE.lower(),
                            current_settings.STAGING, chr_id=chr_id)
-                execute_query(query, using='default')
+                execute_query(query, using='pgbouncer')
         except Exception, e:
             rollback_transaction()
             raise e  
