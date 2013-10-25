@@ -99,9 +99,7 @@ def multiprocess_all_chromosomes(func, cls, *args, **kwargs):
     
     try:
         for chr_list in current_settings.CHR_LISTS:
-            print args
-            # Use a callback to call the ApplyResult.get() function,
-            # which should re-raise any errors encountered in a child process.
+            args=[cls, chr_list,] + list(args)
             p.apply_async(func, args=[cls, chr_list,] + list(args))            
         p.close()
         p.join()
