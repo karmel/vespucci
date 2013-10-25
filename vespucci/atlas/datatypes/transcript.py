@@ -126,8 +126,8 @@ def wrap_set_density(cls, chr_list, *args):
     wrap_errors(cls._set_density, chr_list, *args)
 def wrap_draw_transcript_edges(cls, chr_list): 
     wrap_errors(cls._draw_transcript_edges, chr_list)
-def wrap_set_scores(cls, chr_list, *args): 
-    wrap_errors(cls._set_scores, chr_list, *args)
+def wrap_set_scores(cls, chr_list): 
+    wrap_errors(cls._set_scores, chr_list)
 def wrap_force_vacuum(cls, chr_list): 
     wrap_errors(cls._force_vacuum, chr_list)
 
@@ -404,16 +404,15 @@ class AtlasTranscript(TranscriptBase):
     def set_scores(cls):
         try:
             set_chromosome_lists(cls)
-            active_cursor = [get_cursor()]
-            print active_cursor
-            multiprocess_all_chromosomes(wrap_set_scores, cls, active_cursor)
+            current_settings.CURSOR = get_cursor()
+            multiprocess_all_chromosomes(wrap_set_scores, cls)
             commit_transaction()
         except Exception, e:
             rollback_transaction()
             raise e
         
     @classmethod
-    def _set_scores(cls, chr_list, active_cursor=None):
+    def _set_scores(cls, chr_list):
         try:
             for chr_id in chr_list:
                 print 'Scoring transcripts for chromosome %d' % chr_id
@@ -423,7 +422,7 @@ class AtlasTranscript(TranscriptBase):
                     """.format(current_settings.GENOME,
                            current_settings.CELL_TYPE.lower(),
                            current_settings.STAGING, chr_id=chr_id)
-                execute_query_in_transaction(query, active_cursor=active_cursor)
+                execute_query_in_transaction(query)
         except Exception, e:
             rollback_transaction()
             raise e  

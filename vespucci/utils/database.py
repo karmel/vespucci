@@ -64,11 +64,11 @@ def get_cursor(using='default'):
 def execute_query_in_transaction(query, 
                                   using='default', 
                                   active_cursor=None):
-    print 'Active cursor: ', active_cursor
-    
     if not active_cursor:
-        connection = connections[using]
-        active_cursor = connection.cursor()
+        active_cursor = current_settings.CURSOR
+        if not active_cursor:
+            connection = connections[using]
+            active_cursor = connection.cursor()
     
     print active_cursor
     active_cursor.execute(query)
