@@ -55,14 +55,18 @@ def rollback_transaction(using='default'):
         transaction.rollback(using)
 
 def get_cursor(using='default'):
+    print 'Getting cursor'
     connection = connections[using]
     active_cursor = connection.cursor()
+    print 'Got cursor'
     return active_cursor
     
 def execute_query_in_transaction(query, 
                                   using='default', 
                                   active_cursor=None,
                                   return_cursor=False):
+    print 'Active cursor: ', active_cursor
+    
     if not active_cursor:
         connection = connections[using]
         active_cursor = connection.cursor()
