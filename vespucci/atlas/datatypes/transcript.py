@@ -406,15 +406,16 @@ class AtlasTranscript(TranscriptBase):
     def set_scores(cls):
         try:
             set_chromosome_lists(cls)
-            cursor = get_cursor()
-            multiprocess_all_chromosomes(wrap_set_scores, cls, cursor)
+            active_cursor = get_cursor()
+            print active_cursor
+            multiprocess_all_chromosomes(wrap_set_scores, cls, active_cursor)
             commit_transaction()
         except Exception, e:
             rollback_transaction()
             raise e
         
     @classmethod
-    def _set_scores(cls, chr_list, cursor):
+    def _set_scores(cls, chr_list, active_cursor=None):
         try:
             for chr_id in chr_list:
                 print 'Scoring transcripts for chromosome %d' % chr_id
@@ -424,7 +425,7 @@ class AtlasTranscript(TranscriptBase):
                     """.format(current_settings.GENOME,
                            current_settings.CELL_TYPE.lower(),
                            current_settings.STAGING, chr_id=chr_id)
-                execute_query_in_transaction(query, cursor=cursor)
+                execute_query_in_transaction(query, active_cursor=active_cursor)
         except Exception, e:
             rollback_transaction()
             raise e  
