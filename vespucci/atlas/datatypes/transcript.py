@@ -18,8 +18,7 @@ import os
 from django.db.models.aggregates import Max
 from datetime import datetime
 import traceback
-from django.db.transaction import commit_on_success, commit_manually, rollback,\
-    commit
+from django.db.transaction import commit_manually
 
 # The tags returned from the sequencing run are shorter 
 # than we know them to be biologically

@@ -46,7 +46,7 @@ def execute_query_without_transaction(query,
 
 def commit_transaction(using='default'):
     if transaction.is_managed(using):
-        print 'Rolling back transaction!'
+        print 'Committing transaction!'
         transaction.commit(using)
 
 def rollback_transaction(using='default'):
