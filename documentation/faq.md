@@ -56,3 +56,7 @@ Yes; once the raw tag tables have been converted to proto-transcripts, they are 
 
 #### I loaded all my data. Now what? 
 
+Now, you can ask you data questions. What is the biological problem you are addressing? How can you formulate that as a SQL query over the data?
+
+We have included <a href="/documentation/sample_queries" target="_blank">many examples of queries</a>. Here are a few to get you started.
+

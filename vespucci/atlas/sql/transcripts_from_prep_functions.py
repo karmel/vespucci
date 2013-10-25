@@ -352,4 +352,36 @@ BEGIN
 END;
 $$ LANGUAGE 'plpgsql';
 
+
+------------------------
+-- Convenience functions
+------------------------
+
+CREATE OR REPLACE FUNCTION atlas_{0}_{1}{suffix}.rpkm(transcript atlas_{0}_{1}{suffix}.transcript, 
+                                                      tag_count integer,
+                                                      schema text, table text)
+RETURNS NUMERIC AS $$
+DECLARE
+    millions_of_tags float;
+    rpkm float;
+BEGIN 
+    -- RPKM for given tag count and run
+    millions_of_tags := EXECUTE 'SELECT sum(tag_count)::numeric/1000000 
+            FROM atlas_{0}_{1}_prep.atlas_transcript_source s
+            JOIN genome_reference_{0}.sequencing_run run
+            ON s.sequencing_run_id = run.id
+            WHERE run.source_table = ' || schema || '"."' || table;
+    IF (millions_of_tags IS NULL) THEN
+        RAISE EXCEPTION 'There are tags for schema % and table %', schema, table;
+    END IF;
+    rpkm = (SELECT  
+            tag_count::numeric
+                /(transcript.transcription_end - transcript.transcription_start + 1)::numeric
+                /1000
+                /millions_of_tags::numeric);
+
+    RETURN rpkm;
+END;
+$$ LANGUAGE 'plpgsql';
+
 """.format(genome, cell_type, suffix=suffix)

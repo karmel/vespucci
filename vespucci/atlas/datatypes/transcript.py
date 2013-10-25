@@ -16,7 +16,6 @@ import os
 from django.db.models.aggregates import Max
 from datetime import datetime
 import traceback
-from django.db.transaction import commit_manually
 
 # The tags returned from the sequencing run are shorter 
 # than we know them to be biologically
@@ -396,7 +395,6 @@ class AtlasTranscript(TranscriptBase):
             raise e           
     
     @classmethod
-    @commit_manually('default')
     def set_scores(cls):
         try:
             set_chromosome_lists(cls)
