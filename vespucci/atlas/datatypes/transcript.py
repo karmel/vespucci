@@ -87,7 +87,7 @@ def set_chromosome_lists(cls, *args, **kwargs):
         print 'Determined chromosome sets:\n{0}'.format(
                                         str(current_settings.CHR_LISTS))
     
-
+@commit_on_success('default')
 def multiprocess_all_chromosomes(func, cls, *args, **kwargs):
     ''' 
     Convenience method for splitting up queries based on tag id.
@@ -401,7 +401,6 @@ class AtlasTranscript(TranscriptBase):
         except Exception, e:
             raise e           
     
-    @commit_on_success('default')
     @classmethod
     def set_scores(cls):
         try:
