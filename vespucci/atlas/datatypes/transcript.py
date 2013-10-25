@@ -18,7 +18,7 @@ import os
 from django.db.models.aggregates import Max
 from datetime import datetime
 import traceback
-from django.db.transaction import commit_on_success
+from django.db.transaction import commit_on_success, commit_manually
 
 # The tags returned from the sequencing run are shorter 
 # than we know them to be biologically
@@ -87,7 +87,7 @@ def set_chromosome_lists(cls, *args, **kwargs):
         print 'Determined chromosome sets:\n{0}'.format(
                                         str(current_settings.CHR_LISTS))
     
-@commit_on_success('default')
+
 def multiprocess_all_chromosomes(func, cls, *args, **kwargs):
     ''' 
     Convenience method for splitting up queries based on tag id.
@@ -405,15 +405,16 @@ class AtlasTranscript(TranscriptBase):
     def set_scores(cls):
         try:
             set_chromosome_lists(cls)
-            #begin_transaction(using='pgbouncer')
+            begin_transaction()
             multiprocess_all_chromosomes(wrap_set_scores, cls)
+            commit_transaction()
             print 'Done'
-            #commit_transaction(using='pgbouncer')
         except Exception, e:
             #rollback_transaction(using='pgbouncer')
             raise e
         
     @classmethod
+    @commit_manually('default')
     def _set_scores(cls, chr_list):
         try:
             for chr_id in chr_list:
@@ -424,7 +425,7 @@ class AtlasTranscript(TranscriptBase):
                     """.format(current_settings.GENOME,
                            current_settings.CELL_TYPE.lower(),
                            current_settings.STAGING, chr_id=chr_id)
-                execute_query(query, using='default')
+                execute_query(query)
         except Exception, e:
             #rollback_transaction()
             raise e  
