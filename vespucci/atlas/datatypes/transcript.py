@@ -402,6 +402,7 @@ class AtlasTranscript(TranscriptBase):
             raise e           
     
     @classmethod
+    @commit_manually('default')
     def set_scores(cls):
         try:
             set_chromosome_lists(cls)
@@ -414,7 +415,6 @@ class AtlasTranscript(TranscriptBase):
             raise e
         
     @classmethod
-    @commit_manually('default')
     def _set_scores(cls, chr_list):
         try:
             for chr_id in chr_list:
