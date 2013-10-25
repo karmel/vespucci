@@ -100,6 +100,7 @@ def multiprocess_all_chromosomes(func, cls, *args, **kwargs):
     
     try:
         for chr_list in current_settings.CHR_LISTS:
+            print args
             # Use a callback to call the ApplyResult.get() function,
             # which should re-raise any errors encountered in a child process.
             p.apply_async(func, args=[cls, chr_list,] + list(args))            
@@ -416,7 +417,6 @@ class AtlasTranscript(TranscriptBase):
         
     @classmethod
     def _set_scores(cls, chr_list, active_cursor=None):
-        print active_cursor
         try:
             for chr_id in chr_list:
                 print 'Scoring transcripts for chromosome %d' % chr_id
