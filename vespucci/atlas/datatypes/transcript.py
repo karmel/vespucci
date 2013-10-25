@@ -39,7 +39,7 @@ MIN_ONE_RUN_TAGS = 3
 MIN_SCORE = 1
 
 
-def set_chromosome_lists(cls, *args, **kwargs):
+def set_chromosome_lists(cls, use_table=None):
     '''
     Get and set available chromosomes to multiprocess.
     '''
@@ -53,8 +53,7 @@ def set_chromosome_lists(cls, *args, **kwargs):
                     FROM "{0}" 
                     GROUP BY chromosome_id 
                     ORDER BY COUNT(chromosome_id) DESC;'''.format(
-                                    kwargs.get('use_table',None) 
-                                    or cls._meta.db_table))
+                                    use_table or cls._meta.db_table))
             except utils.DatabaseError:
                 # Prep table instead?
                 all_chr = fetch_rows('''
@@ -94,12 +93,13 @@ def multiprocess_all_chromosomes(func, cls, *args, **kwargs):
     '''
     processes = current_settings.ALLOWED_PROCESSES
     
-    set_chromosome_lists(cls, *args, **kwargs)
-    
+    set_chromosome_lists(cls, use_table=kwargs.get('use_table',None))
+    print args
     p = Pool(processes)
     
     try:
         for chr_list in current_settings.CHR_LISTS:
+            print args
             # Use a callback to call the ApplyResult.get() function,
             # which should re-raise any errors encountered in a child process.
             p.apply_async(func, args=[cls, chr_list,] + list(args))            
