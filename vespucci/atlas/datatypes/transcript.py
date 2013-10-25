@@ -401,7 +401,7 @@ class AtlasTranscript(TranscriptBase):
         except Exception, e:
             raise e           
     
-    @commit_on_success    
+    @commit_on_success('default')
     @classmethod
     def set_scores(cls):
         try:
