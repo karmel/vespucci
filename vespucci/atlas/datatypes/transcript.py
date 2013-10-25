@@ -127,6 +127,7 @@ def wrap_set_density(cls, chr_list, *args):
 def wrap_draw_transcript_edges(cls, chr_list): 
     wrap_errors(cls._draw_transcript_edges, chr_list)
 def wrap_set_scores(cls, chr_list, *args): 
+    print 'in wrap scores'
     wrap_errors(cls._set_scores, chr_list, *args)
 def wrap_force_vacuum(cls, chr_list): 
     wrap_errors(cls._force_vacuum, chr_list)
