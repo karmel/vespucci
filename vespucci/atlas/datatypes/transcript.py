@@ -18,7 +18,8 @@ import os
 from django.db.models.aggregates import Max
 from datetime import datetime
 import traceback
-from django.db.transaction import commit_on_success, commit_manually, rollback
+from django.db.transaction import commit_on_success, commit_manually, rollback,\
+    commit
 
 # The tags returned from the sequencing run are shorter 
 # than we know them to be biologically
@@ -406,13 +407,10 @@ class AtlasTranscript(TranscriptBase):
     def set_scores(cls):
         try:
             set_chromosome_lists(cls)
-            #begin_transaction()
             multiprocess_all_chromosomes(wrap_set_scores, cls)
-            #rollback_transaction()
-            rollback()
-            print 'Done'
+            commit_transaction()
         except Exception, e:
-            #rollback_transaction(using='pgbouncer')
+            rollback_transaction()
             raise e
         
     @classmethod

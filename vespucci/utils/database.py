@@ -44,36 +44,15 @@ def execute_query_without_transaction(query,
     if return_cursor: return cursor
     connection.close()
 
-def begin_transaction(using='default'):
-    connection = connections[using]
-    current_settings.ISOLATION_LEVEL = connection.isolation_level
-    connection.close()
-    connection.isolation_level = 0
-    cursor = connection.cursor()
-    print 'Beginning transaction.'
-    cursor.execute('BEGIN;')
-
 def commit_transaction(using='default'):
-    if current_settings.ISOLATION_LEVEL is not None:
-        connection = connections[using]
-        cursor = connection.cursor()
-        print 'Committing transaction.'
-        cursor.execute('COMMIT;')
-        transaction.commit_unless_managed()
-        connection.isolation_level = current_settings.ISOLATION_LEVEL
-        current_settings.ISOLATION_LEVEL = None
-        connection.close()
+    if transaction.is_managed(using):
+        print 'Rolling back transaction!'
+        transaction.commit(using)
 
 def rollback_transaction(using='default'):
-    if current_settings.ISOLATION_LEVEL is not None:
-        connection = connections[using]
-        cursor = connection.cursor()
+    if transaction.is_managed(using):
         print 'Rolling back transaction!'
-        cursor.execute('ROLLBACK;')
-        transaction.commit_unless_managed()
-        connection.isolation_level = current_settings.ISOLATION_LEVEL
-        current_settings.ISOLATION_LEVEL = None
-        connection.close()
+        transaction.rollback(using)
 
 def execute_query_in_transaction(query, 
                                   using='default', 
