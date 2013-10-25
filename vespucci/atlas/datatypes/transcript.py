@@ -11,7 +11,7 @@ from vespucci.genomereference.datatypes import Chromosome,\
     SequencingRun
 from vespucci.utils.datatypes.basic_model import Int8RangeField, VespucciModel
 from multiprocessing import Pool
-from vespucci.utils.database import execute_query, fetch_rows, begin_transaction,\
+from vespucci.utils.database import execute_query, fetch_rows,\
     commit_transaction, rollback_transaction, execute_query_in_transaction,\
     execute_query_without_transaction
 import os
