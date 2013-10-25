@@ -54,23 +54,23 @@ def rollback_transaction(using='default'):
         print 'Rolling back transaction!'
         transaction.rollback(using)
 
-def get_cursor(using='default', cursor=None):
+def get_cursor(using='default'):
     connection = connections[using]
-    cursor = connection.cursor()
-    return cursor
+    active_cursor = connection.cursor()
+    return active_cursor
     
 def execute_query_in_transaction(query, 
                                   using='default', 
-                                  cursor=None,
+                                  active_cursor=None,
                                   return_cursor=False):
-    if not cursor:
+    if not active_cursor:
         connection = connections[using]
-        cursor = connection.cursor()
+        active_cursor = connection.cursor()
     
-    print cursor
-    
+    print active_cursor
+    active_cursor.execute(query)
     transaction.commit_unless_managed()
-    if return_cursor: return cursor
+    if return_cursor: return active_cursor
 
 def fetch_rows(query, return_cursor=False, using='default'):
     connection = connections[using]
