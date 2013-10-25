@@ -59,7 +59,7 @@ def execute_query_in_transaction(query,
                                   return_cursor=False):
     connection = connections[using]
     #connection.close()
-    cursor = connection.cursor(name='test')
+    cursor = connection.cursor()
     cursor.execute(query)
     transaction.commit_unless_managed()
     if return_cursor: return cursor
