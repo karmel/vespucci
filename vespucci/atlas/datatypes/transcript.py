@@ -404,7 +404,7 @@ class AtlasTranscript(TranscriptBase):
     def set_scores(cls):
         try:
             set_chromosome_lists(cls)
-            active_cursor = get_cursor()
+            active_cursor = object()#get_cursor()
             print active_cursor
             multiprocess_all_chromosomes(wrap_set_scores, cls, active_cursor)
             commit_transaction()
