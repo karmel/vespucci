@@ -60,11 +60,15 @@ def execute_query_in_transaction(query,
     if not current_settings.CONNECTION:
         current_settings.CONNECTION = connections[using]
     #connection.close()
-    print current_settings.CONNECTION
-    cursor = current_settings.CONNECTION.cursor()
-    cursor.execute(query)
+    
+    if not current_settings.CURSOR:
+        current_settings.CURSOR = current_settings.CONNECTION.cursor()
+    current_settings.CURSOR.execute(query)
+    
+    print current_settings.CURSOR
+    
     transaction.commit_unless_managed()
-    if return_cursor: return cursor
+    if return_cursor: return current_settings.CURSOR
     #connection.close()
 
 def fetch_rows(query, return_cursor=False, using='default'):
