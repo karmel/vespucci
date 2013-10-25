@@ -63,8 +63,7 @@ def get_cursor(using='default'):
     
 def execute_query_in_transaction(query, 
                                   using='default', 
-                                  active_cursor=None,
-                                  return_cursor=False):
+                                  active_cursor=None):
     print 'Active cursor: ', active_cursor
     
     if not active_cursor:
@@ -74,7 +73,6 @@ def execute_query_in_transaction(query,
     print active_cursor
     active_cursor.execute(query)
     transaction.commit_unless_managed()
-    if return_cursor: return active_cursor
 
 def fetch_rows(query, return_cursor=False, using='default'):
     connection = connections[using]
