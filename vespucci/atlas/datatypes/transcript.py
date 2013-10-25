@@ -402,13 +402,13 @@ class AtlasTranscript(TranscriptBase):
             raise e           
     
     @classmethod
-    @commit_on_success('default')
+    @commit_manually('default')
     def set_scores(cls):
         try:
             set_chromosome_lists(cls)
             begin_transaction()
             multiprocess_all_chromosomes(wrap_set_scores, cls)
-            commit_transaction()
+            rollback_transaction()
             print 'Done'
         except Exception, e:
             #rollback_transaction(using='pgbouncer')
