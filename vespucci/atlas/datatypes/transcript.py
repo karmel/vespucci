@@ -12,7 +12,8 @@ from vespucci.genomereference.datatypes import Chromosome,\
 from vespucci.utils.datatypes.basic_model import Int8RangeField, VespucciModel
 from multiprocessing import Pool
 from vespucci.utils.database import execute_query, fetch_rows, begin_transaction,\
-    commit_transaction, rollback_transaction, execute_query_in_transaction
+    commit_transaction, rollback_transaction, execute_query_in_transaction,\
+    execute_query_without_transaction
 import os
 from django.db.models.aggregates import Max
 from datetime import datetime
@@ -421,7 +422,7 @@ class AtlasTranscript(TranscriptBase):
                     """.format(current_settings.GENOME,
                            current_settings.CELL_TYPE.lower(),
                            current_settings.STAGING, chr_id=chr_id)
-                execute_query_in_transaction(query, using='pgbouncer')
+                execute_query_without_transaction(query, using='pgbouncer')
         except Exception, e:
             rollback_transaction()
             raise e  
