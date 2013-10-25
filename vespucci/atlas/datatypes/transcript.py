@@ -402,14 +402,14 @@ class AtlasTranscript(TranscriptBase):
             raise e           
     
     @classmethod
-    @commit_manually('pgbouncer')
+    @commit_manually('default')
     def set_scores(cls):
         try:
             set_chromosome_lists(cls)
             multiprocess_all_chromosomes(wrap_set_scores, cls)
-            commit_transaction(using='pgbouncer')
+            commit_transaction()
         except Exception, e:
-            rollback_transaction(using='pgbouncer')
+            rollback_transaction()
             raise e
         
     @classmethod
@@ -423,7 +423,7 @@ class AtlasTranscript(TranscriptBase):
                     """.format(current_settings.GENOME,
                            current_settings.CELL_TYPE.lower(),
                            current_settings.STAGING, chr_id=chr_id)
-                execute_query_in_transaction(query, using='pgbouncer')
+                execute_query_in_transaction(query)
         except Exception, e:
             rollback_transaction()
             raise e  
