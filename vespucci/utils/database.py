@@ -25,7 +25,7 @@ def execute_query(query,
     #connection.close()
     cursor = connection.cursor()
     cursor.execute(query)
-    #transaction.commit_unless_managed()
+    transaction.commit_unless_managed()
     if return_cursor: return cursor
     if discard_temp: discard_temp_tables(using=using)
     #connection.close()
