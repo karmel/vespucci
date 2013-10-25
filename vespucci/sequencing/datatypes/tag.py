@@ -277,6 +277,7 @@ class AtlasTag(DynamicTable):
         Should be called only after all tags have been added.
         '''
         connection.close()
-        # If possible, retrieve bowtie stats
         s, _ = SequencingRun.objects.get_or_create(source_table=cls._meta.db_table)
+        s.total_tags = cls.objects.count()
+        s.save() 
         return s

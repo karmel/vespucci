@@ -146,6 +146,7 @@ class SequencingRun(GenomeReferenceBase):
     Record of details of a given sequencing run and its total tags.
     '''
     source_table = models.CharField(max_length=100)
+    total_tags = models.IntegerField()
     
     class Meta(object):
         db_table = '{0}"."sequencing_run'.format(SCHEMA_BASE)
