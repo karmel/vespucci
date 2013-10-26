@@ -98,7 +98,7 @@ We have included <a href="/documentation/sample_queries" target="_blank">many ex
 	WHERE t.score >= 1
 	AND t.parent_id IS NULL;
 
-Note that you can view the loaded sequencing runs in the table `genome_reference_mm9.sequencing_runs` (or the equivalent for the genome in question), as seen in the screenshot below.
+Note that you can view the loaded sequencing runs in the table `genome_reference_mm9.sequencing_run` (or the equivalent for the genome in question), as seen in the screenshot below.
 
 <a href="/documentation/images/sequencing_runs_large.png" target="_blank"><img alt="Sequencing run table in pgstudio" src="/images/sequencing_runs.png" /></a>
 
