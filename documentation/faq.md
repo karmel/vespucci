@@ -82,15 +82,15 @@ We have included <a href="/documentation/sample_queries" target="_blank">many ex
 	SELECT log(2,rpkm(t, s1.tag_count, run1.total_tags)/rpkm(t, s2.tag_count, run2.total_tags)) as log_fold_change,
 	rpkm(t, s1.tag_count, run1.total_tags) as rpkm1, 
 	rpkm(t, s2.tag_count, run2.total_tags) as rpkm2
-	FROM atlas_transcript t
+	FROM atlas_mm9_default.atlas_transcript t
 
-	JOIN atlas_transcript_source s1
+	JOIN atlas_mm9_default.atlas_transcript_source s1
 	ON t.id = s1.atlas_transcript_id
 	JOIN genome_reference_mm9.sequencing_run run1
 	ON s1.sequencing_run_id = run1.id
 	AND run1.source_table = 'groseq"."tag_wt_notx_12h_1'
 
-	JOIN atlas_transcript_source s2
+	JOIN atlas_mm9_default.atlas_transcript_source s2
 	ON t.id = s2.atlas_transcript_id
 	JOIN genome_reference_mm9.sequencing_run run2
 	ON s2.sequencing_run_id = run2.id
