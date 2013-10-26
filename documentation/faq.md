@@ -77,6 +77,7 @@ We have included <a href="/documentation/sample_queries" target="_blank">many ex
 
 
 **Get all transcripts with RPKM in Sample 1 versus Sample 2**
+
 	-- Get log fold change between runs
 	SELECT log(2,rpkm(t, s1.tag_count, run1.total_tags)/rpkm(t, s2.tag_count, run2.total_tags)) as log_fold_change,
 	rpkm(t, s1.tag_count, run1.total_tags) as rpkm1, 
