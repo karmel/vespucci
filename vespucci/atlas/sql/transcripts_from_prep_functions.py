@@ -359,28 +359,17 @@ $$ LANGUAGE 'plpgsql';
 
 CREATE OR REPLACE FUNCTION atlas_{0}_{1}{suffix}.rpkm(transcript atlas_{0}_{1}{suffix}.atlas_transcript, 
                                                       tag_count integer,
-                                                      from_schema text, from_table text)
+                                                      total_tags bigint)
 RETURNS NUMERIC AS $$
 DECLARE
-    millions_of_tags float;
     rpkm float;
 BEGIN 
     -- RPKM for given tag count and run
-    EXECUTE 'SELECT sum(tag_count)::numeric/1000000 
-            FROM atlas_{0}_{1}_prep.atlas_transcript_source s
-            JOIN genome_reference_{0}.sequencing_run run
-            ON s.sequencing_run_id = run.id
-            WHERE run.source_table = $1'
-    INTO millions_of_tags USING (from_schema || '"."' || from_table);
-    
-    IF (millions_of_tags IS NULL) THEN
-        RAISE EXCEPTION 'There are tags for schema % and table %', from_schema, from_table;
-    END IF;
+    millions_of_tags := total_tags::numeric/1000000;
     rpkm = (SELECT  
             tag_count::numeric
-                /(transcript.transcription_end - transcript.transcription_start + 1)::numeric
-                /1000
-                /millions_of_tags::numeric);
+                /((transcript.transcription_end - transcript.transcription_start + 1)::numeric/1000)
+                /(total_tags::numeric/1000000));
 
     RETURN rpkm;
 END;

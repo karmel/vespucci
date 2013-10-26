@@ -60,3 +60,45 @@ Now, you can ask you data questions. What is the biological problem you are addr
 
 We have included <a href="/documentation/sample_queries" target="_blank">many examples of queries</a>. Here are a few to get you started.
 
+**Get all expressed RefSeq transcripts**
+
+	-- RefSeq genes with transcript details
+	SELECT refseq.sequence_identifier, t.*
+	FROM atlas_mm9_default.atlas_transcript t
+	JOIN atlas_mm9_default.atlas_transcript_sequence seq
+	ON t.id = seq.atlas_transcript_id
+	JOIN genome_reference_mm9.sequence_transcription_region reg
+	ON seq.sequence_transcription_region_id = reg.id
+	JOIN genome_reference_mm9.sequence_identifier refseq
+	ON reg.sequence_identifier_id = refseq.id
+	WHERE t.score >= 1
+	AND t.parent_id IS NULL
+	AND seq.major = true;
+
+
+**Get all transcripts with RPKM in Sample 1 versus Sample 2**
+	-- Get log fold change between runs
+	SELECT log(2,rpkm(t, s1.tag_count, run1.total_tags)/rpkm(t, s2.tag_count, run2.total_tags)) as log_fold_change,
+	rpkm(t, s1.tag_count, run1.total_tags) as rpkm1, 
+	rpkm(t, s2.tag_count, run2.total_tags) as rpkm2
+	FROM atlas_transcript t
+
+	JOIN atlas_transcript_source s1
+	ON t.id = s1.atlas_transcript_id
+	JOIN genome_reference_mm9.sequencing_run run1
+	ON s1.sequencing_run_id = run1.id
+	AND run1.source_table = 'groseq"."tag_wt_notx_12h_1'
+
+	JOIN atlas_transcript_source s2
+	ON t.id = s2.atlas_transcript_id
+	JOIN genome_reference_mm9.sequencing_run run2
+	ON s2.sequencing_run_id = run2.id
+	AND run2.source_table = 'groseq"."tag_wt_notx_12h_2'
+
+	WHERE t.score >= 1
+	AND t.parent_id IS NULL;
+
+Note that you can view the loaded sequencing runs in the table `genome_reference_mm9.sequencing_runs` (or the equivalent for the genome in question), as seen in the screenshot below.
+
+<a href="/documentation/images/sequencing_runs_large.png" target="_blank"><img alt="Sequencing run table in pgstudio" src="/images/sequencing_runs.png" /></a>
+
