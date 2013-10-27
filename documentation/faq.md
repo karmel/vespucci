@@ -56,7 +56,22 @@ Yes; once the raw tag tables have been converted to proto-transcripts, they are 
 
 #### I loaded all my data. Now what? 
 
-Now, you can ask you data questions. What is the biological problem you are addressing? How can you formulate that as a SQL query over the data?
+The first thing you might want to do is visualize the generated transcripts. You can generate Bed files for loading into the UCSC Genome Browser or similar applications with the following command:
+
+	~/Repositories/vespucci/vespucci/vespucci/atlas/pipeline/scripts/transcripts_from_tags.sh -g mm9 -c default --output_dir=/data/www/ucsc/
+	
+The two Bed files created, one for the positive strand and one for the negative strand, can either be transferred to a local server using `scp` or, if you set up your Amazon instance to have port 80 open, can be accessed directly using this URL with your Amazon instance DNS substituted in:
+
+	# Sense strand:
+	http://ec2-11-111-11-11.compute-1.amazonaws.com/ucsc/Atlas_Transcripts_YYYY_mm_dd_0.bed
+	# Anti-sense strand:
+	http://ec2-11-111-11-11.compute-1.amazonaws.com/ucsc/Atlas_Transcripts_YYYY_mm_dd_1.bed
+
+Once loaded into the UCSC Genome Browser, you can see where transcripts have been called:
+
+<a href="/documentation/images/ucsc_browser_large.png" target="_blank"><img alt="Viewing transcripts in the UCSC Browser" src="/images/ucsc_browser.png" /></a>
+
+Next, you can ask you data questions. What is the biological problem you are addressing? How can you formulate that as a SQL query over the data?
 
 We have included <a href="/documentation/sample_queries" target="_blank">many examples of queries</a>. Here are a couple to get you started.
 
