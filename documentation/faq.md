@@ -58,7 +58,7 @@ Yes; once the raw tag tables have been converted to proto-transcripts, they are 
 
 Now, you can ask you data questions. What is the biological problem you are addressing? How can you formulate that as a SQL query over the data?
 
-We have included <a href="/documentation/sample_queries" target="_blank">many examples of queries</a>. Here are a few to get you started.
+We have included <a href="/documentation/sample_queries" target="_blank">many examples of queries</a>. Here are a couple to get you started.
 
 **Get all expressed RefSeq transcripts**
 
@@ -103,3 +103,4 @@ Note that you can view the loaded sequencing runs in the table `genome_reference
 
 <a href="/documentation/images/sequencing_runs_large.png" target="_blank"><img alt="Sequencing run table in pgstudio" src="/images/sequencing_runs.png" /></a>
 
+With the result sets from your query of interest, you can do anything you want-- export to other tools; collect gene lists for further research; view regions of interest in the browser; correlate with other data sets to find enhancers and eRNA; and so on.
