@@ -197,5 +197,5 @@ if __name__ == '__main__':
     else:
         _print('Skipping creation of tag table')
         AtlasTag.set_table_name('tag_' + file_name)
-        #if not options.no_refseq_segmentation: AtlasTag.set_refseq()
-        AtlasTag.add_record_of_tags()
+        if not options.no_refseq_segmentation: AtlasTag.set_refseq()
+        

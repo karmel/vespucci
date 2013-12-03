@@ -279,6 +279,5 @@ class AtlasTag(DynamicTable):
         connection.close()
         s, _ = SequencingRun.objects.get_or_create(source_table=cls._meta.db_table)
         s.total_tags = cls.objects.count()
-        print s.total_tags
         s.save() 
         return s
