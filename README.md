@@ -29,7 +29,7 @@ There are several ways to install and run Vespucci. The **easy way** is to use t
 
 An Amazon Machine Image (AMI) is available for Vespucci with the base Vespucci databases and all dependencies installed, awaiting installation of data for a specific genome. 
 
-The current AMI is available here: <a href="https://console.aws.amazon.com/ec2/home?region=us-east-1#launchAmi=ami-8ff6a9e6" target="_blank">Vespucci v0.92, AMI ID ami-8ff6a9e6</a>.
+The current AMI is available here: <a href="https://console.aws.amazon.com/ec2/home?region=us-east-1#launchAmi=ami-0b341662" target="_blank">Vespucci v0.93, AMI ID ami-0b341662</a>.
 
 #### A. Launching the Image 
 
