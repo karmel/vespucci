@@ -149,10 +149,10 @@ def translate_prep_columns(file_name):
 def add_indices(set_refseq=True):
     # Execute after all the ends have been calculated,
     # as otherwise the insertion of ends takes far too long.
-    #AtlasTag.add_indices()
-    #execute_query_without_transaction('VACUUM ANALYZE "{}";'.format(
-    #                                                AtlasTag._meta.db_table))
-    #if set_refseq: AtlasTag.set_refseq()
+    AtlasTag.add_indices()
+    execute_query_without_transaction('VACUUM ANALYZE "{}";'.format(
+                                                    AtlasTag._meta.db_table))
+    if set_refseq: AtlasTag.set_refseq()
     AtlasTag.add_record_of_tags()
     
 if __name__ == '__main__':    
@@ -197,4 +197,5 @@ if __name__ == '__main__':
     else:
         _print('Skipping creation of tag table')
         AtlasTag.set_table_name('tag_' + file_name)
-        if not options.no_refseq_segmentation: AtlasTag.set_refseq()
+        #if not options.no_refseq_segmentation: AtlasTag.set_refseq()
+        AtlasTag.add_record_of_tags()
