@@ -67,7 +67,7 @@ def import_peaks(options, file_name, peaks_file_name):
             peak = getattr(AtlasPeak, 
                            'init_from_{0}_row'.format(options.not_homer))(row)
 
-        peak.save()
+        if peak: peak.save()
 
     AtlasPeak.add_indices()
     
