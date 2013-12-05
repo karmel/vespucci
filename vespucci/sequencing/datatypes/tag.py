@@ -9,21 +9,21 @@ from vespucci.genomereference.datatypes import Chromosome, SequencingRun
 from vespucci.config import current_settings
 from vespucci.utils.datatypes.basic_model import DynamicTable, Int8RangeField
 from vespucci.utils.database import execute_query
-from vespucci.atlas.datatypes.transcript import multiprocess_all_chromosomes,\
+from vespucci.atlas.datatypes.transcript import multiprocess_all_chromosomes, \
     wrap_errors, set_chromosome_lists
 
-    
-def wrap_partition_tables(cls, chr_list): 
+
+def wrap_partition_tables(cls, chr_list):
     wrap_errors(cls._create_partition_tables, chr_list)
-def wrap_translate_from_prep(cls, chr_list): 
+def wrap_translate_from_prep(cls, chr_list):
     wrap_errors(cls._translate_from_prep, chr_list)
-def wrap_set_refseq(cls, chr_list): 
+def wrap_set_refseq(cls, chr_list):
     wrap_errors(cls._set_refseq, chr_list)
-def wrap_insert_matching_tags(cls, chr_list): 
+def wrap_insert_matching_tags(cls, chr_list):
     wrap_errors(cls._insert_matching_tags, chr_list)
-def wrap_add_indices(cls, chr_list): 
-    wrap_errors(cls._add_indices, chr_list)        
-    
+def wrap_add_indices(cls, chr_list):
+    wrap_errors(cls._add_indices, chr_list)
+
 class AtlasTag(DynamicTable):
     '''
     Denormalized version of tag input::
@@ -34,18 +34,18 @@ class AtlasTag(DynamicTable):
     
     '''
     prep_table = None
-    
+
     chromosome = models.ForeignKey(Chromosome)
     strand = models.IntegerField(max_length=1)
     start = models.IntegerField(max_length=12)
     end = models.IntegerField(max_length=12)
-    
+
     start_end = Int8RangeField(max_length=255, null=True)
-    
+
     refseq = models.NullBooleanField(default=None)
-    
-     
-    @classmethod        
+
+
+    @classmethod
     def create_prep_table(cls, name):
         '''
         Create table that will be used for to upload preparatory tag information,
@@ -61,19 +61,19 @@ class AtlasTag(DynamicTable):
         );
         """ % cls.prep_table
         execute_query(table_sql)
-    
-    @classmethod 
-    def set_prep_table(cls, name): 
+
+    @classmethod
+    def set_prep_table(cls, name):
         cls.prep_table = '%s"."%s' % (current_settings.CURRENT_SCHEMA, name)
-    
-    @classmethod        
+
+    @classmethod
     def delete_prep_table(cls):
         table_sql = """
         DROP TABLE "{0}" CASCADE;
         """.format(cls.prep_table)
         execute_query(table_sql)
-        
-    @classmethod                
+
+    @classmethod
     def create_parent_table(cls, name):
         '''
         Create table that will be used for these tags,
@@ -101,21 +101,21 @@ class AtlasTag(DynamicTable):
         ALTER TABLE "%s" ALTER COLUMN id 
             SET DEFAULT nextval('"%s_id_seq"'::regclass);
         ALTER TABLE ONLY "%s" ADD CONSTRAINT %s_pkey PRIMARY KEY (id);
-        """ % (cls._meta.db_table, 
+        """ % (cls._meta.db_table,
                cls._meta.db_table,
                cls._meta.db_table, cls._meta.db_table,
                cls._meta.db_table, cls._meta.db_table,
                cls._meta.db_table, cls.name)
         execute_query(table_sql)
-        
+
         cls.table_created = True
-    
+
     @classmethod
     def create_partition_tables(cls):
         '''
         Can't be multiprocessed; too many attempts to ANALYZE at once.
         '''
-        
+
         for chr_id in current_settings.GENOME_CHOICES[current_settings.GENOME]['chromosomes']:
             table_sql = """
             CREATE TABLE "%s_%d" (
@@ -124,7 +124,7 @@ class AtlasTag(DynamicTable):
                                      chr_id, chr_id,
                                      cls._meta.db_table)
             execute_query(table_sql)
-        
+
         trigger_sql = '''
             CREATE OR REPLACE FUNCTION %s.atlas_tag_insert_trigger()
             RETURNS TRIGGER AS $$
@@ -166,7 +166,7 @@ class AtlasTag(DynamicTable):
                cls._meta.db_table,
                current_settings.CURRENT_SCHEMA)
         execute_query(trigger_sql)
-        
+
     @classmethod
     def translate_from_prep(cls):
         try:
@@ -174,7 +174,7 @@ class AtlasTag(DynamicTable):
             multiprocess_all_chromosomes(wrap_translate_from_prep, cls)
         except Exception, e:
             raise e
-        
+
     @classmethod
     def _translate_from_prep(cls, chr_list):
         '''
@@ -203,7 +203,7 @@ class AtlasTag(DynamicTable):
                    Chromosome._meta.db_table,
                    chr_id=chr_id)
             execute_query(update_query)
-                            
+
     @classmethod
     def set_refseq(cls):
         try:
@@ -211,7 +211,7 @@ class AtlasTag(DynamicTable):
             multiprocess_all_chromosomes(wrap_set_refseq, cls)
         except Exception, e:
             raise e
-        
+
     @classmethod
     def _set_refseq(cls, chr_list):
         '''
@@ -233,7 +233,7 @@ class AtlasTag(DynamicTable):
             WHERE refseq IS NULL;
             """.format(cls._meta.db_table, chr_id, current_settings.GENOME)
             execute_query(update_query)
-            
+
     @classmethod
     def delete_prep_columns(cls):
         '''
@@ -246,7 +246,7 @@ class AtlasTag(DynamicTable):
         ALTER TABLE "%s" DROP COLUMN chromosome;
         """ % (cls._meta.db_table, cls._meta.db_table, cls._meta.db_table)
         execute_query(table_sql)
-        
+
         cls.table_created = False
 
     @classmethod
@@ -256,7 +256,7 @@ class AtlasTag(DynamicTable):
             multiprocess_all_chromosomes(wrap_add_indices, cls)
         except Exception, e:
             raise e
-        
+
     @classmethod
     def _add_indices(cls, chr_list):
         for chr_id in chr_list:
@@ -268,8 +268,8 @@ class AtlasTag(DynamicTable):
             ANALYZE "{1}_{chr_id}";
             """.format(cls.name, cls._meta.db_table, chr_id=chr_id)
             execute_query(update_query)
-            
-    @classmethod 
+
+    @classmethod
     def add_record_of_tags(cls):
         '''
         Add SequencingRun record with the details of this run.
@@ -279,5 +279,5 @@ class AtlasTag(DynamicTable):
         connection.close()
         s, _ = SequencingRun.objects.get_or_create(source_table=cls._meta.db_table)
         s.total_tags = cls.objects.count()
-        s.save() 
+        s.save()
         return s

@@ -362,6 +362,7 @@ CREATE OR REPLACE FUNCTION atlas_{0}_{1}{suffix}.rpkm(transcript atlas_{0}_{1}{s
                                                       total_tags bigint)
 RETURNS NUMERIC AS $$
 DECLARE
+    millions_of_tags float;
     rpkm float;
 BEGIN 
     -- RPKM for given tag count and run
