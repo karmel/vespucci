@@ -18,7 +18,7 @@ GENOME_CHOICES = {'mm9': {'name':'Mus musculus',
                   'hg19': {'name':'Homo sapiens', 
                           'chromosomes': range(1,26)},
                   }
-
+CHR_MATCH = 'chr[A-Za-z0-9]+$' # Allowed chromosome names
 GENOME = 'mm9'
 
 

@@ -205,7 +205,7 @@ class GenomeResourcesSqlGenerator(SqlGenerator):
             fields = l.strip('\n').split('\t')
             
             # Only include non-random chromosomes, and those without weird suffixes:
-            if re.match('chr[A-Za-z0-9]+$',fields[0]):
+            if re.match(current_settings.CHR_MATCH,fields[0]):
                 # We want length inclusive, not last basepair,
                 # so add 1 to the value from UCSC, which is last basepair
                 fields[1] = int(fields[1]) + 1

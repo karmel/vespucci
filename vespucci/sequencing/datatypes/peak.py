@@ -3,10 +3,13 @@ Created on Sep 27, 2010
 
 @author: karmel
 '''
+from __future__ import division
+import re
 from django.db import models, connection
 from vespucci.genomereference.datatypes import Chromosome
 from vespucci.utils.datatypes.basic_model import Int8RangeField, DynamicTable
 from vespucci.utils.database import execute_query
+from vespucci.config import current_settings
    
        
 class AtlasPeak(DynamicTable):
@@ -106,7 +109,10 @@ class AtlasPeak(DynamicTable):
         '''
         From a standard tab-delimited MACS peak file, create model instance.
         '''
-        return cls(chromosome=Chromosome.objects.get(name=str(row[0]).strip()),
+        connection.close()
+        chrom = str(row[0]).strip()
+        if not re.match(current_settings.CHR_MATCH,chrom): return None
+        return cls(chromosome=Chromosome.objects.get(name=chrom),
                      start=int(row[1]),
                      end=int(row[2]),
                      start_end=(int(row[1]), int(row[2])),
@@ -122,6 +128,9 @@ class AtlasPeak(DynamicTable):
         From a standard tab-delimited Homer peak file, create model instance.
         '''
         connection.close()
+        chrom = str(row['chr']).strip()
+        if not re.match(current_settings.CHR_MATCH,chrom): return None
+            
         try: p_val = str(row['p-value vs Control']).lower().split('e')
         except KeyError: 
             try: p_val = str(row['p-value vs Local']).lower().split('e')
@@ -130,7 +139,7 @@ class AtlasPeak(DynamicTable):
         except KeyError: 
             try: fold_change = str(row['Fold Change vs Local'])
             except KeyError: fold_change = None
-        return cls(chromosome=Chromosome.objects.get(name=str(row['chr']).strip()),
+        return cls(chromosome=Chromosome.objects.get(name=chrom),
                      start=int(row['start']),
                      end=int(row['end']),
                      strand=int(row['strand'] == '-'),
@@ -149,9 +158,13 @@ class AtlasPeak(DynamicTable):
         '''
         From a standard tab-delimited SICER peak file, create model instance.
         '''
+        connection.close()
+        chrom = str(row[0]).strip()
+        if not re.match(current_settings.CHR_MATCH,chrom): return None
+        
         p_val = str(row[5]).split('e') # '1.34e-12' --> 1.34, -12
         fdr = str(row[7]).split('e')
-        return cls(chromosome=Chromosome.objects.get(name=str(row[0]).strip()),
+        return cls(chromosome=Chromosome.objects.get(name=chrom),
                      start=int(row[1]),
                      end=int(row[2]),
                      start_end=(int(row[1]), int(row[2])),
