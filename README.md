@@ -227,7 +227,7 @@ If you are comfortable at the command line, you may want to install Vespucci and
 	# All as root unless otherwise indicated.
 	
 	apt-get update
-	apt-get -y install gcc git
+	apt-get -y install gcc git samtools
 	
 	# Enable screen for all users
 	chmod a+rw /dev/pts/0
