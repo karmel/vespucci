@@ -11,7 +11,7 @@ Code written by Karmel Allison. Questions? Comments? Concerns? Email karmel@arca
 
 ## About
 
-What does Vespucci do? Briefly, it **analyzes GRO-sequencing data and allows the integration of many different genomic data types**, including ChIP-seq data, annotated databases, repeats, and so on. For the complete story, read the paper: <a href="http://nar.oxfordjournals.org/content/early/2013/12/04/nar.gkt1237.abstract" target="_blank">Vespucci: a system for building annotated databases of nascent transcripts</a>.
+What does Vespucci do? Briefly, it **analyzes GRO-sequencing data and allows the integration of many different genomic data types**, including ChIP-seq data, annotated databases, repeats, and so on. For the complete story, read the paper: <a href="http://nar.oxfordjournals.org/content/42/4/2433" target="_blank">Vespucci: a system for building annotated databases of nascent transcripts</a>.
 
 The code is commented-- never as well as it should be, but better than not at all-- and the formal description of Vespucci has been <a href="http://nar.oxfordjournals.org/content/early/2013/12/04/nar.gkt1237.abstract" target="_blank">published</a>. Vespucci is still **a work in progress**, with code publicly available on [GitHub](https://github.com/karmel/vespucci/). I happily take pull requests.
 
@@ -19,7 +19,9 @@ The code is commented-- never as well as it should be, but better than not at al
 
 If you use Vespucci, please cite:
 
-Allison KA, Kaikkonen MU, Gaasterland T, Glass CK. Vespucci: a system for building annotated databases of nascent transcripts. _Nucleic Acids Research_ (2013). <a href="http://nar.oxfordjournals.org/content/early/2013/12/04/nar.gkt1237.abstract" target="_blank">doi: 10.1093/nar/gkt1237</a>
+Allison KA, Kaikkonen MU, Gaasterland T, Glass CK. Vespucci: a system for
+building annotated databases of nascent transcripts. Nucleic Acids Res. 2014 Feb 
+1;42(4):2433-47. <a href="http://nar.oxfordjournals.org/content/early/2013/12/04/nar.gkt1237.abstract" target="_blank">doi: 10.1093/nar/gkt1237</a>
 
 ## Installation
 
