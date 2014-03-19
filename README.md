@@ -20,7 +20,7 @@ The code is commented-- never as well as it should be, but better than not at al
 If you use Vespucci, please cite:
 
 Allison KA, Kaikkonen MU, Gaasterland T, Glass CK. Vespucci: a system for
-building annotated databases of nascent transcripts. Nucleic Acids Res. 2014 Feb 
+building annotated databases of nascent transcripts. _Nucleic Acids Res_. 2014 Feb 
 1;42(4):2433-47. <a href="http://nar.oxfordjournals.org/content/early/2013/12/04/nar.gkt1237.abstract" target="_blank">doi: 10.1093/nar/gkt1237</a>
 
 ## Installation
