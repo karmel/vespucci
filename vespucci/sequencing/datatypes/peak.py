@@ -146,7 +146,7 @@ class AtlasPeak(DynamicTable):
                      start_end=(int(row['start']), int(row['end'])),
                      length=int(row['end']) - int(row['start']),
                      tag_count=str(row['Normalized Tag Count']),
-                     score=str(row.get('findPeaks Score', None)),
+                     score=str(row.get('findPeaks Score', '')),
                      p_value=p_val and str(p_val[0]) or None,
                      p_value_exp=p_val and len(p_val) > 1 and p_val[1] or 0,
                      fold_enrichment=fold_change
