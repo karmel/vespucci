@@ -64,6 +64,6 @@ ON tag.chromosome_id = chr.id)
 ORDER BY "START" asc;
 '''
 
-for x in xrange(1,23): 
+for x in range(1, 23):
     f = open('chr{0}_tags.sql'.format(x), 'w+')
     f.write(s.format(x))

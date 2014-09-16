@@ -70,7 +70,7 @@ def set_chromosome_lists(cls, use_table=None):
 
         # Chromosomes are sorted by count descending, so we want to snake them
         # back and forth to create even-ish groups.
-        chr_sets = [[] for _ in xrange(0, processes)]
+        chr_sets = [[] for _ in range(0, processes)]
         for i, chrom in enumerate(all_chr):
             if i and not i % processes: chr_sets.reverse()
             chr_sets[i % processes].append(chrom)
