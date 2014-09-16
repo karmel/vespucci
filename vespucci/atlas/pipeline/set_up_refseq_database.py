@@ -10,7 +10,7 @@ Here we set it up by calling the other scripts.
 from vespucci.utils.database import execute_query
 from optparse import make_option
 from vespucci.utils.scripting import VespucciOptionParser, get_vespucci_path
-from vespucci.genomereference.datatypes import Chromosome,\
+from vespucci.genomereference.datatypes import Chromosome, \
     SequenceTranscriptionRegion
 import subprocess
 import os
@@ -18,18 +18,18 @@ from vespucci.config import current_settings
 
 class SetUpRefseqDatabaseParser(VespucciOptionParser):
     options = [
-               make_option('-g', '--genome',action='store', 
-                           type='string', dest='genome', default='mm9', 
+               make_option('-g', '--genome', action='store',
+                           type='string', dest='genome', default='mm9',
                            help='Currently supported: mm9, dm3'),
                 ]
 
 if __name__ == '__main__':
     parser = SetUpRefseqDatabaseParser()
     options, args = parser.parse_args()
-    
+
     genome = parser.set_genome(options)
-    
-    print 'Creating tables for refseq data...'
+
+    print('Creating tables for refseq data...')
     chr_ids = Chromosome.objects.values_list('id', flat=True)
     q = ''
     for chr_id in chr_ids:
@@ -41,18 +41,18 @@ if __name__ == '__main__':
                     RENAME COLUMN "transcription_end" TO "end";
                 ALTER TABLE "{0}_{chr_id}" 
                     ADD COLUMN "refseq" bool DEFAULT true;
-                    """.format(SequenceTranscriptionRegion._meta.db_table, 
+                    """.format(SequenceTranscriptionRegion._meta.db_table,
                                chr_id=chr_id)
     execute_query(q)
-    
+
     try:
-        print 'Adding data...'
+        print('Adding data...')
         path = os.path.join(get_vespucci_path(), 'atlas/pipeline/scripts')
-        print subprocess.check_output(path + 
+        print(subprocess.check_output(path +
                     '/set_up_database.sh -g {0} -c refseq --prep'.format(
-                                                    current_settings.GENOME), 
-                                      shell=True)
-        print subprocess.check_output(
+                                                    current_settings.GENOME),
+                                      shell=True))
+        print(subprocess.check_output(
                     path + '/transcripts_from_tags.sh -g {0} -c refseq '.format(
                                                     current_settings.GENOME)
                       + ' --schema_name=genome_reference_{0} '.format(
@@ -60,15 +60,15 @@ if __name__ == '__main__':
                       + ' --tag_table=sequence_transcription_region '
                       + ' --stitch --stitch_processes=2 --set_density '
                       + ' --no_extended_gaps'
-                      , shell=True)
-        
-    except Exception, e: 
-        print e
+                      , shell=True))
+
+    except Exception, e:
+        print(e)
     finally:
-        print 'Deleting tables...'
+        print('Deleting tables...')
         q = ''
         for chr_id in chr_ids:
             q += """DROP TABLE "{0}_{chr_id}";
-                        """.format(SequenceTranscriptionRegion._meta.db_table, 
+                        """.format(SequenceTranscriptionRegion._meta.db_table,
                                    chr_id=chr_id)
         execute_query(q)

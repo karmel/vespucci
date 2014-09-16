@@ -11,15 +11,15 @@ from vespucci.config import current_settings
 # Handle user kills gracefully.
 ################################
 def signal_handler(signal, frame):
-    print 'Caught SIGINT'
+    print('Caught SIGINT')
     rollback_transaction()
-    
+
 signal.signal(signal.SIGINT, signal_handler)
 signal.signal(signal.SIGTERM, signal_handler)
 
-def execute_query(query, 
-                  using='default', 
-                  return_cursor=False, 
+def execute_query(query,
+                  using='default',
+                  return_cursor=False,
                   discard_temp=False):
     connection = connections[using]
     connection.close()
@@ -30,8 +30,8 @@ def execute_query(query,
     if discard_temp: discard_temp_tables(using=using)
     connection.close()
 
-def execute_query_without_transaction(query, 
-                                      using='default', 
+def execute_query_without_transaction(query,
+                                      using='default',
                                       return_cursor=False):
     connection = connections[using]
     isolation_level = connection.isolation_level
@@ -46,25 +46,25 @@ def execute_query_without_transaction(query,
 
 def savepoint(using='default'):
     if transaction.is_managed(using):
-        print 'Creating savepoint.'
+        print('Creating savepoint.')
         return transaction.savepoint(using)
 
 def rollback_to_savepoint(sid, using='default'):
     if transaction.is_managed(using):
-        print 'Rolling back to savepoint!'
+        print('Rolling back to savepoint!')
         return transaction.savepoint_rollback(sid)
-    
+
 def commit_transaction(using='default'):
     if transaction.is_managed(using):
-        print 'Committing transaction.'
+        print('Committing transaction.')
         transaction.commit(using)
 
 def rollback_transaction(using='default'):
     if transaction.is_managed(using):
-        print 'Rolling back transaction!'
+        print('Rolling back transaction!')
         transaction.rollback(using)
-    
-def execute_query_in_transaction(query, 
+
+def execute_query_in_transaction(query,
                                   using='default'):
     connection = connections[using]
     cursor = connection.cursor()
@@ -86,7 +86,7 @@ def discard_temp_tables(using='default'):
     Drops all temporary tables created in the current session.
     '''
     execute_query_without_transaction('DISCARD TEMP;', using=using)
-        
+
 class SqlGenerator(object):
     ''' 
     Parent class for schema-specific SQL generators.
@@ -94,7 +94,7 @@ class SqlGenerator(object):
     user = None
     def __init__(self, user=None):
         self.user = user or current_settings.DATABASES['default']['USER']
-    
+
     def pkey_sequence_sql(self, schema_name, table_name):
         return """
         GRANT ALL ON TABLE "{0}"."{1}" TO  "{user}";

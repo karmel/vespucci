@@ -11,26 +11,26 @@ import os
 #####################################
 # Genomes
 #####################################
-GENOME_CHOICES = {'mm9': {'name':'Mus musculus', 
-                          'chromosomes': range(1,23)},
-                  'mm10': {'name':'Mus musculus', 
-                          'chromosomes': range(1,23)},
-                  'dm3': {'name':'Drosophila melanogaster', 
-                          'chromosomes': range(1,15)},
-                  'hg19': {'name':'Homo sapiens', 
-                          'chromosomes': range(1,26)},
+GENOME_CHOICES = {'mm9': {'name':'Mus musculus',
+                          'chromosomes': range(1, 23)},
+                  'mm10': {'name':'Mus musculus',
+                          'chromosomes': range(1, 23)},
+                  'dm3': {'name':'Drosophila melanogaster',
+                          'chromosomes': range(1, 15)},
+                  'hg19': {'name':'Homo sapiens',
+                          'chromosomes': range(1, 26)},
                   }
-CHR_MATCH = 'chr[A-Za-z0-9]+$' # Allowed chromosome names
+CHR_MATCH = 'chr[A-Za-z0-9]+$'  # Allowed chromosome names
 GENOME = 'mm9'
 
 
 CELL_TYPE = 'Default'
 
-STAGING = '' # Set to the appropriate suffix during DB staging.
+STAGING = ''  # Set to the appropriate suffix during DB staging.
 STAGING_SUFFIX = '_staging'
 
-MAX_EDGE = 500 # Max edge length in 2D between two proto-transcripts
-DENSITY_MULTIPLIER = 10000 # Scaling factor on density-- bps worth of tags to consider
+MAX_EDGE = 500  # Max edge length in 2D between two proto-transcripts
+DENSITY_MULTIPLIER = 10000  # Scaling factor on density-- bps worth of tags to consider
 
 #####################################
 # Databases
@@ -48,7 +48,7 @@ DATABASES = {
         'USER': 'vespucci_user',
         'PASSWORD': password,
         'HOST': 'localhost',
-        'PORT': '5432',  
+        'PORT': '5432',
     },
     'pgbouncer': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
@@ -56,7 +56,7 @@ DATABASES = {
         'USER': 'vespucci_user',
         'PASSWORD': password,
         'HOST': 'localhost',
-        'PORT': '6432',  
+        'PORT': '6432',
     },
 
 }
@@ -65,7 +65,7 @@ DATABASES = {
 # Compute power
 #####################################
 ALLOWED_PROCESSES = 5
-CHR_LISTS = None # Dynamically set during processing
+CHR_LISTS = None  # Dynamically set during processing
 
 #####################################
 # Required for Django; not used

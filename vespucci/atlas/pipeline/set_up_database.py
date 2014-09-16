@@ -10,16 +10,16 @@ from vespucci.utils.scripting import VespucciOptionParser
 
 class SetUpDatabaseParser(VespucciOptionParser):
     options = [
-               make_option('-g', '--genome', action='store', 
-                           type='string', dest='genome', default='mm9', 
+               make_option('-g', '--genome', action='store',
+                           type='string', dest='genome', default='mm9',
                            help='Currently supported: mm9, dm3'),
-               make_option('-c', '--cell_type',action='store', 
-                           type='string', dest='cell_type', 
+               make_option('-c', '--cell_type', action='store',
+                           type='string', dest='cell_type',
                            help='Cell type for this run?'),
-               make_option('-f', '--final', action='store_true', 
+               make_option('-f', '--final', action='store_true',
                            dest='final', default=False,
                            help='Generate only the final schema and tables, without the prep schema?'),
-               make_option('-p', '--prep', action='store_true', 
+               make_option('-p', '--prep', action='store_true',
                            dest='prep', default=False,
                            help='Generate only the prep schema and tables, without the final schema?'),
                 ]
@@ -27,15 +27,14 @@ class SetUpDatabaseParser(VespucciOptionParser):
 if __name__ == '__main__':
     parser = SetUpDatabaseParser()
     options, args = parser.parse_args()
-    
+
     genome = parser.set_genome(options)
     cell_type, cell_base = parser.set_cell(options)
-    
+
     generator = AtlasSqlGenerator(cell_type=cell_type, genome=genome)
-    
-    print 'Creating database schema and tables...'
+
+    print('Creating database schema and tables...')
     q = (options.final and generator.final_set()) \
         or (options.prep and generator.prep_set()) \
         or generator.all_sql()
     execute_query(q)
-    

@@ -51,20 +51,20 @@ class AtlasTag(DynamicTable):
         Create table that will be used for to upload preparatory tag information,
         dynamically named.
         '''
-        cls.set_prep_table('prep_%s' % name)
+        cls.set_prep_table('prep_' + name)
         table_sql = """
-        CREATE TABLE "%s" (
+        CREATE TABLE "{}" (
             strand_char character(1) default NULL,
             chromosome varchar(50),
             "start" bigint,
             sequence_matched varchar(100)
         );
-        """ % cls.prep_table
+        """.format(cls.prep_table)
         execute_query(table_sql)
 
     @classmethod
     def set_prep_table(cls, name):
-        cls.prep_table = '%s"."%s' % (current_settings.CURRENT_SCHEMA, name)
+        cls.prep_table = '{}"."{}'.format(current_settings.CURRENT_SCHEMA, name)
 
     @classmethod
     def delete_prep_table(cls):
@@ -79,10 +79,10 @@ class AtlasTag(DynamicTable):
         Create table that will be used for these tags,
         dynamically named.
         '''
-        name = 'tag_%s' % name
+        name = 'tag_' + name
         cls.set_table_name(name)
         table_sql = """
-        CREATE TABLE "%s" (
+        CREATE TABLE "{0}" (
             id integer NOT NULL,
             chromosome_id integer default NULL,
             strand smallint default NULL,
@@ -91,21 +91,17 @@ class AtlasTag(DynamicTable):
             start_end int8range,
             refseq boolean default false
         );
-        CREATE SEQUENCE "%s_id_seq"
+        CREATE SEQUENCE "{0}_id_seq"
             START WITH 1
             INCREMENT BY 1
             NO MINVALUE
             NO MAXVALUE
             CACHE 1;
-        ALTER SEQUENCE "%s_id_seq" OWNED BY "%s".id;
-        ALTER TABLE "%s" ALTER COLUMN id 
-            SET DEFAULT nextval('"%s_id_seq"'::regclass);
-        ALTER TABLE ONLY "%s" ADD CONSTRAINT %s_pkey PRIMARY KEY (id);
-        """ % (cls._meta.db_table,
-               cls._meta.db_table,
-               cls._meta.db_table, cls._meta.db_table,
-               cls._meta.db_table, cls._meta.db_table,
-               cls._meta.db_table, cls.name)
+        ALTER SEQUENCE "{0}_id_seq" OWNED BY "{0}".id;
+        ALTER TABLE "{0}" ALTER COLUMN id 
+            SET DEFAULT nextval('"{0}_id_seq"'::regclass);
+        ALTER TABLE ONLY "{0}" ADD CONSTRAINT {1}_pkey PRIMARY KEY (id);
+        """.format(cls._meta.db_table, cls.name)
         execute_query(table_sql)
 
         cls.table_created = True
@@ -118,15 +114,13 @@ class AtlasTag(DynamicTable):
 
         for chr_id in current_settings.GENOME_CHOICES[current_settings.GENOME]['chromosomes']:
             table_sql = """
-            CREATE TABLE "%s_%d" (
-                CHECK ( chromosome_id = %d )
-            ) INHERITS ("%s");""" % (cls._meta.db_table,
-                                     chr_id, chr_id,
-                                     cls._meta.db_table)
+            CREATE TABLE "{0}_{1}" (
+                CHECK ( chromosome_id = {1} )
+            ) INHERITS ("{0}");""".format(cls._meta.db_table, chr_id)
             execute_query(table_sql)
 
         trigger_sql = '''
-            CREATE OR REPLACE FUNCTION %s.atlas_tag_insert_trigger()
+            CREATE OR REPLACE FUNCTION {0}.atlas_tag_insert_trigger()
             RETURNS TRIGGER AS $$
             DECLARE
                 refseq_string text;
@@ -144,7 +138,7 @@ class AtlasTag(DynamicTable):
                     start_end_string := 'int8range(' || quote_literal(NEW.start) || ',' 
                     || quote_literal(NEW."end") || ', ''[]'')';
                 END IF;
-                EXECUTE 'INSERT INTO "%s_' || NEW.chromosome_id || '" VALUES ('
+                EXECUTE 'INSERT INTO "{1}_' || NEW.chromosome_id || '" VALUES ('
                 || quote_literal(NEW.id) || ','
                 || quote_literal(NEW.chromosome_id) || ','
                 || quote_literal(NEW.strand) || ','
@@ -159,12 +153,9 @@ class AtlasTag(DynamicTable):
             
             -- Trigger function for inserts on main table
             CREATE TRIGGER atlas_tag_trigger
-                BEFORE INSERT ON "%s"
-                FOR EACH ROW EXECUTE PROCEDURE %s.atlas_tag_insert_trigger();
-        ''' % (current_settings.CURRENT_SCHEMA,
-               cls._meta.db_table,
-               cls._meta.db_table,
-               current_settings.CURRENT_SCHEMA)
+                BEFORE INSERT ON "{1}"
+                FOR EACH ROW EXECUTE PROCEDURE {0}.atlas_tag_insert_trigger();
+        '''.format(current_settings.CURRENT_SCHEMA, cls._meta.db_table,)
         execute_query(trigger_sql)
 
     @classmethod
@@ -219,7 +210,7 @@ class AtlasTag(DynamicTable):
         overlapping with consolidated refseq transcripts.
         '''
         for chr_id in chr_list:
-            print 'Setting Refseq status for chromosome {0}'.format(chr_id)
+            print('Setting Refseq status for chromosome {0}'.format(chr_id))
             update_query = """
             UPDATE "{0}_{1}" tag 
             SET refseq = true 
@@ -241,10 +232,10 @@ class AtlasTag(DynamicTable):
         
         '''
         table_sql = """ 
-        ALTER TABLE "%s" DROP COLUMN sequence_matched;
-        ALTER TABLE "%s" DROP COLUMN strand_char;
-        ALTER TABLE "%s" DROP COLUMN chromosome;
-        """ % (cls._meta.db_table, cls._meta.db_table, cls._meta.db_table)
+        ALTER TABLE "{0}" DROP COLUMN sequence_matched;
+        ALTER TABLE "{0}" DROP COLUMN strand_char;
+        ALTER TABLE "{0}" DROP COLUMN chromosome;
+        """.format(cls._meta.db_table)
         execute_query(table_sql)
 
         cls.table_created = False

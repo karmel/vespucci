@@ -31,12 +31,12 @@ class TranscriptComparer(object):
         Use mm9.bed as reference data for all comparisons.
         '''
         refseq = pandas.read_csv(self.refseq_path, header=0, sep='\t')
-        
+
         # Bed has chr, start, end, ., ., strand
-        refseq = refseq[[0,1,2,5]]
+        refseq = refseq[[0, 1, 2, 5]]
         refseq.columns = TranscriptEvaluator.colnames
         self.reference = refseq
-        
+
     def eval_transcripts(self, data):
         '''
         For passed set of transcripts, evaluate using error
@@ -47,14 +47,14 @@ class TranscriptComparer(object):
         evaluator.set_target(data)
         return evaluator.get_summed_error()
 
-    
+
 class HMMTuner(TranscriptComparer):
     r_path = os.path.abspath('scripts/run_hmm.R')
     refseq_path = 'data/refseq_mm9.bed'
     data_path = 'data/input/notx_tags.txt'
     lts_probs = [-100, -150, -200, -250, -300]
     uts = [5, 10, 15, 20, 25, 30]
-        
+
     def loop_eval_hmm(self):
         '''
         Read in generated HMM transcript files and evaluate
@@ -62,28 +62,28 @@ class HMMTuner(TranscriptComparer):
         '''
         if not self.reference:
             self.set_reference_data()
-            
+
         # Create error matrix, with uts as rows and lt_probs as cols
         rows = [pandas.Series([0], name=shape) for shape in self.uts]
         error_matrix = pandas.DataFrame(rows, columns=self.lts_probs)
-        
+
         # Iterate through all parameters, m x n
         for prob in self.lts_probs:
             for shape in self.uts:
                 path = 'data/output/hmm_transcripts_{}_{}.txt'.format(prob, shape)
-                try: 
+                try:
                     data = pandas.read_csv(path, sep='\t', header=None)
-                    data = data[[0,1,2,5]]
+                    data = data[[0, 1, 2, 5]]
                     data.columns = TranscriptEvaluator.colnames
-    
+
                     error = self.eval_transcripts(data)
                     error_matrix[prob].ix[shape] = error
                 except IOError:
                     # No file for this. Skip.
                     error_matrix[prob].ix[shape] = None
         return error_matrix
-                
-        
+
+
     def loop_run_hmm(self):
         '''
         Loop over set of parameters for -log transition prob and shape.
@@ -92,20 +92,20 @@ class HMMTuner(TranscriptComparer):
         for prob in self.lts_probs:
             for shape in self.uts:
                 self.run_hmm(prob, shape)
-    
+
     def run_hmm(self, lt_prob, uts):
         ''' 
         Run R script with passed args. Output is saved in data dir.
         '''
-        cmd = '{} --args "{}" {} {}'.format(self.r_path, 
+        cmd = '{} --args "{}" {} {}'.format(self.r_path,
                                           self.data_path,
-                                          lt_prob, 
+                                          lt_prob,
                                           uts)
-        subprocess.check_call(cmd, 
+        subprocess.check_call(cmd,
                               shell=True)
-    
+
 if __name__ == '__main__':
-    
+
     tuner = HMMTuner()
     if 'build' in sys.argv: tuner.loop_run_hmm()
-    print tuner.loop_eval_hmm()
+    print(tuner.loop_eval_hmm())

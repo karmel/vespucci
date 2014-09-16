@@ -10,54 +10,54 @@ from vespucci.genomereference.datatypes import Chromosome
 from vespucci.utils.datatypes.basic_model import Int8RangeField, DynamicTable
 from vespucci.utils.database import execute_query
 from vespucci.config import current_settings
-   
-       
+
+
 class AtlasPeak(DynamicTable):
     '''
     Peaks derived from HOMER, MACS, or Sicer peak-finding software
     can be loaded in to be compared to transcripts.
     '''
-    
+
     chromosome = models.ForeignKey(Chromosome)
     start = models.IntegerField(max_length=12)
     end = models.IntegerField(max_length=12)
     strand = models.IntegerField(max_length=2)
-    
-    start_end = Int8RangeField(max_length=255) 
-    
+
+    start_end = Int8RangeField(max_length=255)
+
     length = models.IntegerField(max_length=12)
     summit = models.IntegerField(max_length=12)
-    tag_count = models.DecimalField(max_digits=8, decimal_places=2, 
+    tag_count = models.DecimalField(max_digits=8, decimal_places=2,
                                     null=True, default=None)
-    raw_tag_count = models.DecimalField(max_digits=8, decimal_places=2, 
+    raw_tag_count = models.DecimalField(max_digits=8, decimal_places=2,
                                         null=True, default=None)
-    
-    score = models.DecimalField(max_digits=8, decimal_places=2, 
+
+    score = models.DecimalField(max_digits=8, decimal_places=2,
                                 null=True, default=None)
-    p_value = models.DecimalField(max_digits=6, decimal_places=4, 
+    p_value = models.DecimalField(max_digits=6, decimal_places=4,
                                   null=True, default=None)
-    p_value_exp = models.IntegerField(max_length=12, null=True, default=None, 
+    p_value_exp = models.IntegerField(max_length=12, null=True, default=None,
                             help_text='Exponent of 10 in p_value x 10^y')
-    log_ten_p_value = models.DecimalField(max_digits=10, decimal_places=2, 
+    log_ten_p_value = models.DecimalField(max_digits=10, decimal_places=2,
                                           null=True, default=None)
-    fold_enrichment = models.DecimalField(max_digits=10, decimal_places=2, 
+    fold_enrichment = models.DecimalField(max_digits=10, decimal_places=2,
                                           null=True, default=None)
-    fdr_threshold = models.DecimalField(max_digits=6, decimal_places=4, 
+    fdr_threshold = models.DecimalField(max_digits=6, decimal_places=4,
                                         null=True, default=None)
-    fdr_threshold_exp = models.IntegerField(max_length=12, null=True, default=None, 
+    fdr_threshold_exp = models.IntegerField(max_length=12, null=True, default=None,
                             help_text='Exponent of 10 in fdr_threshold x 10^y')
-    
-    
-    @classmethod        
+
+
+    @classmethod
     def create_table(cls, name):
         '''
         Create table that will be used for these peaks,
         dynamically named.
         '''
         cls.set_table_name('peak_' + name)
-        
+
         table_sql = """
-        CREATE TABLE "%s" (
+        CREATE TABLE "{0}" (
             id int4,
             chromosome_id int4,
             "start" int8,
@@ -76,34 +76,29 @@ class AtlasPeak(DynamicTable):
             fdr_threshold decimal(6,4) default NULL,
             fdr_threshold_exp int4 default NULL
             );
-        CREATE SEQUENCE "%s_id_seq"
+        CREATE SEQUENCE "{0}_id_seq"
             START WITH 1
             INCREMENT BY 1
             NO MINVALUE
             NO MAXVALUE
             CACHE 1;
-        ALTER SEQUENCE "%s_id_seq" OWNED BY "%s".id;
-        ALTER TABLE "%s" ALTER COLUMN id 
-            SET DEFAULT nextval('"%s_id_seq"'::regclass);
-        ALTER TABLE ONLY "%s" ADD CONSTRAINT %s_pkey PRIMARY KEY (id);
-        """ % (cls._meta.db_table, 
-               cls._meta.db_table,
-               cls._meta.db_table, cls._meta.db_table,
-               cls._meta.db_table, cls._meta.db_table,
-               cls._meta.db_table, cls.name)
+        ALTER SEQUENCE "{0}_id_seq" OWNED BY "{0}".id;
+        ALTER TABLE "{0}" ALTER COLUMN id 
+            SET DEFAULT nextval('"{0}_id_seq"'::regclass);
+        ALTER TABLE ONLY "{0}" ADD CONSTRAINT {1}_pkey PRIMARY KEY (id);
+        """.format(cls._meta.db_table, cls.name)
         execute_query(table_sql)
-        
+
         cls.table_created = True
-    
+
     @classmethod
     def add_indices(cls):
         update_query = """
-        CREATE INDEX %s_chr_idx ON "%s" USING btree (chromosome_id);
-        CREATE INDEX %s_start_end_idx ON "%s" USING gist (start_end);
-        """ % (cls.name, cls._meta.db_table,
-               cls.name, cls._meta.db_table)
+        CREATE INDEX {0}_chr_idx ON "{1}" USING btree (chromosome_id);
+        CREATE INDEX {0}_start_end_idx ON "{1}" USING gist (start_end);
+        """.format(cls.name, cls._meta.db_table)
         execute_query(update_query)
-            
+
     @classmethod
     def init_from_macs_row(cls, row):
         '''
@@ -111,7 +106,7 @@ class AtlasPeak(DynamicTable):
         '''
         connection.close()
         chrom = str(row[0]).strip()
-        if not re.match(current_settings.CHR_MATCH,chrom): return None
+        if not re.match(current_settings.CHR_MATCH, chrom): return None
         return cls(chromosome=Chromosome.objects.get(name=chrom),
                      start=int(row[1]),
                      end=int(row[2]),
@@ -129,14 +124,14 @@ class AtlasPeak(DynamicTable):
         '''
         connection.close()
         chrom = str(row['chr']).strip()
-        if not re.match(current_settings.CHR_MATCH,chrom): return None
-            
+        if not re.match(current_settings.CHR_MATCH, chrom): return None
+
         try: p_val = str(row['p-value vs Control']).lower().split('e')
-        except KeyError: 
+        except KeyError:
             try: p_val = str(row['p-value vs Local']).lower().split('e')
             except KeyError: p_val = None
         try: fold_change = str(row['Fold Change vs Control'])
-        except KeyError: 
+        except KeyError:
             try: fold_change = str(row['Fold Change vs Local'])
             except KeyError: fold_change = None
         return cls(chromosome=Chromosome.objects.get(name=chrom),
@@ -151,8 +146,8 @@ class AtlasPeak(DynamicTable):
                      p_value_exp=p_val and len(p_val) > 1 and p_val[1] or 0,
                      fold_enrichment=fold_change
                      )
-        
-        
+
+
     @classmethod
     def init_from_sicer_row(cls, row):
         '''
@@ -160,9 +155,9 @@ class AtlasPeak(DynamicTable):
         '''
         connection.close()
         chrom = str(row[0]).strip()
-        if not re.match(current_settings.CHR_MATCH,chrom): return None
-        
-        p_val = str(row[5]).split('e') # '1.34e-12' --> 1.34, -12
+        if not re.match(current_settings.CHR_MATCH, chrom): return None
+
+        p_val = str(row[5]).split('e')  # '1.34e-12' --> 1.34, -12
         fdr = str(row[7]).split('e')
         return cls(chromosome=Chromosome.objects.get(name=chrom),
                      start=int(row[1]),
