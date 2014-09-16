@@ -4,34 +4,46 @@ Created on Sep 27, 2010
 @author: karmel
 '''
 from __future__ import division
+
 from django.db import models, connection
-from vespucci.genomereference.datatypes import Chromosome, SequencingRun
-from vespucci.config import current_settings
-from vespucci.utils.datatypes.basic_model import DynamicTable, Int8RangeField
-from vespucci.utils.database import execute_query
+
 from vespucci.atlas.datatypes.transcript import multiprocess_all_chromosomes, \
     wrap_errors, set_chromosome_lists
+from vespucci.config import current_settings
+from vespucci.genomereference.datatypes import Chromosome, SequencingRun
+from vespucci.utils.database import execute_query
+from vespucci.utils.datatypes.basic_model import DynamicTable, Int8RangeField
 
 
 def wrap_partition_tables(cls, chr_list):
     wrap_errors(cls._create_partition_tables, chr_list)
+
+
 def wrap_translate_from_prep(cls, chr_list):
     wrap_errors(cls._translate_from_prep, chr_list)
+
+
 def wrap_set_refseq(cls, chr_list):
     wrap_errors(cls._set_refseq, chr_list)
+
+
 def wrap_insert_matching_tags(cls, chr_list):
     wrap_errors(cls._insert_matching_tags, chr_list)
+
+
 def wrap_add_indices(cls, chr_list):
     wrap_errors(cls._add_indices, chr_list)
 
+
 class AtlasTag(DynamicTable):
+
     '''
     Denormalized version of tag input::
-        
+
         strand    chr    start            sequence_matched
         -       chr5    66529332        ATTAGTTGACAGGAATTAGCTAGGAACCACAGAA
 
-    
+
     '''
     prep_table = None
 
@@ -43,7 +55,6 @@ class AtlasTag(DynamicTable):
     start_end = Int8RangeField(max_length=255, null=True)
 
     refseq = models.NullBooleanField(default=None)
-
 
     @classmethod
     def create_prep_table(cls, name):
@@ -64,7 +75,8 @@ class AtlasTag(DynamicTable):
 
     @classmethod
     def set_prep_table(cls, name):
-        cls.prep_table = '{}"."{}'.format(current_settings.CURRENT_SCHEMA, name)
+        cls.prep_table = '{}"."{}'.format(
+            current_settings.CURRENT_SCHEMA, name)
 
     @classmethod
     def delete_prep_table(cls):
@@ -191,8 +203,8 @@ class AtlasTag(DynamicTable):
             JOIN "{2}" chr ON chr.name = prep.chromosome
             WHERE chr.id = {chr_id}) derived;
             """.format(cls._meta.db_table, cls.prep_table,
-                   Chromosome._meta.db_table,
-                   chr_id=chr_id)
+                       Chromosome._meta.db_table,
+                       chr_id=chr_id)
             execute_query(update_query)
 
     @classmethod
@@ -229,7 +241,7 @@ class AtlasTag(DynamicTable):
     def delete_prep_columns(cls):
         '''
         .. warning:: DELETES the associated sequence and strand_char columns to conserve space.
-        
+
         '''
         table_sql = """ 
         ALTER TABLE "{0}" DROP COLUMN sequence_matched;
@@ -264,11 +276,12 @@ class AtlasTag(DynamicTable):
     def add_record_of_tags(cls):
         '''
         Add SequencingRun record with the details of this run.
-        
+
         Should be called only after all tags have been added.
         '''
         connection.close()
-        s, _ = SequencingRun.objects.get_or_create(source_table=cls._meta.db_table)
+        s, _ = SequencingRun.objects.get_or_create(
+            source_table=cls._meta.db_table)
         s.total_tags = cls.objects.count()
         s.save()
         return s

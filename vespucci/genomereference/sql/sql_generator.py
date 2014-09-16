@@ -4,12 +4,14 @@ Created on Nov 12, 2012
 @author: karmel
 '''
 
-from vespucci.config import current_settings
-from vespucci.utils.database import SqlGenerator
 import csv
 import os
 import re
+
+from vespucci.config import current_settings
+from vespucci.utils.database import SqlGenerator
 from vespucci.utils.scripting import get_vespucci_path
+
 
 class GenomeResourcesSqlGenerator(SqlGenerator):
     ''' Generates the SQL queries for building DB schema. '''
@@ -18,7 +20,7 @@ class GenomeResourcesSqlGenerator(SqlGenerator):
     def __init__(self, genome=None, cell_type=None, staging=None, user=None):
         self.genome = genome or current_settings.GENOME.lower()
         self.staging = staging or current_settings.STAGING
-        
+
         self.schema_name = 'genome_reference_{0}'.format(self.genome)
         super(GenomeResourcesSqlGenerator, self).__init__()
 

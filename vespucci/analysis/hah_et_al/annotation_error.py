@@ -13,6 +13,7 @@ run together.
 '''
 from __future__ import division
 
+
 class TranscriptEvaluator(object):
     colnames = ('chr', 'start', 'end', 'strand')
     reference = None
@@ -54,10 +55,10 @@ class TranscriptEvaluator(object):
     def get_summed_error(self):
         '''
         Return the sum of 
-        
+
         # the fraction of reference transcripts broken up, and
         # the fraction of target transcripts that run together references.
-        
+
         '''
         total_targets = self.target.size().sum()
         # We only want to count reference chr, strands for which we have targets.
@@ -68,7 +69,8 @@ class TranscriptEvaluator(object):
         broken_frac = broken / total_ref
         run_together = self.count_run_together_reference()
         run_frac = run_together / total_targets
-        print(broken, broken_frac, total_ref, run_together, run_frac, total_targets)
+        print(broken, broken_frac, total_ref,
+              run_together, run_frac, total_targets)
         return broken_frac + run_frac
 
     def count_broken_reference(self):
@@ -82,7 +84,7 @@ class TranscriptEvaluator(object):
         '''
         The second of the two criteria: how many reference transcripts are
         run together by target transcripts?
-        
+
         Notably, this is the same as asking how many target transcripts
         are broken by reference transcripts.
         '''
@@ -95,27 +97,31 @@ class TranscriptEvaluator(object):
         that has at least one breaking transcript end within it while another 
         breaking transcript begins within it. 
         For example, this configuration would get one count:
-        
+
             [--------------------------------] Broken
         [-----------] [---------] [--------]   Breaking
-        
+
         Note that this is a naive loop, and not efficient.
         Will suffice for now.
         '''
         count = 0
         for (chr, strand), group in broken:
             # Retrieve relevant targets
-            try: breakers = breaking.get_group((chr, strand))
-            except KeyError: continue  # No target transcripts to count
+            try:
+                breakers = breaking.get_group((chr, strand))
+            except KeyError:
+                continue  # No target transcripts to count
 
             for _, ref in group.iterrows():
                 # Get first transcript end after reference transcript start
                 end_past_start = breakers[breakers['end'] >= ref['start']][:1]
                 # Get last transcript start before reference transcript end
-                start_before_end = breakers[breakers['start'] <= ref['end']][-1:]
+                start_before_end = breakers[
+                    breakers['start'] <= ref['end']][-1:]
 
                 # If they don't exist, we're safe; pass to next loop.
-                if end_past_start.empty or start_before_end.empty: continue
+                if end_past_start.empty or start_before_end.empty:
+                    continue
 
                 # If first start and last end are same transcript, we're safe.
                 #     [----------------------]
@@ -128,7 +134,7 @@ class TranscriptEvaluator(object):
                 # [-------------] [-------------]
 
                 if end_past_start['end'].values[0] <= ref['end'] \
-                    and start_before_end['start'].values[0] >= ref['start']:
-                        count += 1
+                        and start_before_end['start'].values[0] >= ref['start']:
+                    count += 1
 
         return count

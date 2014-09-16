@@ -10,10 +10,13 @@ transcripts versus the Hah et al output.
 '''
 
 from __future__ import division
+
+import sys
+
 import pandas
+
 from vespucci.analysis.hah_et_al.annotation_error import TranscriptEvaluator
 from vespucci.analysis.hah_et_al.tune_hmm import TranscriptComparer
-import sys
 
 
 class HMMTuner(TranscriptComparer):
@@ -70,8 +73,10 @@ if __name__ == '__main__':
 
     tuner = HMMTuner()
 
-    try:  tuner.data_path = 'data/' + sys.argv[1]
-    except IndexError: pass
+    try:
+        tuner.data_path = 'data/' + sys.argv[1]
+    except IndexError:
+        pass
 
     # Run for Vespucci data derived with or
     # without knowledge of RefSeq boundaries
