@@ -27,6 +27,8 @@ from vespucci.sequencing.pipeline.add_short_reads import check_input, _print, \
 from vespucci.utils.convert_for_upload import TagFileConverter
 from vespucci.utils.database import execute_query_without_transaction
 from vespucci.utils.scripting import VespucciOptionParser
+
+
 class FastqOptionParser(VespucciOptionParser):
     options = [
         make_option('-g', '--genome', action='store',
@@ -102,7 +104,7 @@ def copy_into_table_from_range(tag_split_dir, file_names):
 
 def _copy_into_table(tag_split_dir, f_name):
     full_path = os.path.join(tag_split_dir, f_name)
-    tag_file = file(full_path)
+    tag_file = open(full_path)
     try:
         connection.close()
         cursor = connection.cursor()

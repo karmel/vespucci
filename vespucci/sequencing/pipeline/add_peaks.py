@@ -53,7 +53,7 @@ def import_peaks(options, file_name, peaks_file_name):
     if not options.not_homer:
         # Find header row
         header_row = None
-        f = file(peaks_file_name)
+        f = open(peaks_file_name)
         for i,line in enumerate(f):
             if line[:7] == '#PeakID': 
                 header_row = i
@@ -73,7 +73,7 @@ def import_peaks(options, file_name, peaks_file_name):
         if peak: peak.save()
 
     AtlasPeak.add_indices()
-    
+
     
 if __name__ == '__main__': 
     run_from_command_line = True # Useful for debugging in Eclipse

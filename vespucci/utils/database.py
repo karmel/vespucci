@@ -105,7 +105,7 @@ def discard_temp_tables(using='default'):
 
 class SqlGenerator(object):
 
-    ''' 
+    '''
     Parent class for schema-specific SQL generators.
     '''
     user = None
