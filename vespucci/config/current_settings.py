@@ -11,14 +11,14 @@ import os
 #####################################
 # Genomes
 #####################################
-GENOME_CHOICES = {'mm9': {'name':'Mus musculus',
+GENOME_CHOICES = {'mm9': {'name': 'Mus musculus',
                           'chromosomes': range(1, 23)},
-                  'mm10': {'name':'Mus musculus',
-                          'chromosomes': range(1, 23)},
-                  'dm3': {'name':'Drosophila melanogaster',
+                  'mm10': {'name': 'Mus musculus',
+                           'chromosomes': range(1, 23)},
+                  'dm3': {'name': 'Drosophila melanogaster',
                           'chromosomes': range(1, 15)},
-                  'hg19': {'name':'Homo sapiens',
-                          'chromosomes': range(1, 26)},
+                  'hg19': {'name': 'Homo sapiens',
+                           'chromosomes': range(1, 26)},
                   }
 CHR_MATCH = 'chr[A-Za-z0-9]+$'  # Allowed chromosome names
 GENOME = 'mm9'
@@ -30,7 +30,8 @@ STAGING = ''  # Set to the appropriate suffix during DB staging.
 STAGING_SUFFIX = '_staging'
 
 MAX_EDGE = 500  # Max edge length in 2D between two proto-transcripts
-DENSITY_MULTIPLIER = 10000  # Scaling factor on density-- bps worth of tags to consider
+# Scaling factor on density-- bps worth of tags to consider
+DENSITY_MULTIPLIER = 10000
 
 #####################################
 # Databases

@@ -10,12 +10,15 @@ from vespucci.config import current_settings
 ################################
 # Handle user kills gracefully.
 ################################
+
+
 def signal_handler(signal, frame):
     print('Caught SIGINT')
     rollback_transaction()
 
 signal.signal(signal.SIGINT, signal_handler)
 signal.signal(signal.SIGTERM, signal_handler)
+
 
 def execute_query(query,
                   using='default',
@@ -26,9 +29,12 @@ def execute_query(query,
     cursor = connection.cursor()
     cursor.execute(query)
     transaction.commit_unless_managed()
-    if return_cursor: return cursor
-    if discard_temp: discard_temp_tables(using=using)
+    if return_cursor:
+        return cursor
+    if discard_temp:
+        discard_temp_tables(using=using)
     connection.close()
+
 
 def execute_query_without_transaction(query,
                                       using='default',
@@ -41,35 +47,42 @@ def execute_query_without_transaction(query,
     cursor.execute(query)
     transaction.commit_unless_managed()
     connection.isolation_level = isolation_level
-    if return_cursor: return cursor
+    if return_cursor:
+        return cursor
     connection.close()
+
 
 def savepoint(using='default'):
     if transaction.is_managed(using):
         print('Creating savepoint.')
         return transaction.savepoint(using)
 
+
 def rollback_to_savepoint(sid, using='default'):
     if transaction.is_managed(using):
         print('Rolling back to savepoint!')
         return transaction.savepoint_rollback(sid)
+
 
 def commit_transaction(using='default'):
     if transaction.is_managed(using):
         print('Committing transaction.')
         transaction.commit(using)
 
+
 def rollback_transaction(using='default'):
     if transaction.is_managed(using):
         print('Rolling back transaction!')
         transaction.rollback(using)
 
+
 def execute_query_in_transaction(query,
-                                  using='default'):
+                                 using='default'):
     connection = connections[using]
     cursor = connection.cursor()
     cursor.execute(query)
     transaction.commit_unless_managed()
+
 
 def fetch_rows(query, return_cursor=False, using='default'):
     connection = connections[using]
@@ -77,9 +90,11 @@ def fetch_rows(query, return_cursor=False, using='default'):
     cursor = connection.cursor()
     cursor.execute(query)
     result = cursor.fetchall()
-    if return_cursor: return result, cursor
+    if return_cursor:
+        return result, cursor
     connection.close()
     return result
+
 
 def discard_temp_tables(using='default'):
     '''
@@ -87,11 +102,14 @@ def discard_temp_tables(using='default'):
     '''
     execute_query_without_transaction('DISCARD TEMP;', using=using)
 
+
 class SqlGenerator(object):
+
     ''' 
     Parent class for schema-specific SQL generators.
     '''
     user = None
+
     def __init__(self, user=None):
         self.user = user or current_settings.DATABASES['default']['USER']
 
@@ -109,4 +127,3 @@ class SqlGenerator(object):
             SET DEFAULT nextval('"{0}"."{1}_id_seq"'::regclass);
         ALTER TABLE ONLY "{0}"."{1}" ADD CONSTRAINT {1}_pkey PRIMARY KEY (id);
         """.format(schema_name, table_name, user=self.user)
-
