@@ -6,7 +6,7 @@ Created on Nov 8, 2010
 from __future__ import division
 
 from datetime import datetime
-from multiprocessing import Pool
+from multiprocessing.pool import Pool
 import os
 import traceback
 
@@ -201,6 +201,7 @@ class CellTypeBase(object):
 
             # We want to use the Default template models,
             # But we reload here to ensure all db_tables are correct
+            from imp import reload
             current_settings.CELL_TYPE = cell_type.lower()
             from vespucci.atlas.datatypes.celltypes import default
             reload(default)

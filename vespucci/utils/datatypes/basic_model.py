@@ -6,6 +6,8 @@ Created on Nov 5, 2010
 from django.db import models
 from psycopg2.extensions import AsIs
 from vespucci.config import current_settings
+
+
 class VespucciModel(models.Model):
     schema_base = 'atlas_{0}_{1}'
 

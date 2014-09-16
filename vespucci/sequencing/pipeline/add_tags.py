@@ -12,7 +12,7 @@ python annotate_peaks.py -f <source.fastq> -o <output_dir> --project_name=my_pro
 '''
 from __future__ import division
 
-from multiprocessing import Pool
+from multiprocessing.pool import Pool
 from optparse import make_option
 import os
 import shutil
@@ -20,14 +20,13 @@ import subprocess
 import traceback
 
 from django.db import connection, transaction
+
 from vespucci.config import current_settings
 from vespucci.sequencing.pipeline.add_short_reads import check_input, _print, \
     create_schema
 from vespucci.utils.convert_for_upload import TagFileConverter
 from vespucci.utils.database import execute_query_without_transaction
 from vespucci.utils.scripting import VespucciOptionParser
-
-
 class FastqOptionParser(VespucciOptionParser):
     options = [
         make_option('-g', '--genome', action='store',
