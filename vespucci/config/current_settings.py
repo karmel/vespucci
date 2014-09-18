@@ -8,6 +8,10 @@ should be set on a run-wide basis.
 '''
 import os
 
+# Required setup to use ORM as of Django 1.7
+import django
+django.setup()
+
 #####################################
 # Genomes
 #####################################
