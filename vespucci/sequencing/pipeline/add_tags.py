@@ -26,7 +26,7 @@ from vespucci.sequencing.pipeline.add_short_reads import check_input, _print, \
     create_schema
 from vespucci.utils.convert_for_upload import TagFileConverter
 from vespucci.utils.database import execute_query_without_transaction
-from vespucci.utils.scripting import VespucciOptionParser
+from vespucci.utils.scripting import VespucciOptionParser, django_setup
 
 
 class FastqOptionParser(VespucciOptionParser):
@@ -166,6 +166,8 @@ def add_indices(set_refseq=True):
     AtlasTag.add_record_of_tags()
 
 if __name__ == '__main__':
+    django_setup()
+
     parser = FastqOptionParser()
     options, args = parser.parse_args()
 

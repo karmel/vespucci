@@ -43,3 +43,9 @@ class VespucciOptionParser(OptionParser):
 def get_vespucci_path():
     import vespucci
     return os.path.dirname(vespucci.__file__)
+
+
+def django_setup():
+    # Required setup to use ORM as of Django 1.7
+    import django
+    django.setup()

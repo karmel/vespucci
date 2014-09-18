@@ -17,7 +17,7 @@ from pandas.io.parsers import read_csv
 from vespucci.sequencing.datatypes.peak import AtlasPeak
 from vespucci.sequencing.pipeline.add_short_reads import check_input, \
     create_schema, _print
-from vespucci.utils.scripting import VespucciOptionParser
+from vespucci.utils.scripting import VespucciOptionParser, django_setup
 
 
 class PeakFileParser(VespucciOptionParser):
@@ -76,6 +76,8 @@ def import_peaks(options, file_name, peaks_file_name):
 
     
 if __name__ == '__main__': 
+    django_setup()
+    
     run_from_command_line = True # Useful for debugging in Eclipse
     parser = PeakFileParser()
     options, args = parser.parse_args()
