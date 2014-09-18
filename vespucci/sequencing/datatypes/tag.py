@@ -175,7 +175,7 @@ class AtlasTag(DynamicTable):
         try:
             set_chromosome_lists(cls)
             multiprocess_all_chromosomes(wrap_translate_from_prep, cls)
-        except Exception, e:
+        except Exception as e:
             raise e
 
     @classmethod
@@ -212,7 +212,7 @@ class AtlasTag(DynamicTable):
         try:
             set_chromosome_lists(cls)
             multiprocess_all_chromosomes(wrap_set_refseq, cls)
-        except Exception, e:
+        except Exception as e:
             raise e
 
     @classmethod
@@ -257,7 +257,7 @@ class AtlasTag(DynamicTable):
         try:
             set_chromosome_lists(cls)
             multiprocess_all_chromosomes(wrap_add_indices, cls)
-        except Exception, e:
+        except Exception as e:
             raise e
 
     @classmethod

@@ -104,7 +104,7 @@ def multiprocess_all_chromosomes(func, cls, *args, **kwargs):
             p.apply_async(func, args=[cls, chr_list, ] + list(args))
         p.close()
         p.join()
-    except Exception, e:
+    except Exception as e:
         print('Terminating pool.')
         p.terminate()
         raise e
@@ -117,7 +117,7 @@ def multiprocess_all_chromosomes(func, cls, *args, **kwargs):
 def wrap_errors(func, *args):
     try:
         func(*args)
-    except Exception, e:
+    except Exception as e:
         print('Encountered exception in wrapped function:\n{0}'.format(
             traceback.format_exc()))
         raise e
@@ -281,7 +281,7 @@ class AtlasTranscript(TranscriptBase):
             set_chromosome_lists(cls, use_table=tag_table)
             multiprocess_all_chromosomes(wrap_add_transcripts_from_groseq, cls,
                                          sequencing_run, use_table=tag_table)
-        except Exception, e:
+        except Exception as e:
             raise e
 
     @classmethod
@@ -303,7 +303,7 @@ class AtlasTranscript(TranscriptBase):
                                EDGE_SCALING_FACTOR,
                                current_settings.DENSITY_MULTIPLIER)
                 execute_query(query)
-        except Exception, e:
+        except Exception as e:
             raise e
 
     ################################################
@@ -323,7 +323,7 @@ class AtlasTranscript(TranscriptBase):
                                          extension_percent,
                                          set_density,
                                          null_only)
-        except Exception, e:
+        except Exception as e:
             raise e
 
     @classmethod
@@ -361,7 +361,7 @@ class AtlasTranscript(TranscriptBase):
                                    extension_percent,
                                    null_only and 'true' or 'false')
                     execute_query(query)
-        except Exception, e:
+        except Exception as e:
             raise e
 
     @classmethod
@@ -377,7 +377,7 @@ class AtlasTranscript(TranscriptBase):
                                          allow_extended_gaps,
                                          extension_percent,
                                          null_only)
-        except Exception, e:
+        except Exception as e:
             raise e
 
     @classmethod
@@ -403,7 +403,7 @@ class AtlasTranscript(TranscriptBase):
                                extension_percent,
                                null_only and 'true' or 'false')
                 execute_query(query)
-        except Exception, e:
+        except Exception as e:
             raise e
 
     @classmethod
@@ -411,7 +411,7 @@ class AtlasTranscript(TranscriptBase):
         try:
             set_chromosome_lists(cls)
             multiprocess_all_chromosomes(wrap_draw_transcript_edges, cls)
-        except Exception, e:
+        except Exception as e:
             raise e
 
     @classmethod
@@ -428,7 +428,7 @@ class AtlasTranscript(TranscriptBase):
                                MIN_ONE_RUN_TAGS, current_settings.MAX_EDGE,
                                chr_id=chr_id)
                 execute_query(query)
-        except Exception, e:
+        except Exception as e:
             raise e
 
     @classmethod
@@ -436,7 +436,7 @@ class AtlasTranscript(TranscriptBase):
         try:
             set_chromosome_lists(cls)
             multiprocess_all_chromosomes(wrap_set_scores, cls)
-        except Exception, e:
+        except Exception as e:
             raise e
 
     @classmethod
@@ -451,7 +451,7 @@ class AtlasTranscript(TranscriptBase):
                                current_settings.CELL_TYPE.lower(),
                                current_settings.STAGING, chr_id=chr_id)
                 execute_query(query)
-        except Exception, e:
+        except Exception as e:
             raise e
 
 
