@@ -36,7 +36,6 @@ class Chromosome(GenomeReferenceBase):
 
     class Meta(object):
         db_table = '{0}"."chromosome'.format(SCHEMA_BASE)
-        app_label = 'Genome_Reference'
 
     def __unicode__(self): return self.name
 
@@ -51,7 +50,6 @@ class SequenceIdentifier(GenomeReferenceBase):
 
     class Meta(object):
         db_table = '{0}"."sequence_identifier'.format(SCHEMA_BASE)
-        app_label = 'Genome_Reference'
 
     def __unicode__(self): return self.sequence_identifier
 
@@ -79,7 +77,6 @@ class NonCodingRna(GenomeReferenceBase):
 
     class Meta(object):
         db_table = '{0}"."non_coding_rna'.format(SCHEMA_BASE)
-        app_label = 'Genome_Reference'
         verbose_name = 'Non coding RNA'
 
     def __unicode__(self):
@@ -121,7 +118,6 @@ class SequenceTranscriptionRegion(GenomeReferenceBase):
 
     class Meta(object):
         db_table = '{0}"."sequence_transcription_region'.format(SCHEMA_BASE)
-        app_label = 'Genome_Reference'
 
     def __unicode__(self):
         return 'Sequence Transcription Region for {0}'.format(
@@ -148,7 +144,6 @@ class NonCodingTranscriptionRegion(GenomeReferenceBase):
 
     class Meta(object):
         db_table = '{0}"."non_coding_transcription_region'.format(SCHEMA_BASE)
-        app_label = 'Genome_Reference'
 
     def __unicode__(self):
         return '{0} Transcription Region for {1}'.format(
@@ -170,7 +165,6 @@ class SequencingRun(GenomeReferenceBase):
 
     class Meta(object):
         db_table = '{0}"."sequencing_run'.format(SCHEMA_BASE)
-        app_label = 'Genome_Reference'
 
     def __unicode__(self):
         return '{0} ({1}, "{2}")'.format(self.name,
