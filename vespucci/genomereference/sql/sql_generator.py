@@ -331,11 +331,7 @@ class GenomeResourcesSqlGenerator(SqlGenerator):
         '''
         path_to_file = os.path.join(get_vespucci_path(),
                        'genomereference/pipeline/data/summary.csv')
-        if os.stat(path_to_file)[6] > 0:
-            f_summary = csv.reader(open(path_to_file, 'rb'))
-        else:
-            f_summary = []
-            
+        f_summary = csv.reader(open(path_to_file, 'rt'))
         output = []
         for fields in f_summary:
             # ID,acc,Description,SO name,Oranism,Xref,Length
