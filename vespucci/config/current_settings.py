@@ -39,7 +39,7 @@ DENSITY_MULTIPLIER = 10000
 # Password should be stored in directory above main package,
 # in a file called .database_password
 current_dir = os.path.dirname(__file__)
-password = file(os.path.join(current_dir, '../../.database_password')).read()
+password = open(os.path.join(current_dir, '../../.database_password')).read()
 password = password.strip('\n').strip()
 CURRENT_SCHEMA = 'current_projects'
 DATABASES = {
