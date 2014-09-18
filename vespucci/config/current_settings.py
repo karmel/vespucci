@@ -72,3 +72,4 @@ CHR_LISTS = None  # Dynamically set during processing
 # Required for Django; not used
 #####################################
 SECRET_KEY = 'feg^reh@(rdyue(yfawu0mg532ok^yfl9$1%*ge+ng$1@0gf%x'
+INSTALLED_APPS = ['genomereference',]
