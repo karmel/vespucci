@@ -77,7 +77,6 @@ class RangeField(models.Field):
         if not value:
             return None
         try:
-            print(value)
             return AsIs(self.range_type + '({},{})'.format(*value))
         except TypeError:
             # The value is a string from the DB
