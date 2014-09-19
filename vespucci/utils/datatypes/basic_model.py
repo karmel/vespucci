@@ -78,11 +78,11 @@ class RangeField(models.Field):
             return None
         try:
             print(value)
-            return AsIs(self.range_type + '({},{})'.format(tuple(value)))
+            return AsIs(self.range_type + '({},{})'.format(*value))
         except TypeError:
             # The value is a string from the DB
             return AsIs(self.range_type
-                        + '({},{})'.format(tuple(self.from_db_val_to_ints(value))))
+                        + '({},{})'.format(*self.from_db_val_to_ints(value)))
 
 
 class Int8RangeField(RangeField):
@@ -111,11 +111,11 @@ class BoxField(models.Field):
         if not value:
             return None
         try:
-            return AsIs('public.make_box({},{},{},{})'.format(tuple(value)))
+            return AsIs('public.make_box({},{},{},{})'.format(*value))
         except TypeError:
             # The value is a string from the DB
-            return AsIs('public.make_box({},{},{},{})'.format(tuple(
-                self.from_db_val_to_ints(value))))
+            return AsIs('public.make_box({},{},{},{})'.format(
+                *self.from_db_val_to_ints(value)))
 
 
 class CubeField(models.Field):
@@ -136,8 +136,8 @@ class CubeField(models.Field):
         if value is None:
             return None
         try:
-            return AsIs('public.cube({},{})'.format(tuple(value)))
+            return AsIs('public.cube({},{})'.format(*value))
         except TypeError:
             # The value is a string from the DB
-            return AsIs('public.cube({},{})'.format(tuple(
-                self.from_db_val_to_ints(value))))
+            return AsIs('public.cube({},{})'.format(
+                *self.from_db_val_to_ints(value)))
