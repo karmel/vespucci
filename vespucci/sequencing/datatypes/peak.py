@@ -31,9 +31,9 @@ class AtlasPeak(DynamicTable):
 
     length = models.IntegerField(max_length=12)
     summit = models.IntegerField(max_length=12)
-    tag_count = models.DecimalField(max_digits=12, decimal_places=2,
+    tag_count = models.DecimalField(max_digits=10, decimal_places=2,
                                     null=True, default=None)
-    raw_tag_count = models.DecimalField(max_digits=12, decimal_places=2,
+    raw_tag_count = models.DecimalField(max_digits=10, decimal_places=2,
                                         null=True, default=None)
 
     score = models.DecimalField(max_digits=8, decimal_places=2,
@@ -70,8 +70,8 @@ class AtlasPeak(DynamicTable):
             "length" int4,
             summit int8,
             tag_count decimal(8,2) default NULL,
-            raw_tag_count decimal(8,2) default NULL,
-            score decimal(8,2) default NULL,
+            raw_tag_count decimal(10,2) default NULL,
+            score decimal(10,2) default NULL,
             p_value decimal(6,4) default NULL,
             p_value_exp int4 default NULL,
             log_ten_p_value decimal(10,2) default NULL,
