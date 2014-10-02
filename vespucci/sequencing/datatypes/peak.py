@@ -33,7 +33,7 @@ class AtlasPeak(DynamicTable):
     summit = models.IntegerField(max_length=12)
     tag_count = models.DecimalField(max_digits=12, decimal_places=2,
                                     null=True, default=None)
-    raw_tag_count = models.DecimalField(max_digits=8, decimal_places=2,
+    raw_tag_count = models.DecimalField(max_digits=12, decimal_places=2,
                                         null=True, default=None)
 
     score = models.DecimalField(max_digits=8, decimal_places=2,
