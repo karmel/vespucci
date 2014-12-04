@@ -9,7 +9,7 @@
 
 The URL for your instance can be found on the Amazon AWS web listing for your instance as the **Public DNS**:
 
-<a href="/documentation/images/finding_AWS_URL_large.png" target="_blank"><img alt="Screenshot of AWS interface" src="/images/finding_AWS_URL.png" /></a>
+<a href="/documentation/images/finding_AWS_URL_large.png" target="_blank"><img alt="Screenshot of AWS interface" src="/documentation/images/finding_AWS_URL.png" /></a>
 
 #### <span id="no-raw-tags">I added my SAM file to the database, but it was really fast, and no rows were added to the tag table.</span>
 
@@ -17,7 +17,7 @@ Are you sure you uncompressed the file before you loaded it in? Does the file su
 
 Once you figure out what the cause is, you can drop the empty tag table and retry the `add_tags.sh` command with the fixed SAM file. This is easy to do using the <a href="/README.md#e-etc" target="_blank">PostgresSQL Studio interface that comes with the Amazon instance</a>:
 
-<a href="/documentation/images/drop_table_large.png" target="_blank"><img alt="Dropping a tag table in pgstudio" src="/images/drop_table.png" /></a>
+<a href="/documentation/images/drop_table_large.png" target="_blank"><img alt="Dropping a tag table in pgstudio" src="/documentation/images/drop_table.png" /></a>
 
 #### I am trying to add proto-transcripts, but I keep getting a fatal error from PostgreSQL, and the database restarts.
 
@@ -33,9 +33,9 @@ If your raw tag tables have data, but that data didn't make it into the preparat
 
 No. You can simply delete (or rename) the final Vespucci schema you built. For example, rename `atlas_mm9_default` to `atlas_mm9_default_max_edge_500` using the <a href="/README.md#e-etc" target="_blank">PostgreSQL Studio interface</a>: 
 
-<a href="/documentation/images/drop_schema_large.png" target="_blank"><img alt="Drop schema controls in pgstudio" src="/images/drop_schema.png" /></a>
+<a href="/documentation/images/drop_schema_large.png" target="_blank"><img alt="Drop schema controls in pgstudio" src="/documentation/images/drop_schema.png" /></a>
 
-<a href="/documentation/images/rename_schema_large.png" target="_blank"><img alt="Renaming a schema in pgstudio" src="/images/rename_schema.png" /></a>
+<a href="/documentation/images/rename_schema_large.png" target="_blank"><img alt="Renaming a schema in pgstudio" src="/documentation/images/rename_schema.png" /></a>
 
 Then, you can set up the new database with the command:
 
@@ -52,7 +52,7 @@ Then, you can set up the new database with the command:
 
 Yes; once the raw tag tables have been converted to proto-transcripts, they are no longer used. We find keeping raw tag tables around can be useful for other purposes, but if you don't need them, feel free to drop them. This is easy to do using the <a href="/README.md#e-etc" target="_blank">PostgresSQL Studio interface that comes with the Amazon instance</a>:
 
-<a href="/documentation/images/drop_table_large.png" target="_blank"><img alt="Dropping a tag table in pgstudio" src="/images/drop_table.png" /></a>
+<a href="/documentation/images/drop_table_large.png" target="_blank"><img alt="Dropping a tag table in pgstudio" src="/documentation/images/drop_table.png" /></a>
 
 #### I loaded all my data. Now what? 
 
@@ -69,7 +69,7 @@ The two Bed files created, one for the positive strand and one for the negative 
 
 Once loaded into the UCSC Genome Browser, you can see where transcripts have been called:
 
-<a href="/documentation/images/ucsc_browser_large.png" target="_blank"><img alt="Viewing transcripts in the UCSC Browser" src="/images/ucsc_browser.png" /></a>
+<a href="/documentation/images/ucsc_browser_large.png" target="_blank"><img alt="Viewing transcripts in the UCSC Browser" src="/documentation/images/ucsc_browser.png" /></a>
 
 Next, you can ask you data questions. What is the biological problem you are addressing? How can you formulate that as a SQL query over the data?
 
@@ -116,6 +116,6 @@ We have included <a href="/documentation/sample_queries" target="_blank">many ex
 
 Note that you can view the loaded sequencing runs in the table `genome_reference_mm9.sequencing_run` (or the equivalent for the genome in question), as seen in the screenshot below.
 
-<a href="/documentation/images/sequencing_runs_large.png" target="_blank"><img alt="Sequencing run table in pgstudio" src="/images/sequencing_runs.png" /></a>
+<a href="/documentation/images/sequencing_runs_large.png" target="_blank"><img alt="Sequencing run table in pgstudio" src="/documentation/images/sequencing_runs.png" /></a>
 
 With the result sets from your query of interest, you can do anything you want-- export to other tools; collect gene lists for further research; view regions of interest in the browser; correlate with other data sets to find enhancers and eRNA; and so on.
