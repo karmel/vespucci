@@ -34,11 +34,12 @@ class TagFileConverter(object):
             shell=True)
         return output
 
-    def convert_sam_file(self, file_name, output_file=None, min_map_quality=10):
+    def convert_sam_file(self, file_name, output_file=None,
+                         min_map_quality=10):
         '''
         Sample output::
 
-                +	chr18	78148411	AACCATTAGGAGACC	
+                +	chr18	78148411	AACCATTAGGAGACC
 
         and equivalent SAM::
 
@@ -71,9 +72,9 @@ class TagFileConverter(object):
         Note that SAM is 1-indexed instead of 0-indexed like the Bowtie output.
 
         '''
-        f = file(file_name)
+        f = open(file_name)
         output = output_file or (file_name + '.4column')
-        o1 = file(output, 'w')
+        o1 = open(output, 'w')
 
         for line in f:
             fields = line.split('\t')
@@ -112,9 +113,9 @@ class TagFileConverter(object):
         Used for files with (obsolete) six-column bowtie output.
         Generally, SAM is preferred at this point, even by Bowtie.
         '''
-        f = file(file_name)
+        f = open(file_name)
         output = output_file or (file_name + '.4column')
-        o1 = file(output, 'w')
+        o1 = open(output, 'w')
 
         for line in f:
             fields = line.split('\t')
