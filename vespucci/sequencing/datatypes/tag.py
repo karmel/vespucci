@@ -20,7 +20,6 @@ def wrap_partition_tables(cls, chr_list):
 
 
 def wrap_translate_from_prep(cls, chr_list, *args):
-    print(args)
     wrap_errors(cls._translate_from_prep, chr_list, *args)
 
 
@@ -187,9 +186,9 @@ class AtlasTag(DynamicTable):
         # Some files come in with the reads flipped.
         # Allow for insertion of flipped strands.
         if flip:
-            strand_char = '-'
-        else:
             strand_char = '+'
+        else:
+            strand_char = '-'
 
         for chr_id in chr_list:
             update_query = """
