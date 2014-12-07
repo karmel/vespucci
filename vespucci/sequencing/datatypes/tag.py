@@ -19,8 +19,9 @@ def wrap_partition_tables(cls, chr_list):
     wrap_errors(cls._create_partition_tables, chr_list)
 
 
-def wrap_translate_from_prep(cls, chr_list, flip=False):
-    wrap_errors(cls._translate_from_prep, chr_list, flip=flip)
+def wrap_translate_from_prep(cls, chr_list, *args):
+    print(args)
+    wrap_errors(cls._translate_from_prep, chr_list, *args)
 
 
 def wrap_set_refseq(cls, chr_list):
