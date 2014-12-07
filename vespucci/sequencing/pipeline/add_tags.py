@@ -56,6 +56,9 @@ class FastqOptionParser(VespucciOptionParser):
         make_option('--input_file_type', action='store',
                     type='string', dest='input_file_type',
                     help='File type (bowtie, sam, bam, 4col) to be converted to 4 column input file. Will guess if not specified.'),
+        make_option('--flip', action='store_true',
+                    dest='flip', default=False,
+                    help='If specified, tags on the sense strand will be input as antisense and vice versa.'),
 
         make_option('--skip_file_conversion', action='store_true',
                     dest='skip_file_conversion', default=False,
@@ -145,14 +148,14 @@ def upload_tag_files(options, file_name, tag_split_dir):
     shutil.rmtree(tag_split_dir)
 
 
-def translate_prep_columns(file_name):
+def translate_prep_columns(file_name, flip=False):
     '''
     Transfer prep tags to indexed, streamlined Atlas tags for annotation.
     '''
     # AtlasTag.set_table_name('tag_' + file_name)
     AtlasTag.create_parent_table(file_name)
     AtlasTag.create_partition_tables()
-    AtlasTag.translate_from_prep()
+    AtlasTag.translate_from_prep(flip=flip)
 
 
 def add_indices(set_refseq=True):
@@ -200,7 +203,7 @@ if __name__ == '__main__':
             AtlasTag.set_prep_table(options.prep_table)
 
         _print('Translating prep columns to integers.')
-        translate_prep_columns(file_name)
+        translate_prep_columns(file_name, options.flip)
         _print('Adding indices.')
         AtlasTag.set_table_name('tag_' + file_name)
         add_indices(set_refseq=(not options.no_refseq_segmentation))

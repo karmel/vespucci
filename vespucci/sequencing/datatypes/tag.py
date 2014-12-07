@@ -19,8 +19,8 @@ def wrap_partition_tables(cls, chr_list):
     wrap_errors(cls._create_partition_tables, chr_list)
 
 
-def wrap_translate_from_prep(cls, chr_list):
-    wrap_errors(cls._translate_from_prep, chr_list)
+def wrap_translate_from_prep(cls, chr_list, flip=False):
+    wrap_errors(cls._translate_from_prep, chr_list, flip=flip)
 
 
 def wrap_set_refseq(cls, chr_list):
@@ -171,18 +171,25 @@ class AtlasTag(DynamicTable):
         execute_query(trigger_sql)
 
     @classmethod
-    def translate_from_prep(cls):
+    def translate_from_prep(cls, flip=False):
         try:
             set_chromosome_lists(cls)
-            multiprocess_all_chromosomes(wrap_translate_from_prep, cls)
+            multiprocess_all_chromosomes(wrap_translate_from_prep, cls, flip)
         except Exception as e:
             raise e
 
     @classmethod
-    def _translate_from_prep(cls, chr_list):
+    def _translate_from_prep(cls, chr_list, flip):
         '''
         Take uploaded values and streamline into ints and sequence ends.
         '''
+        # Some files come in with the reads flipped.
+        # Allow for insertion of flipped strands.
+        if flip:
+            strand_char = '-'
+        else:
+            strand_char = '+'
+
         for chr_id in chr_list:
             update_query = """
             INSERT INTO "{0}_{chr_id}" (chromosome_id, 
@@ -193,7 +200,7 @@ class AtlasTag(DynamicTable):
                                         refseq)
             SELECT * FROM (
                 SELECT {chr_id}, 
-                (CASE WHEN prep.strand_char = '-' THEN 1 ELSE 0 END), 
+                (CASE WHEN prep.strand_char = '{strand_char}' THEN 1 ELSE 0 END), 
                 prep."start", 
                 (prep."start" + char_length(prep.sequence_matched)),
                 int8range(prep."start", 
@@ -204,7 +211,9 @@ class AtlasTag(DynamicTable):
             WHERE chr.id = {chr_id}) derived;
             """.format(cls._meta.db_table, cls.prep_table,
                        Chromosome._meta.db_table,
+                       strand_char=strand_char,
                        chr_id=chr_id)
+            print(update_query)
             execute_query(update_query)
 
     @classmethod
