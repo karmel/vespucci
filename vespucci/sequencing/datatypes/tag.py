@@ -213,7 +213,6 @@ class AtlasTag(DynamicTable):
                        Chromosome._meta.db_table,
                        strand_char=strand_char,
                        chr_id=chr_id)
-            print(update_query)
             execute_query(update_query)
 
     @classmethod
